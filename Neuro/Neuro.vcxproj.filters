@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{ed2badaf-31c4-4ff4-ba9a-913e209ade50}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{26111226-ce32-4cbc-9ea4-388666e6795a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\Tensors">
+      <UniqueIdentifier>{f3a2fdbb-3a88-40bd-9682-8754e6a5b764}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Tensors">
+      <UniqueIdentifier>{b86672a1-082c-4add-b613-6eaf604ba0fc}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\NeuralNetwork.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tensors\Shape.h">
+      <Filter>include\Tensors</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tensors\Tensor.h">
+      <Filter>include\Tensors</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Random.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tensors\TensorOpCpu.h">
+      <Filter>include\Tensors</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tools.h">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\NeuralNetwork.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tensors\Shape.cpp">
+      <Filter>src\Tensors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tensors\Tensor.cpp">
+      <Filter>src\Tensors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Random.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tensors\TensorOpCpu.cpp">
+      <Filter>src\Tensors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tools.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
