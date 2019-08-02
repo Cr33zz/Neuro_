@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <array>
 #include "assert.h"
 
 namespace Neuro
@@ -31,19 +32,25 @@ namespace Neuro
 
         static Shape From(const vector<int>& dimensions)
         {
-            switch (dimensions.size())
+            return From(dimensions.data(), (int)dimensions.size());
+        }
+
+        static Shape From(const int* dimensions, int dimNum)
+        {
+            switch (dimNum)
             {
-                case 1: return Shape(dimensions[0]);
-                case 2: return Shape(dimensions[0], dimensions[1]);
-                case 3: return Shape(dimensions[0], dimensions[1], dimensions[2]);
-                case 4: return Shape(dimensions[0], dimensions[1], dimensions[2], dimensions[3]);
+            case 1: return Shape(dimensions[0]);
+            case 2: return Shape(dimensions[0], dimensions[1]);
+            case 3: return Shape(dimensions[0], dimensions[1], dimensions[2]);
+            default: return Shape(dimensions[0], dimensions[1], dimensions[2], dimensions[3]);
             }
         }
 
 		static const int Auto = -1; // Automatically guesses
 
-        Shape Reshaped(vector<int>& dimensions)
+        Shape Reshaped(int w, int h, int d, int n) const
         {
+            int dimensions[4] = { w, h, d, n };
             int dToUpdate = -1;
             int product = 1;
             for (int d = 0; d < 4; ++d)
@@ -62,10 +69,10 @@ namespace Neuro
                 dimensions[dToUpdate] = Length / product;
             }
 
-            return From(dimensions);
+            return From(dimensions, 4);
         }
 
-        int GetIndex(int w, int h = 0, int d = 0, int n = 0)
+        int GetIndex(int w, int h = 0, int d = 0, int n = 0) const
         {
             assert(w < Width());
 			assert(h < Height());

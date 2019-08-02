@@ -61,6 +61,7 @@ namespace Neuro
 		int Length() const { return (int)Values.size(); }
 
         vector<float>& GetValues();
+        const vector<float>& GetValues() const;
 
         /*Bitmap ToBitmap()
         {
@@ -85,51 +86,51 @@ namespace Neuro
         void Zero();
 	
 	private:
-        void Mul(bool transposeT, const Tensor& t, Tensor& result);
-        Tensor Mul(bool transposeT, const Tensor& t);
+        void Mul(bool transposeT, const Tensor& t, Tensor& result) const;
+        Tensor Mul(bool transposeT, const Tensor& t) const;
 
 	public:
-        void Mul(const Tensor& t, Tensor& result);
-        Tensor Mul(const Tensor& t);
-        void MulElem(const Tensor& t, Tensor& result);
-        Tensor MulElem(const Tensor& t);
-        void Mul(float v, Tensor& result);
-        Tensor Mul(float v);
-        void Div(const Tensor& t, Tensor& result);
-        Tensor Div(const Tensor& t);
-        void Div(float v, Tensor& result);
-        Tensor Div(float v);
-        void Add(float alpha, float beta, const Tensor& t, Tensor& result);
-        void Add(const Tensor& t, Tensor& result);
-        Tensor Add(const Tensor& t);
-        Tensor Add(float alpha, float beta, const Tensor& t);
-        void Add(float v, Tensor& result);
-        Tensor Add(float v);
-        void Sub(const Tensor& t, Tensor& result);
-        Tensor Sub(const Tensor& t);
-        void Sub(float v, Tensor& result);
-        Tensor Sub(float v);
-        void Negated(Tensor& result);
-        Tensor Negated();
-        void Clipped(float min, float max, Tensor& result);
-        Tensor Clipped(float min, float max);
-        Tensor DiagFlat();
+        void Mul(const Tensor& t, Tensor& result) const;
+        Tensor Mul(const Tensor& t) const;
+        void MulElem(const Tensor& t, Tensor& result) const;
+        Tensor MulElem(const Tensor& t) const;
+        void Mul(float v, Tensor& result) const;
+        Tensor Mul(float v) const;
+        void Div(const Tensor& t, Tensor& result) const;
+        Tensor Div(const Tensor& t) const;
+        void Div(float v, Tensor& result) const;
+        Tensor Div(float v) const;
+        void Add(float alpha, float beta, const Tensor& t, Tensor& result) const;
+        void Add(const Tensor& t, Tensor& result) const;
+        Tensor Add(const Tensor& t) const;
+        Tensor Add(float alpha, float beta, const Tensor& t) const;
+        void Add(float v, Tensor& result) const;
+        Tensor Add(float v) const;
+        void Sub(const Tensor& t, Tensor& result) const;
+        Tensor Sub(const Tensor& t) const;
+        void Sub(float v, Tensor& result) const;
+        Tensor Sub(float v) const;
+        void Negated(Tensor& result) const;
+        Tensor Negated() const;
+        void Clipped(float min, float max, Tensor& result) const;
+        Tensor Clipped(float min, float max) const;
+        Tensor DiagFlat() const;
 
-        void Map(const function<float(float)>& func, Tensor& result);
-		Tensor Map(const function<float(float)>& func);
-		void Map(const function<float(float, float)>&, const Tensor& other, Tensor& result);
-		Tensor Map(const function<float(float, float)>& func, const Tensor& other);
+        void Map(const function<float(float)>& func, Tensor& result) const;
+		Tensor Map(const function<float(float)>& func) const;
+		void Map(const function<float(float, float)>&, const Tensor& other, Tensor& result) const;
+		Tensor Map(const function<float(float, float)>& func, const Tensor& other) const;
 
-        Tensor SumBatches();
-        float Sum(int batch = -1);
-        Tensor SumPerBatch();
+        Tensor SumBatches() const;
+        float Sum(int batch = -1) const;
+        Tensor SumPerBatch() const;
 
-        Tensor AvgBatches();
-		float Avg(int batch = -1);
-        Tensor AvgPerBatch();
+        Tensor AvgBatches() const;
+		float Avg(int batch = -1) const;
+        Tensor AvgPerBatch() const;
 
-		float Max(int batch = -1);
-        Tensor MaxPerBatch();
+		float Max(int batch = -1) const;
+        Tensor MaxPerBatch() const;
 
         static Tensor MergeIntoBatch(const vector<Tensor>& tensors);
         // In case number of tensors is smaller than forcedDepth, first tensor will be repeated to account for missing tensors
@@ -138,7 +139,7 @@ namespace Neuro
 		// This operation will concatenate elements of all input tensors separately for each batch
 		static void Concat(const vector<Tensor>& inputs, Tensor& result);
         // This is reverse Concat operation
-        void Split(vector<Tensor>& outputs);
+        void Split(vector<Tensor>& outputs) const;
 
         static void MergeMin(const vector<Tensor>& inputs, Tensor& result);
         static void MergeMax(const vector<Tensor>& inputs, Tensor& result);
@@ -152,32 +153,32 @@ namespace Neuro
         // ArgMax will return local index inside given batch if batch is not -1
         int ArgMax(int batch = -1);
         Tensor ArgMaxPerBatch();
-        const Tensor& transposed();
-        void Transpose(Tensor& result);
+        Tensor Transposed() const;
+        void Transpose(Tensor& result) const;
 
         // Generates a new tensor with given dimensions and populate it with this tensor's values in index order.
         // One of dimensions can be -1, in that case it will be calculated based on remaining dimensions.
-        Tensor Reshaped(Shape shape);
+        Tensor Reshaped(Shape shape) const;
         void Reshape(Shape shape);
 
         // Create new tensor with different batch length and use current tensors values to fill the new tensor.
         // Number of batches will be the same as in source tensor.
-        Tensor Resized(int width, int height = 1, int depth = 1);
-        Tensor FlattenHoriz();
-        Tensor FlattenVert();
-        void Rotated180(Tensor& result);
-        Tensor Rotated180();
-        void Conv2D(Tensor kernels, int stride, EPaddingType padding, Tensor& result);
-        Tensor Conv2D(Tensor kernels, int stride, EPaddingType padding);
-        static void Conv2DInputsGradient(Tensor gradient, Tensor kernels, int stride, EPaddingType padding, Tensor inputsGradient);
-        static void Conv2DKernelsGradient(Tensor input, Tensor gradient, int stride, EPaddingType padding, Tensor kernelsGradient);
-        static void Conv2DGradient_old(Tensor input, Tensor kernels, Tensor gradient, int stride, EPaddingType padding, Tensor inputGradient, Tensor kernelsGradient);
-        void Pool(int filterSize, int stride, EPoolType type, EPaddingType padding, Tensor& result);
-        Tensor Pool(int filterSize, int stride, EPoolType type, EPaddingType padding);
+        Tensor Resized(int width, int height = 1, int depth = 1) const;
+        Tensor FlattenHoriz() const;
+        Tensor FlattenVert() const;
+        void Rotated180(Tensor& result) const;
+        Tensor Rotated180() const;
+        void Conv2D(const Tensor& kernels, int stride, EPaddingType padding, Tensor& result) const;
+        Tensor Conv2D(const Tensor& kernels, int stride, EPaddingType padding) const;
+        void Conv2DInputsGradient(const Tensor& gradient, const Tensor& kernels, int stride, EPaddingType padding, Tensor& inputsGradient) const;
+        void Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, EPaddingType padding, Tensor& kernelsGradient) const;
+        void Conv2DGradient_old(const Tensor& input, const Tensor& kernels, const Tensor& gradient, int stride, EPaddingType padding, Tensor& inputGradient, Tensor& kernelsGradient) const;
+        void Pool(int filterSize, int stride, EPoolType type, EPaddingType padding, Tensor& result) const;
+        Tensor Pool(int filterSize, int stride, EPoolType type, EPaddingType padding) const;
         // Assuming result matrix is of the dimensions of input to pooling layer
-        static void PoolGradient(Tensor output, Tensor input, Tensor outputGradient, int filterSize, int stride, EPoolType type, EPaddingType padding, Tensor& result);
-        string ToString();
-        bool SameDimensionsExceptBatches(const Tensor& t);
+        void PoolGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, EPoolType type, EPaddingType padding, Tensor& result) const;
+        string ToString() const;
+        bool SameDimensionsExceptBatches(const Tensor& t) const;
 
         static void GetPaddingParams(EPaddingType type, int width, int height, int kernelWidth, int kernelHeight, int stride, int& outHeight, int& outWidth, int& paddingX, int& paddingY);
 
@@ -216,24 +217,29 @@ namespace Neuro
         //    return t;
         //}
 
+        float& operator()(int w, int h = 0, int d = 0, int n = 0);
+        float operator()(int w, int h = 0, int d = 0, int n = 0) const;
+
         float GetFlat(int i);
         float& Get(int w, int h = 0, int d = 0, int n = 0);
-        float& operator()(int w, int h = 0, int d = 0, int n = 0);
-        float TryGet(float def, int w, int h = 0, int d = 0, int n = 0);
+        float Get(int w, int h = 0, int d = 0, int n = 0) const;
+        float TryGet(float def, int w, int h = 0, int d = 0, int n = 0) const;
+
         void SetFlat(float value, int i);
         void Set(float value, int w, int h = 0, int d = 0, int n = 0);
         void TrySet(float value, int w, int h = 0, int d = 0, int n = 0);
+
         void CopyTo(Tensor& result, float tau = -1) const;
         void CopyBatchTo(int batchId, int targetBatchId, Tensor& result);
         void CopyDepthTo(int depthId, int batchId, int targetDepthId, int targetBatchId, Tensor& result);
         Tensor GetBatch(int batchId);
         Tensor GetDepth(int depthId, int batchId = 0);
-        bool Equals(const Tensor& other, float epsilon = 0.00001f);
-        float GetMaxData(int batch, int& maxIndex);
-        void Elu(float alpha, Tensor& result);
-        static void EluGradient(Tensor output, Tensor outputGradient, float alpha, Tensor& result);
-        void Softmax(Tensor& result);
-        static void SoftmaxGradient(Tensor output, Tensor outputGradient, Tensor& result);
+        bool Equals(const Tensor& other, float epsilon = 0.00001f) const;
+        float GetMaxData(int batch, int& maxIndex) const;
+        void Elu(float alpha, Tensor& result) const;
+        void EluGradient(Tensor output, Tensor outputGradient, float alpha, Tensor& result) const;
+        void Softmax(Tensor& result) const;
+        void SoftmaxGradient(Tensor output, Tensor outputGradient, Tensor& result) const;
 		const Shape& GetShape() const { return m_Shape; }
 
         struct GPUData
@@ -254,6 +260,7 @@ namespace Neuro
 
         void CopyToDevice() const;
         void CopyToHost() const;
+        void OverrideHost() const;
 
 	private:
         GPUData GpuData;
