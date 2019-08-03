@@ -16,24 +16,20 @@ namespace Neuro
         static int AccBinaryClassificationEquality(const Tensor& target, const Tensor& output);
         static int AccCategoricalClassificationEquality(const Tensor& target, const Tensor& output);
 
-        /*static void Shuffle<T>(this IList<T> list)
+        template<typename T> static void Shuffle(vector<T>& list)
         {
             int n = list.Count;
             while (n-- > 1)
             {
-                int k = Tools.Rng.Next(n + 1);
-                T value = list[k];
+                int k = Rng.Next(n + 1);
+                T& value = list[k];
                 list[k] = list[n];
                 list[n] = value;
             }
-        }*/
+        }
 
         static float Clip(float value, float min, float max);
-
-        //static int Sign(float value)
-        //{
-        //    return value < 0 ? -1 : (value > 0 ? 1 : 0);
-        //}
+		static int Sign(float value);
 
         //static List<float> LinSpace(float start, float stop, int num = 50, bool endPoint = true)
         //{

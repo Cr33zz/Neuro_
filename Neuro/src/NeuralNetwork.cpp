@@ -1,99 +1,113 @@
 ﻿#include "NeuralNetwork.h"
+#include "Models/ModelBase.h"
+#include "Tools.h"
 
 namespace Neuro
 {
     bool NeuralNetwork::DebugMode = false;
 
-    ///
+    //////////////////////////////////////////////////////////////////////////
     NeuralNetwork::NeuralNetwork(string name, int seed /*= 0*/)
     {
         Name = name;
         if (seed > 0)
         {
             Seed = seed;
-            Tools.Rng = new Random(seed);
+            Tools::Rng = Random(seed);
         }
     }
 
+	//////////////////////////////////////////////////////////////////////////
     void NeuralNetwork::ForceInitLayers()
     {
-        foreach(auto layer in Model->GetLayers())
+        for(auto layer : Model->GetLayers())
             layer.Init();
     }
 
+	//////////////////////////////////////////////////////////////////////////
     void NeuralNetwork::CopyParametersTo(NeuralNetwork& target)
     {
-        foreach(auto layersPair in Model.GetLayers().Zip(target.Model.GetLayers(), (l1, l2) = > new [] {l1, l2}))
+        for(auto layersPair : Model->GetLayers().Zip(target.Model->GetLayers(), (l1, l2) = > new [] {l1, l2}))
             layersPair[0].CopyParametersTo(layersPair[1]);
     }
 
+	//////////////////////////////////////////////////////////////////////////
     void NeuralNetwork::SoftCopyParametersTo(NeuralNetwork& target, float tau)
     {
         if (tau > 1 || tau <= 0) throw new Exception("Tau has to be a value from range (0, 1>.");
-        foreach(auto layersPair in Model.GetLayers().Zip(target.Model.GetLayers(), (l1, l2) = > new[] { l1, l2 }))
+        foreach(auto layersPair in Model->GetLayers().Zip(target.Model->GetLayers(), (l1, l2) = > new[] { l1, l2 }))
             layersPair[0].CopyParametersTo(layersPair[1], tau);
     }
 
-    std::string NeuralNetwork::FilePrefix() const
+	//////////////////////////////////////////////////////////////////////////
+    string NeuralNetwork::FilePrefix() const
     {
         //get { return Name.ToLower().Replace(" ", "_"); }
     }
 
-    const vector<Neuro::Tensor>& NeuralNetwork::Predict(const vector<Tensor>& inputs)
+	//////////////////////////////////////////////////////////////////////////
+    const vector<Tensor>& NeuralNetwork::Predict(const vector<Tensor>& inputs)
     {
-        Model.FeedForward(inputs);
-        return Model.GetOutputs();
+        Model->FeedForward(inputs);
+        return Model->GetOutputs();
     }
 
-    const std::vector<Neuro::Tensor>& NeuralNetwork::Predict(const Tensor& input)
+	//////////////////////////////////////////////////////////////////////////
+    const std::vector<Tensor>& NeuralNetwork::Predict(const Tensor& input)
     {
-        Model.FeedForward(new[] { input });
-        return Model.GetOutputs();
+        Model->FeedForward(new[] { input });
+        return Model->GetOutputs();
     }
 
+	//////////////////////////////////////////////////////////////////////////
     void NeuralNetwork::FeedForward(const vector<Tensor>& inputs)
     {
-        Model.FeedForward(inputs);
+        Model->FeedForward(inputs);
     }
 
-    std::vector<Neuro::ParametersAndGradients> NeuralNetwork::GetParametersAndGradients()
+	//////////////////////////////////////////////////////////////////////////
+    std::vector<ParametersAndGradients> NeuralNetwork::GetParametersAndGradients()
     {
-        return Model.GetParametersAndGradients();
+        return Model->GetParametersAndGradients();
     }
 
+	//////////////////////////////////////////////////////////////////////////
     void NeuralNetwork::BackProp(const vector<Tensor>& deltas)
     {
-        Model.BackProp(deltas);
+        Model->BackProp(deltas);
     }
 
-    void NeuralNetwork::Optimize(Optimizers.OptimizerBase optimizer, LossFunc loss)
+	//////////////////////////////////////////////////////////////////////////
+    void NeuralNetwork::Optimize(OptimizerBase* optimizer, LossFunc* loss)
     {
         Optimizer = optimizer;
-        Model.Optimize();
+        Model->Optimize();
 
-        LossFuncs = new LossFunc[Model.GetOutputLayersCount()];
+        LossFuncs = new LossFunc[Model->GetOutputLayersCount()];
         for (int i = 0; i < LossFuncs.Length; ++i)
             LossFuncs[i] = loss;
     }
 
-    void NeuralNetwork::Optimize(Optimizers.OptimizerBase optimizer, Dictionary<string, LossFunc> lossDict)
+	//////////////////////////////////////////////////////////////////////////
+    void NeuralNetwork::Optimize(OptimizerBase* optimizer, map<string, LossFunc*> lossDict)
     {
         Optimizer = optimizer;
-        Model.Optimize();
+        Model->Optimize();
 
 #ifdef VALIDATION_ENABLED
-        if (lossDict.Count != Model.GetOutputLayersCount()) throw new Exception($"Mismatched number of loss functions ({lossDict.Count}) and output layers ({Model.GetOutputLayersCount()})!");
+        if (lossDict.Count != Model->GetOutputLayersCount()) throw new Exception($"Mismatched number of loss functions ({lossDict.Count}) and output layers ({Model->GetOutputLayersCount()})!");
 #endif
 
-        LossFuncs = new LossFunc[Model.GetOutputLayersCount()];
+        LossFuncs = new LossFunc[Model->GetOutputLayersCount()];
         int i = 0;
-        foreach(auto outLayer in Model.GetOutputLayers())
+        foreach(auto outLayer in Model->GetOutputLayers())
         {
             LossFuncs[i++] = lossDict[outLayer.Name];
         }
     }
 
-    void NeuralNetwork::FitBatched(List<Tensor> inputs, List<Tensor> outputs, int epochs /*= 1*/, int verbose /*= 1*/, Track trackFlags /*= Track.TrainError | Track.TestAccuracy*/, bool shuffle /*= true*/)
+	//////////////////////////////////////////////////////////////////////////
+    void NeuralNetwork::FitBatched(const vector<Tensor>& inputs, const vector<Tensor>& outputs, int epochs, int verbose, Track trackFlags, bool shuffle)
     {
         List<Data> trainingData = new List<Data>();
         int batchSize = inputs[0].BatchSize;
@@ -121,12 +135,14 @@ namespace Neuro
         Fit(trainingData, inputs[0].BatchSize, epochs, null, verbose, trackFlags, shuffle);
     }
 
-    void NeuralNetwork::FitBatched(Tensor input, Tensor output, int epochs /*= 1*/, int verbose /*= 1*/, Track trackFlags /*= Track.TrainError | Track.TestAccuracy*/, bool shuffle /*= true*/)
+	//////////////////////////////////////////////////////////////////////////
+    void NeuralNetwork::FitBatched(const Tensor& input, const Tensor& output, int epochs, int verbose, Track trackFlags, bool shuffle)
     {
         FitBatched(new List<Tensor>{ input }, new List<Tensor>{ output }, epochs, verbose, trackFlags, shuffle);
     }
 
-    void NeuralNetwork::Fit(List<Tensor[]> inputs, List<Tensor[]> outputs, int batchSize /*= -1*/, int epochs /*= 1*/, int verbose /*= 1*/, Track trackFlags /*= Track.TrainError | Track.TestAccuracy*/, bool shuffle /*= true*/)
+	//////////////////////////////////////////////////////////////////////////
+    void NeuralNetwork::Fit(const vector<vector<Tensor>>& inputs, const vector<vector<Tensor>>& outputs, int batchSize, int epochs, int verbose, Track trackFlags, bool shuffle)
     {
         int numberOfTensors = inputs[0].Length; // we treat first input tensors list as a baseline
 #ifdef VALIDATION_ENABLED
@@ -163,11 +179,13 @@ namespace Neuro
         Fit(trainingData, batchSize, epochs, null, verbose, trackFlags, shuffle);
     }
 
+	//////////////////////////////////////////////////////////////////////////
     void NeuralNetwork::Fit(Tensor[] inputs, Tensor[] outputs, int batchSize /*= -1*/, int epochs /*= 1*/, int verbose /*= 1*/, Track trackFlags /*= Track.TrainError | Track.TestAccuracy*/, bool shuffle /*= true*/)
     {
         Fit(new List<Tensor[]>{ inputs }, new List<Tensor[]>{ outputs }, batchSize, epochs, verbose, trackFlags, shuffle);
     }
 
+	//////////////////////////////////////////////////////////////////////////
     void NeuralNetwork::Fit(List<Data> trainingData, int batchSize /*= -1*/, int epochs /*= 1*/, List<Data> validationData /*= null*/, int verbose /*= 1*/, Track trackFlags /*= Track.TrainError | Track.TestAccuracy*/, bool shuffle /*= true*/)
     {
         int inputsBatchSize = trainingData[0].Inputs[0].BatchSize;
@@ -200,7 +218,7 @@ namespace Neuro
             chartGen.AddSeries((int)Track.TestAccuracy, "Accuracy on test\n(right Y axis)", Color.CornflowerBlue, true);
 
         //auto lastLayer = Layers.Last();
-        int outputLayersCount = Model.GetOutputLayersCount();
+        int outputLayersCount = Model->GetOutputLayersCount();
 
         int batchesNum = trainingDataAlreadyBatched ? trainingData.Count : (trainingData.Count / batchSize);
         int totalTrainingSamples = trainingData.Count * inputsBatchSize;
@@ -211,10 +229,10 @@ namespace Neuro
 
             for (int i = 0; i < outputLayersCount; ++i)
             {
-                if (Model.GetOutputLayers().ElementAt(i).OutputShape.Length == 1)
-                    AccuracyFuncs[i] = Tools.AccBinaryClassificationEquality;
+                if (Model->GetOutputLayers().ElementAt(i).OutputShape.Length == 1)
+                    AccuracyFuncs[i] = Tools::AccBinaryClassificationEquality;
                 else
-                    AccuracyFuncs[i] = Tools.AccCategoricalClassificationEquality;
+                    AccuracyFuncs[i] = Tools::AccCategoricalClassificationEquality;
             }
         }
 
@@ -231,7 +249,7 @@ namespace Neuro
             if (batchesNum > 1 && shuffle)
                 trainingData.Shuffle();
 
-            List<Data> batchedTrainingData = trainingDataAlreadyBatched ? trainingData : Tools.MergeData(trainingData, batchSize);
+            List<Data> batchedTrainingData = trainingDataAlreadyBatched ? trainingData : Tools::MergeData(trainingData, batchSize);
 
             float trainTotalError = 0;
             int trainHits = 0;
@@ -246,7 +264,7 @@ namespace Neuro
 
                 if (verbose == 2)
                 {
-                    output = Tools.GetProgressString(b * batchSize + samples, totalTrainingSamples);
+                    output = Tools::GetProgressString(b * batchSize + samples, totalTrainingSamples);
                     Console.Write(output);
                     Console.Write(new string('\b', output.Length));
                 }
@@ -256,7 +274,7 @@ namespace Neuro
 
             if (verbose == 2)
             {
-                output = Tools.GetProgressString(totalTrainingSamples, totalTrainingSamples);
+                output = Tools::GetProgressString(totalTrainingSamples, totalTrainingSamples);
                 LogLine(output);
             }
 
@@ -285,7 +303,7 @@ namespace Neuro
                 for (int n = 0; n < validationData.Count; ++n)
                 {
                     FeedForward(validationData[n].Inputs);
-                    auto outputs = Model.GetOutputs();
+                    auto outputs = Model->GetOutputs();
                     Tensor[] losses = new Tensor[outputs.Length];
                     for (int i = 0; i < outputLayersCount; ++i)
                     {
@@ -314,10 +332,11 @@ namespace Neuro
             File.WriteAllLines($"{outFilename}_log.txt", LogLines);
     }
 
-    void NeuralNetwork::GradientDescentStep(Data trainingData, int samplesInTrainingData, ref float trainError, ref int trainHits)
+	//////////////////////////////////////////////////////////////////////////
+    void NeuralNetwork::GradientDescentStep(const Data& trainingData, int samplesInTrainingData, float& trainError, int& trainHits)
     {
         FeedForward(trainingData.Inputs);
-        auto outputs = Model.GetOutputs();
+        auto outputs = Model->GetOutputs();
         Tensor[] losses = new Tensor[outputs.Length];
         for (int i = 0; i < outputs.Length; ++i)
         {
@@ -331,15 +350,29 @@ namespace Neuro
         Optimizer.Step(GetParametersAndGradients(), samplesInTrainingData);
     }
 
+	//////////////////////////////////////////////////////////////////////////
     void NeuralNetwork::LogLine(string text)
     {
         LogLines.Add(text);
         Console.WriteLine(text);
     }
 
-    std::string NeuralNetwork::Summary()
+	//////////////////////////////////////////////////////////////////////////
+    string NeuralNetwork::Summary()
     {
-        return Model.Summary();
+        return Model->Summary();
     }
+
+	//////////////////////////////////////////////////////////////////////////
+	void NeuralNetwork::SaveStateXml(string filename /*= ""*/)
+	{
+		Model->SaveStateXml(filename.Length == 0 ? $"{FilePrefix}.xml" : filename);
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	void NeuralNetwork::LoadStateXml(string filename /*= ""*/)
+	{
+		Model->LoadStateXml(filename.Length == 0 ? $"{FilePrefix}.xml" : filename);
+	}
 
 }

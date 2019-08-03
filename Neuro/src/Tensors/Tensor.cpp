@@ -8,11 +8,17 @@ namespace Neuro
 {
     using namespace std;
 
+	TensorOpCpu* Tensor::g_OpCpu = new TensorOpCpu();
+
 	//////////////////////////////////////////////////////////////////////////
 	Tensor::Tensor()
 	{
 		CurrentLocation = ELocation::Host;
-		SetOpMode(EOpMode::CPU);
+
+		if (g_DefaultOpCpu == nullptr)
+			g_DefaultOpCpu = g_OpCpu;
+
+		Op = g_DefaultOpCpu;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -76,20 +82,15 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
+	void Tensor::SetDefaultOpMode(EOpMode mode)
+	{
+		g_DefaultOpCpu = GetOpMode(mode);
+	}
+
+	//////////////////////////////////////////////////////////////////////////
 	void Tensor::SetOpMode(EOpMode mode)
 	{
-		switch (mode)
-		{
-		case EOpMode::CPU:
-			Op = (g_OpCpu ? g_OpCpu : g_OpCpu = new TensorOpCpu());
-			return;
-		/*case EOpMode.MultiCPU:
-			Op = new TensorOpMultiCpu();
-			return;
-		case EOpMode.GPU:
-			Op = new TensorOpGpu();
-			return;*/
-		}
+		Op = GetOpMode(mode);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -631,14 +632,14 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Normalized(Tensor& result)
+	void Tensor::Normalized(Tensor& result) const
 	{
 		float sum = Sum();
         Map([&](float x) { return x / sum; }, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	int Tensor::ArgMax(int batch /*= -1*/)
+	int Tensor::ArgMax(int batch) const
 	{
 		int maxIndex;
 		GetMaxData(batch, maxIndex);
@@ -646,7 +647,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::ArgMaxPerBatch()
+	Tensor Tensor::ArgMaxPerBatch() const
 	{
 		Tensor result(Shape(1, 1, 1, m_Shape.BatchSize()));
 		for (int n = 0; n < BatchSize(); ++n)
@@ -1044,7 +1045,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::EluGradient(Tensor output, Tensor outputGradient, float alpha, Tensor& result) const
+	void Tensor::EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& result) const
 	{
 		Op->EluGradient(output, outputGradient, alpha, result);
 	}
@@ -1056,7 +1057,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::SoftmaxGradient(Tensor output, Tensor outputGradient, Tensor& result) const
+	void Tensor::SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
 	{
 		Op->SoftmaxGradient(output, outputGradient, result);
 	}
@@ -1087,5 +1088,23 @@ namespace Neuro
     {
         CurrentLocation = ELocation::Host;
     }
+
+	//////////////////////////////////////////////////////////////////////////
+	Neuro::TensorOpCpu* Tensor::GetOpMode(EOpMode mode)
+	{
+		switch (mode)
+		{
+		case EOpMode::CPU:
+			return g_OpCpu;
+		/*case EOpMode.MultiCPU:
+			Op = new TensorOpMultiCpu();
+			return;
+		case EOpMode.GPU:
+			Op = new TensorOpGpu();
+			return;*/
+		}
+
+		return nullptr;
+	}
 }
 

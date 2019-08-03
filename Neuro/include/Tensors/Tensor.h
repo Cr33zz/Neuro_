@@ -51,6 +51,7 @@ namespace Neuro
         Tensor(const Tensor& t);
         Tensor(string bmpFile, bool grayScale);
 
+		static void SetDefaultOpMode(EOpMode mode);
         void SetOpMode(EOpMode mode);
 
         int Width() const { return m_Shape.Width(); };
@@ -149,10 +150,10 @@ namespace Neuro
         static void MergeSumGradient(Tensor output, const vector<Tensor>& inputs, Tensor outputGradient, vector<Tensor>& results);
         static void MergeAvgGradient(Tensor output, const vector<Tensor>& inputs, Tensor outputGradient, vector<Tensor>& results);
 
-        void Normalized(Tensor& result);
+        void Normalized(Tensor& result) const;
         // ArgMax will return local index inside given batch if batch is not -1
-        int ArgMax(int batch = -1);
-        Tensor ArgMaxPerBatch();
+        int ArgMax(int batch = -1) const;
+        Tensor ArgMaxPerBatch() const;
         Tensor Transposed() const;
         void Transpose(Tensor& result) const;
 
@@ -237,9 +238,9 @@ namespace Neuro
         bool Equals(const Tensor& other, float epsilon = 0.00001f) const;
         float GetMaxData(int batch, int& maxIndex) const;
         void Elu(float alpha, Tensor& result) const;
-        void EluGradient(Tensor output, Tensor outputGradient, float alpha, Tensor& result) const;
+        void EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& result) const;
         void Softmax(Tensor& result) const;
-        void SoftmaxGradient(Tensor output, Tensor outputGradient, Tensor& result) const;
+        void SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& result) const;
 		const Shape& GetShape() const { return m_Shape; }
 
         struct GPUData
@@ -269,6 +270,9 @@ namespace Neuro
         vector<float> Values;
 		Shape m_Shape;
 
+		static TensorOpCpu* GetOpMode(EOpMode mode);
+
+		static TensorOpCpu* g_DefaultOpCpu;
 		static TensorOpCpu* g_OpCpu;
 		static Random g_Rng;
 	};

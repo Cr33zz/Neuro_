@@ -15,8 +15,8 @@ namespace Neuro
 	int Tools::AccBinaryClassificationEquality(const Tensor& target, const Tensor& output)
 	{
 		int hits = 0;
-		for (int n = 0; n < output.BatchSize; ++n)
-			hits += target(0, 0, 0, n).Equals(roundf(output(0, 0, 0, n))) ? 1 : 0;
+		for (int n = 0; n < output.BatchSize(); ++n)
+			hits += target(0, 0, 0, n) == roundf(output(0, 0, 0, n)) ? 1 : 0;
 		return hits;
 	}
 
@@ -24,8 +24,8 @@ namespace Neuro
 	int Tools::AccCategoricalClassificationEquality(const Tensor& target, const Tensor& output)
 	{
 		int hits = 0;
-		for (int n = 0; n < output.BatchSize; ++n)
-			hits += target.ArgMax(n).Equals(output.ArgMax(n)) ? 1 : 0;
+		for (int n = 0; n < output.BatchSize(); ++n)
+			hits += target.ArgMax(n) == output.ArgMax(n) ? 1 : 0;
 		return hits;
 	}
 
@@ -33,5 +33,11 @@ namespace Neuro
 	float Tools::Clip(float value, float min, float max)
 	{
 		return value < min ? min : (value > max ? max : value);
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	int Tools::Sign(float value)
+	{
+		return value < 0 ? -1 : (value > 0 ? 1 : 0);
 	}
 }

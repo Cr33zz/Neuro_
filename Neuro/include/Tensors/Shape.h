@@ -30,6 +30,11 @@ namespace Neuro
 			return Width() == other.Width() && Height() == other.Height() && Depth() == other.Depth();
 		}
 
+		bool operator!=(const Shape& other) const
+		{
+			return !(*this == other);
+		}
+
         static Shape From(const vector<int>& dimensions)
         {
             return From(dimensions.data(), (int)dimensions.size());
