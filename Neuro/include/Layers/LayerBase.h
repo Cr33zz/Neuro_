@@ -19,8 +19,8 @@ namespace Neuro
 	public:
 		vector<Shape> InputShapes;
         const Shape& InputShape() const { return InputShapes[0]; }
-		vector<Tensor> Inputs;
-        Tensor& Input() { return Inputs[0]; }
+		vector<const Tensor*> Inputs;
+        const Tensor* Input() { return Inputs[0]; }
 		vector<Tensor> InputsGradient;
         Tensor& InputGradient() { return InputsGradient[0]; }
 		Tensor Output;
@@ -36,8 +36,8 @@ namespace Neuro
 
 		virtual void CopyParametersTo(LayerBase& target, float tau = 0);
 
-		Tensor FeedForward(const Tensor& input);
-		Tensor FeedForward(const vector<Tensor>& inputs);
+		const Tensor* FeedForward(const Tensor* input);
+		const Tensor* FeedForward(const vector<const Tensor*>& inputs);
 		vector<Tensor>& BackProp(Tensor& outputGradient);
 
 		virtual int GetParamsNum();
@@ -52,13 +52,13 @@ namespace Neuro
         // Back propagation: error gradients (for its outputs) -> |learning| -> error gradients (for predecessing layer outputs) and internal parameters deltas
         // These error gradients are always of the same size as respective outputs and are saying now much each output
         // contributed to the final error)
-        LayerBase(LayerBase* inputLayer, const Shape& outputShape, ActivationFunc* activation = nullptr);
-		LayerBase(const vector<LayerBase*>& inputLayers, const Shape& outputShape, ActivationFunc* activation = nullptr);
+        LayerBase(LayerBase* inputLayer, const Shape& outputShape, ActivationFunc* activation = nullptr, const string& name = "");
+		LayerBase(const vector<LayerBase*>& inputLayers, const Shape& outputShape, ActivationFunc* activation = nullptr, const string& name = "");
         // This constructor should only be used for input layer
-        LayerBase(const Shape& inputShape, const Shape& outputShape, ActivationFunc* activation = nullptr);
+        LayerBase(const Shape& inputShape, const Shape& outputShape, ActivationFunc* activation = nullptr, const string& name = "");
         // This constructor should only be used for input layer
-        LayerBase(const vector<Shape>& inputShapes, const Shape& outputShape, ActivationFunc* activation = nullptr);
-		LayerBase(const Shape& outputShape, ActivationFunc* activation = nullptr);
+        LayerBase(const vector<Shape>& inputShapes, const Shape& outputShape, ActivationFunc* activation = nullptr, const string& name = "");
+		LayerBase(const Shape& outputShape, ActivationFunc* activation = nullptr, const string& name = "");
         // This constructor exists only for cloning purposes
         LayerBase();
 
@@ -72,7 +72,7 @@ namespace Neuro
         // - if there is activation function apply derivative of that function to the errors computed by previous layer Errors.MultElementWise(Output.Map(x => ActivationF(x, true)));
         // - update errors in next layer (how much each input contributes to our output errors in relation to our parameters) stored InputDelta
         // - update parameters using error and input
-        virtual void BackPropInternal(Tensor outputGradient) = 0;
+        virtual void BackPropInternal(Tensor& outputGradient) = 0;
 
         //virtual void SerializeParameters(XmlElement elem) {}
         //virtual void DeserializeParameters(XmlElement elem) {}

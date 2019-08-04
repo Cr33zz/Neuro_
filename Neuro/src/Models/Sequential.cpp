@@ -16,12 +16,12 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Sequential::FeedForward(const vector<Tensor>& inputs)
+	void Sequential::FeedForward(const tensor_ptr_vec_t& inputs)
 	{
 		//if (inputs.size() > 1) throw new Exception("Only single input is allowed for sequential model.");
 
 		for (int l = 0; l < (int)Layers.size(); ++l)
-			Layers[l]->FeedForward(l == 0 ? inputs[0] : Layers[l - 1]->Output);
+			Layers[l]->FeedForward(l == 0 ? inputs[0] : &(Layers[l - 1]->Output));
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -35,10 +35,10 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	/*const vector<Tensor>& Sequential::GetOutputs() const
+	tensor_ptr_vec_t Sequential::GetOutputs() const
 	{
-		return vector<Tensor>(&GetLastLayer()->Output, &GetLastLayer()->Output);
-	}*/
+		return { &(GetLastLayer()->Output) };
+	}
 
 	//////////////////////////////////////////////////////////////////////////
 	const std::vector<LayerBase*>& Sequential::GetOutputLayers() const
@@ -70,7 +70,7 @@ namespace Neuro
 		for (auto layer : Layers)
 		{
 			totalParams += layer->GetParamsNum();
-			ss << setw(29) << layer->Name << " (" << typeid(layer).name() << ")" << setw(26) << layer->OutputShape.Width() << ", " << layer->OutputShape.Height() << ", " << layer->OutputShape.Depth() << layer->GetParamsNum() << "\n";
+			ss << setw(29) << layer->Name << " (" << typeid(layer).name() << ")" << setw(26) << "(" << layer->OutputShape.Width() << ", " << layer->OutputShape.Height() << ", " << layer->OutputShape.Depth() << ")" << setw(13) << layer->GetParamsNum() << "\n";
 			ss << "_________________________________________________________________\n";
 		}
 

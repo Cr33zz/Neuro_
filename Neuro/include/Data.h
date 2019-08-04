@@ -1,28 +1,29 @@
 ﻿#pragma once
 
-#include <vector>
+#include "Types.h"
 #include "Tensors/Tensor.h"
 
 namespace Neuro
 {
 	using namespace std;
 
+	// Represents single input and corresponding output
     struct Data
     {
-        Data(const vector<Tensor>& inputs, const vector<Tensor>& outputs)
+        Data(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs)
 			: Inputs(inputs), Outputs(outputs)
         {
         }
 
-        Data(Tensor input, Tensor output)
+        Data(const Tensor* input, const Tensor* output)
 			: Inputs(&input, &input), Outputs(&output, &output)
         {
         }
 
-        const vector<Tensor> Inputs;
-		const vector<Tensor> Outputs;
+        const Tensor* Input() const { return Inputs[0]; }
+        const Tensor* Output() const { return Outputs[0]; }
 
-        const Tensor& Input() const { return Inputs[0]; }
-        const Tensor& Output() const { return Outputs[0]; }
+		tensor_ptr_vec_t Inputs;
+		tensor_ptr_vec_t Outputs;
 	};
 }

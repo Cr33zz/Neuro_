@@ -1,5 +1,10 @@
-﻿#include "NeuralNetwork.h"
+﻿#include <ostream>
+
+#include "NeuralNetwork.h"
 #include "Models/ModelBase.h"
+#include "Layers/LayerBase.h"
+#include "Optimizers/OptimizerBase.h"
+#include "Loss.h"
 #include "Tools.h"
 
 namespace Neuro
@@ -7,7 +12,7 @@ namespace Neuro
     bool NeuralNetwork::DebugMode = false;
 
     //////////////////////////////////////////////////////////////////////////
-    NeuralNetwork::NeuralNetwork(string name, int seed /*= 0*/)
+    NeuralNetwork::NeuralNetwork(const string& name, int seed)
     {
         Name = name;
         if (seed > 0)
@@ -18,25 +23,47 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
+	Neuro::NeuralNetwork* NeuralNetwork::Clone()
+	{
+		auto clone = new NeuralNetwork(Name, Seed);
+		clone->Model = Model->Clone();
+		clone->Optimizer = Optimizer;
+		clone->LossFuncs = LossFuncs;
+		return clone;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	void NeuralNetwork::SetModel(ModelBase* model)
+	{
+		Model = model;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
     void NeuralNetwork::ForceInitLayers()
     {
         for(auto layer : Model->GetLayers())
-            layer.Init();
+            layer->Init();
     }
 
 	//////////////////////////////////////////////////////////////////////////
     void NeuralNetwork::CopyParametersTo(NeuralNetwork& target)
     {
-        for(auto layersPair : Model->GetLayers().Zip(target.Model->GetLayers(), (l1, l2) = > new [] {l1, l2}))
-            layersPair[0].CopyParametersTo(layersPair[1]);
+		auto& layers = Model->GetLayers();
+		auto& targetLayers = target.Model->GetLayers();
+
+		for (int i = 0; i < layers.size(); ++i)
+			layers[i]->CopyParametersTo(*targetLayers[i]);
     }
 
 	//////////////////////////////////////////////////////////////////////////
     void NeuralNetwork::SoftCopyParametersTo(NeuralNetwork& target, float tau)
     {
-        if (tau > 1 || tau <= 0) throw new Exception("Tau has to be a value from range (0, 1>.");
-        foreach(auto layersPair in Model->GetLayers().Zip(target.Model->GetLayers(), (l1, l2) = > new[] { l1, l2 }))
-            layersPair[0].CopyParametersTo(layersPair[1], tau);
+        //if (tau > 1 || tau <= 0) throw new Exception("Tau has to be a value from range (0, 1>.");
+		auto& layers = Model->GetLayers();
+		auto& targetLayers = target.Model->GetLayers();
+
+		for (int i = 0; i < layers.size(); ++i)
+			layers[i]->CopyParametersTo(*targetLayers[i], tau);
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -46,33 +73,33 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-    const vector<Tensor>& NeuralNetwork::Predict(const vector<Tensor>& inputs)
+	tensor_ptr_vec_t NeuralNetwork::Predict(const tensor_ptr_vec_t& inputs)
     {
         Model->FeedForward(inputs);
         return Model->GetOutputs();
     }
 
 	//////////////////////////////////////////////////////////////////////////
-    const std::vector<Tensor>& NeuralNetwork::Predict(const Tensor& input)
+    tensor_ptr_vec_t NeuralNetwork::Predict(const Tensor* input)
     {
-        Model->FeedForward(new[] { input });
+		Model->FeedForward({ input });
         return Model->GetOutputs();
     }
 
 	//////////////////////////////////////////////////////////////////////////
-    void NeuralNetwork::FeedForward(const vector<Tensor>& inputs)
+    void NeuralNetwork::FeedForward(const tensor_ptr_vec_t& inputs)
     {
         Model->FeedForward(inputs);
     }
 
 	//////////////////////////////////////////////////////////////////////////
-    std::vector<ParametersAndGradients> NeuralNetwork::GetParametersAndGradients()
+    vector<ParametersAndGradients> NeuralNetwork::GetParametersAndGradients()
     {
         return Model->GetParametersAndGradients();
     }
 
 	//////////////////////////////////////////////////////////////////////////
-    void NeuralNetwork::BackProp(const vector<Tensor>& deltas)
+    void NeuralNetwork::BackProp(vector<Tensor>& deltas)
     {
         Model->BackProp(deltas);
     }
@@ -83,8 +110,8 @@ namespace Neuro
         Optimizer = optimizer;
         Model->Optimize();
 
-        LossFuncs = new LossFunc[Model->GetOutputLayersCount()];
-        for (int i = 0; i < LossFuncs.Length; ++i)
+        LossFuncs.resize(Model->GetOutputLayersCount());
+        for (int i = 0; i < (int)LossFuncs.size(); ++i)
             LossFuncs[i] = loss;
     }
 
@@ -95,67 +122,67 @@ namespace Neuro
         Model->Optimize();
 
 #ifdef VALIDATION_ENABLED
-        if (lossDict.Count != Model->GetOutputLayersCount()) throw new Exception($"Mismatched number of loss functions ({lossDict.Count}) and output layers ({Model->GetOutputLayersCount()})!");
+        //if (lossDict.size() != Model->GetOutputLayersCount()) throw new Exception($"Mismatched number of loss functions ({lossDict.Count}) and output layers ({Model->GetOutputLayersCount()})!");
 #endif
 
-        LossFuncs = new LossFunc[Model->GetOutputLayersCount()];
+        LossFuncs.resize(Model->GetOutputLayersCount());
         int i = 0;
-        foreach(auto outLayer in Model->GetOutputLayers())
+        for (auto outLayer : Model->GetOutputLayers())
         {
-            LossFuncs[i++] = lossDict[outLayer.Name];
+            LossFuncs[i++] = lossDict[outLayer->Name];
         }
     }
 
 	//////////////////////////////////////////////////////////////////////////
-    void NeuralNetwork::FitBatched(const vector<Tensor>& inputs, const vector<Tensor>& outputs, int epochs, int verbose, Track trackFlags, bool shuffle)
+	void NeuralNetwork::FitBatched(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, int epochs, int verbose, Track trackFlags, bool shuffle)
     {
-        List<Data> trainingData = new List<Data>();
-        int batchSize = inputs[0].BatchSize;
+        vector<Data> trainingData;
+        int batchSize = inputs[0]->BatchSize();
 
-        Tensor[] inp = new Tensor[inputs.Count];
-        for (int i = 0; i < inputs.Count; ++i)
-        {
-#ifdef VALIDATION_ENABLED
-            if (inputs[i].BatchSize != batchSize) throw new Exception($"Tensor for input {i} has invalid batch size {inputs[i].BatchSize} expected {batchSize}!");
-#endif
-            inp[i] = inputs[i];
-        }
+//        Tensor[] inp = new Tensor[inputs.Count];
+//        for (int i = 0; i < inputs.Count; ++i)
+//        {
+//#ifdef VALIDATION_ENABLED
+//            if (inputs[i].BatchSize != batchSize) throw new Exception($"Tensor for input {i} has invalid batch size {inputs[i].BatchSize} expected {batchSize}!");
+//#endif
+//            inp[i] = inputs[i];
+//        }
+//
+//        Tensor[] outp = new Tensor[outputs.Count];
+//        for (int i = 0; i < outputs.Count; ++i)
+//        {
+//#ifdef VALIDATION_ENABLED
+//            if (outputs[i].BatchSize != batchSize) throw new Exception($"Tensor for output {i} has invalid batch size {outputs[i].BatchSize} expected {batchSize}!");
+//#endif
+//            outp[i] = outputs[i];
+//        }
 
-        Tensor[] outp = new Tensor[outputs.Count];
-        for (int i = 0; i < outputs.Count; ++i)
-        {
-#ifdef VALIDATION_ENABLED
-            if (outputs[i].BatchSize != batchSize) throw new Exception($"Tensor for output {i} has invalid batch size {outputs[i].BatchSize} expected {batchSize}!");
-#endif
-            outp[i] = outputs[i];
-        }
+        trainingData.push_back(Data(inputs, outputs));
 
-        trainingData.Add(new Data(inp, outp));
-
-        Fit(trainingData, inputs[0].BatchSize, epochs, null, verbose, trackFlags, shuffle);
+        Fit(trainingData, inputs[0]->BatchSize(), epochs, nullptr, verbose, trackFlags, shuffle);
     }
 
 	//////////////////////////////////////////////////////////////////////////
-    void NeuralNetwork::FitBatched(const Tensor& input, const Tensor& output, int epochs, int verbose, Track trackFlags, bool shuffle)
+    void NeuralNetwork::FitBatched(const Tensor* input, const Tensor* output, int epochs, int verbose, Track trackFlags, bool shuffle)
     {
-        FitBatched(new List<Tensor>{ input }, new List<Tensor>{ output }, epochs, verbose, trackFlags, shuffle);
+        FitBatched({ &input }, { &output }, epochs, verbose, trackFlags, shuffle);
     }
 
 	//////////////////////////////////////////////////////////////////////////
-    void NeuralNetwork::Fit(const vector<vector<Tensor>>& inputs, const vector<vector<Tensor>>& outputs, int batchSize, int epochs, int verbose, Track trackFlags, bool shuffle)
+	void NeuralNetwork::Fit(const vector<tensor_ptr_vec_t>& inputs, const vector<tensor_ptr_vec_t>& outputs, int batchSize, int epochs, int verbose, Track trackFlags, bool shuffle)
     {
-        int numberOfTensors = inputs[0].Length; // we treat first input tensors list as a baseline
+        int numberOfTensors = inputs[0].size(); // we treat first input tensors list as a baseline
 #ifdef VALIDATION_ENABLED
-        for (int i = 0; i < inputs.Count; ++i)
+        /*for (int i = 0; i < inputs.Count; ++i)
             if (inputs[i].Length != numberOfTensors) throw new Exception($"Invalid number of tensors for input {i} has {inputs[i].Length} expected {numberOfTensors}!");
         for (int i = 0; i < outputs.Count; ++i)
-            if (outputs[i].Length != numberOfTensors) throw new Exception($"Invalid number of tensors for output {i} has {outputs[i].Length} expected {numberOfTensors}!");
+            if (outputs[i].Length != numberOfTensors) throw new Exception($"Invalid number of tensors for output {i} has {outputs[i].Length} expected {numberOfTensors}!");*/
 #endif
 
-        List<Data> trainingData = new List<Data>();
+        vector<Data> trainingData;
         for (int n = 0; n < numberOfTensors; ++n)
         {
-            Tensor[] inp = new Tensor[inputs.Count];
+            /*Tensor[] inp = new Tensor[inputs.Count];
             for (int i = 0; i < inputs.Count; ++i)
             {
 #ifdef VALIDATION_ENABLED
@@ -171,24 +198,25 @@ namespace Neuro
                 if (outputs[i][n].BatchSize != 1) throw new Exception($"Tensor at index {n} for output {i} has multiple batches in it, this is not supported!");
 #endif
                 outp[i] = outputs[i][n];
-            }
-
-            trainingData.Add(new Data(inp, outp));
+            }*/
         }
 
-        Fit(trainingData, batchSize, epochs, null, verbose, trackFlags, shuffle);
+		for (int i = 0; i < inputs.size(); ++i)
+			trainingData.push_back(Data(inputs[i], outputs[i]));
+
+        Fit(trainingData, batchSize, epochs, nullptr, verbose, trackFlags, shuffle);
     }
 
 	//////////////////////////////////////////////////////////////////////////
-    void NeuralNetwork::Fit(Tensor[] inputs, Tensor[] outputs, int batchSize /*= -1*/, int epochs /*= 1*/, int verbose /*= 1*/, Track trackFlags /*= Track.TrainError | Track.TestAccuracy*/, bool shuffle /*= true*/)
+    void NeuralNetwork::Fit(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, int batchSize, int epochs, int verbose, Track trackFlags, bool shuffle)
     {
-        Fit(new List<Tensor[]>{ inputs }, new List<Tensor[]>{ outputs }, batchSize, epochs, verbose, trackFlags, shuffle);
+        Fit({ inputs }, { outputs }, batchSize, epochs, verbose, trackFlags, shuffle);
     }
 
 	//////////////////////////////////////////////////////////////////////////
-    void NeuralNetwork::Fit(List<Data> trainingData, int batchSize /*= -1*/, int epochs /*= 1*/, List<Data> validationData /*= null*/, int verbose /*= 1*/, Track trackFlags /*= Track.TrainError | Track.TestAccuracy*/, bool shuffle /*= true*/)
+    void NeuralNetwork::Fit(const vector<Data>& trainingData, int batchSize, int epochs, const vector<Data>* validationData, int verbose, Track trackFlags, bool shuffle)
     {
-        int inputsBatchSize = trainingData[0].Inputs[0].BatchSize;
+        int inputsBatchSize = trainingData[0].Inputs[0]->BatchSize();
         bool trainingDataAlreadyBatched = inputsBatchSize > 1;
 
 #ifdef VALIDATION_ENABLED
@@ -201,7 +229,7 @@ namespace Neuro
 #endif
 
         if (batchSize < 0)
-            batchSize = trainingDataAlreadyBatched ? trainingData[0].Inputs[0].BatchSize : trainingData.Count;
+            batchSize = trainingDataAlreadyBatched ? trainingData[0].Inputs[0]->BatchSize() : trainingData.size();
 
         string outFilename = $"{FilePrefix}_training_data_{Optimizer.GetType().Name.ToLower()}_b{batchSize}{(Seed > 0 ? ("_seed" + Seed) : "")}_{Tensor.CurrentOpMode}";
         ChartGenerator chartGen = null;
@@ -243,13 +271,13 @@ namespace Neuro
             string output;
 
             if (verbose > 0)
-                LogLine($"Epoch {e}/{epochs}");
+                LogLine("Epoch " + to_string(e) + "/" + to_string(epochs));
 
             // no point shuffling stuff when we have single batch
             if (batchesNum > 1 && shuffle)
                 trainingData.Shuffle();
 
-            List<Data> batchedTrainingData = trainingDataAlreadyBatched ? trainingData : Tools::MergeData(trainingData, batchSize);
+            vector<Data> batchedTrainingData = trainingDataAlreadyBatched ? trainingData : Tools::MergeData(trainingData, batchSize);
 
             float trainTotalError = 0;
             int trainHits = 0;
@@ -337,24 +365,25 @@ namespace Neuro
     {
         FeedForward(trainingData.Inputs);
         auto outputs = Model->GetOutputs();
-        Tensor[] losses = new Tensor[outputs.Length];
-        for (int i = 0; i < outputs.Length; ++i)
+        vector<Tensor> losses;
+        for (int i = 0; i < (int)outputs.size(); ++i)
         {
-            losses[i] = new Tensor(outputs[i].Shape);
-            LossFuncs[i].Compute(trainingData.Outputs[i], outputs[i], losses[i]);
-            trainError += losses[i].Sum() / outputs[i].BatchLength;
-            trainHits += AccuracyFuncs != null ? AccuracyFuncs[i](trainingData.Outputs[i], outputs[i]) : 0;
-            LossFuncs[i].Derivative(trainingData.Outputs[i], outputs[i], losses[i]);
+            losses.push_back(Tensor(outputs[i]->GetShape()));
+            LossFuncs[i]->Compute(*trainingData.Outputs[i], *outputs[i], losses[i]);
+            trainError += losses[i].Sum() / outputs[i]->BatchLength();
+            trainHits += AccuracyFuncs ? AccuracyFuncs[i](*trainingData.Outputs[i], *outputs[i]) : 0;
+            LossFuncs[i]->Derivative(*trainingData.Outputs[i], *outputs[i], losses[i]);
         }
         BackProp(losses);
-        Optimizer.Step(GetParametersAndGradients(), samplesInTrainingData);
+		auto paramsAndGrad = GetParametersAndGradients();
+        Optimizer->Step(paramsAndGrad, samplesInTrainingData);
     }
 
 	//////////////////////////////////////////////////////////////////////////
-    void NeuralNetwork::LogLine(string text)
+    void NeuralNetwork::LogLine(const string& text)
     {
-        LogLines.Add(text);
-        Console.WriteLine(text);
+        LogLines.push_back(text);
+        cout << text << "\n";
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -364,15 +393,15 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	void NeuralNetwork::SaveStateXml(string filename /*= ""*/)
+	void NeuralNetwork::SaveStateXml(const string& filename)
 	{
-		Model->SaveStateXml(filename.Length == 0 ? $"{FilePrefix}.xml" : filename);
+		Model->SaveStateXml(filename.empty() ? FilePrefix() + ".xml" : filename);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void NeuralNetwork::LoadStateXml(string filename /*= ""*/)
+	void NeuralNetwork::LoadStateXml(const string& filename)
 	{
-		Model->LoadStateXml(filename.Length == 0 ? $"{FilePrefix}.xml" : filename);
+		Model->LoadStateXml(filename.empty() ? FilePrefix() + ".xml" : filename);
 	}
 
 }

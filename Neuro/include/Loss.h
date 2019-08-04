@@ -21,21 +21,21 @@ namespace Neuro
 	};
 
     // This function is also known as binary cross entropy and can be used for any sigmoided or softmaxed output (doesn't have to be probability distribution)
-    class CrossEntropy : LossFunc
+    class CrossEntropy : public LossFunc
     {
 	public:
         virtual void Compute(const Tensor& targetOutput, const Tensor& output, Tensor& result) override;
         virtual void Derivative(const Tensor& targetOutput, const Tensor& output, Tensor& result) override;
 	};
 
-    class MeanSquareError : LossFunc
+    class MeanSquareError : public LossFunc
     {
 	public:
         virtual void Compute(const Tensor& targetOutput, const Tensor& output, Tensor& result) override;
         virtual void Derivative(const Tensor& targetOutput, const Tensor& output, Tensor& result) override;
 	};
 
-    class Huber : LossFunc
+    class Huber : public LossFunc
     {
 	public:
         Huber(float delta);
@@ -46,12 +46,4 @@ namespace Neuro
 	private:
         float Delta;
 	};
-
-	namespace Loss
-	{
-		static CategoricalCrossEntropy CategoricalCrossEntropyLoss;
-		static CrossEntropy CrossEntropyLoss;
-		static MeanSquareError MeanSquareErrorLoss;
-		static Huber Huber1Loss(1);
-	}
 }

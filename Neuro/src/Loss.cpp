@@ -62,9 +62,4 @@ namespace Neuro
 	{
 		targetOutput.Map([&](float yTrue, float y) { float a = y - yTrue; return abs(a) <= Delta ? a : (Delta * Tools::Sign(a)); }, output, result);
 	}
-
-	/*CategoricalCrossEntropy Loss::CategoricalCrossEntropyLoss = CategoricalCrossEntropy();
-	CrossEntropy Loss::CrossEntropyLoss = CrossEntropy();
-	MeanSquareError Loss::MeanSquareErrorLoss = MeanSquareError();
-	Huber Loss::Huber1Loss = Huber(1);*/
 }

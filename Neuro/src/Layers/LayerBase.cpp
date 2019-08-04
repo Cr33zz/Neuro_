@@ -7,7 +7,7 @@
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	LayerBase::LayerBase(LayerBase* inputLayer, const Shape& outputShape, ActivationFunc* activation)
+	LayerBase::LayerBase(LayerBase* inputLayer, const Shape& outputShape, ActivationFunc* activation, const string& name)
 		: LayerBase(outputShape, activation)
 	{
 		InputShapes.push_back(inputLayer->OutputShape);
@@ -16,7 +16,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	LayerBase::LayerBase(const vector<LayerBase*>& inputLayers, const Shape& outputShape, ActivationFunc* activation)
+	LayerBase::LayerBase(const vector<LayerBase*>& inputLayers, const Shape& outputShape, ActivationFunc* activation, const string& name)
 		: LayerBase(outputShape, activation)
 	{
 		InputLayers.insert(InputLayers.end(), inputLayers.begin(), inputLayers.end());
@@ -28,25 +28,25 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	LayerBase::LayerBase(const Shape& inputShape, const Shape& outputShape, ActivationFunc* activation)
+	LayerBase::LayerBase(const Shape& inputShape, const Shape& outputShape, ActivationFunc* activation, const string& name)
 		: LayerBase(outputShape, activation)
 	{
 		InputShapes.push_back(inputShape);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	LayerBase::LayerBase(const vector<Shape>& inputShapes, const Shape& outputShape, ActivationFunc* activation)
+	LayerBase::LayerBase(const vector<Shape>& inputShapes, const Shape& outputShape, ActivationFunc* activation, const string& name)
 		: LayerBase(outputShape, activation)
 	{
 		InputShapes = inputShapes;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	LayerBase::LayerBase(const Shape& outputShape, ActivationFunc* activation)
+	LayerBase::LayerBase(const Shape& outputShape, ActivationFunc* activation, const string& name)
 	{
 		OutputShape = outputShape;
 		Activation = activation;
-		Name = GenerateName();
+		Name = name.empty() ? GenerateName() : name;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -74,7 +74,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void LayerBase::CopyParametersTo(const LayerBase& target, float tau /*= 0*/)
+	void LayerBase::CopyParametersTo(LayerBase& target, float tau)
 	{
 		/*if (InputShapes != target.InputShapes || OutputShape != target.OutputShape)
 			throw new Exception("Cannot copy parameters between incompatible layers.");*/
@@ -83,7 +83,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void LayerBase::ExecuteFeedForward()
 	{
-		Shape outShape(OutputShape.Width(), OutputShape.Height(), OutputShape.Depth(), Inputs[0].BatchSize());
+		Shape outShape(OutputShape.Width(), OutputShape.Height(), OutputShape.Depth(), Inputs[0]->BatchSize());
 		// shape comparison is required for cases when last batch has different size
 		if (Output.GetShape() != outShape)
 			Output = Tensor(outShape);
@@ -104,7 +104,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor LayerBase::FeedForward(const Tensor& input)
+	const Tensor* LayerBase::FeedForward(const Tensor* input)
 	{
 		if (!Initialized)
 			Init();
@@ -112,18 +112,18 @@ namespace Neuro
 		Inputs.resize(1);
 		Inputs[0] = input;
 		ExecuteFeedForward();
-		return Output;
+		return &Output;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor LayerBase::FeedForward(const vector<Tensor>& inputs)
+	const Tensor* LayerBase::FeedForward(const vector<const Tensor*>& inputs)
 	{
 		if (!Initialized)
 			Init();
 
 		Inputs = inputs;
 		ExecuteFeedForward();
-		return Output;
+		return &Output;
 	}
 
 	//////////////////////////////////////////////////////////////////////////

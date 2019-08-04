@@ -18,13 +18,13 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -44,9 +44,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(ProjectDir)include;$(IncludePath)</IncludePath>
+    <OutDir>$(ProjectDir)lib\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(ProjectDir)include;$(IncludePath)</IncludePath>
+    <OutDir>$(ProjectDir)lib\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -71,15 +73,65 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\Activations.h" />
+    <ClInclude Include="include\Data.h" />
+    <ClInclude Include="include\Initializers\Constant.h" />
+    <ClInclude Include="include\Initializers\GlorotNormal.h" />
+    <ClInclude Include="include\Initializers\GlorotUniform.h" />
+    <ClInclude Include="include\Initializers\InitializerBase.h" />
+    <ClInclude Include="include\Initializers\Normal.h" />
+    <ClInclude Include="include\Initializers\Uniform.h" />
+    <ClInclude Include="include\Initializers\Zeros.h" />
+    <ClInclude Include="include\Layers\Concatenate.h" />
+    <ClInclude Include="include\Layers\Convolution.h" />
+    <ClInclude Include="include\Layers\Dense.h" />
+    <ClInclude Include="include\Layers\Flatten.h" />
+    <ClInclude Include="include\Layers\Input.h" />
+    <ClInclude Include="include\Layers\Lambda.h" />
+    <ClInclude Include="include\Layers\LayerBase.h" />
+    <ClInclude Include="include\Layers\Merge.h" />
+    <ClInclude Include="include\Layers\Pooling.h" />
+    <ClInclude Include="include\Loss.h" />
+    <ClInclude Include="include\Models\Flow.h" />
+    <ClInclude Include="include\Models\ModelBase.h" />
+    <ClInclude Include="include\Models\Sequential.h" />
     <ClInclude Include="include\NeuralNetwork.h" />
+    <ClInclude Include="include\Optimizers\Adam.h" />
+    <ClInclude Include="include\Optimizers\OptimizerBase.h" />
+    <ClInclude Include="include\Optimizers\SGD.h" />
+    <ClInclude Include="include\ParametersAndGradients.h" />
     <ClInclude Include="include\Random.h" />
     <ClInclude Include="include\Tensors\Shape.h" />
     <ClInclude Include="include\Tensors\Tensor.h" />
     <ClInclude Include="include\Tensors\TensorOpCpu.h" />
     <ClInclude Include="include\Tools.h" />
+    <ClInclude Include="include\Types.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Activations.cpp" />
+    <ClCompile Include="src\Initializers\Constant.cpp" />
+    <ClCompile Include="src\Initializers\GlorotNormal.cpp" />
+    <ClCompile Include="src\Initializers\GlorotUniform.cpp" />
+    <ClCompile Include="src\Initializers\Normal.cpp" />
+    <ClCompile Include="src\Initializers\Uniform.cpp" />
+    <ClCompile Include="src\Initializers\Zeros.cpp" />
+    <ClCompile Include="src\Layers\Concatenate.cpp" />
+    <ClCompile Include="src\Layers\Convolution.cpp" />
+    <ClCompile Include="src\Layers\Dense.cpp" />
+    <ClCompile Include="src\Layers\Flatten.cpp" />
+    <ClCompile Include="src\Layers\Input.cpp" />
+    <ClCompile Include="src\Layers\Lambda.cpp" />
+    <ClCompile Include="src\Layers\LayerBase.cpp" />
+    <ClCompile Include="src\Layers\Merge.cpp" />
+    <ClCompile Include="src\Layers\Pooling.cpp" />
+    <ClCompile Include="src\Loss.cpp" />
+    <ClCompile Include="src\Models\Flow.cpp" />
+    <ClCompile Include="src\Models\ModelBase.cpp" />
+    <ClCompile Include="src\Models\Sequential.cpp" />
     <ClCompile Include="src\NeuralNetwork.cpp" />
+    <ClCompile Include="src\Optimizers\Adam.cpp" />
+    <ClCompile Include="src\Optimizers\OptimizerBase.cpp" />
+    <ClCompile Include="src\Optimizers\SGD.cpp" />
     <ClCompile Include="src\Random.cpp" />
     <ClCompile Include="src\Tensors\Shape.cpp" />
     <ClCompile Include="src\Tensors\Tensor.cpp" />

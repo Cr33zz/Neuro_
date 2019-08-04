@@ -13,6 +13,30 @@
     <Filter Include="src\Tensors">
       <UniqueIdentifier>{b86672a1-082c-4add-b613-6eaf604ba0fc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\Models">
+      <UniqueIdentifier>{36e6a0ae-7332-4283-aafa-0f89e8872503}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\Optimizers">
+      <UniqueIdentifier>{aa45116a-274e-4362-ad93-1e9b7caea157}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\Layers">
+      <UniqueIdentifier>{8e9d7fb2-72bb-4c36-b0fb-4b80de2a7d22}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\Initializers">
+      <UniqueIdentifier>{963b2032-eab7-4e22-b5f5-78ad726a0742}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Models">
+      <UniqueIdentifier>{bf7ffe8a-c463-456b-b2b1-ceeb61fe8ee5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Layers">
+      <UniqueIdentifier>{9a92584b-6073-4f91-87b4-01275615b4d8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Optimizers">
+      <UniqueIdentifier>{1640cdf0-a5f8-4446-8307-f0d465e62e3c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Initializers">
+      <UniqueIdentifier>{7860454d-0713-4690-a0db-3f2702c8e8eb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\NeuralNetwork.h">
@@ -31,6 +55,87 @@
       <Filter>include\Tensors</Filter>
     </ClInclude>
     <ClInclude Include="include\Tools.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Activations.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Data.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Loss.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Optimizers\Adam.h">
+      <Filter>include\Optimizers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Optimizers\OptimizerBase.h">
+      <Filter>include\Optimizers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Optimizers\SGD.h">
+      <Filter>include\Optimizers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Initializers\Constant.h">
+      <Filter>include\Initializers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Initializers\GlorotNormal.h">
+      <Filter>include\Initializers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Initializers\GlorotUniform.h">
+      <Filter>include\Initializers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Initializers\InitializerBase.h">
+      <Filter>include\Initializers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Initializers\Normal.h">
+      <Filter>include\Initializers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Initializers\Uniform.h">
+      <Filter>include\Initializers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Initializers\Zeros.h">
+      <Filter>include\Initializers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Layers\Concatenate.h">
+      <Filter>include\Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Layers\Convolution.h">
+      <Filter>include\Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Layers\Dense.h">
+      <Filter>include\Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Layers\Flatten.h">
+      <Filter>include\Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Layers\Input.h">
+      <Filter>include\Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Layers\Lambda.h">
+      <Filter>include\Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Layers\LayerBase.h">
+      <Filter>include\Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Layers\Merge.h">
+      <Filter>include\Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Layers\Pooling.h">
+      <Filter>include\Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Models\Flow.h">
+      <Filter>include\Models</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Models\ModelBase.h">
+      <Filter>include\Models</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Models\Sequential.h">
+      <Filter>include\Models</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ParametersAndGradients.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Types.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
@@ -52,6 +157,75 @@
     </ClCompile>
     <ClCompile Include="src\Tools.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Loss.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Activations.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Concatenate.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Convolution.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Dense.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Flatten.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Input.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Lambda.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\LayerBase.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Merge.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Pooling.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Models\Flow.cpp">
+      <Filter>src\Models</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Models\ModelBase.cpp">
+      <Filter>src\Models</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Models\Sequential.cpp">
+      <Filter>src\Models</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Optimizers\Adam.cpp">
+      <Filter>src\Optimizers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Optimizers\OptimizerBase.cpp">
+      <Filter>src\Optimizers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Optimizers\SGD.cpp">
+      <Filter>src\Optimizers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Initializers\Constant.cpp">
+      <Filter>src\Initializers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Initializers\GlorotNormal.cpp">
+      <Filter>src\Initializers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Initializers\GlorotUniform.cpp">
+      <Filter>src\Initializers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Initializers\Normal.cpp">
+      <Filter>src\Initializers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Initializers\Uniform.cpp">
+      <Filter>src\Initializers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Initializers\Zeros.cpp">
+      <Filter>src\Initializers</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

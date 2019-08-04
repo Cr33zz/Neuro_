@@ -12,9 +12,9 @@ namespace Neuro
     {
 	public:
         virtual ModelBase* Clone() const override;
-        virtual void FeedForward(const vector<Tensor>& inputs) override;
+        virtual void FeedForward(const tensor_ptr_vec_t& inputs) override;
         virtual void BackProp(vector<Tensor>& deltas) override;
-        //virtual const vector<Tensor>& GetOutputs() const override;
+        virtual tensor_ptr_vec_t GetOutputs() const override;
         virtual const vector<LayerBase*>& GetOutputLayers() const override;
         virtual int GetOutputLayersCount() const override;
         virtual const vector<LayerBase*>& GetLayers() const override;

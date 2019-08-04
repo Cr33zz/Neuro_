@@ -1,16 +1,19 @@
 ﻿#include "Layers/Dense.h"
+#include "Tensors/Tensor.h"
+#include "Initializers/GlorotUniform.h"
+#include "Initializers/Zeros.h"
 
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	Dense::Dense(LayerBase* inputLayer, int outputs, ActivationFunc* activation) 
-		: LayerBase(inputLayer, Shape(1, outputs), activation)
+	Dense::Dense(LayerBase* inputLayer, int outputs, ActivationFunc* activation, const string& name)
+		: LayerBase(inputLayer, Shape(1, outputs), activation, name)
 	{
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Dense::Dense(int inputs, int outputs, ActivationFunc* activation)
-		: LayerBase(Shape(1, inputs), Shape(1, outputs), activation)
+	Dense::Dense(int inputs, int outputs, ActivationFunc* activation, const string& name)
+		: LayerBase(Shape(1, inputs), Shape(1, outputs), activation, name)
 	{
 	}
 
@@ -47,27 +50,34 @@ namespace Neuro
 		WeightsGradient = Tensor(Weights.GetShape());
 		BiasGradient = Tensor(Bias.GetShape());
 
-		KernelInitializer.Init(Weights, InputShape().Length, OutputShape.Length);
+		if (KernelInitializer == nullptr)
+			KernelInitializer = new GlorotUniform();
+		KernelInitializer->Init(Weights, InputShape().Length, OutputShape.Length);
+
 		if (UseBias)
-			BiasInitializer.Init(Bias, InputShape().Length, OutputShape.Length);
+		{
+			if (BiasInitializer == nullptr)
+				BiasInitializer = new Zeros();
+			BiasInitializer->Init(Bias, InputShape().Length, OutputShape.Length);
+		}
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Dense::FeedForwardInternal()
 	{
-		Weights.Mul(Inputs[0], Output);
+		Weights.Mul(*Inputs[0], Output);
 		if (UseBias)
 			Output.Add(Bias, Output);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Dense::BackPropInternal(Tensor outputGradient)
+	void Dense::BackPropInternal(Tensor& outputGradient)
 	{
 		// for explanation watch https://www.youtube.com/watch?v=8H2ODPNxEgA&t=898s
 		// each input is responsible for the output error proportionally to weights it is multiplied by
 		Weights.Transposed().Mul(outputGradient, InputsGradient[0]);
 
-		WeightsGradient.Add(outputGradient.Mul(Inputs[0].Transposed()).SumBatches(), WeightsGradient);
+		WeightsGradient.Add(outputGradient.Mul(Inputs[0]->Transposed()).SumBatches(), WeightsGradient);
 		if (UseBias)
 			BiasGradient.Add(outputGradient.SumBatches(), BiasGradient);
 	}
