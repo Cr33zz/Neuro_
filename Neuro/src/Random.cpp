@@ -10,32 +10,32 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	int Neuro::Random::Next(int max)
+	int Neuro::Random::Next(int max) const
 	{
 		return Next(0, max);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	int Random::Next(int min, int max)
+	int Random::Next(int min, int max) const
 	{
 		uniform_int_distribution<> range(min, max);
 		return range(m_Engine);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	float Random::NextFloat()
+	float Random::NextFloat() const
 	{
 		return NextFloat(0, 1);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	float Random::NextFloat(float max)
+	float Random::NextFloat(float max) const
 	{
 		return NextFloat(0, max);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	float Random::NextFloat(float min, float max)
+	float Random::NextFloat(float min, float max) const
 	{
 		uniform_real_distribution<float> range(min, max);
 		return range(m_Engine);

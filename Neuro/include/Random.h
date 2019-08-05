@@ -9,19 +9,15 @@ namespace Neuro
 	class Random
 	{
 	public:
-		Random(unsigned int seed);
+		Random(unsigned int seed = 0);
 
-		int Next(int max);
-
-		int Next(int min, int max);
-
-		float NextFloat();
-
-		float NextFloat(float max);
-
-		float NextFloat(float min, float max);
+		int Next(int max) const;
+		int Next(int min, int max) const;
+		float NextFloat() const;
+		float NextFloat(float max) const;
+		float NextFloat(float min, float max) const;
 
 	private:
-		mt19937 m_Engine;
+		mutable mt19937 m_Engine;
 	};
 }

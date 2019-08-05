@@ -17,4 +17,5 @@ namespace Neuro
 #endif
 
 	typedef vector<const Tensor*> tensor_ptr_vec_t;	
+	typedef int(*accuracy_func_t)(const Tensor& targetOutput, const Tensor& output);
 }

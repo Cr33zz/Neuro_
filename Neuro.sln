@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Neuro", "Neuro\Neuro.vcxproj", "{913DCDCD-2B3B-4F8B-9C6D-10D7388B0B45}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Neuro.PerfTests", "Neuro.PerfTests\Neuro.PerfTests.vcxproj", "{4D032030-F36D-45AC-B992-6B89C628D746}"
+	ProjectSection(ProjectDependencies) = postProject
+		{913DCDCD-2B3B-4F8B-9C6D-10D7388B0B45} = {913DCDCD-2B3B-4F8B-9C6D-10D7388B0B45}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

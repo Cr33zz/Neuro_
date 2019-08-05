@@ -28,14 +28,12 @@ public:
         net->SetModel(new Flow({ input1 }, { upperStream1, lowerStream1 }));
         net->Optimize(new SGD(0.05f), new MeanSquareError());
 
-		vector<Tensor*> inputs = { new Tensor({ 0, 1 }, new Shape(1, 2)) };
-		vector<Tensor*> outputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
-
-		vector<Data> trainingData = { Data(inputs, outputs) };
+		tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, new Shape(1, 2)) };
+		tensor_ptr_vec_t outputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
 
         auto netClone = net->Clone();
 
-        netClone->Fit(trainingData, 1, 60, nullptr, 2, Track::Nothing, false);
+        netClone->Fit(inputs, outputs, 1, 60, 2, Track::Nothing, false);
 
         //var input1 = new Dense(2, 2, Activation.Sigmoid);
         //var upperStream1 = new Dense(input1, 2, Activation.Sigmoid);
@@ -104,13 +102,13 @@ public:
         net.Model = model;
         net.Optimize(new Adam(), Loss.MeanSquareError);*/
 
-        var timer = new Stopwatch();
+        /*var timer = new Stopwatch();
         timer.Start();
 
         net.Fit(trainingData, -1, 500, null, 0, Track.Nothing);
 
         timer.Stop();
-        Trace.WriteLine($"{Math.Round(timer.ElapsedMilliseconds / 1000.0, 2)} seconds");
+        Trace.WriteLine($"{Math.Round(timer.ElapsedMilliseconds / 1000.0, 2)} seconds");*/
 
         return;
     }

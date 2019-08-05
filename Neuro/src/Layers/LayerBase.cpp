@@ -6,6 +6,8 @@
 
 namespace Neuro
 {
+	map<const char*, int> LayerBase::LayersCountPerType;
+
 	//////////////////////////////////////////////////////////////////////////
 	LayerBase::LayerBase(LayerBase* inputLayer, const Shape& outputShape, ActivationFunc* activation, const string& name)
 		: LayerBase(outputShape, activation)

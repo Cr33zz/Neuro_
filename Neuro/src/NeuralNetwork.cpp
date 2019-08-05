@@ -1,5 +1,7 @@
-﻿#include <iostream>
+﻿#include <algorithm>
+#include <iostream>
 #include <numeric>
+#include <cctype>
 
 #include "NeuralNetwork.h"
 #include "Models/ModelBase.h"
@@ -70,7 +72,9 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
     string NeuralNetwork::FilePrefix() const
     {
-        //get { return Name.ToLower().Replace(" ", "_"); }
+		string lower = ToLower(Name);
+		replace_if(lower.begin(), lower.end(), [](unsigned char c) { return c == ' '; }, '_');
+		return lower;
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -135,20 +139,20 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	void NeuralNetwork::Fit(const tensor_ptr_vec_t& input, const tensor_ptr_vec_t& output, int batchSize /*= -1*/, int epochs /*= 1*/, int verbose /*= 1*/, Track trackFlags /*= Track::TrainError | Track::TestAccuracy*/, bool shuffle /*= true*/)
+	void NeuralNetwork::Fit(const tensor_ptr_vec_t& input, const tensor_ptr_vec_t& output, int batchSize, int epochs, int verbose, int trackFlags, bool shuffle)
 	{
 		Fit({ input }, { output }, batchSize, epochs, nullptr, verbose, trackFlags, shuffle);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void NeuralNetwork::Fit(const vector<tensor_ptr_vec_t>& inputs, const vector<tensor_ptr_vec_t>& outputs, int batchSize /*= -1*/, int epochs /*= 1*/, const tensor_ptr_vec_t* validationData /*= nullptr*/, int verbose /*= 1*/, Track trackFlags /*= Track::TrainError | Track::TestAccuracy*/, bool shuffle /*= true*/)
+	void NeuralNetwork::Fit(const vector<tensor_ptr_vec_t>& inputs, const vector<tensor_ptr_vec_t>& outputs, int batchSize, int epochs, const tensor_ptr_vec_t* validationData, int verbose, int trackFlags, bool shuffle)
 	{
-		int samplesNum = inputs[0].size();
+		int samplesNum = (int)inputs[0].size();
 
 		if (batchSize < 0)
 			batchSize = samplesNum;
 
-		string outFilename = FilePrefix() + "_training_data_" + to_string(typeid(Optimizer).name) + "_b" + to_string(batchSize) + (Seed > 0 ? "(_seed" + to_string(Seed) + ")" : "");
+		string outFilename = FilePrefix() + "_training_data_" + typeid(Optimizer).name() + "_b" + to_string(batchSize) + (Seed > 0 ? "(_seed" + to_string(Seed) + ")" : "");
 		/*ChartGenerator chartGen = null;
 		if (trackFlags != Track.Nothing)
 			chartGen = new ChartGenerator($"{outFilename}", $"{Name}\nloss=[{string.Join(", ", Losses.Select(x => x.GetType().Name))}] optimizer={Optimizer} batch_size={batchSize}\nseed={(Seed > 0 ? Seed.ToString() : "None")}", "Epoch");
@@ -196,7 +200,7 @@ namespace Neuro
 				Shuffle(indices);
 
 			for (int b = 0; b < batchesNum; ++b)
-				copy(indices.begin() + b * batchSize, indices.begin() + min((b + 1) * batchSize, samplesNum), batchesIndices.begin());
+				copy(indices.begin() + b * batchSize, indices.begin() + min((b + 1) * batchSize, samplesNum), batchesIndices[b].begin());
 
 			float trainTotalError = 0;
 			int trainHits = 0;
@@ -212,7 +216,7 @@ namespace Neuro
 
 				if (verbose == 2)
 				{
-					output = GetProgressString(b * batchSize + inputsBatch[0].Length(), samplesNum);
+					output = GetProgressString(b * batchSize + inputsBatch[0]->Length(), samplesNum);
 					cout << output;
 					for (int i = 0; i < output.length(); ++i)
 						cout << '\b';
@@ -522,7 +526,7 @@ namespace Neuro
             losses.push_back(Tensor(modelOutputs[i]->GetShape()));
             LossFuncs[i]->Compute(*outputs[i], *modelOutputs[i], losses[i]);
             trainError += losses[i].Sum() / modelOutputs[i]->BatchLength();
-            trainHits += AccuracyFuncs ? AccuracyFuncs[i](*outputs[i], *modelOutputs[i]) : 0;
+            trainHits += AccuracyFuncs[i] ? AccuracyFuncs[i](*outputs[i], *modelOutputs[i]) : 0;
             LossFuncs[i]->Derivative(*outputs[i], *modelOutputs[i], losses[i]);
         }
         BackProp(losses);
@@ -537,11 +541,12 @@ namespace Neuro
 
 		for (int i = 0; i < (int)inputs.size(); ++i)
 		{
-			result.push_back(new Tensor(Shape(inputs[i][0]->Width(), inputs[i][0]->Height(), inputs[i][0]->Depth(), (int)batchIndices.size())));
-			auto& t = result.back();
+			auto t = new Tensor(Shape(inputs[i][0]->Width(), inputs[i][0]->Height(), inputs[i][0]->Depth(), (int)batchIndices.size()));
 
 			for (int b : batchIndices)
 				inputs[i][b]->CopyBatchTo(0, b, *t);
+
+			result.push_back(t);
 		}
 
 		return result;

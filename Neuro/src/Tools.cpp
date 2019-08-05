@@ -1,12 +1,12 @@
-﻿#include <sstream>
+﻿#include <algorithm>
+#include <iomanip>
+#include <sstream>
 
 #include "Tools.h"
 #include "Tensors/Tensor.h"
 
 namespace Neuro
 {
-	const float _EPSILON = 10e-7f;
-
 	//////////////////////////////////////////////////////////////////////////
 	int AccNone(const Tensor& target, const Tensor& output)
 	{
@@ -52,11 +52,22 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	string GetProgressString(int iteration, int maxIterations, const string& extraStr /*= ""*/, int barLength /*= 30*/)
+	std::string ToLower(const string& str)
 	{
-		int maxIterLen = to_string(maxIterations).length();
+		string result = str;
+
+		for (size_t i = 0; i < str.length(); ++i)
+			result[i] = tolower(str[i]);
+
+		return result;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	string GetProgressString(int iteration, int maxIterations, const string& extraStr, int barLength)
+	{
+		int maxIterLen = (int)to_string(maxIterations).length();
 		float step = maxIterations / (float)barLength;
-		int currStep = (int)min(ceil(iteration / step), barLength);
+		int currStep = min((int)ceil(iteration / step), barLength);
 
 		stringstream ss;
 		ss << setw(maxIterLen) << iteration << "/" << maxIterations << " [";
@@ -68,5 +79,4 @@ namespace Neuro
 		ss << extraStr;
 		return ss.str();
 	}
-
 }

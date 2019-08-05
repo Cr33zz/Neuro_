@@ -7,30 +7,27 @@ namespace Neuro
 {
 	class Tensor;
 
-    static const float _EPSILON;
-
+    static const float _EPSILON = 10e-7f;
     static Random Rng;
 
-    static int AccNone(const Tensor& target, const Tensor& output);
-    static int AccBinaryClassificationEquality(const Tensor& target, const Tensor& output);
-    static int AccCategoricalClassificationEquality(const Tensor& target, const Tensor& output);
+    int AccNone(const Tensor& target, const Tensor& output);
+    int AccBinaryClassificationEquality(const Tensor& target, const Tensor& output);
+    int AccCategoricalClassificationEquality(const Tensor& target, const Tensor& output);
 
-	static void Delete(tensor_ptr_vec_t& tensorsVec);
+	void Delete(tensor_ptr_vec_t& tensorsVec);
 
-    template<typename T> static void Shuffle(vector<T>& list)
+    template<typename T> void Shuffle(vector<T>& list)
     {
-        int n = list.Count;
+        int n = (int)list.size();
         while (n-- > 1)
         {
             int k = Rng.Next(n + 1);
-            T& value = list[k];
-            list[k] = list[n];
-            list[n] = value;
+			swap(list[k], list[n]);
         }
     }
 
-    static float Clip(float value, float min, float max);
-	static int Sign(float value);
+    float Clip(float value, float min, float max);
+	int Sign(float value);
 
     //static List<float> LinSpace(float start, float stop, int num = 50, bool endPoint = true)
     //{
@@ -48,7 +45,9 @@ namespace Neuro
     //    return result;
     //}
 
-    static string GetProgressString(int iteration, int maxIterations, const string& extraStr = "", int barLength = 30);
+	string ToLower(const string& str);
+
+    string GetProgressString(int iteration, int maxIterations, const string& extraStr = "", int barLength = 30);
 
     //static int ReadBigInt32(this BinaryReader br)
     //{

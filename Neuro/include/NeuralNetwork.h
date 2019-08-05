@@ -63,10 +63,10 @@ namespace Neuro
         void Optimize(OptimizerBase* optimizer, LossFunc* loss);
         void Optimize(OptimizerBase* optimizer, map<string, LossFunc*> lossDict);
 
-		void Fit(const tensor_ptr_vec_t& input, const tensor_ptr_vec_t& output, int batchSize = -1, int epochs = 1, int verbose = 1, Track trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
+		void Fit(const tensor_ptr_vec_t& input, const tensor_ptr_vec_t& output, int batchSize = -1, int epochs = 1, int verbose = 1, int trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
 
 		// Training method, when batch size is -1 the whole training set is used for single gradient descent step (in other words, batch size equals to training set size)
-		void Fit(const vector<tensor_ptr_vec_t>& inputs, const vector<tensor_ptr_vec_t>& outputs, int batchSize = -1, int epochs = 1, const tensor_ptr_vec_t* validationData = nullptr, int verbose = 1, Track trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
+		void Fit(const vector<tensor_ptr_vec_t>& inputs, const vector<tensor_ptr_vec_t>& outputs, int batchSize = -1, int epochs = 1, const tensor_ptr_vec_t* validationData = nullptr, int verbose = 1, int trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
 
         // This function expects input and output tensors to be batched already. This batch will be maintained throughout all training epochs!
         //void FitBatched(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, int epochs = 1, int verbose = 1, Track trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
@@ -100,9 +100,8 @@ namespace Neuro
         vector<LossFunc*> LossFuncs;
         OptimizerBase* Optimizer;
         ModelBase* Model;
-        int Seed;
-        typedef int (TAccuracyFunc*)(const Tensor& targetOutput, Tensor& output);
-        vector<TAccuracyFunc> AccuracyFuncs;
+        int Seed;        
+        vector<accuracy_func_t> AccuracyFuncs;
         vector<string> LogLines;
 	};
 }

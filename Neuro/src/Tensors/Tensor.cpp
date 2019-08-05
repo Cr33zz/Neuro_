@@ -9,6 +9,7 @@ namespace Neuro
     using namespace std;
 
 	TensorOpCpu* Tensor::g_OpCpu = new TensorOpCpu();
+	TensorOpCpu* Tensor::g_DefaultOpCpu = nullptr;
 
 	//////////////////////////////////////////////////////////////////////////
 	Tensor::Tensor()
@@ -112,21 +113,13 @@ namespace Neuro
 	{
 		CurrentLocation = ELocation::Host;
 
-		auto fillUp = [&](Random& rng)
+		auto fillUp = [&](const Random& rng)
 		{
 			for (int i = 0; i < Values.size(); ++i)
 				Values[i] = min + (max - min) * rng.NextFloat();
 		};
 
-		if (seed > 0)
-		{
-			Random tempRng(seed);
-			fillUp(tempRng);
-		}
-		else
-		{
-			fillUp(g_Rng);
-		}
+		fillUp(seed > 0 ? Random(seed) : Rng);
 
 		return *this;
 	}
@@ -359,7 +352,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Clipped(float min, float max, Tensor& result) const
 	{
-		Map([&](float x) { return Tools::Clip(x, min, max); }, result);
+		Map([&](float x) { return Clip(x, min, max); }, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
