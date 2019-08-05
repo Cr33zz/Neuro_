@@ -62,20 +62,29 @@ namespace Neuro
 	public:    
         void Optimize(OptimizerBase* optimizer, LossFunc* loss);
         void Optimize(OptimizerBase* optimizer, map<string, LossFunc*> lossDict);
+
+		void Fit(const tensor_ptr_vec_t& input, const tensor_ptr_vec_t& output, int batchSize = -1, int epochs = 1, int verbose = 1, Track trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
+
+		// Training method, when batch size is -1 the whole training set is used for single gradient descent step (in other words, batch size equals to training set size)
+		void Fit(const vector<tensor_ptr_vec_t>& inputs, const vector<tensor_ptr_vec_t>& outputs, int batchSize = -1, int epochs = 1, const tensor_ptr_vec_t* validationData = nullptr, int verbose = 1, Track trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
+
         // This function expects input and output tensors to be batched already. This batch will be maintained throughout all training epochs!
-        void FitBatched(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, int epochs = 1, int verbose = 1, Track trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
+        //void FitBatched(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, int epochs = 1, int verbose = 1, Track trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
         // This function is a simplified version of FitBatched for networks with single input and single output
-        void FitBatched(const Tensor* input, const Tensor* output, int epochs = 1, int verbose = 1, Track trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
+        //void FitBatched(const Tensor* input, const Tensor* output, int epochs = 1, int verbose = 1, Track trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
         // This function expects list of tensors (with batch size 1) for every input and output.
-        void Fit(const vector<tensor_ptr_vec_t>& inputs, const vector<tensor_ptr_vec_t>& outputs, int batchSize = -1, int epochs = 1, int verbose = 1, Track trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
+        //void Fit(const vector<tensor_ptr_vec_t>& inputs, const vector<tensor_ptr_vec_t>& outputs, int batchSize = -1, int epochs = 1, int verbose = 1, Track trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
         // This function is a simplified version of Fit for networks with single input and single output
-        void Fit(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, int batchSize = -1, int epochs = 1, int verbose = 1, Track trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
+        //void Fit(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, int batchSize = -1, int epochs = 1, int verbose = 1, Track trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
         // Training method, when batch size is -1 the whole training set is used for single gradient descent step (in other words, batch size equals to training set size)
-        void Fit(const vector<Data>& trainingData, int batchSize = -1, int epochs = 1, const vector<Data>* validationData = nullptr, int verbose = 1, Track trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
+        //void Fit(const vector<Data>& trainingData, int batchSize = -1, int epochs = 1, const vector<Data>* validationData = nullptr, int verbose = 1, Track trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
 
     private:
         // This is vectorized gradient descent
-        void GradientDescentStep(const Data& trainingData, int samplesInTrainingData, float& trainError, int& trainHits);
+        void TrainStep(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, float& trainError, int& trainHits);
+
+		// Build a single tensor with multiple batches for each input
+		tensor_ptr_vec_t GenerateBatch(const vector<tensor_ptr_vec_t>& inputs, vector<int> batchIndices);
 
 		void LogLine(const string& text);
 

@@ -948,7 +948,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::CopyBatchTo(int batchId, int targetBatchId, Tensor& result)
+	void Tensor::CopyBatchTo(int batchId, int targetBatchId, Tensor& result) const
 	{
 		CopyToHost();
 		result.CurrentLocation = ELocation::Host;
@@ -960,7 +960,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::CopyDepthTo(int depthId, int batchId, int targetDepthId, int targetBatchId, Tensor& result)
+	void Tensor::CopyDepthTo(int depthId, int batchId, int targetDepthId, int targetBatchId, Tensor& result) const
 	{
 		CopyToHost();
 		result.CurrentLocation = ELocation::Host;
@@ -972,7 +972,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::GetBatch(int batchId)
+	Tensor Tensor::GetBatch(int batchId) const
 	{
 		Tensor result(Shape(Width(), Height(), Depth()));
 		CopyBatchTo(batchId, 0, result);
@@ -980,7 +980,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::GetDepth(int depthId, int batchId)
+	Tensor Tensor::GetDepth(int depthId, int batchId) const
 	{
 		Tensor result(Shape(Width(), Height()));
 		CopyDepthTo(depthId, batchId, 0, 0, result);

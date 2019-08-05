@@ -6,6 +6,8 @@
 #include <sstream>
 #include <vector>
 #include "assert.h"
+
+#include "Types.h"
 #include "Tensors/Shape.h"
 
 namespace Neuro
@@ -231,10 +233,10 @@ namespace Neuro
         void TrySet(float value, int w, int h = 0, int d = 0, int n = 0);
 
         void CopyTo(Tensor& result, float tau = -1) const;
-        void CopyBatchTo(int batchId, int targetBatchId, Tensor& result);
-        void CopyDepthTo(int depthId, int batchId, int targetDepthId, int targetBatchId, Tensor& result);
-        Tensor GetBatch(int batchId);
-        Tensor GetDepth(int depthId, int batchId = 0);
+        void CopyBatchTo(int batchId, int targetBatchId, Tensor& result) const;
+        void CopyDepthTo(int depthId, int batchId, int targetDepthId, int targetBatchId, Tensor& result) const;
+        Tensor GetBatch(int batchId) const;
+        Tensor GetDepth(int depthId, int batchId = 0) const;
         bool Equals(const Tensor& other, float epsilon = 0.00001f) const;
         float GetMaxData(int batch, int& maxIndex) const;
         void Elu(float alpha, Tensor& result) const;
@@ -267,7 +269,7 @@ namespace Neuro
         GPUData GpuData;
 		TensorOpCpu* Op;
         mutable ELocation CurrentLocation;
-        vector<float> Values;
+        vector<float_t> Values;
 		Shape m_Shape;
 
 		static TensorOpCpu* GetOpMode(EOpMode mode);
