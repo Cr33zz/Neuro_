@@ -10,7 +10,7 @@ namespace Neuro
 
 	//////////////////////////////////////////////////////////////////////////
 	LayerBase::LayerBase(LayerBase* inputLayer, const Shape& outputShape, ActivationFunc* activation, const string& name)
-		: LayerBase(outputShape, activation)
+		: LayerBase(outputShape, activation, name)
 	{
 		InputShapes.push_back(inputLayer->OutputShape);
 		InputLayers.push_back(inputLayer);
@@ -19,7 +19,7 @@ namespace Neuro
 
 	//////////////////////////////////////////////////////////////////////////
 	LayerBase::LayerBase(const vector<LayerBase*>& inputLayers, const Shape& outputShape, ActivationFunc* activation, const string& name)
-		: LayerBase(outputShape, activation)
+		: LayerBase(outputShape, activation, name)
 	{
 		InputLayers.insert(InputLayers.end(), inputLayers.begin(), inputLayers.end());
 		for (auto inLayer : inputLayers)
@@ -31,14 +31,14 @@ namespace Neuro
 
 	//////////////////////////////////////////////////////////////////////////
 	LayerBase::LayerBase(const Shape& inputShape, const Shape& outputShape, ActivationFunc* activation, const string& name)
-		: LayerBase(outputShape, activation)
+		: LayerBase(outputShape, activation, name)
 	{
 		InputShapes.push_back(inputShape);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	LayerBase::LayerBase(const vector<Shape>& inputShapes, const Shape& outputShape, ActivationFunc* activation, const string& name)
-		: LayerBase(outputShape, activation)
+		: LayerBase(outputShape, activation, name)
 	{
 		InputShapes = inputShapes;
 	}
@@ -48,6 +48,7 @@ namespace Neuro
 	{
 		OutputShape = outputShape;
 		Activation = activation;
+		Name = name;
 	}
 
 	//////////////////////////////////////////////////////////////////////////

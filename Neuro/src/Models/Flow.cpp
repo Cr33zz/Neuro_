@@ -193,7 +193,7 @@ namespace Neuro
 		for (auto layer : Order)
 		{
 			totalParams += layer->GetParamsNum();
-			ss << setw(29) << layer->Name << " (" << typeid(layer).name() << ")" << setw(26) << "(" << layer->OutputShape.Width() << ", " << layer->OutputShape.Height() << ", " << layer->OutputShape.Depth() << ")" << setw(13) << layer->GetParamsNum() << "\n";
+			ss << left << setw(29) << (layer->Name + "(" + layer->ClassName() + ")") << setw(26) << "(" + to_string(layer->OutputShape.Width()) + ", " + to_string(layer->OutputShape.Height()) + ", " + to_string(layer->OutputShape.Depth()) + ")" << setw(13) << layer->GetParamsNum() << "\n";
 			for (int i = 1; i < (int)layer->InputLayers.size(); ++i)
 				ss << setw(68 + layer->InputLayers[i]->Name.length()) << layer->InputLayers[i]->Name << "\n";
 			ss << "_________________________________________________________________\n";
