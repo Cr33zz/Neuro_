@@ -7,13 +7,13 @@ namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
 	Dense::Dense(LayerBase* inputLayer, int outputs, ActivationFunc* activation, const string& name)
-		: LayerBase(inputLayer, Shape(1, outputs), activation, name)
+		: LayerBase(inputLayer, Shape(1, outputs), activation, name.empty() ? GenerateName() : name)
 	{
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	Dense::Dense(int inputs, int outputs, ActivationFunc* activation, const string& name)
-		: LayerBase(Shape(1, inputs), Shape(1, outputs), activation, name)
+		: LayerBase(Shape(1, inputs), Shape(1, outputs), activation, name.empty() ? GenerateName() : name)
 	{
 	}
 
@@ -107,4 +107,9 @@ namespace Neuro
 			result.push_back(ParametersAndGradients(&Bias, &BiasGradient));
 	}
 
+	//////////////////////////////////////////////////////////////////////////
+	const char* Dense::ClassName() const
+	{
+		return "Dense";
+	}
 }

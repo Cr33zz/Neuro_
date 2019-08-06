@@ -48,7 +48,6 @@ namespace Neuro
 	{
 		OutputShape = outputShape;
 		Activation = activation;
-		Name = name.empty() ? GenerateName() : name;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -189,7 +188,7 @@ namespace Neuro
 	string LayerBase::GenerateName() const
 	{
 		stringstream ss;
-		ss << typeid(this).name() << "_" << (++LayersCountPerType[typeid(this).name()]);
+		ss << ClassName() << "_" << (++LayersCountPerType[ClassName()]);
 		return ss.str();
 	}
 }

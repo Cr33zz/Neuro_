@@ -45,6 +45,8 @@ namespace Neuro
 
 		LayerBase* Clone();
 		void Init();
+		
+		virtual const char* ClassName() const = 0;
 
 	protected:
         // The concept of layer is that it is a 'block box' that supports feed forward and backward propagation.
@@ -76,14 +78,13 @@ namespace Neuro
 
         //virtual void SerializeParameters(XmlElement elem) {}
         //virtual void DeserializeParameters(XmlElement elem) {}
+        
+		string GenerateName() const;
 
 	private:
 		void ExecuteFeedForward();
 
 		bool Initialized = false;
-
-        string GenerateName() const;
-
         static map<const char*, int> LayersCountPerType;
 	};
 }

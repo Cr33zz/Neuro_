@@ -16,6 +16,7 @@ namespace Neuro
 	    virtual void CopyParametersTo(LayerBase& target, float tau);
 		virtual int GetParamsNum() override;
 		virtual void GetParametersAndGradients(vector<ParametersAndGradients>& result) override;
+		virtual const char* ClassName() const override;
 
 	protected:
 		// This constructor exists only for cloning purposes

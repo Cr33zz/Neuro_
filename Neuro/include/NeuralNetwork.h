@@ -37,14 +37,13 @@ namespace Neuro
 
         NeuralNetwork* Clone();
 
-		void SetModel(ModelBase* model);
-
-        void ForceInitLayers();
+		void ForceInitLayers();
         void CopyParametersTo(NeuralNetwork& target);
         // Tau specifies the percentage of copied parameters to be applied on a target network, when less than 1 target's network
         // parameters will be updated as follows: this_parameters * tau + target_parameters * (1 - tau)
         void SoftCopyParametersTo(NeuralNetwork& target, float tau);
 
+		ModelBase* Model;
         string Name;
 
         string FilePrefix() const;
@@ -99,7 +98,7 @@ namespace Neuro
 	private:
         vector<LossFunc*> LossFuncs;
         OptimizerBase* Optimizer;
-        ModelBase* Model;
+        
         int Seed;        
         vector<accuracy_func_t> AccuracyFuncs;
         vector<string> LogLines;

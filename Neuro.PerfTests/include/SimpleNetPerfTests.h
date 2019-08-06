@@ -1,4 +1,5 @@
-﻿#include <string>
+﻿#include <iostream>
+#include <string>
 #include <vector>
 
 #include "Tensors/Tensor.h"
@@ -25,11 +26,13 @@ public:
         auto lowerStream1 = new Dense(input1, 2, new Linear(), "lowerStream1");
 
         auto net = new NeuralNetwork("simple-flow");
-        net->SetModel(new Flow({ input1 }, { upperStream1, lowerStream1 }));
+        net->Model = new Flow({ input1 }, { upperStream1, lowerStream1 });
         net->Optimize(new SGD(0.05f), new MeanSquareError());
 
 		tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, new Shape(1, 2)) };
 		tensor_ptr_vec_t outputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
+
+		cout << net->Model->Summary() << "\n";
 
         auto netClone = net->Clone();
 
