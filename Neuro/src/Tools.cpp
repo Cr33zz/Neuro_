@@ -73,10 +73,10 @@ namespace Neuro
 		ss << setw(maxIterLen) << iteration << "/" << maxIterations << " [";
 		for (int i = 0; i < currStep - 1; ++i)
 			ss << "=";
-		ss << (iteration == maxIterations) ? "=" : ">";
+		ss << ((iteration == maxIterations) ? "=" : ">");
 		for (int i = 0; i < barLength - currStep; ++i)
 			ss << ".";
-		ss << extraStr;
+		ss << "] " << extraStr;
 		return ss.str();
 	}
 }

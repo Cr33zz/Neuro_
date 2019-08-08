@@ -51,7 +51,7 @@ namespace Neuro
 	Tensor::Tensor(const vector<float>& values, const Shape& shape)
 		: Tensor()
 	{
-		//assert(Values.size() == shape.Length && "Invalid array size {Values.size()}. Expected {shape.Length}.");
+		assert(values.size() == shape.Length);// && string("Invalid array size ") + to_string(values.size()) + ". Expected " + to_string(shape.Length) + ".");
 		m_Shape = shape;
 		Values = values;
 	}
@@ -417,7 +417,14 @@ namespace Neuro
 	float Tensor::Sum(int batch) const
 	{
 		CopyToHost();
-		int batchLen = batch < 0 ? Length() : BatchLength();
+		int batchLen = BatchLength();
+
+		if (batch < 0)
+		{
+			batchLen = Length();
+			batch = 0;
+		}
+
 		float sum = 0;
 
 		for (int i = 0, idx = batch * batchLen; i < batchLen; ++i, ++idx)

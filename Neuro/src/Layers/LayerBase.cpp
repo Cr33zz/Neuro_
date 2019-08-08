@@ -45,6 +45,7 @@ namespace Neuro
 
 	//////////////////////////////////////////////////////////////////////////
 	LayerBase::LayerBase(const Shape& outputShape, ActivationFunc* activation, const string& name)
+		: Initialized(false)
 	{
 		OutputShape = outputShape;
 		Activation = activation;

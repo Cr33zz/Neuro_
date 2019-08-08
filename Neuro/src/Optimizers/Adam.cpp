@@ -55,4 +55,11 @@ namespace Neuro
 		return ss.str();
 		//return $"Adam(lr={LearningRate}, beta1={Beta1}, beta2={Beta2}, epsilon={Epsilon})";
 	}
+
+	//////////////////////////////////////////////////////////////////////////
+	const char* Adam::ClassName() const
+	{
+		return "Adam";
+	}
+
 }

@@ -26,9 +26,10 @@ namespace Neuro
 		Tensor Output;
 		Shape OutputShape;
 		ActivationFunc* Activation;
-		string Name;
         vector<LayerBase*> InputLayers;
 		vector<LayerBase*> OutputLayers;
+		
+		string Name;
         /*Stopwatch FeedForwardTimer = new Stopwatch();
         Stopwatch ActivationTimer = new Stopwatch();
         Stopwatch BackPropTimer = new Stopwatch();
@@ -84,7 +85,7 @@ namespace Neuro
 	private:
 		void ExecuteFeedForward();
 
-		bool Initialized = false;
+		bool Initialized;
         static map<const char*, int> LayersCountPerType;
 	};
 }

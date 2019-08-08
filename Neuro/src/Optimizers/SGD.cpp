@@ -20,6 +20,12 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
+	const char* SGD::ClassName() const
+	{
+		return "SGD";
+	}
+
+	//////////////////////////////////////////////////////////////////////////
 	void SGD::OnStep(vector<ParametersAndGradients>& paramsAndGrads, int batchSize)
 	{
 		for (int i = 0; i < paramsAndGrads.size(); ++i)

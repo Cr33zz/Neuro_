@@ -7,7 +7,7 @@ namespace Neuro
 	struct ParametersAndGradients
 	{
 		ParametersAndGradients(Tensor* parameters, Tensor* gradients)
-			: Parameters(parameters), Gradients(Gradients)
+			: Parameters(parameters), Gradients(gradients)
 		{}
 
 		Tensor* Parameters;

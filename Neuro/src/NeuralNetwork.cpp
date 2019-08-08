@@ -146,7 +146,8 @@ namespace Neuro
 		if (batchSize < 0)
 			batchSize = samplesNum;
 
-		string outFilename = FilePrefix() + "_training_data_" + typeid(Optimizer).name() + "_b" + to_string(batchSize) + (Seed > 0 ? "(_seed" + to_string(Seed) + ")" : "");
+		string outFilename = FilePrefix() + "_training_data_" + Optimizer->ClassName() + "_b" + to_string(batchSize) + (Seed > 0 ? "(_seed" + to_string(Seed) + ")" : "");
+		
 		/*ChartGenerator chartGen = null;
 		if (trackFlags != Track.Nothing)
 			chartGen = new ChartGenerator($"{outFilename}", $"{Name}\nloss=[{string.Join(", ", Losses.Select(x => x.GetType().Name))}] optimizer={Optimizer} batch_size={batchSize}\nseed={(Seed > 0 ? Seed.ToString() : "None")}", "Epoch");
@@ -160,20 +161,23 @@ namespace Neuro
 		if (trackFlags.HasFlag(Track.TestAccuracy))
 			chartGen.AddSeries((int)Track.TestAccuracy, "Accuracy on test\n(right Y axis)", Color.CornflowerBlue, true);*/
 
-			//            if (AccuracyFuncs == null && (trackFlags.HasFlag(Track.TrainAccuracy) || trackFlags.HasFlag(Track.TestAccuracy)))
-			//            {
-			//                AccuracyFuncs = new AccuracyFunc[outputLayersCount];
+		if (AccuracyFuncs.size() == 0)
+		{
+			for (int i = 0; i < (int)outputs[0].size(); ++i)
+			{
+				AccuracyFuncs.push_back(nullptr);
 
-			//                for (int i = 0; i < outputLayersCount; ++i)
-			//                {
-			//                    if (Model.GetOutputLayers().ElementAt(i).OutputShape.Length == 1)
-			//                        AccuracyFuncs[i] = Tools.AccBinaryClassificationEquality;
-			//                    else
-			//                        AccuracyFuncs[i] = Tools.AccCategoricalClassificationEquality;
-			//                }
-			//            }
+				if ((trackFlags & Track::TrainAccuracy) || (trackFlags & Track::TestAccuracy))
+				{
+					if (Model->GetOutputLayers()[i]->OutputShape.Length == 1)
+						AccuracyFuncs[i] = AccBinaryClassificationEquality;
+					else
+						AccuracyFuncs[i] = AccCategoricalClassificationEquality;
+				}
+			}
+		}
 
-			//Stopwatch trainTimer = new Stopwatch();
+		//Stopwatch trainTimer = new Stopwatch();
 
 		vector<int> indices(samplesNum);
 		iota(indices.begin(), indices.end(), 0);
@@ -194,7 +198,12 @@ namespace Neuro
 				Shuffle(indices);
 
 			for (int b = 0; b < batchesNum; ++b)
-				copy(indices.begin() + b * batchSize, indices.begin() + min((b + 1) * batchSize, samplesNum), batchesIndices[b].begin());
+			{
+				int samplesStartIndex = b * batchSize;
+				int samplesEndIndex = min((b + 1) * batchSize, samplesNum);
+				batchesIndices[b].resize(samplesEndIndex - samplesStartIndex);
+				copy(indices.begin() + samplesStartIndex, indices.begin() + samplesEndIndex, batchesIndices[b].begin());
+			}
 
 			float trainTotalError = 0;
 			int trainHits = 0;
@@ -210,7 +219,7 @@ namespace Neuro
 
 				if (verbose == 2)
 				{
-					output = GetProgressString(b * batchSize + inputsBatch[0]->Length(), samplesNum);
+					output = GetProgressString(min((b + 1) * batchSize, samplesNum), samplesNum);
 					cout << output;
 					for (int i = 0; i < output.length(); ++i)
 						cout << '\b';
@@ -245,12 +254,12 @@ namespace Neuro
 
 			//float testTotalError = 0;
 
-			//if (validationData != null)
+			//if (validationData)
 			//{
-			//    int validationSamples = validationData.Count * validationData[0].Inputs[0].BatchSize;
+			//    int validationSamples = validationData->size();
 			//    float testHits = 0;
 
-			//    for (int n = 0; n < validationData.Count; ++n)
+			//    for (int n = 0; n < validationData->size(); ++n)
 			//    {
 			//        FeedForward(validationData[n].Inputs);
 			//        var outputs = Model.GetOutputs();
@@ -270,8 +279,8 @@ namespace Neuro
 			//        }
 			//    }
 
-			//    chartGen?.AddData(e, testTotalError / validationSamples, (int)Track.TestError);
-			//    chartGen?.AddData(e, (float)testHits / validationSamples / outputLayersCount, (int)Track.TestAccuracy);
+			//    /*chartGen?.AddData(e, testTotalError / validationSamples, (int)Track.TestError);
+			//    chartGen?.AddData(e, (float)testHits / validationSamples / outputLayersCount, (int)Track.TestAccuracy);*/
 			//}
 
 			/*if ((ChartSaveInterval > 0 && (e % ChartSaveInterval == 0)) || e == epochs)
@@ -531,14 +540,14 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	tensor_ptr_vec_t NeuralNetwork::GenerateBatch(const vector<tensor_ptr_vec_t>& inputs, vector<int> batchIndices)
 	{
-		tensor_ptr_vec_t result;
-
-		for (int i = 0; i < (int)inputs.size(); ++i)
+		tensor_ptr_vec_t result; // result is a vector of tensors (1 per each input) with multiple (batchIndices.size()) batches in each one of them
+		
+		for (int i = 0; i < (int)inputs[0].size(); ++i)
 		{
-			auto t = new Tensor(Shape(inputs[i][0]->Width(), inputs[i][0]->Height(), inputs[i][0]->Depth(), (int)batchIndices.size()));
+			auto t = new Tensor(Shape(inputs[0][i]->Width(), inputs[0][i]->Height(), inputs[0][i]->Depth(), (int)batchIndices.size()));
 
 			for (int b : batchIndices)
-				inputs[i][b]->CopyBatchTo(0, b, *t);
+				inputs[b][i]->CopyBatchTo(0, b, *t);
 
 			result.push_back(t);
 		}

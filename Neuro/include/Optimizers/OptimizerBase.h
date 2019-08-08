@@ -14,6 +14,7 @@ namespace Neuro
 	public:
         void Step(vector<ParametersAndGradients>& paramsAndGrads, int batchSize);
 		virtual string ToString() = 0;
+		virtual const char* ClassName() const = 0;
 
 	protected:
         virtual void OnStep(vector<ParametersAndGradients>& paramsAndGrads, int batchSize) = 0;
