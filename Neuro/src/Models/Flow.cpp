@@ -1,4 +1,5 @@
-﻿#include <iomanip>
+﻿#include <algorithm>
+#include <iomanip>
 #include <sstream>
 
 #include "Models/Flow.h"
@@ -9,8 +10,8 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	Flow::Flow(const vector<LayerBase*>& inputLayers, const vector<LayerBase*>& outputLayers)
 	{
-		InputLayers = inputLayers;
-		OutputLayers = outputLayers;
+		m_InputLayers = inputLayers;
+		m_OutputLayers = outputLayers;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -23,7 +24,7 @@ namespace Neuro
 	{
 		bool allInputLayersVisited = true;
 
-		for (auto inLayer : layer->InputLayers)
+		for (auto inLayer : layer->m_InputLayers)
 		{
 			if (find(visited.begin(), visited.end(), inLayer) == visited.end())
 			{
@@ -35,28 +36,28 @@ namespace Neuro
 		if (!allInputLayersVisited)
 			return;
 
-		Order.push_back(layer);
+		m_Order.push_back(layer);
 		visited.push_back(layer);
 
-		for (auto outLayer : layer->OutputLayers)
+		for (auto outLayer : layer->m_OutputLayers)
 			ProcessLayer(outLayer, visited);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Flow::FeedForward(const tensor_ptr_vec_t& inputs)
 	{
-		for (int i = 0; i < (int)InputLayers.size(); ++i)
-			InputLayers[i]->FeedForward(inputs[i]);
+		for (int i = 0; i < (int)m_InputLayers.size(); ++i)
+			m_InputLayers[i]->FeedForward(inputs[i]);
 
-		for (auto layer : Order)
+		for (auto layer : m_Order)
 		{
 			// layers with no input layers have are already been fed forward
-			if (layer->InputLayers.size() == 0)
+			if (layer->m_InputLayers.size() == 0)
 				continue;
 
-			tensor_ptr_vec_t ins(layer->InputLayers.size());
-			for (int i = 0; i < (int)layer->InputLayers.size(); ++i)
-				ins[i] = &(layer->InputLayers[i]->Output);
+			tensor_ptr_vec_t ins(layer->m_InputLayers.size());
+			for (int i = 0; i < (int)layer->m_InputLayers.size(); ++i)
+				ins[i] = &(layer->m_InputLayers[i]->m_Output);
 
 			layer->FeedForward(ins);
 		}
@@ -65,30 +66,30 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Flow::BackProp(vector<Tensor>& deltas)
 	{
-		for (int i = 0; i < (int)OutputLayers.size(); ++i)
-			OutputLayers[i]->BackProp(deltas[i]);
+		for (int i = 0; i < (int)m_OutputLayers.size(); ++i)
+			m_OutputLayers[i]->BackProp(deltas[i]);
 
-		for (auto layer : ReversedOrder)
+		for (auto layer : m_ReversedOrder)
 		{
 			// layers with no input layers have are already been fed forward
-			if (layer->OutputLayers.size() == 0)
+			if (layer->m_OutputLayers.size() == 0)
 				continue;
 
-			Tensor avgDelta(layer->OutputShape);
-			for (int i = 0; i < (int)layer->OutputLayers.size(); ++i)
+			Tensor avgDelta(layer->m_OutputShape);
+			for (int i = 0; i < (int)layer->m_OutputLayers.size(); ++i)
 			{
 				// we need to find this layer index in output layer's inputs to grab proper delta (it could be cached)
-				for (int j = 0; j < (int)layer->OutputLayers[i]->InputLayers.size(); ++j)
+				for (int j = 0; j < (int)layer->m_OutputLayers[i]->m_InputLayers.size(); ++j)
 				{
-					if (layer->OutputLayers[i]->InputLayers[j] == layer)
+					if (layer->m_OutputLayers[i]->m_InputLayers[j] == layer)
 					{
-						avgDelta.Add(layer->OutputLayers[i]->InputsGradient[j], avgDelta);
+						avgDelta.Add(layer->m_OutputLayers[i]->m_InputsGradient[j], avgDelta);
 						break;
 					}
 				}
 			}
 
-			avgDelta.Div((float)layer->OutputLayers.size(), avgDelta);
+			avgDelta.Div((float)layer->m_OutputLayers.size(), avgDelta);
 
 			layer->BackProp(avgDelta);
 		}
@@ -97,22 +98,22 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	tensor_ptr_vec_t Flow::GetOutputs() const
 	{
-		tensor_ptr_vec_t outputs(OutputLayers.size());
-		for (int i = 0; i < (int)OutputLayers.size(); ++i)
-			outputs[i] = &(OutputLayers[i]->Output);
+		tensor_ptr_vec_t outputs(m_OutputLayers.size());
+		for (int i = 0; i < (int)m_OutputLayers.size(); ++i)
+			outputs[i] = &(m_OutputLayers[i]->m_Output);
 		return outputs;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	const vector<LayerBase*>& Flow::GetOutputLayers() const
 	{
-		return OutputLayers;
+		return m_OutputLayers;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	int Flow::GetOutputLayersCount() const
 	{
-		return (int)OutputLayers.size();
+		return (int)m_OutputLayers.size();
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -120,11 +121,11 @@ namespace Neuro
 	{
 		vector<LayerBase*> visited;
 
-		for (auto inputLayer : InputLayers)
+		for (auto inputLayer : m_InputLayers)
 			ProcessLayer(inputLayer, visited);
 
-		ReversedOrder.resize(Order.size());
-		reverse_copy(Order.begin(), Order.end(), ReversedOrder.begin());
+		m_ReversedOrder.resize(m_Order.size());
+		reverse_copy(m_Order.begin(), m_Order.end(), m_ReversedOrder.begin());
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -135,41 +136,41 @@ namespace Neuro
 		// make clones first and store then in dictionary
 		map<string, LayerBase*> clones;
 
-		for (auto layer : Order)
+		for (auto layer : m_Order)
 		{
 			auto clone = layer->Clone();
-			clones[clone->Name] = clone;
+			clones[clone->Name()] = clone;
 		}
 
 		// then connect them in the same manner as in original network and clone order
 		auto flowClone = new Flow();
 
-		for (auto layer : Order)
+		for (auto layer : m_Order)
 		{
-			auto layerClone = clones[layer->Name];
-			for (auto inLayer : layer->InputLayers)
+			auto layerClone = clones[layer->Name()];
+			for (auto inLayer : layer->InputLayers())
 			{
-				auto inLayerClone = clones[inLayer->Name];
-				layerClone->InputLayers.push_back(inLayerClone);
-				inLayerClone->OutputLayers.push_back(layerClone);
+				auto inLayerClone = clones[inLayer->Name()];
+				layerClone->m_InputLayers.push_back(inLayerClone);
+				inLayerClone->m_OutputLayers.push_back(layerClone);
 			}
 
-			flowClone->Order.push_back(layerClone);
+			flowClone->m_Order.push_back(layerClone);
 		}
 
-		flowClone->ReversedOrder.resize(flowClone->Order.size());
-		reverse_copy(flowClone->Order.begin(), flowClone->Order.end(), flowClone->ReversedOrder.begin());
+		flowClone->m_ReversedOrder.resize(flowClone->m_Order.size());
+		reverse_copy(flowClone->m_Order.begin(), flowClone->m_Order.end(), flowClone->m_ReversedOrder.begin());
 
-		for (auto layer : InputLayers)
+		for (auto layer : m_InputLayers)
 		{
-			auto layerClone = clones[layer->Name];
-			flowClone->InputLayers.push_back(layerClone);
+			auto layerClone = clones[layer->Name()];
+			flowClone->m_InputLayers.push_back(layerClone);
 		}
 
-		for (auto layer : OutputLayers)
+		for (auto layer : m_OutputLayers)
 		{
-			auto layerClone = clones[layer->Name];
-			flowClone->OutputLayers.push_back(layerClone);
+			auto layerClone = clones[layer->Name()];
+			flowClone->m_OutputLayers.push_back(layerClone);
 		}
 
 		return flowClone;
@@ -178,7 +179,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	const vector<LayerBase*>& Flow::GetLayers() const
 	{
-		return Order;
+		return m_Order;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -190,12 +191,12 @@ namespace Neuro
 		ss << "Layer                        Output Shape              Param #\n";
 		ss << "=================================================================\n";
 
-		for (auto layer : Order)
+		for (auto layer : m_Order)
 		{
 			totalParams += layer->GetParamsNum();
-			ss << left << setw(29) << (layer->Name + "(" + layer->ClassName() + ")") << setw(26) << "(" + to_string(layer->OutputShape.Width()) + ", " + to_string(layer->OutputShape.Height()) + ", " + to_string(layer->OutputShape.Depth()) + ")" << setw(13) << layer->GetParamsNum() << "\n";
-			for (int i = 1; i < (int)layer->InputLayers.size(); ++i)
-				ss << setw(68 + layer->InputLayers[i]->Name.length()) << layer->InputLayers[i]->Name << "\n";
+			ss << left << setw(29) << (layer->m_Name + "(" + layer->ClassName() + ")") << setw(26) << layer->OutputShape().ToString() << setw(13) << layer->GetParamsNum() << "\n";
+			for (int i = 1; i < (int)layer->m_InputLayers.size(); ++i)
+				ss << setw(68 + layer->m_InputLayers[i]->m_Name.length()) << layer->m_InputLayers[i]->m_Name << "\n";
 			ss << "_________________________________________________________________\n";
 		}
 

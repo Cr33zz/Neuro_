@@ -12,14 +12,14 @@ namespace Neuro.Layers
             Min
         }
 
-        public Merge(LayerBase[] inputLayers, Mode mergeMode, ActivationFunc activation = null)
-            : base(inputLayers, inputLayers[0].OutputShape, activation)
+        public Merge(LayerBase[] inputLayers, Mode mergeMode, ActivationBase activation = null)
+            : base(inputLayers, inputLayers[0].m_OutputShape, activation)
         {
             MergeMode = mergeMode;
         }
 
         // This constructor should only be used for input layer
-        public Merge(Shape[] inputShapes, Mode mergeMode, ActivationFunc activation = null)
+        public Merge(Shape[] inputShapes, Mode mergeMode, ActivationBase activation = null)
             : base(inputShapes, inputShapes[0], activation)
         {
             MergeMode = mergeMode;
@@ -47,16 +47,16 @@ namespace Neuro.Layers
             switch (MergeMode)
             {
                 case Mode.Avg:
-                    Tensor.MergeAvg(Inputs, Output);
+                    Tensor.MergeAvg(m_Inputs, m_Output);
                     break;
                 case Mode.Max:
-                    Tensor.MergeMax(Inputs, Output);
+                    Tensor.MergeMax(m_Inputs, m_Output);
                     break;
                 case Mode.Min:
-                    Tensor.MergeMin(Inputs, Output);
+                    Tensor.MergeMin(m_Inputs, m_Output);
                     break;
                 case Mode.Sum:
-                    Tensor.MergeSum(Inputs, Output);
+                    Tensor.MergeSum(m_Inputs, m_Output);
                     break;
             }
         }
@@ -66,14 +66,14 @@ namespace Neuro.Layers
             switch (MergeMode)
             {
                 case Mode.Avg:
-                    Tensor.MergeAvgGradient(Output, Inputs, outputGradient, InputsGradient);
+                    Tensor.MergeAvgGradient(m_Output, m_Inputs, outputGradient, m_InputsGradient);
                     break;
                 case Mode.Max:
                 case Mode.Min:
-                    Tensor.MergeMinMaxGradient(Output, Inputs, outputGradient, InputsGradient);
+                    Tensor.MergeMinMaxGradient(m_Output, m_Inputs, outputGradient, m_InputsGradient);
                     break;
                 case Mode.Sum:
-                    Tensor.MergeSumGradient(Output, Inputs, outputGradient, InputsGradient);
+                    Tensor.MergeSumGradient(m_Output, m_Inputs, outputGradient, m_InputsGradient);
                     break;
             }
         }

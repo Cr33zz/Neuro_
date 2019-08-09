@@ -10,8 +10,8 @@ namespace Neuro
 	ModelBase* Sequential::Clone() const
 	{
 		Sequential* clone = new Sequential();
-		for(auto layer : Layers)
-			clone->Layers.push_back(layer->Clone());
+		for(auto layer : m_Layers)
+			clone->m_Layers.push_back(layer->Clone());
 		return clone;
 	}
 
@@ -20,8 +20,8 @@ namespace Neuro
 	{
 		//if (inputs.size() > 1) throw new Exception("Only single input is allowed for sequential model.");
 
-		for (int l = 0; l < (int)Layers.size(); ++l)
-			Layers[l]->FeedForward(l == 0 ? inputs[0] : &(Layers[l - 1]->Output));
+		for (int l = 0; l < (int)m_Layers.size(); ++l)
+			m_Layers[l]->FeedForward(l == 0 ? inputs[0] : &(m_Layers[l - 1]->Output()));
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -30,20 +30,20 @@ namespace Neuro
 		//if (deltas.Length > 1) throw new Exception("Only single delta is allowed for sequential model.");
 
 		Tensor& delta = deltas[0];
-		for (int l = (int)Layers.size() - 1; l >= 0; --l)
-			delta = Layers[l]->BackProp(delta)[0];
+		for (int l = (int)m_Layers.size() - 1; l >= 0; --l)
+			delta = m_Layers[l]->BackProp(delta)[0];
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	tensor_ptr_vec_t Sequential::GetOutputs() const
 	{
-		return { &(GetLastLayer()->Output) };
+		return { &(GetLastLayer()->Output()) };
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	const std::vector<LayerBase*>& Sequential::GetOutputLayers() const
 	{
-		return OutputLayers;
+		return m_OutputLayers;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -55,7 +55,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	const std::vector<LayerBase*>& Sequential::GetLayers() const
 	{
-		return Layers;
+		return m_Layers;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -67,10 +67,10 @@ namespace Neuro
 		ss << "Layer                        Output Shape              Param #\n";
 		ss << "=================================================================\n";
 
-		for (auto layer : Layers)
+		for (auto layer : m_Layers)
 		{
 			totalParams += layer->GetParamsNum();
-			ss << left << setw(29) << (layer->Name + "(" + layer->ClassName() + ")") << setw(26) << "(" + to_string(layer->OutputShape.Width()) + ", " + to_string(layer->OutputShape.Height()) + ", " + to_string(layer->OutputShape.Depth()) + ")" << setw(13) << layer->GetParamsNum() << "\n";
+			ss << left << setw(29) << (layer->Name() + "(" + layer->ClassName() + ")") << setw(26) << layer->OutputShape().ToString() << setw(13) << layer->GetParamsNum() << "\n";
 			ss << "_________________________________________________________________\n";
 		}
 
@@ -112,26 +112,26 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	LayerBase* Sequential::GetLayer(int i)
 	{
-		return Layers[i];
+		return m_Layers[i];
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	LayerBase* Sequential::GetLastLayer() const
 	{
-		return Layers.back();
+		return m_Layers.back();
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	int Sequential::LayersCount() const
 	{
-		return (int)Layers.size();
+		return (int)m_Layers.size();
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Sequential::AddLayer(LayerBase* layer)
 	{
-		OutputLayers.resize(1);
-		OutputLayers[0] = layer;
-		Layers.push_back(layer);
+		m_OutputLayers.resize(1);
+		m_OutputLayers[0] = layer;
+		m_Layers.push_back(layer);
 	}
 }

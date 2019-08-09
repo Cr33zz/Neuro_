@@ -8,7 +8,7 @@ namespace Neuro
 	{
 		for (auto layer : GetLayers())
 		{
-			if (layer->Name == name)
+			if (layer->Name() == name)
 				return layer;
 		}
 		return nullptr;

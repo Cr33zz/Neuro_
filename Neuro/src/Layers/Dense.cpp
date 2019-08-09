@@ -6,13 +6,13 @@
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	Dense::Dense(LayerBase* inputLayer, int outputs, ActivationFunc* activation, const string& name)
+	Dense::Dense(LayerBase* inputLayer, int outputs, ActivationBase* activation, const string& name)
 		: LayerBase(inputLayer, Shape(1, outputs), activation, name.empty() ? GenerateName() : name)
 	{
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Dense::Dense(int inputs, int outputs, ActivationFunc* activation, const string& name)
+	Dense::Dense(int inputs, int outputs, ActivationBase* activation, const string& name)
 		: LayerBase(Shape(1, inputs), Shape(1, outputs), activation, name.empty() ? GenerateName() : name)
 	{
 	}
@@ -23,7 +23,14 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Neuro::LayerBase* Dense::GetCloneInstance()
+	Dense::~Dense()
+	{
+		delete WeightsInitializer;
+		delete BiasInitializer;
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	Neuro::LayerBase* Dense::GetCloneInstance() const
 	{
 		return new Dense();
 	}
@@ -44,30 +51,24 @@ namespace Neuro
 	{
 		__super::OnInit();
 
-		Weights = Tensor(Shape(InputShape().Length, OutputShape.Length));
-		Bias = Tensor(OutputShape);
+		Weights = Tensor(Shape(InputShape().Length, m_OutputShape.Length));
+		Bias = Tensor(m_OutputShape);
 
 		WeightsGradient = Tensor(Weights.GetShape());
 		BiasGradient = Tensor(Bias.GetShape());
 
-		if (KernelInitializer == nullptr)
-			KernelInitializer = new GlorotUniform();
-		KernelInitializer->Init(Weights, InputShape().Length, OutputShape.Length);
+		WeightsInitializer->Init(Weights, InputShape().Length, m_OutputShape.Length);
 
 		if (UseBias)
-		{
-			if (BiasInitializer == nullptr)
-				BiasInitializer = new Zeros();
-			BiasInitializer->Init(Bias, InputShape().Length, OutputShape.Length);
-		}
+			BiasInitializer->Init(Bias, InputShape().Length, m_OutputShape.Length);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Dense::FeedForwardInternal()
 	{
-		Weights.Mul(*Inputs[0], Output);
+		Weights.Mul(*m_Inputs[0], m_Output);
 		if (UseBias)
-			Output.Add(Bias, Output);
+			m_Output.Add(Bias, m_Output);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -75,15 +76,15 @@ namespace Neuro
 	{
 		// for explanation watch https://www.youtube.com/watch?v=8H2ODPNxEgA&t=898s
 		// each input is responsible for the output error proportionally to weights it is multiplied by
-		Weights.Transposed().Mul(outputGradient, InputsGradient[0]);
+		Weights.Transposed().Mul(outputGradient, m_InputsGradient[0]);
 
-		WeightsGradient.Add(outputGradient.Mul(Inputs[0]->Transposed()).SumBatches(), WeightsGradient);
+		WeightsGradient.Add(outputGradient.Mul(m_Inputs[0]->Transposed()).SumBatches(), WeightsGradient);
 		if (UseBias)
 			BiasGradient.Add(outputGradient.SumBatches(), BiasGradient);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Dense::CopyParametersTo(LayerBase& target, float tau)
+	void Dense::CopyParametersTo(LayerBase& target, float tau) const
 	{
 		__super::CopyParametersTo(target, tau);
 
@@ -93,9 +94,9 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	int Dense::GetParamsNum()
+	int Dense::GetParamsNum() const
 	{
-		return InputShape().Length * OutputShape.Length;
+		return InputShape().Length * m_OutputShape.Length;
 	}
 
 	//////////////////////////////////////////////////////////////////////////

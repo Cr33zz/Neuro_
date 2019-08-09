@@ -6,7 +6,7 @@ namespace Neuro.Layers
 {
     public class Concatenate : LayerBase
     {
-        public Concatenate(LayerBase[] inputLayers, ActivationFunc activation = null)
+        public Concatenate(LayerBase[] inputLayers, ActivationBase activation = null)
             : base(inputLayers, new Shape(1, inputLayers.Select(x => x.OutputShape.Length).Sum()))
         {
         }
@@ -23,12 +23,12 @@ namespace Neuro.Layers
         protected override void FeedForwardInternal()
         {
             // output is already of proper shape thanks to LayerBase.FeedForward
-            Tensor.Concat(Inputs, Output);
+            Tensor.Concat(m_Inputs, m_Output);
         }
 
         protected override void BackPropInternal(Tensor outputGradient)
         {
-            outputGradient.Split(InputsGradient);
+            outputGradient.Split(m_InputsGradient);
         }
     }
 }

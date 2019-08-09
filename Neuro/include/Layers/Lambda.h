@@ -13,7 +13,7 @@ namespace Neuro.Layers
         // and gradient for each input should be the same as output gradient; in case of average weight for each input would be 1/number_of_inputs.
         public delegate void LambdaBackpropFunc(Tensor outputGradient, Tensor[] inputsGradient);
 
-        public Lambda(LayerBase[] inputLayers, Shape outputShape, LambdaFunc processInputsFunc, LambdaBackpropFunc backPropOutputGradientFunc, ActivationFunc activation = null)
+        public Lambda(LayerBase[] inputLayers, Shape outputShape, LambdaFunc processInputsFunc, LambdaBackpropFunc backPropOutputGradientFunc, ActivationBase activation = null)
             : base(inputLayers, outputShape, activation)
         {
             ProcessInputsFunc = processInputsFunc;
@@ -21,7 +21,7 @@ namespace Neuro.Layers
         }
 
         // This constructor should only be used for input layer
-        public Lambda(Shape[] inputShapes, Shape outputShape, LambdaFunc processInputsFunc, LambdaBackpropFunc backPropOutputGradientFunc, ActivationFunc activation = null)
+        public Lambda(Shape[] inputShapes, Shape outputShape, LambdaFunc processInputsFunc, LambdaBackpropFunc backPropOutputGradientFunc, ActivationBase activation = null)
             : base(inputShapes, outputShape, activation)
         {
             ProcessInputsFunc = processInputsFunc;
@@ -48,12 +48,12 @@ namespace Neuro.Layers
 
         protected override void FeedForwardInternal()
         {
-            ProcessInputsFunc(Inputs, Output);
+            ProcessInputsFunc(m_Inputs, m_Output);
         }
 
         protected override void BackPropInternal(Tensor outputGradient)
         {
-            BackPropOutputGradientFunc(outputGradient, InputsGradient);
+            BackPropOutputGradientFunc(outputGradient, m_InputsGradient);
         }
 
         private LambdaFunc ProcessInputsFunc;

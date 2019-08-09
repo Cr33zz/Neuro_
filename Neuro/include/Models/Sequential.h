@@ -28,7 +28,7 @@ namespace Neuro
         void AddLayer(LayerBase* layer);
 
 	private:
-        vector<LayerBase*> Layers;
-		vector<LayerBase*> OutputLayers;
+        vector<LayerBase*> m_Layers;
+		vector<LayerBase*> m_OutputLayers;
 	};
 }

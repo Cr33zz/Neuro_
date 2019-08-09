@@ -1,39 +1,23 @@
-﻿using System.Diagnostics;
-using Neuro.Tensors;
+﻿#pragma once
 
-namespace Neuro.Layers
+#include "Layers/LayerBase.h"
+
+namespace Neuro
 {
-    public class Flatten : LayerBase
+    class Flatten : public LayerBase
     {
-        public Flatten(LayerBase inputLayer)
-            : base(inputLayer, new Shape(1, inputLayer.OutputShape.Length))
-        {
-        }
-
+	public:
+        Flatten(LayerBase* inputLayer, const string& name = "");
         // This constructor should only be used for input layer
-        public Flatten(Shape inputShape)
-            : base(inputShape, new Shape(1, inputShape.Length))
-        {
-        }
+        Flatten(const Shape& inputShape, const string& name = "");
 
-        protected Flatten()
-        {
-        }
+		virtual const char* ClassName() const override;
 
-        protected override LayerBase GetCloneInstance()
-        {
-            return new Flatten();
-        }
+	protected:
+        Flatten();
 
-        protected override void FeedForwardInternal()
-        {
-            // output is already of proper shape thanks to LayerBase.FeedForward
-            Inputs[0].CopyTo(Output);
-        }
-
-        protected override void BackPropInternal(Tensor outputGradient)
-        {
-            InputsGradient[0] = outputGradient.Reshaped(Inputs[0].Shape);
-        }
-    }
+		virtual LayerBase* GetCloneInstance() const override;
+		virtual void FeedForwardInternal() override;
+		virtual void BackPropInternal(Tensor& outputGradient) override;
+	};
 }

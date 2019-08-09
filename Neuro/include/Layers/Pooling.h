@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using Neuro.Tensors;
+﻿
 
 namespace Neuro.Layers
 {
@@ -8,7 +6,7 @@ namespace Neuro.Layers
     public class Pooling : LayerBase
     {
         public Pooling(LayerBase inputLayer, int filterSize, int stride = 1, Tensor.PoolType type = Tensor.PoolType.Max)
-            : base(inputLayer, Pooling.GetOutShape(inputLayer.OutputShape, filterSize, filterSize, stride))
+            : base(inputLayer, Pooling.GetOutShape(inputLayer.m_OutputShape, filterSize, filterSize, stride))
         {
             Type = type;
             FilterSize = filterSize;
@@ -45,12 +43,12 @@ namespace Neuro.Layers
 
         protected override void FeedForwardInternal()
         {
-            Inputs[0].Pool(FilterSize, Stride, Type, Tensor.PaddingType.Valid, Output);
+            m_Inputs[0].Pool(FilterSize, Stride, Type, Tensor.PaddingType.Valid, m_Output);
         }
 
         protected override void BackPropInternal(Tensor outputGradient)
         {
-            Tensor.PoolGradient(Output, Inputs[0], outputGradient, FilterSize, Stride, Type, Tensor.PaddingType.Valid, InputsGradient[0]);
+            Tensor.PoolGradient(m_Output, m_Inputs[0], outputGradient, FilterSize, Stride, Type, Tensor.PaddingType.Valid, m_InputsGradient[0]);
         }
 
         private static Shape GetOutShape(Shape inputShape, int filterWidth, int filterHeight, int stride)

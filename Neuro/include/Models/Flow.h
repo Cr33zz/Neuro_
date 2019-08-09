@@ -29,10 +29,10 @@ namespace Neuro
 		Flow();
         void ProcessLayer(LayerBase* layer, vector<LayerBase*>& visited);
         
-        vector<LayerBase*> InputLayers;
-        vector<LayerBase*> OutputLayers;
+        vector<LayerBase*> m_InputLayers;
+        vector<LayerBase*> m_OutputLayers;
 
-        vector<LayerBase*> Order;
-        vector<LayerBase*> ReversedOrder;
+        vector<LayerBase*> m_Order;
+        vector<LayerBase*> m_ReversedOrder;
 	};
 }

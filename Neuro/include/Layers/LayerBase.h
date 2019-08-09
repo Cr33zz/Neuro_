@@ -12,36 +12,31 @@ namespace Neuro
 {
 	using namespace std;
 
-	class ActivationFunc;
+	class ActivationBase;
 
     class LayerBase
     {
 	public:
-		vector<Shape> InputShapes;
-        const Shape& InputShape() const { return InputShapes[0]; }
-		vector<const Tensor*> Inputs;
-        const Tensor* Input() { return Inputs[0]; }
-		vector<Tensor> InputsGradient;
-        Tensor& InputGradient() { return InputsGradient[0]; }
-		Tensor Output;
-		Shape OutputShape;
-		ActivationFunc* Activation;
-        vector<LayerBase*> InputLayers;
-		vector<LayerBase*> OutputLayers;
-		
-		string Name;
-        /*Stopwatch FeedForwardTimer = new Stopwatch();
-        Stopwatch ActivationTimer = new Stopwatch();
-        Stopwatch BackPropTimer = new Stopwatch();
-        Stopwatch ActivationBackPropTimer = new Stopwatch();*/
+		const vector<Shape>& InputShapes() const { return m_InputShapes; }
+		const Shape& InputShape() const { return m_InputShapes[0]; }
+		const tensor_ptr_vec_t& Inputs() const { return m_Inputs; }
+		const Tensor* Input() { return m_Inputs[0]; }
+		vector<Tensor>& InputsGradient() { return m_InputsGradient; }
+		Tensor& InputGradient() { return m_InputsGradient[0]; }
+		const Tensor& Output() const { return m_Output; }
+		const Shape& OutputShape() const { return m_OutputShape; }
+		const ActivationBase* Activation() const { return m_Activation; }
+		const vector<LayerBase*>& InputLayers() const { return m_InputLayers; }
+		const vector<LayerBase*>& OutputLayers() const { return m_OutputLayers; }
+		const string& Name() const { return m_Name; }
 
-		virtual void CopyParametersTo(LayerBase& target, float tau = 0);
+        virtual void CopyParametersTo(LayerBase& target, float tau = 0) const;
 
 		const Tensor* FeedForward(const Tensor* input);
 		const Tensor* FeedForward(const vector<const Tensor*>& inputs);
 		vector<Tensor>& BackProp(Tensor& outputGradient);
 
-		virtual int GetParamsNum();
+		virtual int GetParamsNum() const;
 		virtual void GetParametersAndGradients(vector<ParametersAndGradients>& result);
 
 		LayerBase* Clone();
@@ -55,17 +50,18 @@ namespace Neuro
         // Back propagation: error gradients (for its outputs) -> |learning| -> error gradients (for predecessing layer outputs) and internal parameters deltas
         // These error gradients are always of the same size as respective outputs and are saying now much each output
         // contributed to the final error)
-        LayerBase(LayerBase* inputLayer, const Shape& outputShape, ActivationFunc* activation = nullptr, const string& name = "");
-		LayerBase(const vector<LayerBase*>& inputLayers, const Shape& outputShape, ActivationFunc* activation = nullptr, const string& name = "");
+        LayerBase(LayerBase* inputLayer, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
+		LayerBase(const vector<LayerBase*>& inputLayers, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
         // This constructor should only be used for input layer
-        LayerBase(const Shape& inputShape, const Shape& outputShape, ActivationFunc* activation = nullptr, const string& name = "");
+        LayerBase(const Shape& inputShape, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
         // This constructor should only be used for input layer
-        LayerBase(const vector<Shape>& inputShapes, const Shape& outputShape, ActivationFunc* activation = nullptr, const string& name = "");
-		LayerBase(const Shape& outputShape, ActivationFunc* activation = nullptr, const string& name = "");
+        LayerBase(const vector<Shape>& inputShapes, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
+		LayerBase(const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
         // This constructor exists only for cloning purposes
         LayerBase();
+		virtual ~LayerBase() {}
 
-        virtual LayerBase* GetCloneInstance() = 0;
+        virtual LayerBase* GetCloneInstance() const = 0;
         virtual void OnClone(const LayerBase& source);
 		virtual void OnInit();
 
@@ -82,10 +78,28 @@ namespace Neuro
         
 		string GenerateName() const;
 
+		vector<const Tensor*> m_Inputs;
+		vector<Shape> m_InputShapes;
+		vector<Tensor> m_InputsGradient;
+		Tensor m_Output;
+		Shape m_OutputShape;
+
 	private:
 		void ExecuteFeedForward();
+		
+		ActivationBase* m_Activation;
+		vector<LayerBase*> m_InputLayers;
+		vector<LayerBase*> m_OutputLayers;
+		string m_Name;
+		bool Initialized = false;        
 
-		bool Initialized;
-        static map<const char*, int> LayersCountPerType;
+		/*Stopwatch FeedForwardTimer = new Stopwatch();
+		Stopwatch ActivationTimer = new Stopwatch();
+		Stopwatch BackPropTimer = new Stopwatch();
+		Stopwatch ActivationBackPropTimer = new Stopwatch();*/
+
+		static map<const char*, int> s_LayersCountPerType;
+
+		friend class Flow;
 	};
 }

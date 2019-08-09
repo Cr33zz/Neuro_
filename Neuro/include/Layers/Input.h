@@ -1,34 +1,23 @@
-﻿using Neuro.Tensors;
+﻿#pragma once
 
-namespace Neuro.Layers
+#include "Layers/LayerBase.h"
+
+namespace Neuro
 {
     // This layer should only be used when we want to combine raw input with output of another layer
     // somewhere inside a network
-    public class Input : LayerBase
+    class Input : public LayerBase
     {
-        public Input(Shape inputShape)
-            : base(inputShape, inputShape)
-        {
-        }
+	public:
+        Input(const Shape& inputShape, const string& name = "");
 
-        protected Input()
-        {
-        }
+		virtual const char* ClassName() const override;
 
-        protected override LayerBase GetCloneInstance()
-        {
-            return new Input();
-        }
+	protected:
+        Input();
 
-        protected override void FeedForwardInternal()
-        {
-            // output is already of proper shape thanks to LayerBase.FeedForward
-            Input.CopyTo(Output);
-        }
-
-        protected override void BackPropInternal(Tensor outputGradient)
-        {
-            InputsGradient[0] = outputGradient;
-        }
-    }
+		virtual LayerBase* GetCloneInstance() const override;
+		virtual void FeedForwardInternal() override;
+		virtual void BackPropInternal(Tensor& outputGradient) override;
+	};
 }

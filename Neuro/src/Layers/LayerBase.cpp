@@ -6,50 +6,49 @@
 
 namespace Neuro
 {
-	map<const char*, int> LayerBase::LayersCountPerType;
+	map<const char*, int> LayerBase::s_LayersCountPerType;
 
 	//////////////////////////////////////////////////////////////////////////
-	LayerBase::LayerBase(LayerBase* inputLayer, const Shape& outputShape, ActivationFunc* activation, const string& name)
+	LayerBase::LayerBase(LayerBase* inputLayer, const Shape& outputShape, ActivationBase* activation, const string& name)
 		: LayerBase(outputShape, activation, name)
 	{
-		InputShapes.push_back(inputLayer->OutputShape);
-		InputLayers.push_back(inputLayer);
-		inputLayer->OutputLayers.push_back(this);
+		m_InputShapes.push_back(inputLayer->m_OutputShape);
+		m_InputLayers.push_back(inputLayer);
+		inputLayer->m_OutputLayers.push_back(this);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	LayerBase::LayerBase(const vector<LayerBase*>& inputLayers, const Shape& outputShape, ActivationFunc* activation, const string& name)
+	LayerBase::LayerBase(const vector<LayerBase*>& inputLayers, const Shape& outputShape, ActivationBase* activation, const string& name)
 		: LayerBase(outputShape, activation, name)
 	{
-		InputLayers.insert(InputLayers.end(), inputLayers.begin(), inputLayers.end());
+		m_InputLayers.insert(m_InputLayers.end(), inputLayers.begin(), inputLayers.end());
 		for (auto inLayer : inputLayers)
 		{
-			InputShapes.push_back(inLayer->OutputShape);
-			inLayer->OutputLayers.push_back(this);
+			m_InputShapes.push_back(inLayer->m_OutputShape);
+			inLayer->m_OutputLayers.push_back(this);
 		}
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	LayerBase::LayerBase(const Shape& inputShape, const Shape& outputShape, ActivationFunc* activation, const string& name)
+	LayerBase::LayerBase(const Shape& inputShape, const Shape& outputShape, ActivationBase* activation, const string& name)
 		: LayerBase(outputShape, activation, name)
 	{
-		InputShapes.push_back(inputShape);
+		m_InputShapes.push_back(inputShape);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	LayerBase::LayerBase(const vector<Shape>& inputShapes, const Shape& outputShape, ActivationFunc* activation, const string& name)
+	LayerBase::LayerBase(const vector<Shape>& inputShapes, const Shape& outputShape, ActivationBase* activation, const string& name)
 		: LayerBase(outputShape, activation, name)
 	{
-		InputShapes = inputShapes;
+		m_InputShapes = inputShapes;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	LayerBase::LayerBase(const Shape& outputShape, ActivationFunc* activation, const string& name)
-		: Initialized(false)
+	LayerBase::LayerBase(const Shape& outputShape, ActivationBase* activation, const string& name)
 	{
-		OutputShape = outputShape;
-		Activation = activation;
-		Name = name;
+		m_OutputShape = outputShape;
+		m_Activation = activation;
+		m_Name = name;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -70,35 +69,34 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void LayerBase::OnClone(const LayerBase& source)
 	{
-		InputShapes = source.InputShapes;
-		OutputShape = source.OutputShape;
-		Activation = source.Activation;
-		Name = source.Name;
+		m_InputShapes = source.m_InputShapes;
+		m_OutputShape = source.m_OutputShape;
+		m_Activation = source.m_Activation;
+		m_Name = source.m_Name;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void LayerBase::CopyParametersTo(LayerBase& target, float tau)
+	void LayerBase::CopyParametersTo(LayerBase& target, float tau) const
 	{
-		/*if (InputShapes != target.InputShapes || OutputShape != target.OutputShape)
-			throw new Exception("Cannot copy parameters between incompatible layers.");*/
+		assert(m_InputShapes == target.m_InputShapes && m_OutputShape == target.m_OutputShape && "Cannot copy parameters between incompatible layers.");
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void LayerBase::ExecuteFeedForward()
 	{
-		Shape outShape(OutputShape.Width(), OutputShape.Height(), OutputShape.Depth(), Inputs[0]->BatchSize());
+		Shape outShape(m_OutputShape.Width(), m_OutputShape.Height(), m_OutputShape.Depth(), m_Inputs[0]->BatchSize());
 		// shape comparison is required for cases when last batch has different size
-		if (Output.GetShape() != outShape)
-			Output = Tensor(outShape);
+		if (m_Output.GetShape() != outShape)
+			m_Output = Tensor(outShape);
 
 		//FeedForwardTimer.Start();
 		FeedForwardInternal();
 		//FeedForwardTimer.Stop();
 
-		if (Activation)
+		if (m_Activation)
 		{
 			//ActivationTimer.Start();
-			Activation->Compute(Output, Output);
+			m_Activation->Compute(m_Output, m_Output);
 			//ActivationTimer.Stop();
 
 			/*if (NeuralNetwork::DebugMode)
@@ -112,10 +110,10 @@ namespace Neuro
 		if (!Initialized)
 			Init();
 
-		Inputs.resize(1);
-		Inputs[0] = input;
+		m_Inputs.resize(1);
+		m_Inputs[0] = input;
 		ExecuteFeedForward();
-		return &Output;
+		return &m_Output;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -124,29 +122,29 @@ namespace Neuro
 		if (!Initialized)
 			Init();
 
-		Inputs = inputs;
+		m_Inputs = inputs;
 		ExecuteFeedForward();
-		return &Output;
+		return &m_Output;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	vector<Tensor>& LayerBase::BackProp(Tensor& outputGradient)
 	{
-		InputsGradient.resize(InputShapes.size());
+		m_InputsGradient.resize(m_InputShapes.size());
 
-		for (int i = 0; i < (int)InputShapes.size(); ++i)
+		for (int i = 0; i < (int)m_InputShapes.size(); ++i)
 		{
-			auto& inputShape = InputShapes[i];
+			auto& inputShape = m_InputShapes[i];
 			Shape deltaShape(inputShape.Width(), inputShape.Height(), inputShape.Depth(), outputGradient.BatchSize());
-			if (InputsGradient[i].GetShape() != deltaShape)
-				InputsGradient[i] = Tensor(deltaShape);
+			if (m_InputsGradient[i].GetShape() != deltaShape)
+				m_InputsGradient[i] = Tensor(deltaShape);
 		}
 
 		// apply derivative of our activation function to the errors computed by previous layer
-		if (Activation)
+		if (m_Activation)
 		{
 			//ActivationBackPropTimer.Start();
-			Activation->Derivative(Output, outputGradient, outputGradient);
+			m_Activation->Derivative(m_Output, outputGradient, outputGradient);
 			//ActivationBackPropTimer.Stop();
 
 			/*if (NeuralNetwork::DebugMode)
@@ -157,11 +155,11 @@ namespace Neuro
 		BackPropInternal(outputGradient);
 		//BackPropTimer.Stop();
 
-		return InputsGradient;
+		return m_InputsGradient;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	int LayerBase::GetParamsNum()
+	int LayerBase::GetParamsNum() const
 	{
 		return 0;
 	}
@@ -190,7 +188,7 @@ namespace Neuro
 	string LayerBase::GenerateName() const
 	{
 		stringstream ss;
-		ss << ClassName() << "_" << (++LayersCountPerType[ClassName()]);
+		ss << ClassName() << "_" << (++s_LayersCountPerType[ClassName()]);
 		return ss.str();
 	}
 }

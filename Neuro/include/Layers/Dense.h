@@ -1,6 +1,8 @@
 ﻿#pragma once
 
 #include "Layers/LayerBase.h"
+#include "Initializers/GlorotUniform.h"
+#include "Initializers/Zeros.h"
 
 namespace Neuro
 {
@@ -9,12 +11,13 @@ namespace Neuro
     class Dense : public LayerBase
     {
 	public:
-        Dense(LayerBase* inputLayer, int outputs, ActivationFunc* activation = nullptr, const string& name = "");
+        Dense(LayerBase* inputLayer, int outputs, ActivationBase* activation = nullptr, const string& name = "");
         // Use this constructor for input layer only!
-        Dense(int inputs, int outputs, ActivationFunc* activation = nullptr, const string& name = "");
+        Dense(int inputs, int outputs, ActivationBase* activation = nullptr, const string& name = "");
+		~Dense();
 
-	    virtual void CopyParametersTo(LayerBase& target, float tau);
-		virtual int GetParamsNum() override;
+	    virtual void CopyParametersTo(LayerBase& target, float tau) const override;
+		virtual int GetParamsNum() const override;
 		virtual void GetParametersAndGradients(vector<ParametersAndGradients>& result) override;
 		virtual const char* ClassName() const override;
 
@@ -22,7 +25,7 @@ namespace Neuro
 		// This constructor exists only for cloning purposes
 		Dense();
 
-		virtual LayerBase* GetCloneInstance() override;
+		virtual LayerBase* GetCloneInstance() const override;
 		virtual void OnClone(const LayerBase& source) override;
 		virtual void OnInit() override;
         virtual void FeedForwardInternal() override;
@@ -33,8 +36,8 @@ namespace Neuro
         Tensor Bias;
         bool UseBias = true;
 
-        InitializerBase* KernelInitializer;
-        InitializerBase* BiasInitializer;
+		InitializerBase* WeightsInitializer = new GlorotUniform();
+		InitializerBase* BiasInitializer = new Zeros();
 
         Tensor WeightsGradient;
         Tensor BiasGradient;
