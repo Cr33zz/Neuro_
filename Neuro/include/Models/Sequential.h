@@ -11,6 +11,7 @@ namespace Neuro
     class Sequential : public ModelBase
     {
 	public:
+		Sequential();
         virtual ModelBase* Clone() const override;
         virtual void FeedForward(const tensor_ptr_vec_t& inputs) override;
         virtual void BackProp(vector<Tensor>& deltas) override;

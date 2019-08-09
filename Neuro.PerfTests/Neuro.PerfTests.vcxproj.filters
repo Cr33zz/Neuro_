@@ -17,5 +17,8 @@
     <ClInclude Include="include\SimpleNetPerfTests.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\ConvNetPeftTests.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -138,6 +138,12 @@
     <ClInclude Include="include\Types.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Neuro.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\TestTools.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\NeuralNetwork.cpp">
@@ -226,6 +232,9 @@
     </ClCompile>
     <ClCompile Include="src\Initializers\Zeros.cpp">
       <Filter>src\Initializers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TestTools.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
