@@ -7,40 +7,36 @@ namespace Neuro
     class ActivationBase
     {
 	public:
-        virtual void Compute(const Tensor& input, Tensor& result) = 0;
-        virtual void Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) = 0;
+        virtual void Compute(const Tensor& input, Tensor& result) const = 0;
+        virtual void Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) const = 0;
 	};
 
     class Linear : public ActivationBase
     {
 	public:
-        virtual void Compute(const Tensor& input, Tensor& result) override;
-
-        virtual void Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) override;
+        virtual void Compute(const Tensor& input, Tensor& result) const override;
+        virtual void Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) const override;
 	};
 
     class Sigmoid : public ActivationBase
     {
 	public:
-        virtual void Compute(const Tensor& input, Tensor& result) override;
-
-        virtual void Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) override;
+        virtual void Compute(const Tensor& input, Tensor& result) const override;
+        virtual void Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) const override;
 	};
 
     class Tanh : public ActivationBase
     {
 	public:
-        virtual void Compute(const Tensor& input, Tensor& result) override;
-
-        virtual void Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) override;
+        virtual void Compute(const Tensor& input, Tensor& result) const override;
+        virtual void Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) const override;
 	};
 
     class ReLU : public ActivationBase
     {
 	public:
-        virtual void Compute(const Tensor& input, Tensor& result) override;
-
-        virtual void Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) override;
+        virtual void Compute(const Tensor& input, Tensor& result) const override;
+        virtual void Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) const override;
 	};
 
     class ELU : public ActivationBase
@@ -48,8 +44,8 @@ namespace Neuro
 	public:
 		ELU(float alpha);
 
-        virtual void Compute(const Tensor& input, Tensor& result) override;
-        virtual void Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) override;
+        virtual void Compute(const Tensor& input, Tensor& result) const override;
+        virtual void Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) const override;
 
 	private:
         const float ALPHA;
@@ -58,9 +54,8 @@ namespace Neuro
     class Softmax : public ActivationBase
     {
 	public:
-        virtual void Compute(const Tensor& input, Tensor& result) override;
-
-        virtual void Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) override;
+        virtual void Compute(const Tensor& input, Tensor& result) const override;
+        virtual void Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) const override;
 	};
 
 	namespace Activation

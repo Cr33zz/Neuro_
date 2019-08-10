@@ -7,6 +7,7 @@
 #include "Loss.h"
 #include "Random.h"
 #include "Tools.h"
+#include "TestTools.h"
 
 #include "Layers/Convolution.h"
 #include "Layers/Dense.h"

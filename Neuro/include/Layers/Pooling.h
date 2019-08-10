@@ -1,65 +1,32 @@
-﻿
+﻿#pragma once
 
-namespace Neuro.Layers
+#include "Layers/LayerBase.h"
+
+namespace Neuro
 {
     // https://www.youtube.com/watch?v=8oOgPUO-TBY
-    public class Pooling : LayerBase
+    class Pooling : public LayerBase
     {
-        public Pooling(LayerBase inputLayer, int filterSize, int stride = 1, Tensor.PoolType type = Tensor.PoolType.Max)
-            : base(inputLayer, Pooling.GetOutShape(inputLayer.m_OutputShape, filterSize, filterSize, stride))
-        {
-            Type = type;
-            FilterSize = filterSize;
-            Stride = stride;
-        }
-
+    public:
+        Pooling(LayerBase* inputLayer, int filterSize, int stride = 1, Tensor::EPoolType type = Tensor::EPoolType::Max, const string& name = "");
         // Use this constructor for input layer only!
-        public Pooling(Shape inputShape, int filterSize, int stride = 1, Tensor.PoolType type = Tensor.PoolType.Max)
-            : base(inputShape, Pooling.GetOutShape(inputShape, filterSize, filterSize, stride))
-        {
-            Type = type;
-            FilterSize = filterSize;
-            Stride = stride;
-        }
+        Pooling(Shape inputShape, int filterSize, int stride = 1, Tensor::EPoolType type = Tensor::EPoolType::Max, const string& name = "");
 
-        protected Pooling()
-        {
-        }
+        virtual const char* ClassName() const override;
 
-        protected override LayerBase GetCloneInstance()
-        {
-            return new Pooling();
-        }
+    protected:
+        Pooling();
 
-        protected override void OnClone(LayerBase source)
-        {
-            base.OnClone(source);
+        virtual LayerBase* GetCloneInstance() const override;
+        virtual void OnClone(const LayerBase& source) override;
+        virtual void FeedForwardInternal() override;
+        virtual void BackPropInternal(Tensor& outputGradient) override;
 
-            var sourcePool = source as Pooling;
-            Type = sourcePool.Type;
-            FilterSize = sourcePool.FilterSize;
-            Stride = sourcePool.Stride;
-        }
+    private:
+        static Shape GetOutShape(const Shape& inputShape, int filterWidth, int filterHeight, int stride);
 
-        protected override void FeedForwardInternal()
-        {
-            m_Inputs[0].Pool(FilterSize, Stride, Type, Tensor.PaddingType.Valid, m_Output);
-        }
-
-        protected override void BackPropInternal(Tensor outputGradient)
-        {
-            Tensor.PoolGradient(m_Output, m_Inputs[0], outputGradient, FilterSize, Stride, Type, Tensor.PaddingType.Valid, m_InputsGradient[0]);
-        }
-
-        private static Shape GetOutShape(Shape inputShape, int filterWidth, int filterHeight, int stride)
-        {
-            return new Shape((int)Math.Floor((float)(inputShape.Width - filterWidth) / stride + 1),
-                             (int)Math.Floor((float)(inputShape.Height - filterHeight) / stride + 1),
-                             inputShape.Depth);
-        }
-
-        private Tensor.PoolType Type;
-        private int FilterSize;
-        private int Stride;
-    }
+        Tensor::EPoolType Type;
+        int FilterSize;
+        int Stride;
+    };
 }

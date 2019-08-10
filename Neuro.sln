@@ -11,6 +11,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Neuro.PerfTests", "Neuro.Pe
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Neuro.Tests", "Neuro.Tests\Neuro.Tests.vcxproj", "{4AFD5B50-5B18-4220-A9A2-5B7E49F1E33E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{913DCDCD-2B3B-4F8B-9C6D-10D7388B0B45} = {913DCDCD-2B3B-4F8B-9C6D-10D7388B0B45}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

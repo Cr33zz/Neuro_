@@ -10,18 +10,19 @@ namespace Neuro
 
 	class ActivationBase;
 	class LayerBase;
+    class LossBase;
 
 	namespace TestTools
     {
-        float DERIVATIVE_EPSILON = 1e-4f;
-        float LOSS_DERIVATIVE_EPSILON = 1e-5f;
+        extern float DERIVATIVE_EPSILON;
+        extern float LOSS_DERIVATIVE_EPSILON;
 
         bool ValidateLayer(LayerBase& layer);
         bool VerifyInputGradient(LayerBase& layer, int batchSize = 1);
         bool VerifyParametersGradient(LayerBase& layer, int batchSize = 1);
         tensor_ptr_vec_t GenerateInputsForLayer(LayerBase& layer, int batchSize);
-        bool VerifyActivationFuncDerivative(ActivationBase& func, int batchSize = 1);
-        bool VerifyLossFuncDerivative(LossBase& func, const Tensor& targetOutput, bool onlyPositiveOutput = false, int batchSize = 1, float tolerance = 0.01f);
-        bool VerifyLossFunc(LossBase& func, const Tensor& targetOutput, function<float, float, float> testFunc, bool onlyPositiveOutput = false, int batchSize = 1);
+        bool VerifyActivationFuncDerivative(const ActivationBase& func, int batchSize = 1);
+        bool VerifyLossFuncDerivative(const LossBase& func, const Tensor& targetOutput, bool onlyPositiveOutput = false, int batchSize = 1, float tolerance = 0.01f);
+        template <typename F> bool VerifyLossFunc(const LossBase& func, const Tensor& targetOutput, F& testFunc, bool onlyPositiveOutput = false, int batchSize = 1);
     }
 }
