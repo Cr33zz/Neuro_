@@ -20,7 +20,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Neuro::LayerBase* Input::GetCloneInstance() const
+	LayerBase* Input::GetCloneInstance() const
 	{
 		return new Input();
 	}

@@ -9,17 +9,30 @@
 #include "Tools.h"
 #include "TestTools.h"
 
+#include "Layers/LayerBase.h"
 #include "Layers/Convolution.h"
 #include "Layers/Dense.h"
 #include "Layers/Flatten.h"
 #include "Layers/Input.h"
 #include "Layers/Pooling.h"
+#include "Layers/Concatenate.h"
+#include "Layers/Merge.h"
 
+#include "Models/ModelBase.h"
 #include "Models/Sequential.h"
 #include "Models/Flow.h"
 
+#include "Optimizers/OptimizerBase.h"
 #include "Optimizers/Adam.h"
 #include "Optimizers/SGD.h"
+
+#include "Initializers/InitializerBase.h"
+#include "Initializers/Constant.h"
+#include "Initializers/GlorotNormal.h"
+#include "Initializers/GlorotUniform.h"
+#include "Initializers/Normal.h"
+#include "Initializers/Uniform.h"
+#include "Initializers/Zeros.h"
 
 #include "Tensors/Shape.h"
 #include "Tensors/Tensor.h"

@@ -12,6 +12,7 @@ namespace Neuro
     {
 	public:
 		Sequential();
+        virtual ~Sequential();
         virtual ModelBase* Clone() const override;
         virtual void FeedForward(const tensor_ptr_vec_t& inputs) override;
         virtual void BackProp(vector<Tensor>& deltas) override;

@@ -11,6 +11,7 @@ namespace Neuro
         Adam(float lr = 0.001f);
 
         virtual void OnStep(vector<ParametersAndGradients>& paramsAndGrads, int batchSize) override;
+        virtual OptimizerBase* Clone() const override;
         virtual string ToString() override;
 		virtual const char* ClassName() const override;
 

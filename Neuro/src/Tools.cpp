@@ -31,13 +31,26 @@ namespace Neuro
 		return hits;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
-	void Delete(tensor_ptr_vec_t& tensorsVec)
-	{
-		for (auto tPtr : tensorsVec)
-			delete tPtr;
-		tensorsVec.clear();
-	}
+    //////////////////////////////////////////////////////////////////////////
+    template<typename C>
+    void DeleteContainer(C& container)
+    {
+        for (auto elem : container)
+            delete elem;
+        container.clear();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    template<typename T>
+    void Shuffle(vector<T>& list)
+    {
+        int n = (int)list.size();
+        while (n-- > 1)
+        {
+            int k = Rng.Next(n + 1);
+            swap(list[k], list[n]);
+        }
+    }
 
 	//////////////////////////////////////////////////////////////////////////
 	float Clip(float value, float min, float max)

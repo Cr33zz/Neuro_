@@ -17,6 +17,8 @@ namespace Neuro
     class LayerBase
     {
 	public:
+        virtual ~LayerBase() {}
+
 		const vector<Shape>& InputShapes() const { return m_InputShapes; }
 		const Shape& InputShape() const { return m_InputShapes[0]; }
 		const tensor_ptr_vec_t& Inputs() const { return m_Inputs; }
@@ -58,8 +60,7 @@ namespace Neuro
         LayerBase(const vector<Shape>& inputShapes, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
 		LayerBase(const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
         // This constructor exists only for cloning purposes
-        LayerBase();
-		virtual ~LayerBase() {}
+        LayerBase();		
 
         virtual LayerBase* GetCloneInstance() const = 0;
         virtual void OnClone(const LayerBase& source);

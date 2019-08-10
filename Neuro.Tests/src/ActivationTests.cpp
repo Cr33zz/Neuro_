@@ -1,12 +1,11 @@
 #include "CppUnitTest.h"
 #include "Neuro.h"
 
-
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace Neuro;
 
 namespace NeuroTests
-{		
+{
 	TEST_CLASS(ActivationTests)
 	{
 		TEST_METHOD(Linear_Derivative_1Batch)

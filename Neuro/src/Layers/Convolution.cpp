@@ -7,18 +7,18 @@ namespace Neuro
 	Convolution::Convolution(LayerBase* inputLayer, int filterSize, int filtersNum, int stride, ActivationBase* activation, const string& name)
 		: LayerBase(inputLayer, GetOutShape(inputLayer->OutputShape(), filterSize, filterSize, stride, filtersNum), activation, name.empty() ? GenerateName() : name)
 	{
-		FilterSize = filterSize;
-		FiltersNum = filtersNum;
-		Stride = stride;
+		m_FilterSize = filterSize;
+		m_FiltersNum = filtersNum;
+		m_Stride = stride;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	Convolution::Convolution(const Shape& inputShape, int filterSize, int filtersNum, int stride, ActivationBase* activation, const string& name)
 		: LayerBase(inputShape, GetOutShape(inputShape, filterSize, filterSize, stride, filtersNum), activation, name.empty() ? GenerateName() : name)
 	{
-		FilterSize = filterSize;
-		FiltersNum = filtersNum;
-		Stride = stride;
+		m_FilterSize = filterSize;
+		m_FiltersNum = filtersNum;
+		m_Stride = stride;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -30,8 +30,8 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	Convolution::~Convolution()
 	{
-		delete KernelInitializer;
-		delete BiasInitializer;
+		delete m_KernelInitializer;
+		delete m_BiasInitializer;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -39,18 +39,18 @@ namespace Neuro
 	{
 		__super::OnInit();
 
-		Kernels = Tensor(Shape(FilterSize, FilterSize, InputShape().Depth(), FiltersNum));
-		Bias = Tensor(Shape(m_OutputShape.Width(), m_OutputShape.Height(), FiltersNum));
-		KernelsGradient = Tensor(Kernels.GetShape());
-		BiasGradient = Tensor(Bias.GetShape());
+		m_Kernels = Tensor(Shape(m_FilterSize, m_FilterSize, InputShape().Depth(), m_FiltersNum));
+		m_Bias = Tensor(Shape(m_OutputShape.Width(), m_OutputShape.Height(), m_FiltersNum));
+		m_KernelsGradient = Tensor(m_Kernels.GetShape());
+		m_BiasGradient = Tensor(m_Bias.GetShape());
 
-		KernelInitializer->Init(Kernels, m_InputShapes[0].Length, m_OutputShape.Length);
-		if (UseBias)
-			BiasInitializer->Init(Bias, m_InputShapes[0].Length, m_OutputShape.Length);
+		m_KernelInitializer->Init(m_Kernels, m_InputShapes[0].Length, m_OutputShape.Length);
+		if (m_UseBias)
+			m_BiasInitializer->Init(m_Bias, m_InputShapes[0].Length, m_OutputShape.Length);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Neuro::LayerBase* Convolution::GetCloneInstance() const
+	LayerBase* Convolution::GetCloneInstance() const
 	{
 		return new Convolution();
 	}
@@ -61,30 +61,30 @@ namespace Neuro
 		__super::OnClone(source);
 
 		auto& sourceConv = static_cast<const Convolution&>(source);
-		Kernels = Tensor(sourceConv.Kernels);
-		Bias = Tensor(sourceConv.Bias);
-		UseBias = sourceConv.UseBias;
-		FilterSize = sourceConv.FilterSize;
-		FiltersNum = sourceConv.FiltersNum;
-		Stride = sourceConv.Stride;
+		m_Kernels = Tensor(sourceConv.m_Kernels);
+		m_Bias = Tensor(sourceConv.m_Bias);
+		m_UseBias = sourceConv.m_UseBias;
+		m_FilterSize = sourceConv.m_FilterSize;
+		m_FiltersNum = sourceConv.m_FiltersNum;
+		m_Stride = sourceConv.m_Stride;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Convolution::FeedForwardInternal()
 	{
-		m_Inputs[0]->Conv2D(Kernels, Stride, Tensor::EPaddingType::Valid, m_Output);
-		if (UseBias)
-			m_Output.Add(Bias, m_Output);
+		m_Inputs[0]->Conv2D(m_Kernels, m_Stride, Tensor::EPaddingType::Valid, m_Output);
+		if (m_UseBias)
+			m_Output.Add(m_Bias, m_Output);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Convolution::BackPropInternal(Tensor& outputGradient)
 	{
-		outputGradient.Conv2DInputsGradient(outputGradient, Kernels, Stride, Tensor::EPaddingType::Valid, m_InputsGradient[0]);
-		outputGradient.Conv2DKernelsGradient(*m_Inputs[0], outputGradient, Stride, Tensor::EPaddingType::Valid, KernelsGradient);
+		outputGradient.Conv2DInputsGradient(outputGradient, m_Kernels, m_Stride, Tensor::EPaddingType::Valid, m_InputsGradient[0]);
+		outputGradient.Conv2DKernelsGradient(*m_Inputs[0], outputGradient, m_Stride, Tensor::EPaddingType::Valid, m_KernelsGradient);
 
-		if (UseBias)
-			BiasGradient.Add(outputGradient.SumBatches());
+		if (m_UseBias)
+			m_BiasGradient.Add(outputGradient.SumBatches());
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -96,10 +96,10 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Convolution::GetParametersAndGradients(vector<ParametersAndGradients>& result)
 	{
-		result.push_back(ParametersAndGradients(&Kernels, &KernelsGradient));
+		result.push_back(ParametersAndGradients(&m_Kernels, &m_KernelsGradient));
 
-		if (UseBias)
-			result.push_back(ParametersAndGradients(&Bias, &BiasGradient));
+		if (m_UseBias)
+			result.push_back(ParametersAndGradients(&m_Bias, &m_BiasGradient));
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -108,14 +108,14 @@ namespace Neuro
 		__super::CopyParametersTo(target, tau);
 
 		auto& targetConv = static_cast<Convolution&>(target);
-		Kernels.CopyTo(targetConv.Kernels, tau);
-		Bias.CopyTo(targetConv.Bias, tau);
+		m_Kernels.CopyTo(targetConv.m_Kernels, tau);
+		m_Bias.CopyTo(targetConv.m_Bias, tau);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	int Convolution::GetParamsNum() const
 	{
-		return FilterSize * FilterSize * FiltersNum;
+		return m_FilterSize * m_FilterSize * m_FiltersNum;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -124,4 +124,26 @@ namespace Neuro
 		return "Conv";
 	}
 
+    //////////////////////////////////////////////////////////////////////////
+    Convolution* Convolution::SetKernelInitializer(InitializerBase* initializer)
+    {
+        delete m_KernelInitializer;
+        m_KernelInitializer = initializer;
+        return this;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Convolution* Convolution::SetBiasInitializer(InitializerBase* initializer)
+    {
+        delete m_BiasInitializer;
+        m_BiasInitializer = initializer;
+        return this;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Convolution* Convolution::SetUseBias(bool useBias)
+    {
+        m_UseBias = useBias;
+        return this;
+    }
 }

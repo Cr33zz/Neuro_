@@ -19,6 +19,13 @@ namespace Neuro
 		virtual void GetParametersAndGradients(vector<ParametersAndGradients>& result) override;
 		virtual const char* ClassName() const override;
 
+        Tensor& Kernels() { return m_Kernels; }
+        Tensor& Bias() { return m_Bias; }
+
+        Convolution* SetKernelInitializer(InitializerBase* initializer);
+        Convolution* SetBiasInitializer(InitializerBase* initializer);
+        Convolution* SetUseBias(bool useBias);
+
 	protected:
         Convolution();
 
@@ -45,19 +52,19 @@ namespace Neuro
 	private:
 		static Shape GetOutShape(const Shape& inputShape, int filterWidth, int filterHeight, int stride, int filtersNum);
 
-        Tensor Kernels;
-        Tensor Bias;
-        bool UseBias = true;
+        Tensor m_Kernels;
+        Tensor m_Bias;
+        bool m_UseBias = true;
 
-        Tensor KernelsGradient;
-        Tensor BiasGradient;
+        Tensor m_KernelsGradient;
+        Tensor m_BiasGradient;
 
-        InitializerBase* KernelInitializer = new GlorotUniform();
-        InitializerBase* BiasInitializer = new Zeros();
+        InitializerBase* m_KernelInitializer = new GlorotUniform();
+        InitializerBase* m_BiasInitializer = new Zeros();
 
-        int FiltersNum;
-        int FilterSize;
-        int Stride;
+        int m_FiltersNum;
+        int m_FilterSize;
+        int m_Stride;
 	};
 }
 

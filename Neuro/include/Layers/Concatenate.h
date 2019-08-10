@@ -1,34 +1,21 @@
-﻿using System;
-using System.Linq;
-using Neuro.Tensors;
+﻿#pragma once
 
-namespace Neuro.Layers
+#include "Layers/LayerBase.h"
+
+namespace Neuro
 {
-    public class Concatenate : LayerBase
+    class Concatenate : public LayerBase
     {
-        public Concatenate(LayerBase[] inputLayers, ActivationBase activation = null)
-            : base(inputLayers, new Shape(1, inputLayers.Select(x => x.OutputShape.Length).Sum()))
-        {
-        }
+    public:
+        Concatenate(const vector<LayerBase*>& inputLayers, const string& name = "");
 
-        protected Concatenate()
-        {
-        }
+        virtual const char* ClassName() const override;
 
-        protected override LayerBase GetCloneInstance()
-        {
-            return new Concatenate();
-        }
+    protected:
+        Concatenate();
 
-        protected override void FeedForwardInternal()
-        {
-            // output is already of proper shape thanks to LayerBase.FeedForward
-            Tensor.Concat(m_Inputs, m_Output);
-        }
-
-        protected override void BackPropInternal(Tensor outputGradient)
-        {
-            outputGradient.Split(m_InputsGradient);
-        }
-    }
+        virtual LayerBase* GetCloneInstance() const override;
+        virtual void FeedForwardInternal() override;
+        virtual void BackPropInternal(Tensor& outputGradient) override;
+    };
 }

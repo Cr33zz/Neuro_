@@ -13,6 +13,7 @@ namespace Neuro
     {
 	public:
         void Step(vector<ParametersAndGradients>& paramsAndGrads, int batchSize);
+        virtual OptimizerBase* Clone() const = 0;
 		virtual string ToString() = 0;
 		virtual const char* ClassName() const = 0;
 

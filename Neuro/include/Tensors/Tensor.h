@@ -61,7 +61,7 @@ namespace Neuro
 		int Depth() const { return m_Shape.Depth(); }
 		int BatchSize() const { return m_Shape.BatchSize(); }
 		int BatchLength() const { return m_Shape.Dim0Dim1Dim2; }
-		int Length() const { return (int)Values.size(); }
+		int Length() const { return (int)m_Values.size(); }
 
         vector<float>& GetValues();
         const vector<float>& GetValues() const;
@@ -140,17 +140,17 @@ namespace Neuro
         static Tensor MergeIntoDepth(const vector<Tensor>& tensors, int forcedDepth = 0);
 
 		// This operation will concatenate elements of all input tensors separately for each batch
-		static void Concat(const vector<Tensor>& inputs, Tensor& result);
+		static void Concat(const tensor_ptr_vec_t& inputs, Tensor& result);
         // This is reverse Concat operation
         void Split(vector<Tensor>& outputs) const;
 
-        static void MergeMin(const vector<Tensor>& inputs, Tensor& result);
-        static void MergeMax(const vector<Tensor>& inputs, Tensor& result);
-        static void MergeSum(const vector<Tensor>& inputs, Tensor& result);
-        static void MergeAvg(const vector<Tensor>& inputs, Tensor& result);
-        static void MergeMinMaxGradient(Tensor output, const vector<Tensor>& inputs, Tensor outputGradient, vector<Tensor>& results);
-        static void MergeSumGradient(Tensor output, const vector<Tensor>& inputs, Tensor outputGradient, vector<Tensor>& results);
-        static void MergeAvgGradient(Tensor output, const vector<Tensor>& inputs, Tensor outputGradient, vector<Tensor>& results);
+        static void MergeMin(const tensor_ptr_vec_t& inputs, Tensor& result);
+        static void MergeMax(const tensor_ptr_vec_t& inputs, Tensor& result);
+        static void MergeSum(const tensor_ptr_vec_t& inputs, Tensor& result);
+        static void MergeAvg(const tensor_ptr_vec_t& inputs, Tensor& result);
+        static void MergeMinMaxGradient(const Tensor& output, const tensor_ptr_vec_t& inputs, const Tensor& outputGradient, vector<Tensor>& results);
+        static void MergeSumGradient(const Tensor& output, const tensor_ptr_vec_t& inputs, const Tensor& outputGradient, vector<Tensor>& results);
+        static void MergeAvgGradient(const Tensor& output, const tensor_ptr_vec_t& inputs, const Tensor& outputGradient, vector<Tensor>& results);
 
         void Normalized(Tensor& result) const;
         // ArgMax will return local index inside given batch if batch is not -1
@@ -266,10 +266,10 @@ namespace Neuro
         void OverrideHost() const;
 
 	private:
-        GPUData GpuData;
-		TensorOpCpu* Op;
-        mutable ELocation CurrentLocation;
-        vector<float_t> Values;
+        GPUData m_GpuData;
+		TensorOpCpu* m_Op;
+        mutable ELocation m_CurrentLocation;
+        vector<float_t> m_Values;
 		Shape m_Shape;
 
 		static TensorOpCpu* GetOpMode(EOpMode mode);

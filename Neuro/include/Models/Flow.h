@@ -13,6 +13,7 @@ namespace Neuro
     {
 	public:
         Flow(const vector<LayerBase*>& inputLayers, const vector<LayerBase*>& outputLayers);
+        virtual ~Flow();
 		virtual ModelBase* Clone() const override;
 
 		virtual void FeedForward(const vector<const Tensor*>& inputs) override;

@@ -21,6 +21,13 @@ namespace Neuro
 		virtual void GetParametersAndGradients(vector<ParametersAndGradients>& result) override;
 		virtual const char* ClassName() const override;
 
+        Tensor& Weights() { return m_Weights; }
+        Tensor& Bias() { return m_Bias; }
+
+        Dense* SetWeightsInitializer(InitializerBase* initializer);
+        Dense* SetBiasInitializer(InitializerBase* initializer);
+        Dense* SetUseBias(bool useBias);
+
 	protected:
 		// This constructor exists only for cloning purposes
 		Dense();
@@ -32,15 +39,15 @@ namespace Neuro
         virtual void BackPropInternal(Tensor& outputGradient) override;
 
 	private:
-        Tensor Weights;
-        Tensor Bias;
-        bool UseBias = true;
+        Tensor m_Weights;
+        Tensor m_Bias;
+        bool m_UseBias = true;
 
-		InitializerBase* WeightsInitializer = new GlorotUniform();
-		InitializerBase* BiasInitializer = new Zeros();
-
-        Tensor WeightsGradient;
-        Tensor BiasGradient;
+		Tensor m_WeightsGradient;
+        Tensor m_BiasGradient;
+        
+        InitializerBase* m_WeightsInitializer = new GlorotUniform();
+        InitializerBase* m_BiasInitializer = new Zeros();
 
         /*virtual void SerializeParameters(XmlElement elem)
         {

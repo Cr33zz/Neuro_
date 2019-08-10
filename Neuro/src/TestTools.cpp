@@ -10,7 +10,7 @@ namespace Neuro
     float TestTools::LOSS_DERIVATIVE_EPSILON = 1e-5f;
 
 	//////////////////////////////////////////////////////////////////////////
-	bool TestTools::ValidateLayer(LayerBase& layer)
+	bool TestTools::ValidateLayer(LayerBase* layer)
 	{
 		return VerifyInputGradient(layer) && 
 			   VerifyInputGradient(layer, 3) &&
@@ -19,16 +19,16 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	bool TestTools::VerifyInputGradient(LayerBase& layer, int batchSize)
+	bool TestTools::VerifyInputGradient(LayerBase* layer, int batchSize)
 	{
 		Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
 		auto inputs = GenerateInputsForLayer(layer, batchSize);
 
-		auto output = layer.FeedForward(inputs);
+		auto output = layer->FeedForward(inputs);
 		auto outputGradient = Tensor(output->GetShape());
 		outputGradient.FillWithValue(1);
 
-		layer.BackProp(outputGradient);
+		layer->BackProp(outputGradient);
 
 		auto result = Tensor(output->GetShape());
 
@@ -42,9 +42,9 @@ namespace Neuro
 				auto oldValue = input.GetFlat(i);
 
 				input.SetFlat(oldValue - DERIVATIVE_EPSILON, i);
-				auto output1 = *layer.FeedForward(inputs);
+				auto output1 = *layer->FeedForward(inputs);
 				input.SetFlat(oldValue + DERIVATIVE_EPSILON, i);
-				auto output2 = *layer.FeedForward(inputs);
+				auto output2 = *layer->FeedForward(inputs);
 
 				input.SetFlat(oldValue, i);
 
@@ -58,9 +58,9 @@ namespace Neuro
 					approxGradient += approxGrad[j];
 				}
 
-				if (abs(approxGradient - layer.InputsGradient()[n].GetFlat(i)) > 0.02f)
+				if (abs(approxGradient - layer->InputsGradient()[n].GetFlat(i)) > 0.02f)
 				{
-					//Assert::Fail(string("Input gradient validation failed at element ") + to_string(i) + " of input " + to_string(n) + ", expected " + to_string(approxGradient) + " actual " + to_string(layer.InputsGradient[n].GetFlat(i)) + "!");
+					//Assert::Fail(string("Input gradient validation failed at element ") + to_string(i) + " of input " + to_string(n) + ", expected " + to_string(approxGradient) + " actual " + to_string(layer->InputsGradient[n].GetFlat(i)) + "!");
 					return false;
 				}
 			}
@@ -70,19 +70,19 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	bool TestTools::VerifyParametersGradient(LayerBase& layer, int batchSize)
+	bool TestTools::VerifyParametersGradient(LayerBase* layer, int batchSize)
 	{
         Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
         auto inputs = GenerateInputsForLayer(layer, batchSize);
 
-        auto output = layer.FeedForward(inputs);
+        auto output = layer->FeedForward(inputs);
         auto outputGradient = Tensor(output->GetShape());
         outputGradient.FillWithValue(1);
 
-        layer.BackProp(outputGradient);
+        layer->BackProp(outputGradient);
 
         vector<ParametersAndGradients> paramsAndGrads;
-		layer.GetParametersAndGradients(paramsAndGrads);
+		layer->GetParametersAndGradients(paramsAndGrads);
 
 		if (paramsAndGrads.empty())
 			return true;
@@ -98,9 +98,9 @@ namespace Neuro
 
 			float oldValue = parameters->GetFlat(i);
 			parameters->SetFlat(oldValue + DERIVATIVE_EPSILON, i);
-			auto output1 = Tensor(*layer.FeedForward(inputs));
+			auto output1 = Tensor(*layer->FeedForward(inputs));
 			parameters->SetFlat(oldValue - DERIVATIVE_EPSILON, i);
-			auto output2 = Tensor(*layer.FeedForward(inputs));
+			auto output2 = Tensor(*layer->FeedForward(inputs));
 
 			parameters->SetFlat(oldValue, i);
 
@@ -125,13 +125,13 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Neuro::tensor_ptr_vec_t TestTools::GenerateInputsForLayer(LayerBase& layer, int batchSize)
+	Neuro::tensor_ptr_vec_t TestTools::GenerateInputsForLayer(LayerBase* layer, int batchSize)
 	{
-		tensor_ptr_vec_t inputs(layer.InputShapes().size());
+		tensor_ptr_vec_t inputs(layer->InputShapes().size());
 
 		for (int i = 0; i < (int)inputs.size(); ++i)
 		{
-			auto input = new Tensor(Shape(layer.InputShape().Width(), layer.InputShape().Height(), layer.InputShape().Depth(), batchSize));
+			auto input = new Tensor(Shape(layer->InputShape().Width(), layer->InputShape().Height(), layer->InputShape().Depth(), batchSize));
 			input->FillWithRand(7 + i);
 			inputs[i] = input;
 		}

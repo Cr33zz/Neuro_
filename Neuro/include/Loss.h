@@ -7,6 +7,7 @@ namespace Neuro
     class LossBase
     {
 	public:
+        virtual LossBase* Clone() const = 0;
         virtual void Compute(const Tensor& targetOutput, const Tensor& output, Tensor& result) const = 0;
         virtual void Derivative(const Tensor& targetOutput, const Tensor& output, Tensor& result) const = 0;
 	};
@@ -16,6 +17,7 @@ namespace Neuro
     class CategoricalCrossEntropy : public LossBase
     {
 	public:
+        virtual LossBase* Clone() const override { return new CategoricalCrossEntropy(*this); }
         virtual void Compute(const Tensor& targetOutput, const Tensor& output, Tensor& result) const override;
         virtual void Derivative(const Tensor& targetOutput, const Tensor& output, Tensor& result) const override;
 	};
@@ -24,6 +26,7 @@ namespace Neuro
     class CrossEntropy : public LossBase
     {
 	public:
+        virtual LossBase* Clone() const override { return new CrossEntropy(*this); }
         virtual void Compute(const Tensor& targetOutput, const Tensor& output, Tensor& result) const override;
         virtual void Derivative(const Tensor& targetOutput, const Tensor& output, Tensor& result) const override;
 	};
@@ -31,6 +34,7 @@ namespace Neuro
     class MeanSquareError : public LossBase
     {
 	public:
+        virtual LossBase* Clone() const override { return new MeanSquareError(*this); }
         virtual void Compute(const Tensor& targetOutput, const Tensor& output, Tensor& result) const override;
         virtual void Derivative(const Tensor& targetOutput, const Tensor& output, Tensor& result) const override;
 	};
@@ -40,6 +44,7 @@ namespace Neuro
 	public:
         Huber(float delta);
 
+        virtual LossBase* Clone() const override { return new Huber(*this); }
         virtual void Compute(const Tensor& targetOutput, const Tensor& output, Tensor& result) const override;
         virtual void Derivative(const Tensor& targetOutput, const Tensor& output, Tensor& result) const override;
 

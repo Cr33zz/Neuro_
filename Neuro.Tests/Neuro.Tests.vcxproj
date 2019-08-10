@@ -20,6 +20,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ActivationTests.cpp" />
+    <ClCompile Include="src\ConvolutionLayerTests.cpp" />
+    <ClCompile Include="src\DenseLayerTests.cpp" />
+    <ClCompile Include="src\FlattenLayerTests.cpp" />
+    <ClCompile Include="src\NeuralNetworkTests.cpp" />
+    <ClCompile Include="src\TensorTests.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Neuro\Neuro.vcxproj">
+      <Project>{913dcdcd-2b3b-4f8b-9c6d-10d7388b0b45}</Project>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

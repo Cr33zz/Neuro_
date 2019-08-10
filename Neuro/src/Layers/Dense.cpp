@@ -25,8 +25,8 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	Dense::~Dense()
 	{
-		delete WeightsInitializer;
-		delete BiasInitializer;
+		delete m_WeightsInitializer;
+		delete m_BiasInitializer;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -41,9 +41,9 @@ namespace Neuro
 		__super::OnClone(source);
 
 		auto& sourceDense = static_cast<const Dense&>(source);
-		Weights = sourceDense.Weights;
-		Bias = sourceDense.Bias;
-		UseBias = sourceDense.UseBias;
+		m_Weights = sourceDense.m_Weights;
+		m_Bias = sourceDense.m_Bias;
+		m_UseBias = sourceDense.m_UseBias;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -51,24 +51,24 @@ namespace Neuro
 	{
 		__super::OnInit();
 
-		Weights = Tensor(Shape(InputShape().Length, m_OutputShape.Length));
-		Bias = Tensor(m_OutputShape);
+		m_Weights = Tensor(Shape(InputShape().Length, m_OutputShape.Length));
+		m_Bias = Tensor(m_OutputShape);
 
-		WeightsGradient = Tensor(Weights.GetShape());
-		BiasGradient = Tensor(Bias.GetShape());
+		m_WeightsGradient = Tensor(m_Weights.GetShape());
+		m_BiasGradient = Tensor(m_Bias.GetShape());
 
-		WeightsInitializer->Init(Weights, InputShape().Length, m_OutputShape.Length);
+		m_WeightsInitializer->Init(m_Weights, InputShape().Length, m_OutputShape.Length);
 
-		if (UseBias)
-			BiasInitializer->Init(Bias, InputShape().Length, m_OutputShape.Length);
+		if (m_UseBias)
+			m_BiasInitializer->Init(m_Bias, InputShape().Length, m_OutputShape.Length);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Dense::FeedForwardInternal()
 	{
-		Weights.Mul(*m_Inputs[0], m_Output);
-		if (UseBias)
-			m_Output.Add(Bias, m_Output);
+		m_Weights.Mul(*m_Inputs[0], m_Output);
+		if (m_UseBias)
+			m_Output.Add(m_Bias, m_Output);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -76,11 +76,11 @@ namespace Neuro
 	{
 		// for explanation watch https://www.youtube.com/watch?v=8H2ODPNxEgA&t=898s
 		// each input is responsible for the output error proportionally to weights it is multiplied by
-		Weights.Transposed().Mul(outputGradient, m_InputsGradient[0]);
+		m_Weights.Transposed().Mul(outputGradient, m_InputsGradient[0]);
 
-		WeightsGradient.Add(outputGradient.Mul(m_Inputs[0]->Transposed()).SumBatches(), WeightsGradient);
-		if (UseBias)
-			BiasGradient.Add(outputGradient.SumBatches(), BiasGradient);
+		m_WeightsGradient.Add(outputGradient.Mul(m_Inputs[0]->Transposed()).SumBatches(), m_WeightsGradient);
+		if (m_UseBias)
+			m_BiasGradient.Add(outputGradient.SumBatches(), m_BiasGradient);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -89,8 +89,8 @@ namespace Neuro
 		__super::CopyParametersTo(target, tau);
 
 		auto& targetDense = static_cast<Dense&>(target);
-		Weights.CopyTo(targetDense.Weights, tau);
-		Bias.CopyTo(targetDense.Bias, tau);
+		m_Weights.CopyTo(targetDense.m_Weights, tau);
+		m_Bias.CopyTo(targetDense.m_Bias, tau);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -102,10 +102,10 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Dense::GetParametersAndGradients(vector<ParametersAndGradients>& result)
 	{
-		result.push_back(ParametersAndGradients(&Weights, &WeightsGradient));
+		result.push_back(ParametersAndGradients(&m_Weights, &m_WeightsGradient));
 
-		if (UseBias)
-			result.push_back(ParametersAndGradients(&Bias, &BiasGradient));
+		if (m_UseBias)
+			result.push_back(ParametersAndGradients(&m_Bias, &m_BiasGradient));
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -113,4 +113,27 @@ namespace Neuro
 	{
 		return "Dense";
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    Dense* Dense::SetWeightsInitializer(InitializerBase* initializer)
+    {
+        delete m_WeightsInitializer;
+        m_WeightsInitializer = initializer;
+        return this;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Dense* Dense::SetBiasInitializer(InitializerBase* initializer)
+    {
+        delete m_BiasInitializer;
+        m_BiasInitializer = initializer;
+        return this;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Dense* Dense::SetUseBias(bool useBias)
+    {
+        m_UseBias = useBias;
+        return this;
+    }
 }

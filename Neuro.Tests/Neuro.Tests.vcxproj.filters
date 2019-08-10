@@ -13,5 +13,20 @@
     <ClCompile Include="src\ActivationTests.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\NeuralNetworkTests.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ConvolutionLayerTests.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DenseLayerTests.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FlattenLayerTests.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TensorTests.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

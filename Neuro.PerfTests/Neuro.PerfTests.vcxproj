@@ -132,6 +132,11 @@
     <ClInclude Include="include\ConvNetPeftTests.h" />
     <ClInclude Include="include\SimpleNetPerfTests.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Neuro\Neuro.vcxproj">
+      <Project>{913dcdcd-2b3b-4f8b-9c6d-10d7388b0b45}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

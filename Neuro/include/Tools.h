@@ -14,17 +14,8 @@ namespace Neuro
     int AccBinaryClassificationEquality(const Tensor& target, const Tensor& output);
     int AccCategoricalClassificationEquality(const Tensor& target, const Tensor& output);
 
-	void Delete(tensor_ptr_vec_t& tensorsVec);
-
-    template<typename T> void Shuffle(vector<T>& list)
-    {
-        int n = (int)list.size();
-        while (n-- > 1)
-        {
-            int k = Rng.Next(n + 1);
-			swap(list[k], list[n]);
-        }
-    }
+	template<typename C> void DeleteContainer(C& container);
+    template<typename T> void Shuffle(vector<T>& list);
 
     float Clip(float value, float min, float max);
 	int Sign(float value);

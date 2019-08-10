@@ -25,13 +25,22 @@ namespace Neuro
         }
     }
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    NeuralNetwork::~NeuralNetwork()
+    {
+        delete Model;
+        delete Optimizer;
+        DeleteContainer(LossFuncs);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	Neuro::NeuralNetwork* NeuralNetwork::Clone()
 	{
 		auto clone = new NeuralNetwork(Name, Seed);
 		clone->Model = Model->Clone();
-		clone->Optimizer = Optimizer;
-		clone->LossFuncs = LossFuncs;
+		clone->Optimizer = Optimizer->Clone();
+        for (auto loss : LossFuncs)
+		    clone->LossFuncs.push_back(loss->Clone());
 		return clone;
 	}
 
@@ -110,8 +119,9 @@ namespace Neuro
         Model->Optimize();
 
         LossFuncs.resize(Model->GetOutputLayersCount());
-        for (int i = 0; i < (int)LossFuncs.size(); ++i)
-            LossFuncs[i] = loss;
+        LossFuncs[0] = loss;
+        for (int i = 1; i < (int)LossFuncs.size(); ++i)
+            LossFuncs[i] = loss->Clone();
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -225,8 +235,8 @@ namespace Neuro
 						cout << '\b';
 				}
 
-				Delete(inputsBatch);
-				Delete(outputsBatch);
+				DeleteContainer(inputsBatch);
+				DeleteContainer(outputsBatch);
 			}
 
 			//trainTimer.Stop();

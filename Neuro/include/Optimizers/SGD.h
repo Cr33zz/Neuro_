@@ -8,6 +8,7 @@ namespace Neuro
     {
 	public:
         SGD(float lr = 0.01f);
+        virtual OptimizerBase* Clone() const override;
 		virtual string ToString() override;
 		virtual const char* ClassName() const override;
 

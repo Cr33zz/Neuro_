@@ -34,6 +34,7 @@ namespace Neuro
     {
 	public:
         NeuralNetwork(const string& name, int seed = 0);
+        ~NeuralNetwork();
 
         NeuralNetwork* Clone();
 

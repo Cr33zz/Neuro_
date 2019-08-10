@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     Pooling::Pooling(LayerBase* inputLayer, int filterSize, int stride, Tensor::EPoolType type, const string& name)
-        : LayerBase(inputLayer, GetOutShape(inputLayer->OutputShape(), filterSize, filterSize, stride), nullptr, name)
+        : LayerBase(inputLayer, GetOutShape(inputLayer->OutputShape(), filterSize, filterSize, stride), nullptr, name.empty() ? GenerateName() : name)
     {
         Type = type;
         FilterSize = filterSize;
@@ -13,7 +13,7 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     Pooling::Pooling(Shape inputShape, int filterSize, int stride, Tensor::EPoolType type, const string& name)
-        : LayerBase(inputShape, GetOutShape(inputShape, filterSize, filterSize, stride), nullptr, name)
+        : LayerBase(inputShape, GetOutShape(inputShape, filterSize, filterSize, stride), nullptr, name.empty() ? GenerateName() : name)
     {
         Type = type;
         FilterSize = filterSize;
@@ -27,7 +27,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Neuro::LayerBase* Pooling::GetCloneInstance() const
+    LayerBase* Pooling::GetCloneInstance() const
     {
         return new Pooling();
     }
@@ -56,7 +56,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Neuro::Shape Pooling::GetOutShape(const Shape& inputShape, int filterWidth, int filterHeight, int stride)
+    Shape Pooling::GetOutShape(const Shape& inputShape, int filterWidth, int filterHeight, int stride)
     {
         return Shape((int)floor((float)(inputShape.Width() - filterWidth) / stride + 1),
             (int)floor((float)(inputShape.Height() - filterHeight) / stride + 1),

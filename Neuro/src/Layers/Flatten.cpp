@@ -26,7 +26,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Neuro::LayerBase* Flatten::GetCloneInstance() const
+	LayerBase* Flatten::GetCloneInstance() const
 	{
 		return new Flatten();
 	}
