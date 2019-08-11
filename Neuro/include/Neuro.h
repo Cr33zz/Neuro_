@@ -8,6 +8,7 @@
 #include "Random.h"
 #include "Tools.h"
 #include "TestTools.h"
+#include "Stopwatch.h"
 
 #include "Layers/LayerBase.h"
 #include "Layers/Convolution.h"

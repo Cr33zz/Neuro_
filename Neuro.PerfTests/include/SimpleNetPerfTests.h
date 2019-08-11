@@ -2,14 +2,7 @@
 #include <string>
 #include <vector>
 
-#include "Tensors/Tensor.h"
-#include "Activations.h"
-#include "Loss.h"
-#include "Layers/Dense.h"
-#include "Models/Flow.h"
-#include "Optimizers/SGD.h"
-#include "NeuralNetwork.h"
-#include "Data.h"
+#include "Neuro.h"
 
 using namespace std;
 using namespace Neuro;
@@ -21,11 +14,11 @@ public:
     {
         Tensor::SetDefaultOpMode(Tensor::EOpMode::MultiCPU);
 
-        auto input1 = new Dense(2, 2, new Sigmoid(), "input1");
-        auto upperStream1 = new Dense(input1, 2, new Linear(), "upperStream1");
-        auto lowerStream1 = new Dense(input1, 2, new Linear(), "lowerStream1");
+        auto input1 = new Dense(2, 2, new Sigmoid(), "input_1");
+        auto upperStream1 = new Dense(input1, 2, new Linear(), "upperStream_1");
+        auto lowerStream1 = new Dense(input1, 2, new Linear(), "lowerStream_1");
 
-        auto net = new NeuralNetwork("simple-flow");
+        auto net = new NeuralNetwork("simple_flow");
         net->Model = new Flow({ input1 }, { upperStream1, lowerStream1 });
         net->Optimize(new SGD(0.05f), new MeanSquareError());
 
@@ -34,9 +27,14 @@ public:
 
 		cout << net->Model->Summary() << "\n";
 
-        auto netClone = net->Clone();
+        Stopwatch timer;
+        timer.Start();
 
-        netClone->Fit(inputs, outputs, 1, 60, nullptr, nullptr, 0, Track::Nothing, false);
+        net->Fit(inputs, outputs, 1, 60, nullptr, nullptr, 0, Track::Nothing, false);
+
+        timer.Stop();
+        cout << timer.ElapsedMiliseconds() << " ms";
+        
 
         //var input1 = new Dense(2, 2, Activation.Sigmoid);
         //var upperStream1 = new Dense(input1, 2, Activation.Sigmoid);
