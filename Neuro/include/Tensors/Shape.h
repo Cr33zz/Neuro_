@@ -11,7 +11,7 @@ namespace Neuro
     class Shape
     {
 	public:
-        Shape(int width = 1, int height = 1, int depth = 1, int batchSize = 1);
+        explicit Shape(int width = 1, int height = 1, int depth = 1, int batchSize = 1);
 
 		bool operator==(const Shape& other) const;
 		bool operator!=(const Shape& other) const;

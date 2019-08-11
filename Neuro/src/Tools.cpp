@@ -32,6 +32,14 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
+    void DeleteData(vector<tensor_ptr_vec_t>& data)
+    {
+        for (auto& v : data)
+            DeleteContainer(v);
+        data.clear();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	float Clip(float value, float min, float max)
 	{
 		return value < min ? min : (value > max ? max : value);

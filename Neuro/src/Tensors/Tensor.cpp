@@ -943,7 +943,7 @@ namespace Neuro
 		CopyToHost();
 		//if (m_Shape.Length != result.m_Shape.Length) throw new Exception("Incompatible tensors.");
 
-		if (tau > 0)
+		if (tau <= 0)
 			copy(m_Values.begin(), m_Values.end(), result.m_Values.begin());
 		else
 			Map([&](float v1, float v2) { return v1 * tau + v2 * (1 - tau); }, result, result);

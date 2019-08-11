@@ -102,27 +102,27 @@ namespace NeuroTests
 
         TEST_METHOD(Single_Convolution_Layer_BS10_VS1)
         {
-            TestConvolutionLayer(Shape(9, 9, 2), 3, 4, 1, 50, 10, 15, ConvValidStride1);
+            TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 1, 30, 10, 40, ConvValidStride1);
         }
 
         TEST_METHOD(Single_Convolution_Layer_BS1_VS1)
         {
-            TestConvolutionLayer(Shape(9, 9, 2), 3, 4, 1, 50, 1, 10, ConvValidStride1);
+            TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 1, 30, 1, 15, ConvValidStride1);
         }
 
         TEST_METHOD(Single_Convolution_Layer_FullBatch_VS1)
         {
-            TestConvolutionLayer(Shape(9, 9, 2), 3, 4, 1, 50, -1, 20, ConvValidStride1);
+            TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 1, 30, -1, 30, ConvValidStride1);
         }
 
         TEST_METHOD(Single_Convolution_Layer_BS10_VS2)
         {
-            TestConvolutionLayer(Shape(9, 9, 2), 3, 4, 2, 50, 10, 15, ConvValidStride2);
+            TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 2, 30, 10, 40, ConvValidStride2);
         }
 
         TEST_METHOD(Single_Convolution_Layer_BS10_VS3)
         {
-            TestConvolutionLayer(Shape(9, 9, 2), 3, 4, 3, 50, 10, 15, ConvValidStride3);
+            TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 3, 30, 10, 40, ConvValidStride3);
         }
 
         TEST_METHOD(Batching_No_Reminder)
@@ -174,18 +174,21 @@ namespace NeuroTests
                 Assert::IsTrue(netParams[i].Parameters->Equals(*net2Params[i].Parameters));
         }
 
-        void TestDenseLayer(int inputs, int outputs, int samples, int batchSize, int epochs)
+        void TestDenseLayer(int inputsNum, int outputsNum, int samples, int batchSize, int epochs)
         {
             auto net = new NeuralNetwork("dense_test", 7);
             auto model = new Sequential();
-            model->AddLayer((new Dense(inputs, outputs, new Linear()))->SetWeightsInitializer(new Constant(1))->SetUseBias(false));
+            model->AddLayer((new Dense(inputsNum, outputsNum, new Linear()))->SetWeightsInitializer(new Constant(1))->SetUseBias(false));
             net->Model = model;
 
             auto expectedWeights = Tensor({ 1.1f, 0.1f, -1.3f, 0.2f, -0.9f, 0.7f }, Shape(3, 2));
-            auto tData = GenerateTrainingData(samples, model->GetLayer(0)->InputShape(), expectedWeights, MatMult);
+
+            vector<tensor_ptr_vec_t> inputs;
+            vector<tensor_ptr_vec_t> outputs;
+            GenerateTrainingData(samples, model->GetLayer(0)->InputShape(), expectedWeights, MatMult, inputs, outputs);
 
             net->Optimize(new SGD(0.07f), new MeanSquareError());
-            net->Fit(tData.first, tData.second, batchSize, epochs, 0, Track::Nothing);
+            net->Fit(inputs, outputs, batchSize, epochs, nullptr, nullptr, 0, Track::Nothing);
 
             vector<ParametersAndGradients> paramsAndGrads;
             model->GetLastLayer()->GetParametersAndGradients(paramsAndGrads);
@@ -193,8 +196,8 @@ namespace NeuroTests
             for (int i = 0; i < expectedWeights.Length(); ++i)
                 Assert::AreEqual((double)paramsAndGrads[0].Parameters->GetFlat(i), (double)expectedWeights.GetFlat(i), 1e-2);
 
-            DeleteContainer(tData.first);
-            DeleteContainer(tData.second);
+            DeleteData(inputs);
+            DeleteData(outputs);
         }
 
         void TestDenseNetwork(int inputsNum, int samples, int batchSize, int epochs)
@@ -206,26 +209,26 @@ namespace NeuroTests
             model->AddLayer(new Dense(model->GetLastLayer(), inputsNum, new Linear()));
             net->Model = model;
 
-            tensor_ptr_vec_t inputs;
-            tensor_ptr_vec_t outputs;
+            vector<tensor_ptr_vec_t> inputs;
+            vector<tensor_ptr_vec_t> outputs;
             
             for (int i = 0; i < samples; ++i)
             {
                 auto input = new Tensor(model->GetLayer(0)->InputShape());
                 input->FillWithRand(10 * i, -2, 2);
 
-                inputs.push_back(input);
-                outputs.push_back(new Tensor(input->Mul(1.7f)));
+                inputs.push_back({ input });
+                outputs.push_back({ new Tensor(input->Mul(1.7f)) });
             }
 
             net->Optimize(new SGD(0.02f), new MeanSquareError());
-            net->Fit(inputs, outputs, batchSize, epochs, 0, Track::Nothing);
+            net->Fit(inputs, outputs, batchSize, epochs, nullptr, nullptr, 0, Track::Nothing);
 
             for (size_t i = 0; i < inputs.size(); ++i)
-                Assert::IsTrue(outputs[i]->Equals(*net->Predict(inputs[i])[0], 0.01f));
+                Assert::IsTrue(outputs[i][0]->Equals(*net->Predict(inputs[i])[0], 0.01f));
 
-            DeleteContainer(inputs);
-            DeleteContainer(outputs);
+            DeleteData(inputs);
+            DeleteData(outputs);
         }
 
         template<typename F>
@@ -239,16 +242,21 @@ namespace NeuroTests
             auto expectedKernels = Tensor(Shape(kernelSize, kernelSize, inputShape.Depth(), kernelsNum));
             expectedKernels.FillWithRand(17);
 
-            auto tData = GenerateTrainingData(samples, model->GetLastLayer()->InputShape(), expectedKernels, convFunc);
+            vector<tensor_ptr_vec_t> inputs;
+            vector<tensor_ptr_vec_t> outputs;
+            GenerateTrainingData(samples, model->GetLastLayer()->InputShape(), expectedKernels, convFunc, inputs, outputs);
             
             net->Optimize(new SGD(0.02f), new MeanSquareError());
-            net->Fit(tData.first, tData.second, batchSize, epochs, 0, Track::Nothing);
+            net->Fit(inputs, outputs, batchSize, epochs, nullptr, nullptr, 0, Track::Nothing);
 
             vector<ParametersAndGradients> paramsAndGrads;
             model->GetLastLayer()->GetParametersAndGradients(paramsAndGrads);
 
             for (int i = 0; i < expectedKernels.Length(); ++i)
                 Assert::AreEqual((double)paramsAndGrads[0].Parameters->GetFlat(i), (double)expectedKernels.GetFlat(i), 1e-2);
+
+            DeleteData(inputs);
+            DeleteData(outputs);
         }
 
         TEST_METHOD(Streams_1Input_2Outputs_SimpleSplit)
@@ -262,14 +270,14 @@ namespace NeuroTests
 
             net->Optimize(new SGD(0.05f), new MeanSquareError());
 
-            tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)) };
-            tensor_ptr_vec_t outputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
+            vector<tensor_ptr_vec_t> inputs = { { new Tensor({ 0, 1 }, Shape(1, 2)) } };
+            vector<tensor_ptr_vec_t> outputs = { { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) } };
 
-            net->Fit({ inputs }, { outputs }, 1, 100, nullptr, 0, Track::Nothing, false);
+            net->Fit(inputs, outputs, 1, 100, nullptr, 0, Track::Nothing, false);
 
-            auto prediction = net->Predict(inputs);
-            Assert::IsTrue(prediction[0]->Equals(*outputs[0], 0.01f));
-            Assert::IsTrue(prediction[1]->Equals(*outputs[1], 0.01f));
+            auto prediction = net->Predict(inputs[0]);
+            Assert::IsTrue(prediction[0]->Equals(*outputs[0][0], 0.01f));
+            Assert::IsTrue(prediction[1]->Equals(*outputs[0][1], 0.01f));
         }
 
         TEST_METHOD(Streams_2Inputs_1Output_SimpleConcat)
@@ -283,53 +291,53 @@ namespace NeuroTests
 
             net->Optimize(new SGD(0.05f), new MeanSquareError());
 
-            tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
-            tensor_ptr_vec_t output = { new Tensor({ 1, 2, 1, 2 }, Shape(1, 4)) };
+            vector<tensor_ptr_vec_t> inputs = { { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) } };
+            vector<tensor_ptr_vec_t> outputs = { { new Tensor({ 1, 2, 1, 2 }, Shape(1, 4)) } };
 
-            net->Fit({ inputs }, { output }, 1, 100, nullptr, 0, Track::Nothing, false);
+            net->Fit(inputs, outputs, 1, 100, nullptr, nullptr, 0, Track::Nothing, false);
 
-            auto prediction = net->Predict(inputs);
-            Assert::IsTrue(prediction[0]->Equals(*output[0], 0.01f));
+            auto prediction = net->Predict(inputs[0]);
+            Assert::IsTrue(prediction[0]->Equals(*outputs[0][0], 0.01f));
         }
 
         TEST_METHOD(Streams_2Inputs_1Output_AvgMerge)
         {
             LayerBase* input1 = new Dense(2, 2, new Linear(), "input1");
             LayerBase* input2 = new Dense(2, 2, new Linear(), "input2");
-            LayerBase* avgMerge = new Merge({ input1, input2 }, Merge::Mode::Avg, "avg_merge");
+            LayerBase* avgMerge = new Merge(vector<LayerBase*>{ input1, input2 }, Merge::Mode::Avg, "avg_merge");
 
             auto net = new NeuralNetwork("test");
             net->Model = new Flow({ input1, input2 }, { avgMerge });
 
             net->Optimize(new SGD(0.05f), new MeanSquareError());
 
-            tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
-            tensor_ptr_vec_t output = { new Tensor({ 2, 4 }, Shape(1, 2)) };
+            vector<tensor_ptr_vec_t> inputs = { { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) } };
+            vector<tensor_ptr_vec_t> outputs = { { new Tensor({ 2, 4 }, Shape(1, 2)) } };
 
-            net->Fit({ inputs }, { output }, 1, 100, nullptr, 0, Track::Nothing, false);
+            net->Fit(inputs, outputs, 1, 100, nullptr, nullptr, 0, Track::Nothing, false);
 
-            auto prediction = net->Predict(inputs);
-            Assert::IsTrue(prediction[0]->Equals(*output[0], 0.01f));
+            auto prediction = net->Predict(inputs[0]);
+            Assert::IsTrue(prediction[0]->Equals(*outputs[0][0], 0.01f));
         }
 
         TEST_METHOD(Streams_2Inputs_1Output_MinMerge)
         {
             LayerBase* input1 = new Dense(2, 2, new Linear(), "input1");
             LayerBase* input2 = new Dense(2, 2, new Linear(), "input2");
-            LayerBase* merge = new Merge({ input1, input2 }, Merge::Mode::Min, "min_merge");
+            LayerBase* merge = new Merge(vector<LayerBase*>{ input1, input2 }, Merge::Mode::Min, "min_merge");
 
             auto net = new NeuralNetwork("test");
             net->Model = new Flow({ input1, input2 }, { merge });
 
             net->Optimize(new SGD(0.05f), new MeanSquareError());
 
-            tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
-            tensor_ptr_vec_t output = { new Tensor({ 2, 4 }, Shape(1, 2)) };
+            vector<tensor_ptr_vec_t> inputs = { { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) } };
+            vector<tensor_ptr_vec_t> outputs = { { new Tensor({ 2, 4 }, Shape(1, 2)) } };
 
-            net->Fit({ inputs }, { output }, 1, 100, nullptr, 0, Track::Nothing, false);
+            net->Fit(inputs, outputs, 1, 100, nullptr, nullptr, 0, Track::Nothing, false);
 
-            auto prediction = net->Predict(inputs);
-            Assert::IsTrue(prediction[0]->Equals(*output[0], 0.01f));
+            auto prediction = net->Predict(inputs[0]);
+            Assert::IsTrue(prediction[0]->Equals(*outputs[0][0], 0.01f));
         }
 
         static Tensor* MatMult(const Tensor& input, const Tensor& expectedParams)
@@ -353,20 +361,15 @@ namespace NeuroTests
         }
 
         template<typename F>
-        pair<tensor_ptr_vec_t, tensor_ptr_vec_t> GenerateTrainingData(int samples, const Shape& inShape, const Tensor& expectedParams, F& trainDataFunc)
+        void GenerateTrainingData(int samples, const Shape& inShape, const Tensor& expectedParams, F& trainDataFunc, vector<tensor_ptr_vec_t>& inputs, vector<tensor_ptr_vec_t>& outputs)
         {
-            tensor_ptr_vec_t inputs;
-            tensor_ptr_vec_t outputs;
-
             for (int i = 0; i < samples; ++i)
             {
                 auto input = new Tensor(inShape);
                 input->FillWithRand(3 * i);
-                inputs.push_back(input);
-                outputs.push_back(trainDataFunc(*input, expectedParams));
+                inputs.push_back({ input });
+                outputs.push_back({ trainDataFunc(*input, expectedParams) });
             }
-
-            return make_pair(inputs, outputs);
         }
     };
 }

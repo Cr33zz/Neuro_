@@ -15,7 +15,7 @@ namespace Neuro
     int AccCategoricalClassificationEquality(const Tensor& target, const Tensor& output);
 
 	template<typename C> void DeleteContainer(C& container);
-    template<typename T> void Shuffle(vector<T>& list);
+    void DeleteData(vector<tensor_ptr_vec_t>& data);
 
     float Clip(float value, float min, float max);
 	int Sign(float value);

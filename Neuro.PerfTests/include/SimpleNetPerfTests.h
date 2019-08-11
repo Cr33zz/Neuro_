@@ -29,14 +29,14 @@ public:
         net->Model = new Flow({ input1 }, { upperStream1, lowerStream1 });
         net->Optimize(new SGD(0.05f), new MeanSquareError());
 
-		tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)) };
-		tensor_ptr_vec_t outputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
+        vector<tensor_ptr_vec_t> inputs = { { new Tensor({ 0, 1 }, Shape(1, 2)) } };
+        vector<tensor_ptr_vec_t> outputs = { { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) } };
 
 		cout << net->Model->Summary() << "\n";
 
         auto netClone = net->Clone();
 
-        netClone->Fit(inputs, outputs, 1, 60, 2, Track::Nothing, false);
+        netClone->Fit(inputs, outputs, 1, 60, nullptr, nullptr, 0, Track::Nothing, false);
 
         //var input1 = new Dense(2, 2, Activation.Sigmoid);
         //var upperStream1 = new Dense(input1, 2, Activation.Sigmoid);

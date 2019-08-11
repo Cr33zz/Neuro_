@@ -23,6 +23,7 @@
     <ClCompile Include="src\ConvolutionLayerTests.cpp" />
     <ClCompile Include="src\DenseLayerTests.cpp" />
     <ClCompile Include="src\FlattenLayerTests.cpp" />
+    <ClCompile Include="src\MergeLayerTests.cpp" />
     <ClCompile Include="src\NeuralNetworkTests.cpp" />
     <ClCompile Include="src\TensorTests.cpp" />
   </ItemGroup>

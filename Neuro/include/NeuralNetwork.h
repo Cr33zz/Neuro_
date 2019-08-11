@@ -63,7 +63,7 @@ namespace Neuro
         void Optimize(OptimizerBase* optimizer, LossBase* loss);
         void Optimize(OptimizerBase* optimizer, map<string, LossBase*> lossDict);
 
-		void Fit(const tensor_ptr_vec_t& input, const tensor_ptr_vec_t& output, int batchSize = -1, int epochs = 1, int verbose = 1, int trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
+		void FitBatched(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, int batchSize = -1, int epochs = 1, int verbose = 1, int trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
 		// Training method, when batch size is -1 the whole training set is used for single gradient descent step (in other words, batch size equals to training set size)
 		void Fit(const vector<tensor_ptr_vec_t>& inputs, const vector<tensor_ptr_vec_t>& outputs, int batchSize = -1, int epochs = 1, const vector<tensor_ptr_vec_t>* validInputs = nullptr, const vector<tensor_ptr_vec_t>* validOutputs = nullptr, int verbose = 1, int trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
 

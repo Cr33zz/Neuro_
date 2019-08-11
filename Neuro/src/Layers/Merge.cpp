@@ -6,15 +6,15 @@ namespace Neuro
     Merge::Merge(const vector<LayerBase*>& inputLayers, Mode mergeMode, const string& name)
         : LayerBase(__FUNCTION__, inputLayers, inputLayers[0]->OutputShape(), nullptr, name)
     {
-        MergeMode = mergeMode;
+        m_MergeMode = mergeMode;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    /*Merge::Merge(const vector<Shape>& inputShapes, Mode mergeMode, const string& name)
-        : LayerBase(inputShapes, inputShapes[0], nullptr, name.empty() ? GenerateName(ClassName()) : name)
+    Merge::Merge(const vector<Shape>& inputShapes, Mode mergeMode, const string& name)
+        : LayerBase(__FUNCTION__, inputShapes, inputShapes[0], nullptr, name)
     {
-        MergeMode = mergeMode;
-    }*/
+        m_MergeMode = mergeMode;
+    }
 
     //////////////////////////////////////////////////////////////////////////
     Merge::Merge()
@@ -33,13 +33,13 @@ namespace Neuro
         __super::OnClone(source);
 
         auto sourceMerge = static_cast<const Merge&>(source);
-        MergeMode = sourceMerge.MergeMode;
+        m_MergeMode = sourceMerge.m_MergeMode;
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Merge::FeedForwardInternal()
     {
-        switch (MergeMode)
+        switch (m_MergeMode)
         {
         case Mode::Avg:
             Tensor::MergeAvg(m_Inputs, m_Output);
@@ -59,7 +59,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Merge::BackPropInternal(Tensor& outputGradient)
     {
-        switch (MergeMode)
+        switch (m_MergeMode)
         {
         case Mode::Avg:
             Tensor::MergeAvgGradient(m_Output, m_Inputs, outputGradient, m_InputsGradient);

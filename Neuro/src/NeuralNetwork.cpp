@@ -143,9 +143,9 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	void NeuralNetwork::Fit(const tensor_ptr_vec_t& input, const tensor_ptr_vec_t& output, int batchSize, int epochs, int verbose, int trackFlags, bool shuffle)
+	void NeuralNetwork::FitBatched(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, int batchSize, int epochs, int verbose, int trackFlags, bool shuffle)
 	{
-		Fit({ input }, { output }, batchSize, epochs, nullptr, nullptr, verbose, trackFlags, shuffle);
+		//Fit({ input }, { output }, batchSize, epochs, nullptr, nullptr, verbose, trackFlags, shuffle);
 	}
 
 	//////////////////////////////////////////////////////////////////////////

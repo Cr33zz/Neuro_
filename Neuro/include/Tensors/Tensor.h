@@ -232,7 +232,7 @@ namespace Neuro
         void Set(float value, int w, int h = 0, int d = 0, int n = 0);
         void TrySet(float value, int w, int h = 0, int d = 0, int n = 0);
 
-        void CopyTo(Tensor& result, float tau = -1) const;
+        void CopyTo(Tensor& result, float tau = 0) const;
         void CopyBatchTo(int batchId, int targetBatchId, Tensor& result) const;
         void CopyDepthTo(int depthId, int batchId, int targetDepthId, int targetBatchId, Tensor& result) const;
         Tensor GetBatch(int batchId) const;
