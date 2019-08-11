@@ -38,7 +38,7 @@ namespace Neuro
 	{
 		auto clone = new NeuralNetwork(Name, Seed);
 		clone->Model = Model->Clone();
-		clone->Optimizer = Optimizer->Clone();
+		clone->Optimizer = Optimizer ? Optimizer->Clone() : nullptr;
         for (auto loss : LossFuncs)
 		    clone->LossFuncs.push_back(loss->Clone());
 		return clone;
@@ -145,13 +145,15 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void NeuralNetwork::Fit(const tensor_ptr_vec_t& input, const tensor_ptr_vec_t& output, int batchSize, int epochs, int verbose, int trackFlags, bool shuffle)
 	{
-		Fit({ input }, { output }, batchSize, epochs, nullptr, verbose, trackFlags, shuffle);
+		Fit({ input }, { output }, batchSize, epochs, nullptr, nullptr, verbose, trackFlags, shuffle);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void NeuralNetwork::Fit(const vector<tensor_ptr_vec_t>& inputs, const vector<tensor_ptr_vec_t>& outputs, int batchSize, int epochs, const tensor_ptr_vec_t* validationData, int verbose, int trackFlags, bool shuffle)
+	void NeuralNetwork::Fit(const vector<tensor_ptr_vec_t>& inputs, const vector<tensor_ptr_vec_t>& outputs, int batchSize, int epochs, const vector<tensor_ptr_vec_t>* validInputs, const vector<tensor_ptr_vec_t>* validOutputs, int verbose, int trackFlags, bool shuffle)
 	{
-		int samplesNum = (int)inputs[0].size();
+        assert(inputs.size() == outputs.size() && "Number of input and output samples must match.");
+
+		int samplesNum = (int)inputs.size();
 
 		if (batchSize < 0)
 			batchSize = samplesNum;
@@ -205,7 +207,7 @@ namespace Neuro
 
 			// no point shuffling stuff when we have single batch
 			if (samplesNum > 1 && shuffle)
-				Shuffle(indices);
+                random_shuffle(indices.begin(), indices.end(), [](size_t max) { return Rng.Next((int)max); });
 
 			for (int b = 0; b < batchesNum; ++b)
 			{
@@ -321,16 +323,18 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	tensor_ptr_vec_t NeuralNetwork::GenerateBatch(const vector<tensor_ptr_vec_t>& inputs, vector<int> batchIndices)
+	tensor_ptr_vec_t NeuralNetwork::GenerateBatch(const vector<tensor_ptr_vec_t>& inputs, const vector<int>& batchIndices)
 	{
 		tensor_ptr_vec_t result; // result is a vector of tensors (1 per each input) with multiple (batchIndices.size()) batches in each one of them
 		
 		for (int i = 0; i < (int)inputs[0].size(); ++i)
 		{
-			auto t = new Tensor(Shape(inputs[0][i]->Width(), inputs[0][i]->Height(), inputs[0][i]->Depth(), (int)batchIndices.size()));
+            int batches = (int)batchIndices.size();
 
-			for (int b : batchIndices)
-				inputs[b][i]->CopyBatchTo(0, b, *t);
+			auto t = new Tensor(Shape(inputs[0][i]->Width(), inputs[0][i]->Height(), inputs[0][i]->Depth(), batches));
+
+            for (int b = 0; b < batches; ++b)
+				inputs[batchIndices[b]][i]->CopyBatchTo(0, b, *t);
 
 			result.push_back(t);
 		}

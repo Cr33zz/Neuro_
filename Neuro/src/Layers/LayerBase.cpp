@@ -3,14 +3,15 @@
 #include "Activations.h"
 #include "Layers/LayerBase.h"
 #include "Tensors/Shape.h"
+#include "Tools.h"
 
 namespace Neuro
 {
-	map<const char*, int> LayerBase::s_LayersCountPerType;
+	map<string, int> LayerBase::s_LayersCountPerType;
 
 	//////////////////////////////////////////////////////////////////////////
-	LayerBase::LayerBase(LayerBase* inputLayer, const Shape& outputShape, ActivationBase* activation, const string& name)
-		: LayerBase(outputShape, activation, name)
+	LayerBase::LayerBase(const string& constructorName, LayerBase* inputLayer, const Shape& outputShape, ActivationBase* activation, const string& name)
+		: LayerBase(constructorName, outputShape, activation, name)
 	{
 		m_InputShapes.push_back(inputLayer->m_OutputShape);
 		m_InputLayers.push_back(inputLayer);
@@ -18,8 +19,8 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	LayerBase::LayerBase(const vector<LayerBase*>& inputLayers, const Shape& outputShape, ActivationBase* activation, const string& name)
-		: LayerBase(outputShape, activation, name)
+	LayerBase::LayerBase(const string& constructorName, const vector<LayerBase*>& inputLayers, const Shape& outputShape, ActivationBase* activation, const string& name)
+		: LayerBase(constructorName, outputShape, activation, name)
 	{
 		m_InputLayers.insert(m_InputLayers.end(), inputLayers.begin(), inputLayers.end());
 		for (auto inLayer : inputLayers)
@@ -30,25 +31,26 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	LayerBase::LayerBase(const Shape& inputShape, const Shape& outputShape, ActivationBase* activation, const string& name)
-		: LayerBase(outputShape, activation, name)
+	LayerBase::LayerBase(const string& constructorName, const Shape& inputShape, const Shape& outputShape, ActivationBase* activation, const string& name)
+		: LayerBase(constructorName, outputShape, activation, name)
 	{
 		m_InputShapes.push_back(inputShape);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	LayerBase::LayerBase(const vector<Shape>& inputShapes, const Shape& outputShape, ActivationBase* activation, const string& name)
-		: LayerBase(outputShape, activation, name)
+	LayerBase::LayerBase(const string& constructorName, const vector<Shape>& inputShapes, const Shape& outputShape, ActivationBase* activation, const string& name)
+		: LayerBase(constructorName, outputShape, activation, name)
 	{
 		m_InputShapes = inputShapes;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	LayerBase::LayerBase(const Shape& outputShape, ActivationBase* activation, const string& name)
+    LayerBase::LayerBase(const string& constructorName, const Shape& outputShape, ActivationBase* activation, const string& name)
 	{
 		m_OutputShape = outputShape;
 		m_Activation = activation;
-		m_Name = name;
+        m_ClassName = ToLower(constructorName.substr(constructorName.find_last_of("::") + 1));
+        m_Name = name.empty() ? GenerateName() : name;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -179,7 +181,7 @@ namespace Neuro
 		Initialized = true;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
 	void LayerBase::OnInit()
 	{
 	}
@@ -187,8 +189,8 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	string LayerBase::GenerateName() const
 	{
-		stringstream ss;
-		ss << ClassName() << "_" << (++s_LayersCountPerType[ClassName()]);
+        stringstream ss;
+		ss << m_ClassName << "_" << (++s_LayersCountPerType[m_ClassName]);
 		return ss.str();
 	}
 }

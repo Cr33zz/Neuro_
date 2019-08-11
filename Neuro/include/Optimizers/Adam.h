@@ -13,7 +13,7 @@ namespace Neuro
         virtual void OnStep(vector<ParametersAndGradients>& paramsAndGrads, int batchSize) override;
         virtual OptimizerBase* Clone() const override;
         virtual string ToString() override;
-		virtual const char* ClassName() const override;
+		const char* ClassName() const;
 
 	private:
         float LearningRate;

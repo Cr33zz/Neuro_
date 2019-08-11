@@ -10,7 +10,7 @@ namespace Neuro
         SGD(float lr = 0.01f);
         virtual OptimizerBase* Clone() const override;
 		virtual string ToString() override;
-		virtual const char* ClassName() const override;
+		const char* ClassName() const;
 
 	protected:
         virtual void OnStep(vector<ParametersAndGradients>& paramsAndGrads, int batchSize) override;

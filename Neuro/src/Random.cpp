@@ -18,7 +18,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	int Random::Next(int min, int max) const
 	{
-		uniform_int_distribution<> range(min, max);
+		uniform_int_distribution<> range(min, max - 1);
 		return range(m_Engine);
 	}
 

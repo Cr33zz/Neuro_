@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     Concatenate::Concatenate(const vector<LayerBase*>& inputLayers, const string& name)
-        : LayerBase(inputLayers, Shape(), nullptr, name.empty() ? GenerateName() : name)
+        : LayerBase(__FUNCTION__, inputLayers, Shape(), nullptr, name)
     {
         int totalLen = 0;
         for (auto input : inputLayers)

@@ -549,7 +549,7 @@ namespace Neuro
 			for (int i = 0; i < inputs.size(); ++i)
 			{
 				inputs[i]->CopyToHost();
-				copy(inputs[i]->m_Values.begin() + b * inputs[i]->BatchLength(), inputs[i]->m_Values.begin() + inputs[i]->BatchLength(), result.m_Values.begin() + b * result.BatchLength() + elementsCopied);
+				copy(inputs[i]->m_Values.begin() + b * inputs[i]->BatchLength(), inputs[i]->m_Values.begin() + (b + 1) * inputs[i]->BatchLength(), result.m_Values.begin() + b * result.BatchLength() + elementsCopied);
 				elementsCopied += inputs[i]->BatchLength();
 			}
 		}
@@ -565,7 +565,9 @@ namespace Neuro
 			for (int i = 0; i < outputs.size(); ++i)
 			{
 				outputs[i].CopyToHost();
-				copy(m_Values.begin() + b * BatchLength() + elementsCopied, m_Values.begin() + outputs[i].BatchLength(), outputs[i].m_Values.begin() + b * outputs[i].BatchLength());
+				copy(m_Values.begin() + b * BatchLength() + elementsCopied, 
+                     m_Values.begin() + b * BatchLength() + elementsCopied + outputs[i].BatchLength(),
+                     outputs[i].m_Values.begin() + b * outputs[i].BatchLength());
 				elementsCopied += outputs[i].BatchLength();
 			}
 		}

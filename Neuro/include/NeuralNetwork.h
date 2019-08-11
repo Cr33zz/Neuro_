@@ -44,7 +44,7 @@ namespace Neuro
         // parameters will be updated as follows: this_parameters * tau + target_parameters * (1 - tau)
         void SoftCopyParametersTo(NeuralNetwork& target, float tau);
 
-		ModelBase* Model;
+		ModelBase* Model = nullptr;
         string Name;
 
         string FilePrefix() const;
@@ -65,14 +65,14 @@ namespace Neuro
 
 		void Fit(const tensor_ptr_vec_t& input, const tensor_ptr_vec_t& output, int batchSize = -1, int epochs = 1, int verbose = 1, int trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
 		// Training method, when batch size is -1 the whole training set is used for single gradient descent step (in other words, batch size equals to training set size)
-		void Fit(const vector<tensor_ptr_vec_t>& inputs, const vector<tensor_ptr_vec_t>& outputs, int batchSize = -1, int epochs = 1, const tensor_ptr_vec_t* validationData = nullptr, int verbose = 1, int trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
+		void Fit(const vector<tensor_ptr_vec_t>& inputs, const vector<tensor_ptr_vec_t>& outputs, int batchSize = -1, int epochs = 1, const vector<tensor_ptr_vec_t>* validInputs = nullptr, const vector<tensor_ptr_vec_t>* validOutputs = nullptr, int verbose = 1, int trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
 
     private:
         // This is vectorized gradient descent
         void TrainStep(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, float& trainError, int& trainHits);
 
 		// Build a single tensor with multiple batches for each input
-		tensor_ptr_vec_t GenerateBatch(const vector<tensor_ptr_vec_t>& inputs, vector<int> batchIndices);
+		tensor_ptr_vec_t GenerateBatch(const vector<tensor_ptr_vec_t>& inputs, const vector<int>& batchIndices);
 
 		void LogLine(const string& text);
 
@@ -86,7 +86,7 @@ namespace Neuro
 	
 	private:
         vector<LossBase*> LossFuncs;
-        OptimizerBase* Optimizer;
+        OptimizerBase* Optimizer = nullptr;
         
         int Seed;        
         vector<accuracy_func_t> AccuracyFuncs;

@@ -10,13 +10,13 @@ namespace Neuro
 
 	//////////////////////////////////////////////////////////////////////////
 	Flatten::Flatten(LayerBase* inputLayer, const string& name)
-		: LayerBase(inputLayer, Shape(1, inputLayer->OutputShape().Length), nullptr, name.empty() ? GenerateName() : name)
+        : LayerBase(__FUNCTION__, inputLayer, Shape(1, inputLayer->OutputShape().Length), nullptr, name)
 	{
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	Flatten::Flatten(const Shape& inputShape, const string& name)
-		: LayerBase(inputShape, Shape(1, inputShape.Length), nullptr, name.empty() ? GenerateName() : name)
+		: LayerBase(__FUNCTION__, inputShape, Shape(1, inputShape.Length), nullptr, name)
 	{
 	}
 

@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     Pooling::Pooling(LayerBase* inputLayer, int filterSize, int stride, Tensor::EPoolType type, const string& name)
-        : LayerBase(inputLayer, GetOutShape(inputLayer->OutputShape(), filterSize, filterSize, stride), nullptr, name.empty() ? GenerateName() : name)
+        : LayerBase(__FUNCTION__, inputLayer, GetOutShape(inputLayer->OutputShape(), filterSize, filterSize, stride), nullptr, name)
     {
         Type = type;
         FilterSize = filterSize;
@@ -13,7 +13,7 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     Pooling::Pooling(Shape inputShape, int filterSize, int stride, Tensor::EPoolType type, const string& name)
-        : LayerBase(inputShape, GetOutShape(inputShape, filterSize, filterSize, stride), nullptr, name.empty() ? GenerateName() : name)
+        : LayerBase(__FUNCTION__, inputShape, GetOutShape(inputShape, filterSize, filterSize, stride), nullptr, name)
     {
         Type = type;
         FilterSize = filterSize;

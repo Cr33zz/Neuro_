@@ -17,7 +17,8 @@ namespace Neuro
 		virtual void CopyParametersTo(LayerBase& target, float tau) const override;
 		virtual int GetParamsNum() const override;
 		virtual void GetParametersAndGradients(vector<ParametersAndGradients>& result) override;
-		virtual const char* ClassName() const override;
+		
+        const char* ClassName() const;
 
         Tensor& Kernels() { return m_Kernels; }
         Tensor& Bias() { return m_Bias; }

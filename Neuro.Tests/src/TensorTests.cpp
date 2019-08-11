@@ -249,12 +249,12 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(correct));
         }
 
-        TEST_METHOD(Conv2DInputGradient_3Batches_10Kernels)
+        TEST_METHOD(Conv2DInputGradient_3Batches_5Kernels)
         {
             Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
-            Tensor output = Tensor(Shape(24, 24, 10, 3)); output.FillWithRand();
+            Tensor output = Tensor(Shape(24, 24, 5, 3)); output.FillWithRand();
             Tensor input = Tensor(Shape(26, 26, 32, 3)); input.FillWithRand();
-            Tensor kernels = Tensor(Shape(3, 3, 32, 10)); kernels.FillWithRand();
+            Tensor kernels = Tensor(Shape(3, 3, 32, 5)); kernels.FillWithRand();
             Tensor gradient = Tensor(output); gradient.FillWithRand();
 
             Tensor inputGradient = Tensor(input);
@@ -267,12 +267,12 @@ namespace NeuroTests
             Assert::IsTrue(inputGradient.Equals(inputGradient2));
         }
 
-        TEST_METHOD(Conv2DKernelsGradient_3Batches_10Kernels)
+        TEST_METHOD(Conv2DKernelsGradient_3Batches_5Kernels)
         {
             Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
-            Tensor output = Tensor(Shape(24, 24, 10, 3)); output.FillWithRand();
+            Tensor output = Tensor(Shape(24, 24, 5, 3)); output.FillWithRand();
             Tensor input = Tensor(Shape(26, 26, 32, 3)); input.FillWithRand();
-            Tensor kernels = Tensor(Shape(3, 3, 32, 10)); kernels.FillWithRand();
+            Tensor kernels = Tensor(Shape(3, 3, 32, 5)); kernels.FillWithRand();
             Tensor gradient = Tensor(output); gradient.FillWithRand();
 
             Tensor kernelsGradient = Tensor(kernels);
@@ -356,7 +356,7 @@ namespace NeuroTests
         {
             Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
 
-            auto t = Tensor(Shape(2, 3, 4, 5)); t.FillWithRange(t.GetShape().Length, 0.5f);
+            auto t = Tensor(Shape(2, 3, 4, 5)); t.FillWithRange((float)t.GetShape().Length, 0.5f);
             auto result = t.Clipped(-0.1f, 0.1f);
 
             for (int i = 0; i < t.GetShape().Length; ++i)
@@ -367,7 +367,7 @@ namespace NeuroTests
         {
             Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
 
-            auto t = Tensor(Shape(2, 3, 4, 5)); t.FillWithRange(-t.GetShape().Length, 0.5f);
+            auto t = Tensor(Shape(2, 3, 4, 5)); t.FillWithRange((float)-t.GetShape().Length, 0.5f);
             auto result = t.Clipped(-0.1f, 0.1f);
 
             for (int i = 0; i < t.GetShape().Length; ++i)
@@ -447,7 +447,7 @@ namespace NeuroTests
             auto t = Tensor(Shape(2, 2, 1, 3)); t.FillWithRange(1);
             vector<float> averages = { 2.5f, 6.5f, 10.5f };
 
-            for (int i = 0; i < t.BatchSize; ++i)
+            for (int i = 0; i < t.BatchSize(); ++i)
                 Assert::AreEqual((double)t.Avg(i), (double)averages[i], 1e-7);
         }
 
@@ -496,10 +496,10 @@ namespace NeuroTests
             Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
 
             auto t = Tensor({ -20, 1, 5, 5, 6, -1, 3, 4, 2, 1, 16, 5, 3, 1, 10, 11 }, Shape(2, 2, 1, 4));
-            auto maxes = new int[] { 2, 0, 2, 3 };
+            vector<float> maxes = { 2, 0, 2, 3 };
 
-            for (int i = 0; i < t.BatchSize; ++i)
-                Assert::AreEqual(t.ArgMax(i), maxes[i]);
+            for (int i = 0; i < t.BatchSize(); ++i)
+                Assert::AreEqual((double)t.ArgMax(i), (double)maxes[i]);
         }
 
         TEST_METHOD(CopyBatchTo)
@@ -529,7 +529,7 @@ namespace NeuroTests
 
             auto result = Tensor::MergeIntoBatch(tensors);
 
-            for (int i = 0; i < tensors.size; ++i)
+            for (int i = 0; i < tensors.size(); ++i)
                 Assert::IsTrue(result.GetBatch(i).Equals(tensors[i]));
         }
 

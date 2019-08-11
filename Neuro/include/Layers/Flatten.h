@@ -11,7 +11,7 @@ namespace Neuro
         // This constructor should only be used for input layer
         Flatten(const Shape& inputShape, const string& name = "");
 
-		virtual const char* ClassName() const override;
+		const char* ClassName() const;
 
 	protected:
         Flatten();

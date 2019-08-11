@@ -9,7 +9,7 @@ namespace Neuro
     public:
         Concatenate(const vector<LayerBase*>& inputLayers, const string& name = "");
 
-        virtual const char* ClassName() const override;
+        const char* ClassName() const;
 
     protected:
         Concatenate();

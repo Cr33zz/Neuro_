@@ -5,7 +5,7 @@ namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
 	Convolution::Convolution(LayerBase* inputLayer, int filterSize, int filtersNum, int stride, ActivationBase* activation, const string& name)
-		: LayerBase(inputLayer, GetOutShape(inputLayer->OutputShape(), filterSize, filterSize, stride, filtersNum), activation, name.empty() ? GenerateName() : name)
+		: LayerBase(__FUNCTION__, inputLayer, GetOutShape(inputLayer->OutputShape(), filterSize, filterSize, stride, filtersNum), activation, name)
 	{
 		m_FilterSize = filterSize;
 		m_FiltersNum = filtersNum;
@@ -14,7 +14,7 @@ namespace Neuro
 
 	//////////////////////////////////////////////////////////////////////////
 	Convolution::Convolution(const Shape& inputShape, int filterSize, int filtersNum, int stride, ActivationBase* activation, const string& name)
-		: LayerBase(inputShape, GetOutShape(inputShape, filterSize, filterSize, stride, filtersNum), activation, name.empty() ? GenerateName() : name)
+		: LayerBase(__FUNCTION__, inputShape, GetOutShape(inputShape, filterSize, filterSize, stride, filtersNum), activation, name)
 	{
 		m_FilterSize = filterSize;
 		m_FiltersNum = filtersNum;

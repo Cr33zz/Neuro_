@@ -20,7 +20,7 @@ namespace NeuroTests
 
         TEST_METHOD(Dense_Network_FullBatch)
         {
-            TestDenseNetwork(2, 50, -1, 100);
+            TestDenseNetwork(2, 50, -1, 150);
         }
 
         TEST_METHOD(Fit_Batched_Tensors)
@@ -102,27 +102,27 @@ namespace NeuroTests
 
         TEST_METHOD(Single_Convolution_Layer_BS10_VS1)
         {
-            TestConvolutionLayer(Shape(9, 9, 2), 3, 4, 1, 100, 10, 15, ConvValidStride1);
+            TestConvolutionLayer(Shape(9, 9, 2), 3, 4, 1, 50, 10, 15, ConvValidStride1);
         }
 
         TEST_METHOD(Single_Convolution_Layer_BS1_VS1)
         {
-            TestConvolutionLayer(Shape(9, 9, 2), 3, 4, 1, 100, 1, 10, ConvValidStride1);
+            TestConvolutionLayer(Shape(9, 9, 2), 3, 4, 1, 50, 1, 10, ConvValidStride1);
         }
 
         TEST_METHOD(Single_Convolution_Layer_FullBatch_VS1)
         {
-            TestConvolutionLayer(Shape(9, 9, 2), 3, 4, 1, 100, -1, 20, ConvValidStride1);
+            TestConvolutionLayer(Shape(9, 9, 2), 3, 4, 1, 50, -1, 20, ConvValidStride1);
         }
 
         TEST_METHOD(Single_Convolution_Layer_BS10_VS2)
         {
-            TestConvolutionLayer(Shape(9, 9, 2), 3, 4, 2, 100, 10, 15, ConvValidStride2);
+            TestConvolutionLayer(Shape(9, 9, 2), 3, 4, 2, 50, 10, 15, ConvValidStride2);
         }
 
         TEST_METHOD(Single_Convolution_Layer_BS10_VS3)
         {
-            TestConvolutionLayer(Shape(9, 9, 2), 3, 4, 3, 100, 10, 15, ConvValidStride3);
+            TestConvolutionLayer(Shape(9, 9, 2), 3, 4, 3, 50, 10, 15, ConvValidStride3);
         }
 
         TEST_METHOD(Batching_No_Reminder)
@@ -185,7 +185,7 @@ namespace NeuroTests
             auto tData = GenerateTrainingData(samples, model->GetLayer(0)->InputShape(), expectedWeights, MatMult);
 
             net->Optimize(new SGD(0.07f), new MeanSquareError());
-            net->Fit(tData.first, tData.second, batchSize, epochs, 2, Track::TrainError);
+            net->Fit(tData.first, tData.second, batchSize, epochs, 0, Track::Nothing);
 
             vector<ParametersAndGradients> paramsAndGrads;
             model->GetLastLayer()->GetParametersAndGradients(paramsAndGrads);
@@ -219,7 +219,7 @@ namespace NeuroTests
             }
 
             net->Optimize(new SGD(0.02f), new MeanSquareError());
-            net->Fit(inputs, outputs, batchSize, epochs, 2, Track::TrainError);
+            net->Fit(inputs, outputs, batchSize, epochs, 0, Track::Nothing);
 
             for (size_t i = 0; i < inputs.size(); ++i)
                 Assert::IsTrue(outputs[i]->Equals(*net->Predict(inputs[i])[0], 0.01f));
@@ -263,14 +263,13 @@ namespace NeuroTests
             net->Optimize(new SGD(0.05f), new MeanSquareError());
 
             tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)) };
-            tensor_ptr_vec_t outputs = { new Tensor({ 0, 1 }, Shape(1, 2)),
-                                         new Tensor({ 1, 2 }, Shape(1, 2)) };
+            tensor_ptr_vec_t outputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
 
             net->Fit({ inputs }, { outputs }, 1, 100, nullptr, 0, Track::Nothing, false);
 
             auto prediction = net->Predict(inputs);
-            Assert::IsTrue(prediction[0]->Equals(outputs[0][0], 0.01f));
-            Assert::IsTrue(prediction[1]->Equals(outputs[0][1], 0.01f));
+            Assert::IsTrue(prediction[0]->Equals(*outputs[0], 0.01f));
+            Assert::IsTrue(prediction[1]->Equals(*outputs[1], 0.01f));
         }
 
         TEST_METHOD(Streams_2Inputs_1Output_SimpleConcat)
@@ -284,8 +283,7 @@ namespace NeuroTests
 
             net->Optimize(new SGD(0.05f), new MeanSquareError());
 
-            tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)),
-                                        new Tensor({ 1, 2 }, Shape(1, 2)) };
+            tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
             tensor_ptr_vec_t output = { new Tensor({ 1, 2, 1, 2 }, Shape(1, 4)) };
 
             net->Fit({ inputs }, { output }, 1, 100, nullptr, 0, Track::Nothing, false);
@@ -305,8 +303,7 @@ namespace NeuroTests
 
             net->Optimize(new SGD(0.05f), new MeanSquareError());
 
-            tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)),
-                                        new Tensor({ 1, 2 }, Shape(1, 2)) };
+            tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
             tensor_ptr_vec_t output = { new Tensor({ 2, 4 }, Shape(1, 2)) };
 
             net->Fit({ inputs }, { output }, 1, 100, nullptr, 0, Track::Nothing, false);
@@ -326,8 +323,7 @@ namespace NeuroTests
 
             net->Optimize(new SGD(0.05f), new MeanSquareError());
 
-            tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)),
-                                        new Tensor({ 1, 2 }, Shape(1, 2)) };
+            tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
             tensor_ptr_vec_t output = { new Tensor({ 2, 4 }, Shape(1, 2)) };
 
             net->Fit({ inputs }, { output }, 1, 100, nullptr, 0, Track::Nothing, false);

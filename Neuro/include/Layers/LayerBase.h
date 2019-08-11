@@ -44,7 +44,7 @@ namespace Neuro
 		LayerBase* Clone();
 		void Init();
 		
-		virtual const char* ClassName() const = 0;
+        const string& ClassName() const { return m_ClassName; }
 
 	protected:
         // The concept of layer is that it is a 'block box' that supports feed forward and backward propagation.
@@ -52,13 +52,13 @@ namespace Neuro
         // Back propagation: error gradients (for its outputs) -> |learning| -> error gradients (for predecessing layer outputs) and internal parameters deltas
         // These error gradients are always of the same size as respective outputs and are saying now much each output
         // contributed to the final error)
-        LayerBase(LayerBase* inputLayer, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
-		LayerBase(const vector<LayerBase*>& inputLayers, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
+        LayerBase(const string& constructorName, LayerBase* inputLayer, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
+		LayerBase(const string& constructorName, const vector<LayerBase*>& inputLayers, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
         // This constructor should only be used for input layer
-        LayerBase(const Shape& inputShape, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
+        LayerBase(const string& constructorName, const Shape& inputShape, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
         // This constructor should only be used for input layer
-        LayerBase(const vector<Shape>& inputShapes, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
-		LayerBase(const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
+        LayerBase(const string& constructorName, const vector<Shape>& inputShapes, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
+		LayerBase(const string& constructorName, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
         // This constructor exists only for cloning purposes
         LayerBase();		
 
@@ -92,6 +92,7 @@ namespace Neuro
 		vector<LayerBase*> m_InputLayers;
 		vector<LayerBase*> m_OutputLayers;
 		string m_Name;
+        string m_ClassName;
 		bool Initialized = false;        
 
 		/*Stopwatch FeedForwardTimer = new Stopwatch();
@@ -99,7 +100,7 @@ namespace Neuro
 		Stopwatch BackPropTimer = new Stopwatch();
 		Stopwatch ActivationBackPropTimer = new Stopwatch();*/
 
-		static map<const char*, int> s_LayersCountPerType;
+		static map<string, int> s_LayersCountPerType;
 
 		friend class Flow;
 	};

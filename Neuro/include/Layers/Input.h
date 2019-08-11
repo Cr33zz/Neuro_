@@ -11,8 +11,6 @@ namespace Neuro
 	public:
         Input(const Shape& inputShape, const string& name = "");
 
-		virtual const char* ClassName() const override;
-
 	protected:
         Input();
 
