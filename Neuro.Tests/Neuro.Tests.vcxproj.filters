@@ -31,5 +31,11 @@
     <ClCompile Include="src\MergeLayerTests.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\PoolingLayerTests.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ShapeTests.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
