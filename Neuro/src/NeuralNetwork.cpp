@@ -9,18 +9,22 @@
 #include "Optimizers/OptimizerBase.h"
 #include "Loss.h"
 #include "Tools.h"
+#include "ChartGenerator.h"
+#include "Stopwatch.h"
 
 namespace Neuro
 {
-    bool NeuralNetwork::DebugMode = false;
-
     //////////////////////////////////////////////////////////////////////////
-    NeuralNetwork::NeuralNetwork(const string& name, int seed)
+    NeuralNetwork::NeuralNetwork(ModelBase* model, const string& name, int seed)
     {
-        Name = name;
+        assert(model && "Model cannot be null!");
+
+        m_Model = model;
+        m_Name = name;
+        
         if (seed > 0)
         {
-            Seed = seed;
+            m_Seed = seed;
             Rng = Random(seed);
         }
     }
@@ -28,34 +32,34 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     NeuralNetwork::~NeuralNetwork()
     {
-        delete Model;
-        delete Optimizer;
-        DeleteContainer(LossFuncs);
+        delete m_Model;
+        delete m_Optimizer;
+        DeleteContainer(m_LossFuncs);
     }
 
     //////////////////////////////////////////////////////////////////////////
 	Neuro::NeuralNetwork* NeuralNetwork::Clone()
 	{
-		auto clone = new NeuralNetwork(Name, Seed);
-		clone->Model = Model->Clone();
-		clone->Optimizer = Optimizer ? Optimizer->Clone() : nullptr;
-        for (auto loss : LossFuncs)
-		    clone->LossFuncs.push_back(loss->Clone());
+        auto modelClone = m_Model->Clone();
+		auto clone = new NeuralNetwork(modelClone, m_Name, m_Seed);
+		clone->m_Optimizer = m_Optimizer ? m_Optimizer->Clone() : nullptr;
+        for (auto loss : m_LossFuncs)
+		    clone->m_LossFuncs.push_back(loss->Clone());
 		return clone;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
     void NeuralNetwork::ForceInitLayers()
     {
-        for(auto layer : Model->GetLayers())
+        for(auto layer : m_Model->GetLayers())
             layer->Init();
     }
 
 	//////////////////////////////////////////////////////////////////////////
     void NeuralNetwork::CopyParametersTo(NeuralNetwork& target)
     {
-		auto& layers = Model->GetLayers();
-		auto& targetLayers = target.Model->GetLayers();
+		auto& layers = m_Model->GetLayers();
+		auto& targetLayers = target.m_Model->GetLayers();
 
 		for (int i = 0; i < layers.size(); ++i)
 			layers[i]->CopyParametersTo(*targetLayers[i]);
@@ -65,8 +69,8 @@ namespace Neuro
     void NeuralNetwork::SoftCopyParametersTo(NeuralNetwork& target, float tau)
     {
         //if (tau > 1 || tau <= 0) throw new Exception("Tau has to be a value from range (0, 1>.");
-		auto& layers = Model->GetLayers();
-		auto& targetLayers = target.Model->GetLayers();
+		auto& layers = m_Model->GetLayers();
+		auto& targetLayers = target.m_Model->GetLayers();
 
 		for (int i = 0; i < layers.size(); ++i)
 			layers[i]->CopyParametersTo(*targetLayers[i], tau);
@@ -75,7 +79,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
     string NeuralNetwork::FilePrefix() const
     {
-		string lower = ToLower(Name);
+		string lower = ToLower(m_Name);
 		replace_if(lower.begin(), lower.end(), [](unsigned char c) { return c == ' '; }, '_');
 		return lower;
     }
@@ -83,62 +87,62 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	tensor_ptr_vec_t NeuralNetwork::Predict(const tensor_ptr_vec_t& inputs)
     {
-        Model->FeedForward(inputs);
-        return Model->GetOutputs();
+        m_Model->FeedForward(inputs);
+        return m_Model->GetOutputs();
     }
 
 	//////////////////////////////////////////////////////////////////////////
     tensor_ptr_vec_t NeuralNetwork::Predict(const Tensor* input)
     {
-		Model->FeedForward({ input });
-        return Model->GetOutputs();
+		m_Model->FeedForward({ input });
+        return m_Model->GetOutputs();
     }
 
 	//////////////////////////////////////////////////////////////////////////
     void NeuralNetwork::FeedForward(const tensor_ptr_vec_t& inputs)
     {
-        Model->FeedForward(inputs);
+        m_Model->FeedForward(inputs);
     }
 
 	//////////////////////////////////////////////////////////////////////////
     vector<ParametersAndGradients> NeuralNetwork::GetParametersAndGradients()
     {
-        return Model->GetParametersAndGradients();
+        return m_Model->GetParametersAndGradients();
     }
 
 	//////////////////////////////////////////////////////////////////////////
     void NeuralNetwork::BackProp(vector<Tensor>& deltas)
     {
-        Model->BackProp(deltas);
+        m_Model->BackProp(deltas);
     }
 
 	//////////////////////////////////////////////////////////////////////////
     void NeuralNetwork::Optimize(OptimizerBase* optimizer, LossBase* loss)
     {
-        Optimizer = optimizer;
-        Model->Optimize();
+        m_Optimizer = optimizer;
+        m_Model->Optimize();
 
-        LossFuncs.resize(Model->GetOutputLayersCount());
-        LossFuncs[0] = loss;
-        for (int i = 1; i < (int)LossFuncs.size(); ++i)
-            LossFuncs[i] = loss->Clone();
+        m_LossFuncs.resize(m_Model->GetOutputLayersCount());
+        m_LossFuncs[0] = loss;
+        for (int i = 1; i < (int)m_LossFuncs.size(); ++i)
+            m_LossFuncs[i] = loss->Clone();
     }
 
 	//////////////////////////////////////////////////////////////////////////
     void NeuralNetwork::Optimize(OptimizerBase* optimizer, map<string, LossBase*> lossDict)
     {
-        Optimizer = optimizer;
-        Model->Optimize();
+        m_Optimizer = optimizer;
+        m_Model->Optimize();
 
 #ifdef VALIDATION_ENABLED
         //if (lossDict.size() != Model->GetOutputLayersCount()) throw new Exception($"Mismatched number of loss functions ({lossDict.Count}) and output layers ({Model->GetOutputLayersCount()})!");
 #endif
 
-        LossFuncs.resize(Model->GetOutputLayersCount());
+        m_LossFuncs.resize(m_Model->GetOutputLayersCount());
         int i = 0;
-        for (auto outLayer : Model->GetOutputLayers())
+        for (auto outLayer : m_Model->GetOutputLayers())
         {
-            LossFuncs[i++] = lossDict[outLayer->Name()];
+            m_LossFuncs[i++] = lossDict[outLayer->Name()];
         }
     }
 
@@ -158,38 +162,38 @@ namespace Neuro
 		if (batchSize < 0)
 			batchSize = samplesNum;
 
-		string outFilename = FilePrefix() + "_training_data_" + Optimizer->ClassName() + "_b" + to_string(batchSize) + (Seed > 0 ? "(_seed" + to_string(Seed) + ")" : "");
+		string outFilename = FilePrefix() + "_training_data_" + m_Optimizer->ClassName() + "_b" + to_string(batchSize) + (m_Seed > 0 ? "(_seed" + to_string(m_Seed) + ")" : "");
 		
-		/*ChartGenerator chartGen = null;
-		if (trackFlags != Track.Nothing)
-			chartGen = new ChartGenerator($"{outFilename}", $"{Name}\nloss=[{string.Join(", ", Losses.Select(x => x.GetType().Name))}] optimizer={Optimizer} batch_size={batchSize}\nseed={(Seed > 0 ? Seed.ToString() : "None")}", "Epoch");
+		ChartGenerator* chartGen = nullptr;
+		if (trackFlags != Track::Nothing)
+			chartGen = new ChartGenerator(outFilename, m_Name/* + "\nloss=" + [{string.Join(", ", Losses.Select(x => x.GetType().Name))}] optimizer={Optimizer} batch_size={batchSize}\nseed={(Seed > 0 ? Seed.ToString() : "None")}"*/, "Epoch");
 
-		if (trackFlags.HasFlag(Track.TrainError))
-			chartGen.AddSeries((int)Track.TrainError, "Error on train data\n(left Y axis)", Color.DarkRed);
-		if (trackFlags.HasFlag(Track.TestError))
-			chartGen.AddSeries((int)Track.TestError, "Error on test data\n(left Y axis)", Color.IndianRed);
-		if (trackFlags.HasFlag(Track.TrainAccuracy))
-			chartGen.AddSeries((int)Track.TrainAccuracy, "Accuracy on train data\n(right Y axis)", Color.DarkBlue, true);
-		if (trackFlags.HasFlag(Track.TestAccuracy))
-			chartGen.AddSeries((int)Track.TestAccuracy, "Accuracy on test\n(right Y axis)", Color.CornflowerBlue, true);*/
+		if (trackFlags & Track::TrainError)
+			chartGen->AddSeries((int)Track::TrainError, "Error on train data\n(left Y axis)", 2/*Color.DarkRed*/);
+		if (trackFlags & Track::TestError)
+			chartGen->AddSeries((int)Track::TestError, "Error on test data\n(left Y axis)", 2/*Color.IndianRed*/);
+		if (trackFlags & Track::TrainAccuracy)
+			chartGen->AddSeries((int)Track::TrainAccuracy, "Accuracy on train data\n(right Y axis)", 2/*Color.DarkBlue*/, true);
+		if (trackFlags & Track::TestAccuracy)
+			chartGen->AddSeries((int)Track::TestAccuracy, "Accuracy on test\n(right Y axis)", 2/*Color.CornflowerBlue*/, true);
 
-		if (AccuracyFuncs.size() == 0)
+		if (m_AccuracyFuncs.size() == 0)
 		{
 			for (int i = 0; i < (int)outputs[0].size(); ++i)
 			{
-				AccuracyFuncs.push_back(nullptr);
+				m_AccuracyFuncs.push_back(nullptr);
 
 				if ((trackFlags & Track::TrainAccuracy) || (trackFlags & Track::TestAccuracy))
 				{
-					if (Model->GetOutputLayers()[i]->OutputShape().Length == 1)
-						AccuracyFuncs[i] = AccBinaryClassificationEquality;
+					if (m_Model->GetOutputLayers()[i]->OutputShape().Length == 1)
+						m_AccuracyFuncs[i] = AccBinaryClassificationEquality;
 					else
-						AccuracyFuncs[i] = AccCategoricalClassificationEquality;
+						m_AccuracyFuncs[i] = AccCategoricalClassificationEquality;
 				}
 			}
 		}
 
-		//Stopwatch trainTimer = new Stopwatch();
+		Stopwatch trainTimer;
 
 		vector<int> indices(samplesNum);
 		iota(indices.begin(), indices.end(), 0);
@@ -220,7 +224,7 @@ namespace Neuro
 			float trainTotalError = 0;
 			int trainHits = 0;
 
-			//trainTimer.Restart();
+			trainTimer.Restart();
 
 			for (int b = 0; b < batchesNum; ++b)
 			{
@@ -231,7 +235,12 @@ namespace Neuro
 
 				if (verbose == 2)
 				{
-					output = GetProgressString(min((b + 1) * batchSize, samplesNum), samplesNum);
+                    int processedSamplesNum = min((b + 1) * batchSize, samplesNum);
+					output = GetProgressString(processedSamplesNum, samplesNum);
+
+                    float averageTimePerSample = trainTimer.ElapsedMiliseconds() / (float)processedSamplesNum;
+                        output += " - eta: " + to_string((int)(averageTimePerSample * (samplesNum - processedSamplesNum) / 1000)) + "s";
+
 					cout << output;
 					for (int i = 0; i < output.length(); ++i)
 						cout << '\b';
@@ -241,7 +250,7 @@ namespace Neuro
 				DeleteContainer(outputsBatch);
 			}
 
-			//trainTimer.Stop();
+			trainTimer.Stop();
 
 			if (verbose == 2)
 			{
@@ -251,15 +260,17 @@ namespace Neuro
 
 			float trainError = trainTotalError / samplesNum;
 
-			/*chartGen ? .AddData(e, trainError, (int)Track.TrainError);
-			chartGen ? .AddData(e, (float)trainHits / samplesNum / Model.GetOutputLayersCount(), (int)Track.TrainAccuracy);*/
+            if (chartGen)
+            {
+                chartGen->AddData((float)e, trainError, (int)Track::TrainError);
+                chartGen->AddData((float)e, (float)trainHits / samplesNum / m_Model->GetOutputLayersCount(), (int)Track::TrainAccuracy);
+            }
 
 			if (verbose > 0)
 			{
 				string s = " - loss: " + to_string(roundf(trainError * 1000.f) / 1000.f);
 				if (trackFlags & Track::TrainAccuracy)
 					s += " - acc: " + to_string(roundf((float)trainHits / samplesNum * 100 * 1000.f) / 1000.f) + "%";
-				//s += " - eta: " + trainTimer.Elapsed.ToString(@"mm\:ss\.ffff");
 
 				LogLine(s);
 			}
@@ -291,8 +302,8 @@ namespace Neuro
 			//        }
 			//    }
 
-			//    /*chartGen?.AddData(e, testTotalError / validationSamples, (int)Track.TestError);
-			//    chartGen?.AddData(e, (float)testHits / validationSamples / outputLayersCount, (int)Track.TestAccuracy);*/
+			//    /*chartGen?.AddData(e, testTotalError / validationSamples, (int)Track::TestError);
+			//    chartGen?.AddData(e, (float)testHits / validationSamples / outputLayersCount, (int)Track::TestAccuracy);*/
 			//}
 
 			/*if ((ChartSaveInterval > 0 && (e % ChartSaveInterval == 0)) || e == epochs)
@@ -307,19 +318,19 @@ namespace Neuro
     void NeuralNetwork::TrainStep(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, float& trainError, int& trainHits)
     {
         FeedForward(inputs);
-        auto modelOutputs = Model->GetOutputs();
+        auto modelOutputs = m_Model->GetOutputs();
         vector<Tensor> losses;
         for (int i = 0; i < (int)modelOutputs.size(); ++i)
         {
             losses.push_back(Tensor(modelOutputs[i]->GetShape()));
-            LossFuncs[i]->Compute(*outputs[i], *modelOutputs[i], losses[i]);
+            m_LossFuncs[i]->Compute(*outputs[i], *modelOutputs[i], losses[i]);
             trainError += losses[i].Sum() / modelOutputs[i]->BatchLength();
-            trainHits += AccuracyFuncs[i] ? AccuracyFuncs[i](*outputs[i], *modelOutputs[i]) : 0;
-            LossFuncs[i]->Derivative(*outputs[i], *modelOutputs[i], losses[i]);
+            trainHits += m_AccuracyFuncs[i] ? m_AccuracyFuncs[i](*outputs[i], *modelOutputs[i]) : 0;
+            m_LossFuncs[i]->Derivative(*outputs[i], *modelOutputs[i], losses[i]);
         }
         BackProp(losses);
 		auto paramsAndGrad = GetParametersAndGradients();
-        Optimizer->Step(paramsAndGrad, inputs[0]->BatchSize());
+        m_Optimizer->Step(paramsAndGrad, inputs[0]->BatchSize());
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -345,26 +356,26 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
     void NeuralNetwork::LogLine(const string& text)
     {
-        LogLines.push_back(text);
+        m_LogLines.push_back(text);
         cout << text << "\n";
     }
 
 	//////////////////////////////////////////////////////////////////////////
     string NeuralNetwork::Summary()
     {
-        return Model->Summary();
+        return m_Model->Summary();
     }
 
 	//////////////////////////////////////////////////////////////////////////
 	void NeuralNetwork::SaveStateXml(const string& filename)
 	{
-		Model->SaveStateXml(filename.empty() ? FilePrefix() + ".xml" : filename);
+		m_Model->SaveStateXml(filename.empty() ? FilePrefix() + ".xml" : filename);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void NeuralNetwork::LoadStateXml(const string& filename)
 	{
-		Model->LoadStateXml(filename.empty() ? FilePrefix() + ".xml" : filename);
+		m_Model->LoadStateXml(filename.empty() ? FilePrefix() + ".xml" : filename);
 	}
 
 }

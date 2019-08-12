@@ -56,7 +56,11 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)dependancies\koolplot\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <Lib>
+      <AdditionalLibraryDirectories>$(ProjectDir)dependencies\koolplot\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -66,14 +70,19 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)dependancies\koolplot\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <Lib>
+      <AdditionalLibraryDirectories>$(ProjectDir)dependencies\koolplot\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\Activations.h" />
+    <ClInclude Include="include\ChartGenerator.h" />
     <ClInclude Include="include\Data.h" />
     <ClInclude Include="include\Initializers\Constant.h" />
     <ClInclude Include="include\Initializers\GlorotNormal.h" />
@@ -112,6 +121,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Activations.cpp" />
+    <ClCompile Include="src\ChartGenerator.cpp" />
     <ClCompile Include="src\Initializers\Constant.cpp" />
     <ClCompile Include="src\Initializers\GlorotNormal.cpp" />
     <ClCompile Include="src\Initializers\GlorotUniform.cpp" />

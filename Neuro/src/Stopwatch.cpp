@@ -54,6 +54,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    int Stopwatch::ElapsedSeconds()
+    {
+        return (int)(ElapsedMiliseconds() / 1000);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     __int64 Stopwatch::ElapsedMicrosecondsSinceStart()
     {
         if (!m_IsRunning)

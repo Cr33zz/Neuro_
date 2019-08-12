@@ -33,7 +33,7 @@ namespace Neuro
     class NeuralNetwork
     {
 	public:
-        NeuralNetwork(const string& name, int seed = 0);
+        NeuralNetwork(ModelBase* model, const string& name, int seed = 0);
         ~NeuralNetwork();
 
         NeuralNetwork* Clone();
@@ -44,9 +44,9 @@ namespace Neuro
         // parameters will be updated as follows: this_parameters * tau + target_parameters * (1 - tau)
         void SoftCopyParametersTo(NeuralNetwork& target, float tau);
 
-		ModelBase* Model = nullptr;
-        string Name;
-
+        ModelBase* GetModel() const { return m_Model; }
+        const string GetName() const { return m_Name; }
+		
         string FilePrefix() const;
 
         tensor_ptr_vec_t Predict(const tensor_ptr_vec_t& inputs);
@@ -81,15 +81,13 @@ namespace Neuro
         void SaveStateXml(const string& filename = "");
         void LoadStateXml(const string& filename = "");
 
-        int ChartSaveInterval = 20;
-        static bool DebugMode;
-	
-	private:
-        vector<LossBase*> LossFuncs;
-        OptimizerBase* Optimizer = nullptr;
-        
-        int Seed;        
-        vector<accuracy_func_t> AccuracyFuncs;
-        vector<string> LogLines;
+        string m_Name;
+	    vector<LossBase*> m_LossFuncs;
+        ModelBase* m_Model = nullptr;
+        OptimizerBase* m_Optimizer = nullptr;
+        vector<accuracy_func_t> m_AccuracyFuncs;
+        vector<string> m_LogLines;
+        int m_ChartSaveInterval = 20;
+        int m_Seed;
 	};
 }

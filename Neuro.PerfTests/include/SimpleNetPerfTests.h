@@ -18,19 +18,19 @@ public:
         auto upperStream1 = new Dense(input1, 2, new Linear(), "upperStream_1");
         auto lowerStream1 = new Dense(input1, 2, new Linear(), "lowerStream_1");
 
-        auto net = new NeuralNetwork("simple_flow");
-        net->Model = new Flow({ input1 }, { upperStream1, lowerStream1 });
+        auto model = new Flow({ input1 }, { upperStream1, lowerStream1 });
+        auto net = new NeuralNetwork(model, "simple_flow");
         net->Optimize(new SGD(0.05f), new MeanSquareError());
 
         vector<tensor_ptr_vec_t> inputs = { { new Tensor({ 0, 1 }, Shape(1, 2)) } };
         vector<tensor_ptr_vec_t> outputs = { { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) } };
 
-		cout << net->Model->Summary() << "\n";
+		cout << net->GetModel()->Summary() << "\n";
 
         Stopwatch timer;
         timer.Start();
 
-        net->Fit(inputs, outputs, 1, 60, nullptr, nullptr, 0, Track::Nothing, false);
+        net->Fit(inputs, outputs, 1, 60, nullptr, nullptr, 2, Track::Nothing, false);
 
         timer.Stop();
         cout << timer.ElapsedMiliseconds() << " ms";

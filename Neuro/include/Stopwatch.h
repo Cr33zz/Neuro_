@@ -17,6 +17,7 @@ namespace Neuro
         void Stop();
         __int64 ElapsedMiliseconds();
         __int64 ElapsedMicroseconds();
+        int ElapsedSeconds();
 
         bool IsRunning() const { return m_IsRunning; }
 

@@ -77,10 +77,9 @@ namespace NeuroTests
 
         NeuralNetwork* CreateFitTestNet()
         {
-            auto net = new NeuralNetwork("fit_test", 7);
             auto model = new Sequential();
+            auto net = new NeuralNetwork(model, "fit_test", 7);
             model->AddLayer((new Dense(3, 2, new Linear()))->SetWeightsInitializer(new Constant(1))->SetUseBias(false));
-            net->Model = model;
             net->Optimize(new SGD(0.07f), new MeanSquareError());
             return net;
         }
@@ -137,11 +136,10 @@ namespace NeuroTests
 
         TEST_METHOD(CopyParameters)
         {
-            auto net = new NeuralNetwork("test");
             auto model = new Sequential();
             model->AddLayer(new Dense(2, 3, new Linear()));
             model->AddLayer(new Dense(3, 3, new Linear()));
-            net->Model = model;
+            auto net = new NeuralNetwork(model, "test");
             net->ForceInitLayers();
 
             auto net2 = net->Clone();
@@ -156,11 +154,10 @@ namespace NeuroTests
 
         TEST_METHOD(SoftCopyParameters)
         {
-            auto net = new NeuralNetwork("test");
             auto model = new Sequential();
             model->AddLayer(new Dense(2, 3, new Linear()));
             model->AddLayer(new Dense(3, 3, new Linear()));
-            net->Model = model;
+            auto net = new NeuralNetwork(model, "test");
             net->ForceInitLayers();
 
             auto net2 = net->Clone();
@@ -176,10 +173,9 @@ namespace NeuroTests
 
         void TestDenseLayer(int inputsNum, int outputsNum, int samples, int batchSize, int epochs)
         {
-            auto net = new NeuralNetwork("dense_test", 7);
             auto model = new Sequential();
             model->AddLayer((new Dense(inputsNum, outputsNum, new Linear()))->SetWeightsInitializer(new Constant(1))->SetUseBias(false));
-            net->Model = model;
+            auto net = new NeuralNetwork(model, "dense_test", 7);
 
             auto expectedWeights = Tensor({ 1.1f, 0.1f, -1.3f, 0.2f, -0.9f, 0.7f }, Shape(3, 2));
 
@@ -202,12 +198,11 @@ namespace NeuroTests
 
         void TestDenseNetwork(int inputsNum, int samples, int batchSize, int epochs)
         {
-            auto net = new NeuralNetwork("deep_dense_test", 7);
             auto model = new Sequential();
             model->AddLayer(new Dense(inputsNum, 5, new Linear()));
             model->AddLayer(new Dense(model->GetLastLayer(), 4, new Linear()));
             model->AddLayer(new Dense(model->GetLastLayer(), inputsNum, new Linear()));
-            net->Model = model;
+            auto net = new NeuralNetwork(model, "deep_dense_test", 7);
 
             vector<tensor_ptr_vec_t> inputs;
             vector<tensor_ptr_vec_t> outputs;
@@ -234,10 +229,9 @@ namespace NeuroTests
         template<typename F>
         void TestConvolutionLayer(Shape inputShape, int kernelSize, int kernelsNum, int stride, int samples, int batchSize, int epochs, F& convFunc)
         {
-            auto net = new NeuralNetwork("convolution_test", 7);
             auto model = new Sequential();
             model->AddLayer((new Convolution(inputShape, kernelSize, kernelsNum, stride, new Linear()))->SetKernelInitializer(new Constant(1)));
-            net->Model = model;
+            auto net = new NeuralNetwork(model, "convolution_test", 7);
 
             auto expectedKernels = Tensor(Shape(kernelSize, kernelSize, inputShape.Depth(), kernelsNum));
             expectedKernels.FillWithRand(17);
@@ -265,8 +259,7 @@ namespace NeuroTests
             auto upperStream1 = new Dense(input1, 2, new Linear(), "upperStream1");
             auto lowerStream1 = new Dense(input1, 2, new Linear(), "lowerStream1");
 
-            auto net = new NeuralNetwork("test");
-            net->Model = new Flow({ input1 }, { upperStream1, lowerStream1 });
+            auto net = new NeuralNetwork(new Flow({ input1 }, { upperStream1, lowerStream1 }), "test");
 
             net->Optimize(new SGD(0.05f), new MeanSquareError());
 
@@ -286,8 +279,7 @@ namespace NeuroTests
             LayerBase* auxInput = new Input(Shape(1, 2), "aux_input");
             LayerBase* concat = new Concatenate({ mainInput, auxInput }, "concat");
 
-            auto net = new NeuralNetwork("test");
-            net->Model = new Flow({ mainInput, auxInput }, { concat });
+            auto net = new NeuralNetwork(new Flow({ mainInput, auxInput }, { concat }), "test");
 
             net->Optimize(new SGD(0.05f), new MeanSquareError());
 
@@ -302,12 +294,11 @@ namespace NeuroTests
 
         TEST_METHOD(Streams_2Inputs_1Output_AvgMerge)
         {
-            LayerBase* input1 = new Dense(2, 2, new Linear(), "input1");
-            LayerBase* input2 = new Dense(2, 2, new Linear(), "input2");
-            LayerBase* avgMerge = new Merge(vector<LayerBase*>{ input1, input2 }, Merge::Mode::Avg, "avg_merge");
+            auto input1 = new Dense(2, 2, new Linear(), "input1");
+            auto input2 = new Dense(2, 2, new Linear(), "input2");
+            auto avgMerge = new Merge(vector<LayerBase*>{ input1, input2 }, Merge::Mode::Avg, "avg_merge");
 
-            auto net = new NeuralNetwork("test");
-            net->Model = new Flow({ input1, input2 }, { avgMerge });
+            auto net = new NeuralNetwork(new Flow({ input1, input2 }, { avgMerge }), "test");
 
             net->Optimize(new SGD(0.05f), new MeanSquareError());
 
@@ -326,8 +317,7 @@ namespace NeuroTests
             LayerBase* input2 = new Dense(2, 2, new Linear(), "input2");
             LayerBase* merge = new Merge(vector<LayerBase*>{ input1, input2 }, Merge::Mode::Min, "min_merge");
 
-            auto net = new NeuralNetwork("test");
-            net->Model = new Flow({ input1, input2 }, { merge });
+            auto net = new NeuralNetwork(new Flow({ input1, input2 }, { merge }), "test");
 
             net->Optimize(new SGD(0.05f), new MeanSquareError());
 
