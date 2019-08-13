@@ -115,6 +115,7 @@
     <ClInclude Include="include\Tensors\Shape.h" />
     <ClInclude Include="include\Tensors\Tensor.h" />
     <ClInclude Include="include\Tensors\TensorOpCpu.h" />
+    <ClInclude Include="include\Tensors\TensorOpMultiCpu.h" />
     <ClInclude Include="include\TestTools.h" />
     <ClInclude Include="include\Tools.h" />
     <ClInclude Include="include\Types.h" />
@@ -150,6 +151,7 @@
     <ClCompile Include="src\Tensors\Shape.cpp" />
     <ClCompile Include="src\Tensors\Tensor.cpp" />
     <ClCompile Include="src\Tensors\TensorOpCpu.cpp" />
+    <ClCompile Include="src\Tensors\TensorOpMultiCpu.cpp" />
     <ClCompile Include="src\TestTools.cpp" />
     <ClCompile Include="src\Tools.cpp" />
   </ItemGroup>

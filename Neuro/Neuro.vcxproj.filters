@@ -150,6 +150,9 @@
     <ClInclude Include="include\ChartGenerator.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Tensors\TensorOpMultiCpu.h">
+      <Filter>include\Tensors</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\NeuralNetwork.cpp">
@@ -247,6 +250,9 @@
     </ClCompile>
     <ClCompile Include="src\ChartGenerator.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tensors\TensorOpMultiCpu.cpp">
+      <Filter>src\Tensors</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

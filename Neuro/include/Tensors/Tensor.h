@@ -276,5 +276,6 @@ namespace Neuro
 
 		static TensorOpCpu* g_DefaultOpCpu;
 		static TensorOpCpu* g_OpCpu;
+        static TensorOpCpu* g_OpMultiCpu;
 	};
 }

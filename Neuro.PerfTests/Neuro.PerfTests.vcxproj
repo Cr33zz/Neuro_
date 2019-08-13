@@ -131,6 +131,7 @@
   <ItemGroup>
     <ClInclude Include="include\ConvNetPeftTests.h" />
     <ClInclude Include="include\SimpleNetPerfTests.h" />
+    <ClInclude Include="include\TensorPerfTests.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Neuro\Neuro.vcxproj">

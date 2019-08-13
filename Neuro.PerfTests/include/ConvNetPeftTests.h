@@ -14,8 +14,7 @@ public:
 	{
 		Tensor::SetDefaultOpMode(Tensor::EOpMode::MultiCPU);
 
-        auto net = new NeuralNetwork("test");
-		Shape inputShape(64, 64, 4);
+        Shape inputShape(64, 64, 4);
         auto model = new Sequential();
         model->AddLayer(new Convolution(inputShape, 8, 32, 2, new ELU(1)));
         model->AddLayer(new Convolution(model->GetLastLayer(), 4, 64, 2, new ELU(1)));
@@ -23,7 +22,7 @@ public:
         model->AddLayer(new Flatten(model->GetLastLayer()));
         model->AddLayer(new Dense(model->GetLastLayer(), 512, new ELU(1)));
         model->AddLayer(new Dense(model->GetLastLayer(), 3, new Softmax()));
-        net->Model = model;
+        auto net = new NeuralNetwork(model, "test");
         net->Optimize(new Adam(), new Huber(1));
 
         auto input = new Tensor(Shape(64, 64, 4, 32)); input->FillWithRand();
@@ -34,7 +33,7 @@ public:
         /*var timer = new Stopwatch();
         timer.Start();*/
 
-        net->FitBatched(input, output, 10, 1, Track::Nothing);
+        net->FitBatched({ input }, { output }, 10, 1, Track::Nothing);
 
         /*timer.Stop();
         Trace.WriteLine($"{Math.Round(timer.ElapsedMilliseconds / 1000.0, 2)} seconds");*/

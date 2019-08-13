@@ -20,5 +20,8 @@
     <ClInclude Include="include\ConvNetPeftTests.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\TensorPerfTests.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

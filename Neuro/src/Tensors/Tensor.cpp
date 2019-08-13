@@ -1,5 +1,6 @@
 ﻿#include "Tensors/Tensor.h"
 #include "Tensors/TensorOpCpu.h"
+#include "Tensors/TensorOpMultiCpu.h"
 #include "Random.h"
 #include "Tools.h"
 #include <algorithm>
@@ -9,6 +10,7 @@ namespace Neuro
     using namespace std;
 
 	TensorOpCpu* Tensor::g_OpCpu = new TensorOpCpu();
+    TensorOpCpu* Tensor::g_OpMultiCpu = new TensorOpMultiCpu();
 	TensorOpCpu* Tensor::g_DefaultOpCpu = nullptr;
 
 	//////////////////////////////////////////////////////////////////////////
@@ -1098,10 +1100,9 @@ namespace Neuro
 		{
 		case EOpMode::CPU:
 			return g_OpCpu;
-		/*case EOpMode.MultiCPU:
-			Op = new TensorOpMultiCpu();
-			return;
-		case EOpMode.GPU:
+        case EOpMode::MultiCPU:
+			return g_OpMultiCpu;
+		/*case EOpMode.GPU:
 			Op = new TensorOpGpu();
 			return;*/
 		}
