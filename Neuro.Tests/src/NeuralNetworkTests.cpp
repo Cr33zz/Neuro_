@@ -15,12 +15,12 @@ namespace NeuroTests
 
         TEST_METHOD(Dense_Network_BS10)
         {
-            TestDenseNetwork(2, 50, 10, 100);
+            TestDenseNetwork(2, 50, 10, 150);
         }
 
         TEST_METHOD(Dense_Network_FullBatch)
         {
-            TestDenseNetwork(2, 50, -1, 150);
+            TestDenseNetwork(2, 50, -1, 200);
         }
 
         TEST_METHOD(Fit_Batched_Tensors)
