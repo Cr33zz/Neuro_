@@ -37,6 +37,9 @@
     <Filter Include="src\Initializers">
       <UniqueIdentifier>{7860454d-0713-4690-a0db-3f2702c8e8eb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\Tensors\Cuda">
+      <UniqueIdentifier>{42cd8cc6-b49c-4546-b3ab-b84bc802b627}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\NeuralNetwork.h">
@@ -153,6 +156,12 @@
     <ClInclude Include="include\Tensors\TensorOpMultiCpu.h">
       <Filter>include\Tensors</Filter>
     </ClInclude>
+    <ClInclude Include="include\Tensors\TensorOpGpu.h">
+      <Filter>include\Tensors</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tensors\Cuda\CudaDeviceVariable.h">
+      <Filter>include\Tensors\Cuda</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\NeuralNetwork.cpp">
@@ -252,6 +261,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Tensors\TensorOpMultiCpu.cpp">
+      <Filter>src\Tensors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tensors\TensorOpGpu.cpp">
       <Filter>src\Tensors</Filter>
     </ClCompile>
   </ItemGroup>

@@ -12,11 +12,14 @@ class TensorPerfTests
 public:
     static void Run()
     {
-        Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
+        /*Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
         cout << "CPU\n";
-        RunTest();
-        Tensor::SetDefaultOpMode(Tensor::EOpMode::MultiCPU);
+        RunTest();*/
+        /*Tensor::SetDefaultOpMode(Tensor::EOpMode::MultiCPU);
         cout << "MultiCPU\n";
+        RunTest();*/
+        Tensor::SetDefaultOpMode(Tensor::EOpMode::GPU);
+        cout << "GPU\n";
         RunTest();
 
         return;
@@ -44,7 +47,7 @@ public:
             }
 
             timer.Stop();
-            cout << "Elements: " << t1.GetShape().Length << " " << timer.ElapsedMiliseconds() << " ms\n";
+            cout << t1.GetShape().Length << " elements: " << timer.ElapsedMiliseconds() << "ms\n";
         }
     }
 };

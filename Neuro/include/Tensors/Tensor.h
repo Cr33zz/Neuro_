@@ -14,6 +14,7 @@ namespace Neuro
 {
 	class TensorOpCpu;
 	class Random;
+    template<typename T> class CudaDeviceVariable;
 
 	using namespace std;
 
@@ -247,18 +248,14 @@ namespace Neuro
 
         struct GPUData
         {
-            /*CudaDeviceVariable<float> DeviceVar;
-            CudaDeviceVariable<byte> ConvWorkspace;
-            CudaDeviceVariable<byte> ConvBackWorkspace;
-            CudaDeviceVariable<byte> ConvBackKernelWorkspace;*/
+            ~GPUData();
 
-            ~GPUData()
-            {
-				/*DeviceVar ? .Dispose(); DeviceVar = null;
-				ConvWorkspace ? .Dispose(); ConvWorkspace = null;
-				ConvBackWorkspace ? .Dispose(); ConvBackWorkspace = null;
-				ConvBackKernelWorkspace ? .Dispose(); ConvBackKernelWorkspace = null;*/
-            }
+            void UpdateWorkspace(CudaDeviceVariable<char>*& workspace, size_t size);
+
+            CudaDeviceVariable<float>* m_DeviceVar = nullptr;
+            CudaDeviceVariable<char>* m_ConvWorkspace = nullptr;
+            CudaDeviceVariable<char>* m_ConvBackWorkspace = nullptr;
+            CudaDeviceVariable<char>* m_ConvBackKernelWorkspace = nullptr;
 		};
 
         void CopyToDevice() const;
@@ -266,10 +263,10 @@ namespace Neuro
         void OverrideHost() const;
 
 	private:
-        GPUData m_GpuData;
+        mutable GPUData m_GpuData;
 		TensorOpCpu* m_Op;
         mutable ELocation m_CurrentLocation;
-        vector<float_t> m_Values;
+        mutable vector<float_t> m_Values;
 		Shape m_Shape;
 
 		static TensorOpCpu* GetOpMode(EOpMode mode);
@@ -277,5 +274,8 @@ namespace Neuro
 		static TensorOpCpu* g_DefaultOpCpu;
 		static TensorOpCpu* g_OpCpu;
         static TensorOpCpu* g_OpMultiCpu;
+        static TensorOpCpu* g_OpGpu;
+
+        friend class TensorOpGpu;
 	};
 }

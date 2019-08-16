@@ -1,9 +1,12 @@
-﻿#include "Tensors/Tensor.h"
+﻿#include <algorithm>
+
+#include "Tensors/Tensor.h"
+#include "Tensors/Cuda/CudaDeviceVariable.h"
 #include "Tensors/TensorOpCpu.h"
 #include "Tensors/TensorOpMultiCpu.h"
+#include "Tensors/TensorOpGpu.h"
 #include "Random.h"
 #include "Tools.h"
-#include <algorithm>
 
 namespace Neuro
 {
@@ -11,6 +14,7 @@ namespace Neuro
 
 	TensorOpCpu* Tensor::g_OpCpu = new TensorOpCpu();
     TensorOpCpu* Tensor::g_OpMultiCpu = new TensorOpMultiCpu();
+    TensorOpCpu* Tensor::g_OpGpu = new TensorOpGpu();
 	TensorOpCpu* Tensor::g_DefaultOpCpu = nullptr;
 
 	//////////////////////////////////////////////////////////////////////////
@@ -1072,8 +1076,9 @@ namespace Neuro
 		if (m_CurrentLocation == ELocation::Device)
 			return;
 
-		//GpuData.DeviceVar = GpuData.DeviceVar ?? new CudaDeviceVariable<float>(m_Shape.Length);
-		//GpuData.DeviceVar.CopyToDevice(Values);
+        if (!m_GpuData.m_DeviceVar)
+            m_GpuData.m_DeviceVar = new CudaDeviceVariable<float>(m_Values.size());
+		m_GpuData.m_DeviceVar->CopyToDevice(m_Values);
 		m_CurrentLocation = ELocation::Device;
 	}
 
@@ -1083,7 +1088,7 @@ namespace Neuro
 		if (m_CurrentLocation == ELocation::Host)
 			return;
 
-		//GpuData.DeviceVar.CopyToHost(Values);
+		m_GpuData.m_DeviceVar->CopyToHost(m_Values);
 		m_CurrentLocation = ELocation::Host;
 	}
 
@@ -1102,12 +1107,33 @@ namespace Neuro
 			return g_OpCpu;
         case EOpMode::MultiCPU:
 			return g_OpMultiCpu;
-		/*case EOpMode.GPU:
-			Op = new TensorOpGpu();
-			return;*/
+        case EOpMode::GPU:
+			return g_OpGpu;
 		}
 
 		return nullptr;
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor::GPUData::~GPUData()
+    {
+        delete(m_DeviceVar);
+        delete(m_ConvWorkspace);
+        delete(m_ConvBackWorkspace);
+        delete(m_ConvBackKernelWorkspace);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::GPUData::UpdateWorkspace(CudaDeviceVariable<char>*& workspace, size_t size)
+    {
+        if (workspace && workspace->GetSizeInBytes() != size)
+        {
+            delete workspace;
+            workspace = nullptr;
+        }
+
+        if (!workspace)
+            workspace = new CudaDeviceVariable<char>(size);
+    }
 }
 
