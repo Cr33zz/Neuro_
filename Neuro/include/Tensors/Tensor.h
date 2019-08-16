@@ -251,6 +251,7 @@ namespace Neuro
             ~GPUData();
 
             void UpdateWorkspace(CudaDeviceVariable<char>*& workspace, size_t size);
+            const CudaDeviceVariable<float>& GetDeviceVar() const { return *m_DeviceVar; }
 
             CudaDeviceVariable<float>* m_DeviceVar = nullptr;
             CudaDeviceVariable<char>* m_ConvWorkspace = nullptr;

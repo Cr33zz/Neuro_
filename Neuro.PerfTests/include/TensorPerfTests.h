@@ -15,9 +15,9 @@ public:
         /*Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
         cout << "CPU\n";
         RunTest();*/
-        /*Tensor::SetDefaultOpMode(Tensor::EOpMode::MultiCPU);
+        Tensor::SetDefaultOpMode(Tensor::EOpMode::MultiCPU);
         cout << "MultiCPU\n";
-        RunTest();*/
+        RunTest();
         Tensor::SetDefaultOpMode(Tensor::EOpMode::GPU);
         cout << "GPU\n";
         RunTest();
@@ -44,6 +44,7 @@ public:
             for (int n = 0; n < 20; ++n)
             {
                 t1.Mul(t2, res);
+                res.CopyToHost();
             }
 
             timer.Stop();

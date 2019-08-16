@@ -28,6 +28,11 @@ namespace Neuro
             m_IsOwner = false;
         }
 
+        CudaDeviceVariable(const CudaDeviceVariable<T>* var, size_t lengthOffset)
+            : CudaDeviceVariable(*var, lengthOffset)
+        {
+        }
+
         ~CudaDeviceVariable()
         {
             if (m_IsOwner)
@@ -56,6 +61,8 @@ namespace Neuro
 
         void* GetDevicePtr() const { return m_DevPtr; }
         size_t GetSizeInBytes() const { return m_Length * m_TypeSize; }
+
+        operator T*() const { return static_cast<T*>(m_DevPtr); }
         
     private:
         void* m_DevPtr;

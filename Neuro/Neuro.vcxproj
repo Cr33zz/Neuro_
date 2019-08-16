@@ -15,6 +15,7 @@
     <ProjectGuid>{913DCDCD-2B3B-4F8B-9C6D-10D7388B0B45}</ProjectGuid>
     <RootNamespace>Neuro</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <CudaToolkitCustomDir>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1</CudaToolkitCustomDir>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -32,6 +33,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
@@ -62,6 +64,9 @@
       <AdditionalLibraryDirectories>$(ProjectDir)deps\MKL-DNN\lib;$(ProjectDir)deps\MKL\lib;$(ProjectDir)deps\CUDA\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>cudart_static.lib;cudnn.lib;cublas.lib</AdditionalDependencies>
     </Lib>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -81,6 +86,9 @@
       <AdditionalLibraryDirectories>$(ProjectDir)deps\MKL-DNN\lib;$(ProjectDir)deps\MKL\lib;$(ProjectDir)deps\CUDA\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>cudart_static.lib;cudnn.lib;cublas.lib</AdditionalDependencies>
     </Lib>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\Activations.h" />
@@ -160,7 +168,11 @@
     <ClCompile Include="src\TestTools.cpp" />
     <ClCompile Include="src\Tools.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="Kernels.cu" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.targets" />
   </ImportGroup>
 </Project>

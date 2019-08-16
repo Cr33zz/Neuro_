@@ -267,4 +267,9 @@
       <Filter>src\Tensors</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="Kernels.cu">
+      <Filter>include\Tensors\Cuda</Filter>
+    </CudaCompile>
+  </ItemGroup>
 </Project>
