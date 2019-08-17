@@ -15,7 +15,7 @@
     <ProjectGuid>{913DCDCD-2B3B-4F8B-9C6D-10D7388B0B45}</ProjectGuid>
     <RootNamespace>Neuro</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
-    <CudaToolkitCustomDir>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1</CudaToolkitCustomDir>
+    <CudaToolkitCustomDir>$(CUDA_PATH)</CudaToolkitCustomDir>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -47,10 +47,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(ProjectDir)include;$(IncludePath)</IncludePath>
     <OutDir>$(ProjectDir)lib\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(ProjectDir)include;$(IncludePath)</IncludePath>
     <OutDir>$(ProjectDir)lib\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -61,11 +63,13 @@
       <AdditionalIncludeDirectories>$(ProjectDir)deps\MKL-DNN\include;$(ProjectDir)deps\MKL\include;$(ProjectDir)deps\CUDA\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Lib>
-      <AdditionalLibraryDirectories>$(ProjectDir)deps\MKL-DNN\lib;$(ProjectDir)deps\MKL\lib;$(ProjectDir)deps\CUDA\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)deps\MKL-DNN\lib;$(ProjectDir)deps\MKL\lib;$(CudaToolkitLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>cudart_static.lib;cudnn.lib;cublas.lib</AdditionalDependencies>
     </Lib>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
+      <Include>
+      </Include>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -83,11 +87,13 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>$(ProjectDir)deps\MKL-DNN\lib;$(ProjectDir)deps\MKL\lib;$(ProjectDir)deps\CUDA\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)deps\MKL-DNN\lib;$(ProjectDir)deps\MKL\lib;$(CudaToolkitLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>cudart_static.lib;cudnn.lib;cublas.lib</AdditionalDependencies>
     </Lib>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
+      <Include>
+      </Include>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -123,6 +129,7 @@
     <ClInclude Include="include\Random.h" />
     <ClInclude Include="include\Stopwatch.h" />
     <ClInclude Include="include\Tensors\Cuda\CudaDeviceVariable.h" />
+    <ClInclude Include="include\Tensors\Cuda\CudaKernels.h" />
     <ClInclude Include="include\Tensors\Shape.h" />
     <ClInclude Include="include\Tensors\Tensor.h" />
     <ClInclude Include="include\Tensors\TensorOpCpu.h" />
@@ -169,7 +176,7 @@
     <ClCompile Include="src\Tools.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="Kernels.cu" />
+    <CudaCompile Include="src\Tensors\Cuda\CudaKernels.cu" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

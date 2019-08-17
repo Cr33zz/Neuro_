@@ -39,31 +39,29 @@ namespace Neuro
                 cudaFree(m_DevPtr);
         }
 
-        void CopyToDevice(const T* source)
+        void CopyToDevice(const T* source) const
         {
             cudaMemcpy(m_DevPtr, source, GetSizeInBytes(), cudaMemcpyHostToDevice);
         }
 
-        void CopyToDevice(const vector<T>& source)
+        void CopyToDevice(const vector<T>& source) const
         {
             CopyToDevice(&source[0]);
         }
 
-        void CopyToHost(T* dest)
+        void CopyToHost(T* dest) const
         {
             cudaMemcpy(dest, m_DevPtr, GetSizeInBytes(), cudaMemcpyDeviceToHost);
         }
 
-        void CopyToHost(vector<T>& dest)
+        void CopyToHost(vector<T>& dest) const
         {
             CopyToHost(&dest[0]);
         }
 
-        void* GetDevicePtr() const { return m_DevPtr; }
+        T* GetDevicePtr() const { return static_cast<T*>(m_DevPtr); }
         size_t GetSizeInBytes() const { return m_Length * m_TypeSize; }
 
-        operator T*() const { return static_cast<T*>(m_DevPtr); }
-        
     private:
         void* m_DevPtr;
         size_t m_Length = 0;

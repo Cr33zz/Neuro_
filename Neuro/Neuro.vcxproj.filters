@@ -40,6 +40,9 @@
     <Filter Include="include\Tensors\Cuda">
       <UniqueIdentifier>{42cd8cc6-b49c-4546-b3ab-b84bc802b627}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Tensors\Cuda">
+      <UniqueIdentifier>{104429cd-8ac6-4d21-ac3f-b884a2a3d5e3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\NeuralNetwork.h">
@@ -162,6 +165,9 @@
     <ClInclude Include="include\Tensors\Cuda\CudaDeviceVariable.h">
       <Filter>include\Tensors\Cuda</Filter>
     </ClInclude>
+    <ClInclude Include="include\Tensors\Cuda\CudaKernels.h">
+      <Filter>include\Tensors\Cuda</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\NeuralNetwork.cpp">
@@ -268,8 +274,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="Kernels.cu">
-      <Filter>include\Tensors\Cuda</Filter>
+    <CudaCompile Include="src\Tensors\Cuda\CudaKernels.cu">
+      <Filter>src\Tensors\Cuda</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

@@ -250,8 +250,7 @@ namespace Neuro
         {
             ~GPUData();
 
-            void UpdateWorkspace(CudaDeviceVariable<char>*& workspace, size_t size);
-            const CudaDeviceVariable<float>& GetDeviceVar() const { return *m_DeviceVar; }
+            void UpdateWorkspace(CudaDeviceVariable<char>*& workspace, size_t size);            
 
             CudaDeviceVariable<float>* m_DeviceVar = nullptr;
             CudaDeviceVariable<char>* m_ConvWorkspace = nullptr;
@@ -262,6 +261,10 @@ namespace Neuro
         void CopyToDevice() const;
         void CopyToHost() const;
         void OverrideHost() const;
+        
+        const CudaDeviceVariable<float>& GetDeviceVar() const;
+        const float* GetDevicePtr() const;
+        float* GetDevicePtr();
 
 	private:
         mutable GPUData m_GpuData;

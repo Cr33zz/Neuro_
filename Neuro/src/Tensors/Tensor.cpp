@@ -1075,10 +1075,8 @@ namespace Neuro
 	{
 		if (m_CurrentLocation == ELocation::Device)
 			return;
-
-        if (!m_GpuData.m_DeviceVar)
-            m_GpuData.m_DeviceVar = new CudaDeviceVariable<float>(m_Values.size());
-		m_GpuData.m_DeviceVar->CopyToDevice(m_Values);
+        
+		GetDeviceVar().CopyToDevice(m_Values);
 		m_CurrentLocation = ELocation::Device;
 	}
 
@@ -1088,7 +1086,7 @@ namespace Neuro
 		if (m_CurrentLocation == ELocation::Host)
 			return;
 
-		m_GpuData.m_DeviceVar->CopyToHost(m_Values);
+		GetDeviceVar().CopyToHost(m_Values);
 		m_CurrentLocation = ELocation::Host;
 	}
 
@@ -1098,7 +1096,27 @@ namespace Neuro
         m_CurrentLocation = ELocation::Host;
     }
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    const Neuro::CudaDeviceVariable<float>& Tensor::GetDeviceVar() const
+    {
+        if (!m_GpuData.m_DeviceVar)
+            m_GpuData.m_DeviceVar = new CudaDeviceVariable<float>(m_Values.size());
+        return *m_GpuData.m_DeviceVar;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    const float* Tensor::GetDevicePtr() const
+    {
+        return static_cast<const float*>(GetDeviceVar().GetDevicePtr());
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    float* Tensor::GetDevicePtr()
+    {
+        return static_cast<float*>(GetDeviceVar().GetDevicePtr());
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	Neuro::TensorOpCpu* Tensor::GetOpMode(EOpMode mode)
 	{
 		switch (mode)
