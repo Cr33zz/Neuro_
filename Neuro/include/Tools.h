@@ -37,6 +37,7 @@ namespace Neuro
     //}
 
 	string ToLower(const string& str);
+    vector<string> Split(const string& str, const string& delimiter);
 
     string GetProgressString(int iteration, int maxIterations, const string& extraStr = "", int barLength = 30);
 
@@ -153,38 +154,7 @@ namespace Neuro
     //    }
     //}
 
-    //static List<Data> LoadCSVData(string filename, int outputs, bool outputsOneHotEncoded = false)
-    //{
-    //    List<Data> dataSet = new List<Data>();
-
-    //    using (var f = new StreamReader(filename))
-    //    {
-    //        string line;
-    //        while ((line = f.ReadLine()) != null)
-    //        {
-    //            string[] tmp = line.Split(',');
-
-    //            Tensor input = new Tensor(new Shape(1, tmp.Length - (outputsOneHotEncoded ? 1 : outputs)));
-    //            Tensor output = new Tensor(new Shape(1, outputs));
-
-    //            for (int i = 0; i < input.Length; ++i)
-    //                input[0, i] = float.Parse(tmp[i]);
-
-    //            for (int i = 0; i < (outputsOneHotEncoded ? 1 : outputs); ++i)
-    //            {
-    //                float v = float.Parse(tmp[input.Length + i]);
-    //                if (outputsOneHotEncoded)
-    //                    output[0, (int)v] = 1;
-    //                else
-    //                    output[0, i] = v;
-    //            }
-
-    //            dataSet.Add(new Data(input, output));
-    //        }
-    //    }
-
-    //    return dataSet;
-    //}
+    void LoadCSVData(const string& filename, int outputsNum, vector<tensor_ptr_vec_t>& inputs, vector<tensor_ptr_vec_t>& outputs, bool outputsOneHotEncoded = false);
 
     //static vector<Data> MergeData(const vector<Data>& dataList, int batchSize = -1)
     //{

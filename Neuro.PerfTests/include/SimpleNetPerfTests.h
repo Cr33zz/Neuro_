@@ -33,7 +33,7 @@ public:
         net->Fit(inputs, outputs, 1, 60, nullptr, nullptr, 2, Track::Nothing, false);
 
         timer.Stop();
-        cout << timer.ElapsedMiliseconds() << " ms";
+        cout << "Training time " << timer.ElapsedMiliseconds() << "ms";
         
 
         //var input1 = new Dense(2, 2, Activation.Sigmoid);

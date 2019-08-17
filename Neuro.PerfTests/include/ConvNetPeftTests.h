@@ -30,13 +30,13 @@ public:
         for (int n = 0; n < output->BatchSize(); ++n)
             (*output)(0, Rng.Next(output->Height()), 0, n) = 1.0f;
 
-        /*var timer = new Stopwatch();
-        timer.Start();*/
+        Stopwatch timer;
+        timer.Start();
 
         net->FitBatched({ input }, { output }, 10, 1, Track::Nothing);
 
-        /*timer.Stop();
-        Trace.WriteLine($"{Math.Round(timer.ElapsedMilliseconds / 1000.0, 2)} seconds");*/
+        timer.Stop();
+        cout << "Training time " << timer.ElapsedMiliseconds() << "ms";
 
 		return;
     }
