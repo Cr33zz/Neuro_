@@ -29,7 +29,7 @@ namespace Neuro
 
     private:
         static cudnnPoolingMode_t GetCudnnPoolType(Tensor::EPoolType type);
-        static void GetKernelRunParams(int count, dim3& blockDimensions, dim3& gridDimensions);
+        static void GetKernelRunParams(int count, dim3& blocks, dim3& threads);
         static int GetBlocksNum(int count);
 
         static bool s_Initialized;

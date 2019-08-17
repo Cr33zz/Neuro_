@@ -27,6 +27,7 @@
     <ClCompile Include="src\NeuralNetworkTests.cpp" />
     <ClCompile Include="src\PoolingLayerTests.cpp" />
     <ClCompile Include="src\ShapeTests.cpp" />
+    <ClCompile Include="src\TensorOpGpuTests.cpp" />
     <ClCompile Include="src\TensorOpMultiCpuTests.cpp" />
     <ClCompile Include="src\TensorTests.cpp" />
   </ItemGroup>

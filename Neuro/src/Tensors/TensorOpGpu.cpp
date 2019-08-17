@@ -6,8 +6,8 @@ namespace Neuro
 {
     bool TensorOpGpu::s_Initialized = false;
     cudaDeviceProp TensorOpGpu::s_CudaDevProp;
-    cublasHandle_t TensorOpGpu::s_CublasHandle;
-    cudnnHandle_t TensorOpGpu::s_CudnnHandle;
+    cublasHandle_t TensorOpGpu::s_CublasHandle = nullptr;
+    cudnnHandle_t TensorOpGpu::s_CudnnHandle = nullptr;
 
     //////////////////////////////////////////////////////////////////////////
     TensorOpGpu::TensorOpGpu()
@@ -378,7 +378,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::GetKernelRunParams(int count, dim3& blockDimensions, dim3& gridDimensions)
+    void TensorOpGpu::GetKernelRunParams(int count, dim3& blocks, dim3& threads)
     {
         int threadsPerBlock = s_CudaDevProp.maxThreadsPerBlock;
         int blockCount = GetBlocksNum(count);
@@ -389,8 +389,8 @@ namespace Neuro
             threadsPerBlock = count;
         }
 
-        blockDimensions = dim3(threadsPerBlock, 1, 1);
-        gridDimensions = dim3(blockCount, 1, 1);
+        blocks = dim3(blockCount, 1, 1);
+        threads = dim3(threadsPerBlock, 1, 1);
     }
 
     //////////////////////////////////////////////////////////////////////////

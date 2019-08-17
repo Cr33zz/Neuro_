@@ -27,5 +27,7 @@ namespace Neuro
 
     void CudaKernels::EluGradient(const dim3& blocks, const dim3& threads, int inputLen, const float* outputDev, const float* outputGradientDev, float alpha, float* resultDev)
 	{
+        eluGrad<<<blocks, threads>>>(inputLen, outputDev, outputGradientDev, alpha, resultDev);
+        cudaDeviceSynchronize();
 	}
 }

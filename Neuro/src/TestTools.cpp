@@ -140,9 +140,9 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	bool TestTools::VerifyActivationFuncDerivative(const ActivationBase& func, int batchSize)
+	bool TestTools::VerifyActivationFuncDerivative(const ActivationBase& func, int batchSize, Tensor::EOpMode mode)
 	{
-        Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
+        Tensor::SetDefaultOpMode(mode);
 		auto input = Tensor(Shape(3, 3, 3, batchSize));
 		input.FillWithRange(-1.0f, 2.0f / input.Length());
 
