@@ -20,14 +20,14 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void CrossEntropy::Compute(const Tensor& targetOutput, const Tensor& output, Tensor& result) const
+	void BinaryCrossEntropy::Compute(const Tensor& targetOutput, const Tensor& output, Tensor& result) const
 	{
 		Tensor clippedOutput = output.Clipped(_EPSILON, 1 - _EPSILON);
 		targetOutput.Map([&](float yTrue, float y) { return -yTrue * (float)log(y) - (1 - yTrue) * (float)log(1 - y); }, clippedOutput, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void CrossEntropy::Derivative(const Tensor& targetOutput, const Tensor& output, Tensor& result) const
+	void BinaryCrossEntropy::Derivative(const Tensor& targetOutput, const Tensor& output, Tensor& result) const
 	{
 		Tensor clippedOutput = output.Clipped(_EPSILON, 1 - _EPSILON);
 		targetOutput.Map([&](float yTrue, float y) { return -yTrue / y + (1 - yTrue) / (1 - y); }, clippedOutput, result);

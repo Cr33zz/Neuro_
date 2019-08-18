@@ -12,12 +12,14 @@
 
 #include "Layers/LayerBase.h"
 #include "Layers/Convolution.h"
+#include "Layers/Deconvolution.h"
 #include "Layers/Dense.h"
 #include "Layers/Flatten.h"
 #include "Layers/Dropout.h"
-#include "Layers/BatchNorm.h"
+#include "Layers/BatchNormalization.h"
 #include "Layers/Input.h"
 #include "Layers/Pooling.h"
+#include "Layers/UpSampling.h"
 #include "Layers/Concatenate.h"
 #include "Layers/Merge.h"
 

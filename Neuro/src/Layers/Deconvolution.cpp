@@ -72,7 +72,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Deconvolution::FeedForwardInternal(bool training)
     {
-        m_Inputs[0]->Conv2DTransposed(m_Kernels, m_Stride, Tensor::EPaddingType::Valid, m_Output);
+        m_Inputs[0]->Conv2DTransposed(m_Kernels, m_Stride, Tensor::EPaddingType::Full, m_Output);
         if (m_UseBias)
             m_Output.Add(m_Bias, m_Output);
     }
@@ -81,7 +81,7 @@ namespace Neuro
     void Deconvolution::BackPropInternal(Tensor& outputGradient)
     {
         outputGradient.Conv2DTransposedInputsGradient(outputGradient, m_Kernels, m_Stride, Tensor::EPaddingType::Valid, m_InputsGradient[0]);
-        outputGradient.Conv2DTransposedKernelsGradient(*m_Inputs[0], outputGradient, m_Stride, Tensor::EPaddingType::Valid, m_KernelsGradient);
+        outputGradient.Conv2DTransposedKernelsGradient(*m_Inputs[0], outputGradient, m_Stride, Tensor::EPaddingType::Full, m_KernelsGradient);
 
         if (m_UseBias)
             m_BiasGradient.Add(outputGradient.SumBatches());
@@ -90,7 +90,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     Shape Deconvolution::GetOutShape(const Shape& inputShape, int filterWidth, int filterHeight, int stride, int filtersNum)
     {
-        return Shape((int)floor((float)(inputShape.Width() - filterWidth) / stride + 1), (int)floor((float)(inputShape.Height() - filterHeight) / stride + 1), filtersNum);
+        return Shape(inputShape.Width() + filterWidth - 1, inputShape.Height() + filterHeight - 1, filtersNum);
     }
 
     //////////////////////////////////////////////////////////////////////////

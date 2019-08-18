@@ -6,6 +6,7 @@
 
 namespace Neuro
 {
+    //http://deeplearning.net/software/theano_versions/dev/tutorial/conv_arithmetic.html#transposed-convolution-arithmetic
     class Deconvolution : public LayerBase
     {
     public:

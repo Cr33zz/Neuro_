@@ -171,10 +171,13 @@
     <ClInclude Include="include\Layers\Dropout.h">
       <Filter>include\Layers</Filter>
     </ClInclude>
-    <ClInclude Include="include\Layers\BatchNorm.h">
+    <ClInclude Include="include\Layers\Deconvolution.h">
       <Filter>include\Layers</Filter>
     </ClInclude>
-    <ClInclude Include="include\Layers\Deconvolution.h">
+    <ClInclude Include="include\Layers\UpSampling.h">
+      <Filter>include\Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Layers\BatchNormalization.h">
       <Filter>include\Layers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -284,10 +287,13 @@
     <ClCompile Include="src\Layers\Dropout.cpp">
       <Filter>src\Layers</Filter>
     </ClCompile>
-    <ClCompile Include="src\Layers\BatchNorm.cpp">
+    <ClCompile Include="src\Layers\Deconvolution.cpp">
       <Filter>src\Layers</Filter>
     </ClCompile>
-    <ClCompile Include="src\Layers\Deconvolution.cpp">
+    <ClCompile Include="src\Layers\UpSampling.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\BatchNormalization.cpp">
       <Filter>src\Layers</Filter>
     </ClCompile>
   </ItemGroup>

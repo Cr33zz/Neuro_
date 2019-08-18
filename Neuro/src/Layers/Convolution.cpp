@@ -80,7 +80,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Convolution::BackPropInternal(Tensor& outputGradient)
 	{
-		outputGradient.Conv2DInputsGradient(outputGradient, m_Kernels, m_Stride, Tensor::EPaddingType::Valid, m_InputsGradient[0]);
+		outputGradient.Conv2DInputsGradient(outputGradient, m_Kernels, m_Stride, Tensor::EPaddingType::Full, m_InputsGradient[0]);
 		outputGradient.Conv2DKernelsGradient(*m_Inputs[0], outputGradient, m_Stride, Tensor::EPaddingType::Valid, m_KernelsGradient);
 
 		if (m_UseBias)

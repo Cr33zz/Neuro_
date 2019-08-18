@@ -133,6 +133,7 @@
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\AutoencoderNetwork.h" />
     <ClInclude Include="include\ConvNetPeftTests.h" />
     <ClInclude Include="include\IrisNetwork.h" />
     <ClInclude Include="include\SimpleNetPerfTests.h" />

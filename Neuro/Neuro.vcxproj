@@ -107,7 +107,7 @@
     <ClInclude Include="include\Initializers\Normal.h" />
     <ClInclude Include="include\Initializers\Uniform.h" />
     <ClInclude Include="include\Initializers\Zeros.h" />
-    <ClInclude Include="include\Layers\BatchNorm.h" />
+    <ClInclude Include="include\Layers\BatchNormalization.h" />
     <ClInclude Include="include\Layers\Concatenate.h" />
     <ClInclude Include="include\Layers\Convolution.h" />
     <ClInclude Include="include\Layers\Deconvolution.h" />
@@ -119,6 +119,7 @@
     <ClInclude Include="include\Layers\LayerBase.h" />
     <ClInclude Include="include\Layers\Merge.h" />
     <ClInclude Include="include\Layers\Pooling.h" />
+    <ClInclude Include="include\Layers\UpSampling.h" />
     <ClInclude Include="include\Loss.h" />
     <ClInclude Include="include\Models\Flow.h" />
     <ClInclude Include="include\Models\ModelBase.h" />
@@ -151,7 +152,7 @@
     <ClCompile Include="src\Initializers\Normal.cpp" />
     <ClCompile Include="src\Initializers\Uniform.cpp" />
     <ClCompile Include="src\Initializers\Zeros.cpp" />
-    <ClCompile Include="src\Layers\BatchNorm.cpp" />
+    <ClCompile Include="src\Layers\BatchNormalization.cpp" />
     <ClCompile Include="src\Layers\Concatenate.cpp" />
     <ClCompile Include="src\Layers\Convolution.cpp" />
     <ClCompile Include="src\Layers\Deconvolution.cpp" />
@@ -163,6 +164,7 @@
     <ClCompile Include="src\Layers\LayerBase.cpp" />
     <ClCompile Include="src\Layers\Merge.cpp" />
     <ClCompile Include="src\Layers\Pooling.cpp" />
+    <ClCompile Include="src\Layers\UpSampling.cpp" />
     <ClCompile Include="src\Loss.cpp" />
     <ClCompile Include="src\Models\Flow.cpp" />
     <ClCompile Include="src\Models\ModelBase.cpp" />

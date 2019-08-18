@@ -26,5 +26,8 @@
     <ClInclude Include="include\IrisNetwork.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\AutoencoderNetwork.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

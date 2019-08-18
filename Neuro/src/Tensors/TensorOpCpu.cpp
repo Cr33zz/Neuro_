@@ -26,8 +26,8 @@ namespace Neuro
 		}
 
 		for (int n = 0; n < t1.Batch(); ++n)
-			for (int i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
-				resultValues[idx] = alpha * t1Values[idx] + beta * t2Values[i];
+		for (int i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
+			resultValues[idx] = alpha * t1Values[idx] + beta * t2Values[i];
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -56,10 +56,10 @@ namespace Neuro
 			int t2N = min(n, t2Temp.Batch() - 1);
 
 			for (int d = 0; d < t1Temp.Depth(); ++d)
-				for (int i = 0; i < N; ++i)
-					for (int j = 0; j < M; ++j)
-						for (int k = 0; k < K; ++k)
-							result(j, i, d, n) += t1Temp(k, i, d, t1N) * t2Temp(j, k, d, t2N);
+			for (int i = 0; i < N; ++i)
+			for (int j = 0; j < M; ++j)
+			for (int k = 0; k < K; ++k)
+				result(j, i, d, n) += t1Temp(k, i, d, t1N) * t2Temp(j, k, d, t2N);
 		}
 	}
 
@@ -82,8 +82,8 @@ namespace Neuro
         }
 
         for (int n = 0; n < t1.Batch(); ++n)
-            for (int i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
-                resultValues[idx] = t1Values[idx] * t2Values[i];
+        for (int i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
+            resultValues[idx] = t1Values[idx] * t2Values[i];
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -93,10 +93,10 @@ namespace Neuro
         result.OverrideHost();
 
 		for (int n = 0; n < t.Batch(); ++n)
-			for (int d = 0; d < t.Depth(); ++d)
-				for (int h = 0; h < t.Height(); ++h)
-					for (int w = 0; w < t.Width(); ++w)
-						result(h, w, d, n) = t(w, h, d, n);
+		for (int d = 0; d < t.Depth(); ++d)
+		for (int h = 0; h < t.Height(); ++h)
+		for (int w = 0; w < t.Width(); ++w)
+			result(h, w, d, n) = t(w, h, d, n);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -139,8 +139,8 @@ namespace Neuro
 		int batchLen = t.BatchLength();
 
 		for (int n = 0; n < t.Batch(); ++n)
-			for (int i = 0, idx = n * batchLen; i < batchLen; ++i, ++idx)
-				resultValues[i] += tValues[idx];
+		for (int i = 0, idx = n * batchLen; i < batchLen; ++i, ++idx)
+			resultValues[i] += tValues[idx];
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -169,9 +169,9 @@ namespace Neuro
 			float sum = exps.Sum(n);
 
 			for (int d = 0; d < input.Depth(); ++d)
-				for (int h = 0; h < input.Height(); ++h)
-					for (int w = 0; w < input.Width(); ++w)
-						result(w, h, d, n) = exps(w, h, d, n) / sum;
+			for (int h = 0; h < input.Height(); ++h)
+			for (int w = 0; w < input.Width(); ++w)
+				result(w, h, d, n) = exps(w, h, d, n) / sum;
 		}
 	}
 
@@ -200,18 +200,18 @@ namespace Neuro
 		for (int n = 0; n < t.Batch(); ++n)
 		{
 			for (int outD = 0; outD < kernels.Batch(); ++outD)
-				for (int h = -paddingY, outH = 0; outH < result.Height(); h += stride, ++outH)
-					for (int w = -paddingX, outW = 0; outW < result.Width(); w += stride, ++outW)
-					{
-						float val = 0;
+			for (int h = -paddingY, outH = 0; outH < result.Height(); h += stride, ++outH)
+			for (int w = -paddingX, outW = 0; outW < result.Width(); w += stride, ++outW)
+			{
+				float val = 0;
 
-						for (int kernelD = 0; kernelD < kernels.Depth(); ++kernelD)
-							for (int kernelH = 0; kernelH < kernels.Height(); ++kernelH)
-								for (int kernelW = 0; kernelW < kernels.Width(); ++kernelW)
-									val += t.TryGet(0, w + kernelW, h + kernelH, kernelD, n) * kernels(kernelW, kernelH, kernelD, outD);
+				for (int kernelD = 0; kernelD < kernels.Depth(); ++kernelD)
+				for (int kernelH = 0; kernelH < kernels.Height(); ++kernelH)
+				for (int kernelW = 0; kernelW < kernels.Width(); ++kernelW)
+					val += t.TryGet(0, w + kernelW, h + kernelH, kernelD, n) * kernels(kernelW, kernelH, kernelD, outD);
 
-						result(outW, outH, outD, n) = val;
-					}
+				result(outW, outH, outD, n) = val;
+			}
 		}
 	}
 
@@ -223,7 +223,6 @@ namespace Neuro
 		inputGradients.CopyToHost();
 
 		Tensor rotKernels = kernels.Rotated180();
-		padding = Tensor::EPaddingType::Full;
 
 		int outputWidth = 0, outputHeight = 0, paddingX = 0, paddingY = 0;
 		Tensor::GetPaddingParams(padding, gradient.Width(), gradient.Height(), kernels.Width(), kernels.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
@@ -231,16 +230,14 @@ namespace Neuro
 		for (int n = 0; n < gradient.Batch(); ++n)
 		{
 			for (int outH = 0, h = -paddingY; outH < inputGradients.Height(); h += stride, ++outH)
-				for (int outW = 0, w = -paddingX; outW < inputGradients.Width(); w += stride, ++outW)
-					for (int outD = 0; outD < inputGradients.Depth(); ++outD)
-					{
-						for (int kernelN = 0; kernelN < rotKernels.Batch(); ++kernelN)
-							for (int kernelH = 0; kernelH < rotKernels.Height(); ++kernelH)
-								for (int kernelW = 0; kernelW < rotKernels.Width(); ++kernelW)
-								{
-									inputGradients(outW, outH, outD, n) += gradient.TryGet(0, w + kernelW, h + kernelH, kernelN, n) * rotKernels(kernelW, kernelH, outD, kernelN);
-								}
-					}
+			for (int outW = 0, w = -paddingX; outW < inputGradients.Width(); w += stride, ++outW)
+			for (int outD = 0; outD < inputGradients.Depth(); ++outD)
+			{
+				for (int kernelN = 0; kernelN < rotKernels.Batch(); ++kernelN)
+				for (int kernelH = 0; kernelH < rotKernels.Height(); ++kernelH)
+				for (int kernelW = 0; kernelW < rotKernels.Width(); ++kernelW)
+					inputGradients(outW, outH, outD, n) += gradient.TryGet(0, w + kernelW, h + kernelH, kernelN, n) * rotKernels(kernelW, kernelH, outD, kernelN);
+			}
 		}
 	}
 
@@ -255,85 +252,19 @@ namespace Neuro
 		Tensor::GetPaddingParams(padding, input.Width(), input.Height(), kernelsGradient.Width(), kernelsGradient.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
 
 		for (int kernelD = 0; kernelD < kernelsGradient.Depth(); ++kernelD)
-			for (int kernelH = 0; kernelH < kernelsGradient.Height(); ++kernelH)
-				for (int kernelW = 0; kernelW < kernelsGradient.Width(); ++kernelW)
-					for (int kernelN = 0; kernelN < kernelsGradient.Batch(); ++kernelN)
-					{
-						for (int outN = 0; outN < gradient.Batch(); ++outN)
-							for (int h = -paddingY, outH = 0; outH < gradient.Height(); h += stride, ++outH)
-								for (int w = -paddingX, outW = 0; outW < gradient.Width(); w += stride, ++outW)
-								{
-									float grad = gradient(outW, outH, kernelN, outN);
-									float kernGradVal = input.TryGet(0, w + kernelW, h + kernelH, kernelD, outN) * grad;
-									kernelsGradient(kernelW, kernelH, kernelD, kernelN) += kernGradVal;
-								}
-					}
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::Conv2DGradient_old(const Tensor& input, const Tensor& kernels, const Tensor& outputGradient, int stride, int paddingX, int paddingY, Tensor& inputGradient, Tensor& kernelsGradient) const
-	{
-		input.CopyToHost();
-		kernels.CopyToHost();
-		outputGradient.CopyToHost();
-		inputGradient.CopyToHost();
-		kernelsGradient.CopyToHost();
-
-		for (int n = 0; n < input.Batch(); n++)
+		for (int kernelH = 0; kernelH < kernelsGradient.Height(); ++kernelH)
+		for (int kernelW = 0; kernelW < kernelsGradient.Width(); ++kernelW)
+		for (int kernelN = 0; kernelN < kernelsGradient.Batch(); ++kernelN)
 		{
-			for (int depth = 0; depth < outputGradient.Depth(); depth++)
+			for (int outN = 0; outN < gradient.Batch(); ++outN)
+			for (int h = -paddingY, outH = 0; outH < gradient.Height(); h += stride, ++outH)
+			for (int w = -paddingX, outW = 0; outW < gradient.Width(); w += stride, ++outW)
 			{
-                int y = -paddingY;
-				for (int ay = 0; ay < outputGradient.Height(); y += stride, ay++)
-				{
-                    int x = -paddingX;
-					for (int ax = 0; ax < outputGradient.Width(); x += stride, ax++)
-					{
-						// convolve centered at this particular location
-                        float chainGradient = outputGradient.Get(ax, ay, depth, n);
-
-						// gradient from above, from chain rule
-						for (int fy = 0; fy < kernels.Height(); fy++)
-						{
-                            int oy = y + fy; // coordinates in the original input array coordinates
-							for (int fx = 0; fx < kernels.Width(); fx++)
-							{
-                                int ox = x + fx;
-								if (oy >= 0 && oy < input.Height() && ox >= 0 && ox < input.Width())
-								{
-									for (int fd = 0; fd < kernels.Depth(); fd++)
-									{
-										kernelsGradient.Set(kernelsGradient.Get(fx, fy, fd, depth) + input.Get(ox, oy, fd, n) * chainGradient, fx, fy, fd, depth);
-										inputGradient.Set(inputGradient.Get(ox, oy, fd, n) + kernels.Get(fx, fy, fd, depth) * chainGradient, ox, oy, fd, n);
-									}
-								}
-							}
-						}
-					}
-				}
+				float grad = gradient(outW, outH, kernelN, outN);
+				float kernGradVal = input.TryGet(0, w + kernelW, h + kernelH, kernelD, outN) * grad;
+				kernelsGradient(kernelW, kernelH, kernelD, kernelN) += kernGradVal;
 			}
 		}
-
-		//for (int n = 0; n < output.Batches; ++n)
-		//{
-		//    for (int outD = 0; outD < kernels.Batches; ++outD)
-		//    for (int outH = 0, h = -paddingY; outH < output.Height(); h += stride, ++outH)
-		//    for (int outW = 0, w = -paddingX; outW < output.Width(); w += stride, ++outW)
-		//    {
-		//        float grad = gradient[outW, outH, outD, n];
-
-		//        for (int kernelD = 0; kernelD < kernels.Depth(); ++kernelD)
-		//        for (int kernelH = 0; kernelH < kernels.Height(); ++kernelH)
-		//        for (int kernelW = 0; kernelW < kernels.Width(); ++kernelW)
-		//        {
-		//            float inputGradVal = kernels[kernelW, kernelH, kernelD, outD] * grad;
-		//            inputGradient.TrySet(inputGradient.TryGet(0, w + kernelW, h + kernelH, kernelD, n) + inputGradVal, w + kernelW, h + kernelH, kernelD, n);
-
-		//            float kernGradVal = input.TryGet(0, w + kernelW, h + kernelH, kernelD, n) * grad;
-		//            kernelsGradient[kernelW, kernelH, kernelD, outD] += kernGradVal;
-		//        }
-		//    }
-		//}
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -352,10 +283,8 @@ namespace Neuro
 				float value = numeric_limits<float>().min();
 
 				for (int poolY = 0; poolY < filterSize; ++poolY)
-					for (int poolX = 0; poolX < filterSize; ++poolX)
-					{
-						value = max(value, t.TryGet(numeric_limits<float>().min(), w + poolX, h + poolY, outD, outN));
-					}
+				for (int poolX = 0; poolX < filterSize; ++poolX)
+					value = max(value, t.TryGet(numeric_limits<float>().min(), w + poolX, h + poolY, outD, outN));
 
 				result(outW, outH, outD, outN) = value;
 			}
@@ -363,8 +292,8 @@ namespace Neuro
 			{
 				float sum = 0;
 				for (int poolY = 0; poolY < filterSize; ++poolY)
-					for (int poolX = 0; poolX < filterSize; ++poolX)
-						sum += t.TryGet(0, w + poolX, h + poolY, outD, outN);
+                for (int poolX = 0; poolX < filterSize; ++poolX)
+                    sum += t.TryGet(0, w + poolX, h + poolY, outD, outN);
 
 				result(outW, outH, outD, outN) = sum / (filterSize * filterSize);
 			}
@@ -389,25 +318,23 @@ namespace Neuro
 			if (type == Tensor::EPoolType::Max)
 			{
 				for (int poolH = 0; poolH < filterSize; ++poolH)
-					for (int poolW = 0; poolW < filterSize; ++poolW)
-					{
-                        float value = input.TryGet(numeric_limits<float>().min(), w + poolW, h + poolH, outD, outN);
-						if (value == output(outW, outH, outD, outN))
-							result.TrySet(result.TryGet(numeric_limits<float>().min(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN), w + poolW, h + poolH, outD, outN);
-					}
+				for (int poolW = 0; poolW < filterSize; ++poolW)
+				{
+                    float value = input.TryGet(numeric_limits<float>().min(), w + poolW, h + poolH, outD, outN);
+					if (value == output(outW, outH, outD, outN))
+						result.TrySet(result.TryGet(numeric_limits<float>().min(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN), w + poolW, h + poolH, outD, outN);
+				}
 			}
 			else if (type == Tensor::EPoolType::Avg)
 			{
 				int filterElementsNum = filterSize * filterSize;
 
 				for (int poolH = 0; poolH < filterSize; ++poolH)
-					for (int poolW = 0; poolW < filterSize; ++poolW)
-					{
-						result.TrySet(result.TryGet(numeric_limits<float>().min(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN) / filterElementsNum, w + poolW, h + poolH, outD, outN);
-					}
+				for (int poolW = 0; poolW < filterSize; ++poolW)
+				{
+					result.TrySet(result.TryGet(numeric_limits<float>().min(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN) / filterElementsNum, w + poolW, h + poolH, outD, outN);
+				}
 			}
 		}
 	}
-
 }
-

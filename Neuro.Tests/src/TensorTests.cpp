@@ -249,42 +249,6 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(correct));
         }
 
-        TEST_METHOD(Conv2DInputGradient_3Batches_5Kernels)
-        {
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
-            Tensor output = Tensor(Shape(24, 24, 5, 3)); output.FillWithRand();
-            Tensor input = Tensor(Shape(26, 26, 32, 3)); input.FillWithRand();
-            Tensor kernels = Tensor(Shape(3, 3, 32, 5)); kernels.FillWithRand();
-            Tensor gradient = Tensor(output); gradient.FillWithRand();
-
-            Tensor inputGradient = Tensor(input);
-            gradient.Conv2DInputsGradient(gradient, kernels, 1, Tensor::EPaddingType::Valid, inputGradient);
-
-            Tensor inputGradient2 = Tensor(input);
-            Tensor kernelsGradient = Tensor(kernels);
-            input.Conv2DGradient_old(input, kernels, gradient, 1, Tensor::EPaddingType::Valid, inputGradient2, kernelsGradient);
-
-            Assert::IsTrue(inputGradient.Equals(inputGradient2));
-        }
-
-        TEST_METHOD(Conv2DKernelsGradient_3Batches_5Kernels)
-        {
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
-            Tensor output = Tensor(Shape(24, 24, 5, 3)); output.FillWithRand();
-            Tensor input = Tensor(Shape(26, 26, 32, 3)); input.FillWithRand();
-            Tensor kernels = Tensor(Shape(3, 3, 32, 5)); kernels.FillWithRand();
-            Tensor gradient = Tensor(output); gradient.FillWithRand();
-
-            Tensor kernelsGradient = Tensor(kernels);
-            input.Conv2DKernelsGradient(input, gradient, 1, Tensor::EPaddingType::Valid, kernelsGradient);
-
-            Tensor inputGradient = Tensor(input);
-            Tensor kernelsGradient2 = Tensor(kernels);
-            input.Conv2DGradient_old(input, kernels, gradient, 1, Tensor::EPaddingType::Valid, inputGradient, kernelsGradient2);
-
-            Assert::IsTrue(kernelsGradient.Equals(kernelsGradient2));
-        }
-
         TEST_METHOD(Pool_Max_Valid_1Batch_Stride2)
         {
             Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
