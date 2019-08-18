@@ -18,8 +18,6 @@ namespace Neuro
 		virtual int GetParamsNum() const override;
 		virtual void GetParametersAndGradients(vector<ParametersAndGradients>& result) override;
 		
-        const char* ClassName() const;
-
         Tensor& Kernels() { return m_Kernels; }
         Tensor& Bias() { return m_Bias; }
 

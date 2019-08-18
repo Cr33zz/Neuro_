@@ -12,8 +12,6 @@ namespace Neuro
         // Use this constructor for input layer only!
         Pooling(Shape inputShape, int filterSize, int stride = 1, Tensor::EPoolType type = Tensor::EPoolType::Max, const string& name = "");
 
-        const char* ClassName() const;
-
     protected:
         Pooling();
 

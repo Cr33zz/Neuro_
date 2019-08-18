@@ -73,11 +73,4 @@ namespace Neuro
             break;
         }
     }
-
-    //////////////////////////////////////////////////////////////////////////
-    const char* Merge::ClassName() const
-    {
-        return "Merge";
-    }
-
 }

@@ -35,11 +35,4 @@ namespace Neuro
     {
         outputGradient.Split(m_InputsGradient);
     }
-
-    //////////////////////////////////////////////////////////////////////////
-    const char* Concatenate::ClassName() const
-    {
-        return "Concat";
-    }
-
 }

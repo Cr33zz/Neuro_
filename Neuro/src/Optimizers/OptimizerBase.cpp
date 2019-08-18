@@ -5,7 +5,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void OptimizerBase::Step(vector<ParametersAndGradients>& paramsAndGrads, int batchSize)
 	{
-		++Iteration;
+		++m_Iteration;
 		OnStep(paramsAndGrads, batchSize);
 	}
 }

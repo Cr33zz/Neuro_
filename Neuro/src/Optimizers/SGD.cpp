@@ -8,7 +8,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	SGD::SGD(float lr /*= 0.01f*/)
 	{
-		LearningRate = lr;
+		m_LearningRate = lr;
 	}
 
     //////////////////////////////////////////////////////////////////////////
@@ -21,7 +21,7 @@ namespace Neuro
 	std::string SGD::ToString()
 	{
 		stringstream ss;
-		ss << "SGD(lr=" << LearningRate << ")";
+		ss << "SGD(lr=" << m_LearningRate << ")";
 		return ss.str();
 	}
 
@@ -40,7 +40,7 @@ namespace Neuro
 			auto parameters = parametersAndGradient.Parameters;
 			auto gradients = parametersAndGradient.Gradients;
 
-			float tempLearningRate = LearningRate / batchSize;
+			float tempLearningRate = m_LearningRate / batchSize;
 
 			gradients->Mul(tempLearningRate, *gradients);
 			parameters->Sub(*gradients, *parameters);

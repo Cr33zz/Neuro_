@@ -783,6 +783,39 @@ namespace Neuro
 		m_Op->Conv2DGradient_old(input, kernels, gradient, stride, paddingX, paddingY, inputGradient, kernelsGradient);
 	}
 
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Conv2DTransposed(const Tensor& kernels, int stride, EPaddingType padding, Tensor& result) const
+    {
+        assert(Depth() == kernels.Depth());
+
+        m_Op->Conv2D(*this, kernels, stride, padding, result);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::Conv2DTransposed(const Tensor& kernels, int stride, EPaddingType padding) const
+    {
+        int outputWidth = 0, outputHeight = 0, paddingX = 0, paddingY = 0;
+        GetPaddingParams(padding, Width(), Height(), kernels.Width(), kernels.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
+
+        Tensor result(Shape(outputWidth, outputHeight, kernels.Batch(), Batch()));
+        Conv2D(kernels, stride, padding, result);
+        return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Conv2DTransposedInputsGradient(const Tensor& gradient, const Tensor& kernels, int stride, EPaddingType padding, Tensor& inputsGradient) const
+    {
+        inputsGradient.Zero();
+        m_Op->Conv2DInputGradient(gradient, kernels, stride, padding, inputsGradient);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Conv2DTransposedKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, EPaddingType padding, Tensor& kernelsGradient) const
+    {
+        kernelsGradient.Zero();
+        m_Op->Conv2DKernelsGradient(input, gradient, stride, padding, kernelsGradient);
+    }
+
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Pool(int filterSize, int stride, EPoolType type, EPaddingType padding, Tensor& result) const
 	{

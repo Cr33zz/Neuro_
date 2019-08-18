@@ -118,12 +118,6 @@ namespace Neuro
 		return m_FilterSize * m_FilterSize * m_FiltersNum;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
-	const char* Convolution::ClassName() const
-	{
-		return "Conv";
-	}
-
     //////////////////////////////////////////////////////////////////////////
     Convolution* Convolution::SetKernelInitializer(InitializerBase* initializer)
     {

@@ -173,15 +173,23 @@ namespace Neuro
         Tensor FlattenVert() const;
         void Rotated180(Tensor& result) const;
         Tensor Rotated180() const;
+
         void Conv2D(const Tensor& kernels, int stride, EPaddingType padding, Tensor& result) const;
         Tensor Conv2D(const Tensor& kernels, int stride, EPaddingType padding) const;
         void Conv2DInputsGradient(const Tensor& gradient, const Tensor& kernels, int stride, EPaddingType padding, Tensor& inputsGradient) const;
         void Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, EPaddingType padding, Tensor& kernelsGradient) const;
         void Conv2DGradient_old(const Tensor& input, const Tensor& kernels, const Tensor& gradient, int stride, EPaddingType padding, Tensor& inputGradient, Tensor& kernelsGradient) const;
+
+        void Conv2DTransposed(const Tensor& kernels, int stride, EPaddingType padding, Tensor& result) const;
+        Tensor Conv2DTransposed(const Tensor& kernels, int stride, EPaddingType padding) const;
+        void Conv2DTransposedInputsGradient(const Tensor& gradient, const Tensor& kernels, int stride, EPaddingType padding, Tensor& inputsGradient) const;
+        void Conv2DTransposedKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, EPaddingType padding, Tensor& kernelsGradient) const;
+
         void Pool(int filterSize, int stride, EPoolType type, EPaddingType padding, Tensor& result) const;
         Tensor Pool(int filterSize, int stride, EPoolType type, EPaddingType padding) const;
         // Assuming result matrix is of the dimensions of input to pooling layer
         void PoolGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, EPoolType type, EPaddingType padding, Tensor& result) const;
+
         string ToString() const;
         bool SameDimensionsExceptBatches(const Tensor& t) const;
 

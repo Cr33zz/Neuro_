@@ -9,8 +9,6 @@ namespace Neuro
     public:
         Concatenate(const vector<LayerBase*>& inputLayers, const string& name = "");
 
-        const char* ClassName() const;
-
     protected:
         Concatenate();
 

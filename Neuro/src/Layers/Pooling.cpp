@@ -62,10 +62,4 @@ namespace Neuro
             (int)floor((float)(inputShape.Height() - filterHeight) / stride + 1),
             inputShape.Depth());
     }
-
-    //////////////////////////////////////////////////////////////////////////
-    const char* Pooling::ClassName() const
-    {
-        return "Pooling";
-    }
 }

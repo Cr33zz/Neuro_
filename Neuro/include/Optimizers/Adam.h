@@ -16,12 +16,12 @@ namespace Neuro
 		const char* ClassName() const;
 
 	private:
-        float LearningRate;
-        float Beta1 = 0.9f;
-        float Beta2 = 0.999f;
-        float Epsilon = 1e-8f;
+        float m_LearningRate;
+        float m_Beta1 = 0.9f;
+        float m_Beta2 = 0.999f;
+        float m_Epsilon = 1e-8f;
 
-        vector<Tensor> MGradients;
-        vector<Tensor> VGradients;
+        vector<Tensor> m_MGradients;
+        vector<Tensor> m_VGradients;
 	};
 }

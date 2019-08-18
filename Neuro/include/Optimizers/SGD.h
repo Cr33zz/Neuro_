@@ -16,6 +16,6 @@ namespace Neuro
         virtual void OnStep(vector<ParametersAndGradients>& paramsAndGrads, int batchSize) override;
 
 	private:
-        float LearningRate;
+        float m_LearningRate;
 	};
 }

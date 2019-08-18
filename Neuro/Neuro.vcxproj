@@ -110,6 +110,7 @@
     <ClInclude Include="include\Layers\BatchNorm.h" />
     <ClInclude Include="include\Layers\Concatenate.h" />
     <ClInclude Include="include\Layers\Convolution.h" />
+    <ClInclude Include="include\Layers\Deconvolution.h" />
     <ClInclude Include="include\Layers\Dense.h" />
     <ClInclude Include="include\Layers\Dropout.h" />
     <ClInclude Include="include\Layers\Flatten.h" />
@@ -153,6 +154,7 @@
     <ClCompile Include="src\Layers\BatchNorm.cpp" />
     <ClCompile Include="src\Layers\Concatenate.cpp" />
     <ClCompile Include="src\Layers\Convolution.cpp" />
+    <ClCompile Include="src\Layers\Deconvolution.cpp" />
     <ClCompile Include="src\Layers\Dense.cpp" />
     <ClCompile Include="src\Layers\Dropout.cpp" />
     <ClCompile Include="src\Layers\Flatten.cpp" />

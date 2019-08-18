@@ -20,6 +20,6 @@ namespace Neuro
 	protected:
         virtual void OnStep(vector<ParametersAndGradients>& paramsAndGrads, int batchSize) = 0;
 
-		float Iteration;
+		float m_Iteration;
 	};
 }

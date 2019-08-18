@@ -8,20 +8,20 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	Adam::Adam(float lr)
 	{
-		LearningRate = lr;
+		m_LearningRate = lr;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Adam::OnStep(vector<ParametersAndGradients>& paramsAndGrads, int batchSize)
 	{
-		if (MGradients.size() != paramsAndGrads.size())
+		if (m_MGradients.size() != paramsAndGrads.size())
 		{
 			for (int i = 0; i < paramsAndGrads.size(); ++i)
 			{
 				auto gradients = paramsAndGrads[i].Gradients;
 
-				MGradients.push_back(Tensor(gradients->GetShape()));
-				VGradients.push_back(Tensor(gradients->GetShape()));
+				m_MGradients.push_back(Tensor(gradients->GetShape()));
+				m_VGradients.push_back(Tensor(gradients->GetShape()));
 			}
 		}
 
@@ -30,18 +30,18 @@ namespace Neuro
 			auto& parametersAndGradient = paramsAndGrads[i];
 			auto parameters = parametersAndGradient.Parameters;
 			auto gradients = parametersAndGradient.Gradients;
-			auto& mGrad = MGradients[i];
-			auto& vGrad = VGradients[i];
+			auto& mGrad = m_MGradients[i];
+			auto& vGrad = m_VGradients[i];
 
 			gradients->Div((float)batchSize, *gradients);
 
-			float tempLearningRate = LearningRate * (float)sqrt(1.0 - pow(Beta2, Iteration)) / (1.0f - (float)pow(Beta1, Iteration));
+			float tempLearningRate = m_LearningRate * (float)sqrt(1.0 - pow(m_Beta2, m_Iteration)) / (1.0f - (float)pow(m_Beta1, m_Iteration));
 
 			//mGrad.Map((m, g) => m * Beta1 + (1 - Beta1) * g, gradients, mGrad);
-			mGrad.Add(Beta1, 1 - Beta1, *gradients, mGrad);
-			vGrad.Map([&](float v, float g) { return v * Beta2 + (1 - Beta2) * g * g; }, *gradients, vGrad);
+			mGrad.Add(m_Beta1, 1 - m_Beta1, *gradients, mGrad);
+			vGrad.Map([&](float v, float g) { return v * m_Beta2 + (1 - m_Beta2) * g * g; }, *gradients, vGrad);
 
-			parameters->Sub(mGrad.Div(vGrad.Map([&](float x) { return (float)sqrt(x) + Epsilon; })).Mul(tempLearningRate), *parameters);
+			parameters->Sub(mGrad.Div(vGrad.Map([&](float x) { return (float)sqrt(x) + m_Epsilon; })).Mul(tempLearningRate), *parameters);
 
 			gradients->Zero();
 		}
@@ -57,7 +57,7 @@ namespace Neuro
 	string Adam::ToString()
 	{
 		stringstream ss;
-		ss << "Adam(lr=" << LearningRate << ")";
+		ss << "Adam(lr=" << m_LearningRate << ")";
 		return ss.str();
 		//return $"Adam(lr={LearningRate}, beta1={Beta1}, beta2={Beta2}, epsilon={Epsilon})";
 	}

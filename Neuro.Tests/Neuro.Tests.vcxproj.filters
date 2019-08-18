@@ -40,13 +40,7 @@
     <ClCompile Include="src\TensorOpMultiCpuTests.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\TensorOpGpuTests.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\BatchNormLayerTests.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\DropoutLayerTests.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\RandomTests.cpp">
