@@ -24,7 +24,7 @@ namespace Neuro
 		Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
 		auto inputs = GenerateInputsForLayer(layer, batchSize);
 
-		auto output = layer->FeedForward(inputs);
+		auto output = layer->FeedForward(inputs, true);
 		auto outputGradient = Tensor(output->GetShape());
 		outputGradient.FillWithValue(1);
 
@@ -42,9 +42,9 @@ namespace Neuro
 				auto oldValue = input.GetFlat(i);
 
 				input.SetFlat(oldValue - DERIVATIVE_EPSILON, i);
-				auto output1 = *layer->FeedForward(inputs);
+				auto output1 = *layer->FeedForward(inputs, true);
 				input.SetFlat(oldValue + DERIVATIVE_EPSILON, i);
-				auto output2 = *layer->FeedForward(inputs);
+				auto output2 = *layer->FeedForward(inputs, true);
 
 				input.SetFlat(oldValue, i);
 
@@ -75,7 +75,7 @@ namespace Neuro
         Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
         auto inputs = GenerateInputsForLayer(layer, batchSize);
 
-        auto output = layer->FeedForward(inputs);
+        auto output = layer->FeedForward(inputs, true);
         auto outputGradient = Tensor(output->GetShape());
         outputGradient.FillWithValue(1);
 
@@ -98,9 +98,9 @@ namespace Neuro
 
 			float oldValue = parameters->GetFlat(i);
 			parameters->SetFlat(oldValue + DERIVATIVE_EPSILON, i);
-			auto output1 = Tensor(*layer->FeedForward(inputs));
+			auto output1 = Tensor(*layer->FeedForward(inputs, true));
 			parameters->SetFlat(oldValue - DERIVATIVE_EPSILON, i);
-			auto output2 = Tensor(*layer->FeedForward(inputs));
+			auto output2 = Tensor(*layer->FeedForward(inputs, true));
 
 			parameters->SetFlat(oldValue, i);
 

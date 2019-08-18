@@ -64,7 +64,7 @@ namespace Neuro
 		assert(w < Width());
 		assert(h < Height());
 		assert(d < Depth());
-		assert(n < BatchSize());
+		assert(n < Batch());
 		return Dim0Dim1Dim2 * n + Dim0Dim1 * d + Dim0 * h + w;
 	}
 
@@ -72,7 +72,7 @@ namespace Neuro
 	std::string Shape::ToString() const
 	{
 		stringstream ss;
-		ss << Width() << "x" << Height() << "x" << Depth() << "x" << BatchSize();
+		ss << Width() << "x" << Height() << "x" << Depth() << "x" << Batch();
 		return ss.str();
 	}
 

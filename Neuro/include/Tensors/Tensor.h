@@ -48,7 +48,7 @@ namespace Neuro
 		};
 
 		Tensor();
-        Tensor(const Shape& shape);
+        explicit Tensor(const Shape& shape);
         Tensor(const vector<float>&, const Shape& shape);
         Tensor(const vector<float>&);
         Tensor(const Tensor& t);
@@ -60,7 +60,7 @@ namespace Neuro
         int Width() const { return m_Shape.Width(); };
 		int Height() const { return m_Shape.Height(); }
 		int Depth() const { return m_Shape.Depth(); }
-		int BatchSize() const { return m_Shape.BatchSize(); }
+		int Batch() const { return m_Shape.Batch(); }
 		int BatchLength() const { return m_Shape.Dim0Dim1Dim2; }
 		int Length() const { return (int)m_Values.size(); }
 
@@ -86,6 +86,7 @@ namespace Neuro
         Tensor& FillWithRand(int seed = -1, float min = -1, float max = 1);
         Tensor& FillWithRange(float start = 0, float increment = 1);
         Tensor& FillWithValue(float value);
+        Tensor& FillWithFunc(const function<float()>& func);
 
         void Zero();
 	

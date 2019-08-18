@@ -3,12 +3,6 @@
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	const char* Flatten::ClassName() const
-	{
-		return "Flatten";
-	}
-
-	//////////////////////////////////////////////////////////////////////////
 	Flatten::Flatten(LayerBase* inputLayer, const string& name)
         : LayerBase(__FUNCTION__, inputLayer, Shape(1, inputLayer->OutputShape().Length), nullptr, name)
 	{
@@ -32,7 +26,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Flatten::FeedForwardInternal()
+	void Flatten::FeedForwardInternal(bool training)
 	{
 		// output is already of proper shape thanks to LayerBase.FeedForward
 		m_Inputs[0]->CopyTo(m_Output);

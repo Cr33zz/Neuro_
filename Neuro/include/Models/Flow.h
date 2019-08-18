@@ -16,7 +16,7 @@ namespace Neuro
         virtual ~Flow();
 		virtual ModelBase* Clone() const override;
 
-		virtual void FeedForward(const vector<const Tensor*>& inputs) override;
+		virtual void FeedForward(const vector<const Tensor*>& inputs, bool training) override;
 		virtual void BackProp(vector<Tensor>& deltas) override;
 		virtual vector<const Tensor*> GetOutputs() const override;
 		virtual const vector<LayerBase*>& GetOutputLayers() const override;

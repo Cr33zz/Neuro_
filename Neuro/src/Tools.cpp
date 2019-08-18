@@ -18,7 +18,7 @@ namespace Neuro
 	int AccBinaryClassificationEquality(const Tensor& target, const Tensor& output)
 	{
 		int hits = 0;
-		for (int n = 0; n < output.BatchSize(); ++n)
+		for (int n = 0; n < output.Batch(); ++n)
 			hits += target(0, 0, 0, n) == roundf(output(0, 0, 0, n)) ? 1 : 0;
 		return hits;
 	}
@@ -27,7 +27,7 @@ namespace Neuro
 	int AccCategoricalClassificationEquality(const Tensor& target, const Tensor& output)
 	{
 		int hits = 0;
-		for (int n = 0; n < output.BatchSize(); ++n)
+		for (int n = 0; n < output.Batch(); ++n)
 			hits += target.ArgMax(n) == output.ArgMax(n) ? 1 : 0;
 		return hits;
 	}

@@ -44,7 +44,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Pooling::FeedForwardInternal()
+    void Pooling::FeedForwardInternal(bool training)
     {
         m_Inputs[0]->Pool(FilterSize, Stride, Type, Tensor::EPaddingType::Valid, m_Output);
     }

@@ -17,10 +17,10 @@ public:
         Shape inputShape(64, 64, 4);
         auto model = new Sequential();
         model->AddLayer(new Dense(4, 1000, new ReLU()));
-        model->AddLayer(new Dense(model->GetLastLayer(), 500, new ReLU()));
-        model->AddLayer(new Dense(model->GetLastLayer(), 300, new ReLU()));
-        model->AddLayer(new Dropout(model->GetLastLayer(), 0.2f));
-        model->AddLayer(new Dense(model->GetLastLayer(), 3, new Softmax()));
+        model->AddLayer(new Dense(model->LastLayer(), 500, new ReLU()));
+        model->AddLayer(new Dense(model->LastLayer(), 300, new ReLU()));
+        model->AddLayer(new Dropout(model->LastLayer(), 0.2f));
+        model->AddLayer(new Dense(model->LastLayer(), 3, new Softmax()));
         auto net = new NeuralNetwork(model, "test");
         net->Optimize(new Adam(), new CrossEntropy());
 

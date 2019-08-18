@@ -51,10 +51,10 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Flow::FeedForward(const tensor_ptr_vec_t& inputs)
+	void Flow::FeedForward(const tensor_ptr_vec_t& inputs, bool training)
 	{
 		for (int i = 0; i < (int)m_InputLayers.size(); ++i)
-			m_InputLayers[i]->FeedForward(inputs[i]);
+			m_InputLayers[i]->FeedForward(inputs[i], training);
 
 		for (auto layer : m_Order)
 		{
@@ -66,7 +66,7 @@ namespace Neuro
 			for (int i = 0; i < (int)layer->m_InputLayers.size(); ++i)
 				ins[i] = &(layer->m_InputLayers[i]->m_Output);
 
-			layer->FeedForward(ins);
+			layer->FeedForward(ins, training);
 		}
 	}
 

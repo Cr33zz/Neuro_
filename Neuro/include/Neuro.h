@@ -14,6 +14,8 @@
 #include "Layers/Convolution.h"
 #include "Layers/Dense.h"
 #include "Layers/Flatten.h"
+#include "Layers/Dropout.h"
+#include "Layers/BatchNorm.h"
 #include "Layers/Input.h"
 #include "Layers/Pooling.h"
 #include "Layers/Concatenate.h"

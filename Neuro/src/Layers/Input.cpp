@@ -20,7 +20,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Input::FeedForwardInternal()
+	void Input::FeedForwardInternal(bool training)
 	{
 		// output is already of proper shape thanks to LayerBase.FeedForward
 		m_Inputs[0]->CopyTo(m_Output);

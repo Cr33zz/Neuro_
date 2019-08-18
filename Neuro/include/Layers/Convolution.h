@@ -33,7 +33,7 @@ namespace Neuro
 		virtual LayerBase* GetCloneInstance() const override;
 		virtual void OnClone(const LayerBase& source) override;
 		virtual void OnInit() override;
-		virtual void FeedForwardInternal() override;
+		virtual void FeedForwardInternal(bool training) override;
 		virtual void BackPropInternal(Tensor& outputGradient) override;
 
         /*internal override void SerializeParameters(XmlElement elem)

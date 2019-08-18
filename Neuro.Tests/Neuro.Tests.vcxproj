@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ActivationTests.cpp" />
+    <ClCompile Include="src\BatchNormLayerTests.cpp" />
     <ClCompile Include="src\ConvolutionLayerTests.cpp" />
     <ClCompile Include="src\DenseLayerTests.cpp" />
     <ClCompile Include="src\FlattenLayerTests.cpp" />

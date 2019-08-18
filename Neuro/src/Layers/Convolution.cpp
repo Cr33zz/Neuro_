@@ -70,7 +70,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Convolution::FeedForwardInternal()
+	void Convolution::FeedForwardInternal(bool training)
 	{
 		m_Inputs[0]->Conv2D(m_Kernels, m_Stride, Tensor::EPaddingType::Valid, m_Output);
 		if (m_UseBias)

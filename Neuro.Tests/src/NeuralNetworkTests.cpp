@@ -29,10 +29,10 @@ namespace NeuroTests
             auto seqModel = static_cast<Sequential*>(net->Model);
 
             auto expectedWeights = Tensor({ 1.1f, 0.1f, -1.3f, 0.2f, -0.9f, 0.7f }, Shape(3, 2));
-            auto tData = GenerateTrainingData(50, seqModel->GetLastLayer().InputShapes[0], expectedWeights, MatMult);
+            auto tData = GenerateTrainingData(50, seqModel->LastLayer().InputShapes[0], expectedWeights, MatMult);
 
             auto inputs = new Tensor(Shape(seqModel->GetLayer(0).InputShape.Width, seqModel->GetLayer(0).InputShape.Height, seqModel->GetLayer(0).InputShape.Depth, tData.Count));
-            auto outputs = new Tensor(Shape(seqModel->GetLastLayer().OutputShape.Width, seqModel->GetLastLayer().OutputShape.Height, seqModel->GetLastLayer().OutputShape.Depth, tData.Count));
+            auto outputs = new Tensor(Shape(seqModel->LastLayer().OutputShape.Width, seqModel->LastLayer().OutputShape.Height, seqModel->LastLayer().OutputShape.Depth, tData.Count));
             for (int i = 0; i < tData.Count; ++i)
             {
                 tData[i].Input.CopyBatchTo(0, i, inputs);
@@ -42,7 +42,7 @@ namespace NeuroTests
             net->FitBatched(inputs, outputs, 300, 0, Track::Nothing);
 
             vector<ParametersAndGradients> paramsAndGrads;
-            model->GetLastLayer()->GetParametersAndGradients(paramsAndGrads);
+            model->LastLayer()->GetParametersAndGradients(paramsAndGrads);
 
             for (int i = 0; i < expectedWeights.Length; ++i)
                 Assert::AreEqual((double)paramsAndGrads[0].Parameters->GetFlat(i), (double)expectedWeights.GetFlat(i), 1e-2);*/
@@ -54,10 +54,10 @@ namespace NeuroTests
             auto& seqModel = static_cast<Sequential&>(*net->Model);
 
             auto expectedWeights = Tensor({ 1.1f, 0.1f, -1.3f, 0.2f, -0.9f, 0.7f }, Shape(3, 2));
-            auto tempData = GenerateTrainingData(50, seqModel->GetLastLayer().InputShape(), expectedWeights, MatMult);
+            auto tempData = GenerateTrainingData(50, seqModel->LastLayer().InputShape(), expectedWeights, MatMult);
 
             auto inputs = new Tensor(Shape(seqModel->GetLayer(0).InputShapes[0].Width, seqModel->GetLayer(0).InputShapes[0].Height, seqModel->GetLayer(0).InputShape().Depth, tempData.Count));
-            auto outputs = new Tensor(Shape(seqModel->GetLastLayer().OutputShape.Width, seqModel->GetLastLayer().OutputShape.Height, seqModel->GetLastLayer().OutputShape.Depth, tempData.Count));
+            auto outputs = new Tensor(Shape(seqModel->LastLayer().OutputShape.Width, seqModel->LastLayer().OutputShape.Height, seqModel->LastLayer().OutputShape.Depth, tempData.Count));
             for (int i = 0; i < tempData.Count; ++i)
             {
                 tempData[i].Inputs[0].CopyBatchTo(0, i, inputs);
@@ -69,7 +69,7 @@ namespace NeuroTests
             net->Fit(tData, -1, 300, nullptr, 0, Track::Nothing);
 
             vector<ParametersAndGradients> paramsAndGrads;
-            model->GetLastLayer()->GetParametersAndGradients(paramsAndGrads);
+            model->LastLayer()->GetParametersAndGradients(paramsAndGrads);
 
             for (int i = 0; i < expectedWeights.Length; ++i)
                 Assert::AreEqual(paramsAndGrads[0].Parameters.GetFlat(i), expectedWeights.GetFlat(i), 1e-2);*/
@@ -187,7 +187,7 @@ namespace NeuroTests
             net->Fit(inputs, outputs, batchSize, epochs, nullptr, nullptr, 0, Track::Nothing);
 
             vector<ParametersAndGradients> paramsAndGrads;
-            model->GetLastLayer()->GetParametersAndGradients(paramsAndGrads);
+            model->LastLayer()->GetParametersAndGradients(paramsAndGrads);
 
             for (int i = 0; i < expectedWeights.Length(); ++i)
                 Assert::AreEqual((double)paramsAndGrads[0].Parameters->GetFlat(i), (double)expectedWeights.GetFlat(i), 1e-2);
@@ -200,8 +200,8 @@ namespace NeuroTests
         {
             auto model = new Sequential();
             model->AddLayer(new Dense(inputsNum, 5, new Linear()));
-            model->AddLayer(new Dense(model->GetLastLayer(), 4, new Linear()));
-            model->AddLayer(new Dense(model->GetLastLayer(), inputsNum, new Linear()));
+            model->AddLayer(new Dense(model->LastLayer(), 4, new Linear()));
+            model->AddLayer(new Dense(model->LastLayer(), inputsNum, new Linear()));
             auto net = new NeuralNetwork(model, "deep_dense_test", 7);
 
             vector<tensor_ptr_vec_t> inputs;
@@ -238,13 +238,13 @@ namespace NeuroTests
 
             vector<tensor_ptr_vec_t> inputs;
             vector<tensor_ptr_vec_t> outputs;
-            GenerateTrainingData(samples, model->GetLastLayer()->InputShape(), expectedKernels, convFunc, inputs, outputs);
+            GenerateTrainingData(samples, model->LastLayer()->InputShape(), expectedKernels, convFunc, inputs, outputs);
             
             net->Optimize(new SGD(0.02f), new MeanSquareError());
             net->Fit(inputs, outputs, batchSize, epochs, nullptr, nullptr, 0, Track::Nothing);
 
             vector<ParametersAndGradients> paramsAndGrads;
-            model->GetLastLayer()->GetParametersAndGradients(paramsAndGrads);
+            model->LastLayer()->GetParametersAndGradients(paramsAndGrads);
 
             for (int i = 0; i < expectedKernels.Length(); ++i)
                 Assert::AreEqual((double)paramsAndGrads[0].Parameters->GetFlat(i), (double)expectedKernels.GetFlat(i), 1e-2);

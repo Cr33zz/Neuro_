@@ -12,7 +12,7 @@ namespace NeuroTests
     {
         TEST_METHOD(InputGradient_1Batch)
         {
-            Assert::IsTrue(TestTools::VerifyInputGradient(CreateLayer()));
+            Assert::IsTrue(TestTools::VerifyInputGradient(std::unique_ptr<LayerBase>(CreateLayer()).get()));
         }
 
         TEST_METHOD(InputGradient_3Batches)

@@ -392,7 +392,7 @@ namespace NeuroTests
             auto t = Tensor(Shape(2, 2, 1, 3)); t.FillWithRange(1);
             vector<float> sums = { 10, 26, 42 };
 
-            for (int i = 0; i < t.BatchSize(); ++i)
+            for (int i = 0; i < t.Batch(); ++i)
                 Assert::AreEqual((double)t.Sum(i), (double)sums[i], 1e-7);
         }
 
@@ -447,7 +447,7 @@ namespace NeuroTests
             auto t = Tensor(Shape(2, 2, 1, 3)); t.FillWithRange(1);
             vector<float> averages = { 2.5f, 6.5f, 10.5f };
 
-            for (int i = 0; i < t.BatchSize(); ++i)
+            for (int i = 0; i < t.Batch(); ++i)
                 Assert::AreEqual((double)t.Avg(i), (double)averages[i], 1e-7);
         }
 
@@ -498,7 +498,7 @@ namespace NeuroTests
             auto t = Tensor({ -20, 1, 5, 5, 6, -1, 3, 4, 2, 1, 16, 5, 3, 1, 10, 11 }, Shape(2, 2, 1, 4));
             vector<float> maxes = { 2, 0, 2, 3 };
 
-            for (int i = 0; i < t.BatchSize(); ++i)
+            for (int i = 0; i < t.Batch(); ++i)
                 Assert::AreEqual((double)t.ArgMax(i), (double)maxes[i]);
         }
 

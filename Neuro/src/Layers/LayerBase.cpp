@@ -84,15 +84,15 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void LayerBase::ExecuteFeedForward()
+	void LayerBase::ExecuteFeedForward(bool training)
 	{
-		Shape outShape(m_OutputShape.Width(), m_OutputShape.Height(), m_OutputShape.Depth(), m_Inputs[0]->BatchSize());
+		Shape outShape(m_OutputShape.Width(), m_OutputShape.Height(), m_OutputShape.Depth(), m_Inputs[0]->Batch());
 		// shape comparison is required for cases when last batch has different size
 		if (m_Output.GetShape() != outShape)
 			m_Output = Tensor(outShape);
 
 		//FeedForwardTimer.Start();
-		FeedForwardInternal();
+		FeedForwardInternal(training);
 		//FeedForwardTimer.Stop();
 
 		if (m_Activation)
@@ -107,25 +107,25 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	const Tensor* LayerBase::FeedForward(const Tensor* input)
+	const Tensor* LayerBase::FeedForward(const Tensor* input, bool training)
 	{
 		if (!Initialized)
 			Init();
 
 		m_Inputs.resize(1);
 		m_Inputs[0] = input;
-		ExecuteFeedForward();
+		ExecuteFeedForward(training);
 		return &m_Output;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	const Tensor* LayerBase::FeedForward(const vector<const Tensor*>& inputs)
+	const Tensor* LayerBase::FeedForward(const vector<const Tensor*>& inputs, bool training)
 	{
 		if (!Initialized)
 			Init();
 
 		m_Inputs = inputs;
-		ExecuteFeedForward();
+		ExecuteFeedForward(training);
 		return &m_Output;
 	}
 
@@ -137,7 +137,7 @@ namespace Neuro
 		for (int i = 0; i < (int)m_InputShapes.size(); ++i)
 		{
 			auto& inputShape = m_InputShapes[i];
-			Shape deltaShape(inputShape.Width(), inputShape.Height(), inputShape.Depth(), outputGradient.BatchSize());
+			Shape deltaShape(inputShape.Width(), inputShape.Height(), inputShape.Depth(), outputGradient.Batch());
 			if (m_InputsGradient[i].GetShape() != deltaShape)
 				m_InputsGradient[i] = Tensor(deltaShape);
 		}

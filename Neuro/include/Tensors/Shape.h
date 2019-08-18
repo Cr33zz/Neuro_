@@ -43,7 +43,7 @@ namespace Neuro
 		int Width() const { return Dimensions[0]; }
 		int Height() const { return Dimensions[1]; }
 		int Depth() const { return Dimensions[2]; }
-		int BatchSize() const { return Dimensions[3]; }
+		int Batch() const { return Dimensions[3]; }
 
 		int Dimensions[4];
 

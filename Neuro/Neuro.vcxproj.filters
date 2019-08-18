@@ -168,6 +168,12 @@
     <ClInclude Include="include\Tensors\Cuda\CudaKernels.h">
       <Filter>include\Tensors\Cuda</Filter>
     </ClInclude>
+    <ClInclude Include="include\Layers\Dropout.h">
+      <Filter>include\Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Layers\BatchNorm.h">
+      <Filter>include\Layers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\NeuralNetwork.cpp">
@@ -271,6 +277,12 @@
     </ClCompile>
     <ClCompile Include="src\Tensors\TensorOpGpu.cpp">
       <Filter>src\Tensors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Dropout.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\BatchNorm.cpp">
+      <Filter>src\Layers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

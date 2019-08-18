@@ -87,21 +87,21 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	tensor_ptr_vec_t NeuralNetwork::Predict(const tensor_ptr_vec_t& inputs)
     {
-        m_Model->FeedForward(inputs);
+        m_Model->FeedForward(inputs, false);
         return m_Model->GetOutputs();
     }
 
 	//////////////////////////////////////////////////////////////////////////
     tensor_ptr_vec_t NeuralNetwork::Predict(const Tensor* input)
     {
-		m_Model->FeedForward({ input });
+		m_Model->FeedForward({ input }, false);
         return m_Model->GetOutputs();
     }
 
 	//////////////////////////////////////////////////////////////////////////
     void NeuralNetwork::FeedForward(const tensor_ptr_vec_t& inputs)
     {
-        m_Model->FeedForward(inputs);
+        m_Model->FeedForward(inputs, true);
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -330,7 +330,7 @@ namespace Neuro
         }
         BackProp(losses);
 		auto paramsAndGrad = GetParametersAndGradients();
-        m_Optimizer->Step(paramsAndGrad, inputs[0]->BatchSize());
+        m_Optimizer->Step(paramsAndGrad, inputs[0]->Batch());
     }
 
 	//////////////////////////////////////////////////////////////////////////

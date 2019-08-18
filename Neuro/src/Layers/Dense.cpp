@@ -54,8 +54,8 @@ namespace Neuro
 		m_Weights = Tensor(Shape(InputShape().Length, m_OutputShape.Length));
 		m_Bias = Tensor(m_OutputShape);
 
-		m_WeightsGradient = Tensor(m_Weights.GetShape());
-		m_BiasGradient = Tensor(m_Bias.GetShape());
+		m_WeightsGrad = Tensor(m_Weights.GetShape());
+		m_BiasGrad = Tensor(m_Bias.GetShape());
 
 		m_WeightsInitializer->Init(m_Weights, InputShape().Length, m_OutputShape.Length);
 
@@ -64,7 +64,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Dense::FeedForwardInternal()
+	void Dense::FeedForwardInternal(bool training)
 	{
 		m_Weights.Mul(*m_Inputs[0], m_Output);
 		if (m_UseBias)
@@ -78,9 +78,9 @@ namespace Neuro
 		// each input is responsible for the output error proportionally to weights it is multiplied by
 		m_Weights.Transposed().Mul(outputGradient, m_InputsGradient[0]);
 
-		m_WeightsGradient.Add(outputGradient.Mul(m_Inputs[0]->Transposed()).SumBatches(), m_WeightsGradient);
+		m_WeightsGrad.Add(outputGradient.Mul(m_Inputs[0]->Transposed()).SumBatches(), m_WeightsGrad);
 		if (m_UseBias)
-			m_BiasGradient.Add(outputGradient.SumBatches(), m_BiasGradient);
+			m_BiasGrad.Add(outputGradient.SumBatches(), m_BiasGrad);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -102,10 +102,10 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Dense::GetParametersAndGradients(vector<ParametersAndGradients>& result)
 	{
-		result.push_back(ParametersAndGradients(&m_Weights, &m_WeightsGradient));
+		result.push_back(ParametersAndGradients(&m_Weights, &m_WeightsGrad));
 
 		if (m_UseBias)
-			result.push_back(ParametersAndGradients(&m_Bias, &m_BiasGradient));
+			result.push_back(ParametersAndGradients(&m_Bias, &m_BiasGrad));
 	}
 
     //////////////////////////////////////////////////////////////////////////

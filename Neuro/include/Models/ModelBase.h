@@ -18,7 +18,7 @@ namespace Neuro
 	public:
         virtual ~ModelBase() {}
         virtual ModelBase* Clone() const = 0;
-		virtual void FeedForward(const tensor_ptr_vec_t& inputs) = 0;
+		virtual void FeedForward(const tensor_ptr_vec_t& inputs, bool training) = 0;
         virtual void BackProp(vector<Tensor>& deltas) = 0;
         virtual void Optimize() { }
         virtual const vector<LayerBase*>& GetLayers() const = 0;

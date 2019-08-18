@@ -37,7 +37,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Merge::FeedForwardInternal()
+    void Merge::FeedForwardInternal(bool training)
     {
         switch (m_MergeMode)
         {

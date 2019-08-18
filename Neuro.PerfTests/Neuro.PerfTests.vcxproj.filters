@@ -23,5 +23,8 @@
     <ClInclude Include="include\TensorPerfTests.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\IrisNetwork.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

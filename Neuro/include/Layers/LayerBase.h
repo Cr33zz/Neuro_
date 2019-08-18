@@ -34,8 +34,8 @@ namespace Neuro
 
         virtual void CopyParametersTo(LayerBase& target, float tau = 0) const;
 
-		const Tensor* FeedForward(const Tensor* input);
-		const Tensor* FeedForward(const vector<const Tensor*>& inputs);
+		const Tensor* FeedForward(const Tensor* input, bool training);
+		const Tensor* FeedForward(const vector<const Tensor*>& inputs, bool training);
 		vector<Tensor>& BackProp(Tensor& outputGradient);
 
 		virtual int GetParamsNum() const;
@@ -66,7 +66,7 @@ namespace Neuro
         virtual void OnClone(const LayerBase& source);
 		virtual void OnInit();
 
-        virtual void FeedForwardInternal() = 0;
+        virtual void FeedForwardInternal(bool training) = 0;
 
         // Overall implementation of back propagation should look like this:
         // - if there is activation function apply derivative of that function to the errors computed by previous layer Errors.MultElementWise(Output.Map(x => ActivationF(x, true)));
@@ -86,7 +86,7 @@ namespace Neuro
 		Shape m_OutputShape;
 
 	private:
-		void ExecuteFeedForward();
+		void ExecuteFeedForward(bool training);
 		
 		ActivationBase* m_Activation;
 		vector<LayerBase*> m_InputLayers;

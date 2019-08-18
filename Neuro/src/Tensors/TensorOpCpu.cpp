@@ -18,14 +18,14 @@ namespace Neuro
         auto& t2Values = t2.GetValues();
         auto& resultValues = result.GetValues();
 
-		if (t2.BatchSize() == t1.BatchSize())
+		if (t2.Batch() == t1.Batch())
 		{
 			for (int i = 0; i < (int)t1Values.size(); ++i)
 				resultValues[i] = alpha * t1Values[i] + beta * t2Values[i];
 			return;
 		}
 
-		for (int n = 0; n < t1.BatchSize(); ++n)
+		for (int n = 0; n < t1.Batch(); ++n)
 			for (int i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
 				resultValues[idx] = alpha * t1Values[idx] + beta * t2Values[i];
 	}
@@ -50,10 +50,10 @@ namespace Neuro
 		int M = t2Temp.Width();
 		int K = t1Temp.Width();
 
-		for (int n = 0; n < result.BatchSize(); ++n)
+		for (int n = 0; n < result.Batch(); ++n)
 		{
-			int t1N = min(n, t1Temp.BatchSize() - 1);
-			int t2N = min(n, t2Temp.BatchSize() - 1);
+			int t1N = min(n, t1Temp.Batch() - 1);
+			int t2N = min(n, t2Temp.Batch() - 1);
 
 			for (int d = 0; d < t1Temp.Depth(); ++d)
 				for (int i = 0; i < N; ++i)
@@ -74,8 +74,16 @@ namespace Neuro
         auto& t2Values = t2.GetValues();
         auto& resultValues = result.GetValues();
 
-		for (int i = 0; i < (int)t1Values.size(); ++i)
-			resultValues[i] = t1Values[i] * t2Values[i];
+        if (t2.Batch() == t1.Batch())
+        {
+            for (int i = 0; i < (int)t1Values.size(); ++i)
+                resultValues[i] = t1Values[i] * t2Values[i];
+            return;
+        }
+
+        for (int n = 0; n < t1.Batch(); ++n)
+            for (int i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
+                resultValues[idx] = t1Values[idx] * t2Values[i];
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -84,7 +92,7 @@ namespace Neuro
 		t.CopyToHost();
         result.OverrideHost();
 
-		for (int n = 0; n < t.BatchSize(); ++n)
+		for (int n = 0; n < t.Batch(); ++n)
 			for (int d = 0; d < t.Depth(); ++d)
 				for (int h = 0; h < t.Height(); ++h)
 					for (int w = 0; w < t.Width(); ++w)
@@ -130,7 +138,7 @@ namespace Neuro
 
 		int batchLen = t.BatchLength();
 
-		for (int n = 0; n < t.BatchSize(); ++n)
+		for (int n = 0; n < t.Batch(); ++n)
 			for (int i = 0, idx = n * batchLen; i < batchLen; ++i, ++idx)
 				resultValues[i] += tValues[idx];
 	}
@@ -156,7 +164,7 @@ namespace Neuro
 		Tensor shifted = input.Sub(input.Max());
         Tensor exps = shifted.Map([&](float x) { return (float)exp(x); });
 
-		for (int n = 0; n < input.BatchSize(); ++n)
+		for (int n = 0; n < input.Batch(); ++n)
 		{
 			float sum = exps.Sum(n);
 
@@ -174,7 +182,7 @@ namespace Neuro
 		outputGradient.CopyToHost();
         result.OverrideHost();
 
-		Tensor outputReshaped = output.Reshaped(Shape(1, Shape::Auto, 1, output.BatchSize()));
+		Tensor outputReshaped = output.Reshaped(Shape(1, Shape::Auto, 1, output.Batch()));
 		Tensor jacob = outputReshaped.DiagFlat().Sub(outputReshaped.Mul(outputReshaped.Transposed()));
 		jacob.Mul(outputGradient, result);
 	}
@@ -189,9 +197,9 @@ namespace Neuro
 		int outputWidth = 0, outputHeight = 0, paddingX = 0, paddingY = 0;
 		Tensor::GetPaddingParams(padding, t.Width(), t.Height(), kernels.Width(), kernels.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
 
-		for (int n = 0; n < t.BatchSize(); ++n)
+		for (int n = 0; n < t.Batch(); ++n)
 		{
-			for (int outD = 0; outD < kernels.BatchSize(); ++outD)
+			for (int outD = 0; outD < kernels.Batch(); ++outD)
 				for (int h = -paddingY, outH = 0; outH < result.Height(); h += stride, ++outH)
 					for (int w = -paddingX, outW = 0; outW < result.Width(); w += stride, ++outW)
 					{
@@ -220,13 +228,13 @@ namespace Neuro
 		int outputWidth = 0, outputHeight = 0, paddingX = 0, paddingY = 0;
 		Tensor::GetPaddingParams(padding, gradient.Width(), gradient.Height(), kernels.Width(), kernels.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
 
-		for (int n = 0; n < gradient.BatchSize(); ++n)
+		for (int n = 0; n < gradient.Batch(); ++n)
 		{
 			for (int outH = 0, h = -paddingY; outH < inputGradients.Height(); h += stride, ++outH)
 				for (int outW = 0, w = -paddingX; outW < inputGradients.Width(); w += stride, ++outW)
 					for (int outD = 0; outD < inputGradients.Depth(); ++outD)
 					{
-						for (int kernelN = 0; kernelN < rotKernels.BatchSize(); ++kernelN)
+						for (int kernelN = 0; kernelN < rotKernels.Batch(); ++kernelN)
 							for (int kernelH = 0; kernelH < rotKernels.Height(); ++kernelH)
 								for (int kernelW = 0; kernelW < rotKernels.Width(); ++kernelW)
 								{
@@ -249,9 +257,9 @@ namespace Neuro
 		for (int kernelD = 0; kernelD < kernelsGradient.Depth(); ++kernelD)
 			for (int kernelH = 0; kernelH < kernelsGradient.Height(); ++kernelH)
 				for (int kernelW = 0; kernelW < kernelsGradient.Width(); ++kernelW)
-					for (int kernelN = 0; kernelN < kernelsGradient.BatchSize(); ++kernelN)
+					for (int kernelN = 0; kernelN < kernelsGradient.Batch(); ++kernelN)
 					{
-						for (int outN = 0; outN < gradient.BatchSize(); ++outN)
+						for (int outN = 0; outN < gradient.Batch(); ++outN)
 							for (int h = -paddingY, outH = 0; outH < gradient.Height(); h += stride, ++outH)
 								for (int w = -paddingX, outW = 0; outW < gradient.Width(); w += stride, ++outW)
 								{
@@ -271,7 +279,7 @@ namespace Neuro
 		inputGradient.CopyToHost();
 		kernelsGradient.CopyToHost();
 
-		for (int n = 0; n < input.BatchSize(); n++)
+		for (int n = 0; n < input.Batch(); n++)
 		{
 			for (int depth = 0; depth < outputGradient.Depth(); depth++)
 			{
@@ -334,7 +342,7 @@ namespace Neuro
 		t.CopyToHost();
         result.OverrideHost();
 
-		for (int outN = 0; outN < t.BatchSize(); ++outN)
+		for (int outN = 0; outN < t.Batch(); ++outN)
 		for (int outD = 0; outD < t.Depth(); ++outD)
 		for (int outH = 0, h = -paddingY; outH < result.Height(); h += stride, ++outH)
 		for (int outW = 0, w = -paddingX; outW < result.Width(); w += stride, ++outW)
@@ -373,7 +381,7 @@ namespace Neuro
 
 		result.Zero();
 
-		for (int outN = 0; outN < output.BatchSize(); ++outN)
+		for (int outN = 0; outN < output.Batch(); ++outN)
 		for (int outD = 0; outD < output.Depth(); ++outD)
 		for (int outH = 0, h = -paddingY; outH < output.Height(); ++outH, h += stride)
 		for (int outW = 0, w = -paddingX; outW < output.Width(); ++outW, w += stride)

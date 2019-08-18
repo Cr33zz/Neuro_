@@ -14,7 +14,7 @@ namespace Neuro
 		Sequential();
         virtual ~Sequential();
         virtual ModelBase* Clone() const override;
-        virtual void FeedForward(const tensor_ptr_vec_t& inputs) override;
+        virtual void FeedForward(const tensor_ptr_vec_t& inputs, bool training) override;
         virtual void BackProp(vector<Tensor>& deltas) override;
         virtual tensor_ptr_vec_t GetOutputs() const override;
         virtual const vector<LayerBase*>& GetOutputLayers() const override;
@@ -25,7 +25,7 @@ namespace Neuro
         virtual void LoadStateXml(string filename) override;
 
 		LayerBase* GetLayer(int i);
-        LayerBase* GetLastLayer() const;
+        LayerBase* LastLayer() const;
         int LayersCount() const;
         void AddLayer(LayerBase* layer);
 

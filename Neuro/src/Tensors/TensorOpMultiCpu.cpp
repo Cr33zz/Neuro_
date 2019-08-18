@@ -17,7 +17,7 @@ namespace Neuro
         auto& t2Values = t2.GetValues();
         auto& resultValues = result.GetValues();
 
-        if (t2.BatchSize() == t1.BatchSize())
+        if (t2.Batch() == t1.Batch())
         {
             parallel_for(0, (int)t1Values.size(), [&](int i)
             {
@@ -26,7 +26,7 @@ namespace Neuro
             return;
         }
 
-        parallel_for(0, t1.BatchSize(), [&](int n)
+        parallel_for(0, t1.Batch(), [&](int n)
         {
             for (int i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
                 resultValues[idx] = alpha * t1Values[idx] + beta * t2Values[i];
@@ -43,10 +43,10 @@ namespace Neuro
         t2Temp.CopyToHost();
         result.Zero();
 
-        parallel_for(0, result.BatchSize(), [&](int n)
+        parallel_for(0, result.Batch(), [&](int n)
         {
-            int t1N = min(n, t1Temp.BatchSize() - 1);
-            int t2N = min(n, t2Temp.BatchSize() - 1);
+            int t1N = min(n, t1Temp.Batch() - 1);
+            int t2N = min(n, t2Temp.Batch() - 1);
 
             parallel_for(0, t1Temp.Depth(), [&](int d)
             {
@@ -69,9 +69,19 @@ namespace Neuro
         auto& t2Values = t2.GetValues();
         auto& resultValues = result.GetValues();
 
-        parallel_for(0, (int)t1Values.size(), [&](int i)
+        if (t2.Batch() == t1.Batch())
         {
-            resultValues[i] = t1Values[i] * t2Values[i];
+            parallel_for(0, (int)t1Values.size(), [&](int i)
+            {
+                resultValues[i] = t1Values[i] * t2Values[i];
+            });
+            return;
+        }
+
+        parallel_for(0, t1.Batch(), [&](int n)
+        {
+            for (int i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
+                resultValues[idx] = t1Values[idx] * t2Values[i];
         });
     }
 
@@ -81,7 +91,7 @@ namespace Neuro
         t.CopyToHost();
         result.OverrideHost();
 
-        parallel_for(0, t.BatchSize(), [&](int n)
+        parallel_for(0, t.Batch(), [&](int n)
         {
             parallel_for(0, t.Depth(), [&](int d)
             {
@@ -102,9 +112,9 @@ namespace Neuro
         int outputWidth = 0, outputHeight = 0, paddingX = 0, paddingY = 0;
         Tensor::GetPaddingParams(padding, t.Width(), t.Height(), kernels.Width(), kernels.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
 
-        parallel_for(0, t.BatchSize(), [&](int n)
+        parallel_for(0, t.Batch(), [&](int n)
         {
-            parallel_for(0, kernels.BatchSize(), [&](int outD)
+            parallel_for(0, kernels.Batch(), [&](int outD)
             {
                 for (int h = -paddingY, outH = 0; outH < result.Height(); h += stride, ++outH)
                 for (int w = -paddingX, outW = 0; outW < result.Width(); w += stride, ++outW)
@@ -135,13 +145,13 @@ namespace Neuro
         int outputWidth = 0, outputHeight = 0, paddingX = 0, paddingY = 0;
         Tensor::GetPaddingParams(padding, gradient.Width(), gradient.Height(), kernels.Width(), kernels.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
 
-        parallel_for(0, gradient.BatchSize(), [&](int n)
+        parallel_for(0, gradient.Batch(), [&](int n)
         {
             for (int outH = 0, h = -paddingY; outH < inputGradients.Height(); h += stride, ++outH)
             for (int outW = 0, w = -paddingX; outW < inputGradients.Width(); w += stride, ++outW)
             parallel_for(0, inputGradients.Depth(), [&](int outD)
             {
-                for (int kernelN = 0; kernelN < rotKernels.BatchSize(); ++kernelN)
+                for (int kernelN = 0; kernelN < rotKernels.Batch(); ++kernelN)
                 for (int kernelH = 0; kernelH < rotKernels.Height(); ++kernelH)
                 for (int kernelW = 0; kernelW < rotKernels.Width(); ++kernelW)
                     inputGradients(outW, outH, outD, n) += gradient.TryGet(0, w + kernelW, h + kernelH, kernelN, n) * rotKernels(kernelW, kernelH, outD, kernelN);
@@ -159,8 +169,8 @@ namespace Neuro
         int outputWidth = 0, outputHeight = 0, paddingX = 0, paddingY = 0;
         Tensor::GetPaddingParams(padding, input.Width(), input.Height(), kernelsGradient.Width(), kernelsGradient.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
 
-        for (int n = 0; n < gradient.BatchSize(); ++n)
-        parallel_for(0, kernelsGradient.BatchSize(), [&](int outD)
+        for (int n = 0; n < gradient.Batch(); ++n)
+        parallel_for(0, kernelsGradient.Batch(), [&](int outD)
         {
             for (int h = -paddingY, outH = 0; outH < gradient.Height(); h += stride, ++outH)
             for (int w = -paddingX, outW = 0; outW < gradient.Width(); w += stride, ++outW)
@@ -184,7 +194,7 @@ namespace Neuro
         t.CopyToHost();
         result.OverrideHost();
 
-        parallel_for(0, t.BatchSize(), [&](int outN)
+        parallel_for(0, t.Batch(), [&](int outN)
         {
             parallel_for(0, t.Depth(), [&](int outD)
             {
@@ -227,7 +237,7 @@ namespace Neuro
 
         result.Zero();
 
-        parallel_for(0, output.BatchSize(), [&](int outN)
+        parallel_for(0, output.Batch(), [&](int outN)
         {
             parallel_for(0, output.Depth(), [&](int outD)
             {
@@ -303,7 +313,7 @@ namespace Neuro
 
         int batchLen = t.BatchLength();
 
-        parallel_for(0, result.BatchSize(), [&](int n)
+        parallel_for(0, result.Batch(), [&](int n)
         {
             for (int i = 0, idx = n * batchLen; i < batchLen; ++i, ++idx)
                 resultValues[i] += tValues[idx];

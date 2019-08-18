@@ -29,12 +29,12 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Sequential::FeedForward(const tensor_ptr_vec_t& inputs)
+	void Sequential::FeedForward(const tensor_ptr_vec_t& inputs, bool training)
 	{
 		//if (inputs.size() > 1) throw new Exception("Only single input is allowed for sequential model.");
 
 		for (int l = 0; l < (int)m_Layers.size(); ++l)
-			m_Layers[l]->FeedForward(l == 0 ? inputs[0] : &(m_Layers[l - 1]->Output()));
+			m_Layers[l]->FeedForward(l == 0 ? inputs[0] : &(m_Layers[l - 1]->Output()), training);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -50,7 +50,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	tensor_ptr_vec_t Sequential::GetOutputs() const
 	{
-		return { &(GetLastLayer()->Output()) };
+		return { &(LastLayer()->Output()) };
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -129,7 +129,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	LayerBase* Sequential::GetLastLayer() const
+	LayerBase* Sequential::LastLayer() const
 	{
 		return m_Layers.back();
 	}

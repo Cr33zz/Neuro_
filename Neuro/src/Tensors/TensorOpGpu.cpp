@@ -37,7 +37,7 @@ namespace Neuro
         t2.CopyToDevice();
         result.CopyToDevice();
 
-        if (t2.BatchSize() == t1.BatchSize())
+        if (t2.Batch() == t1.Batch())
         {
             cublasSgeam(s_CublasHandle,
                         CUBLAS_OP_N, CUBLAS_OP_N,
@@ -50,7 +50,7 @@ namespace Neuro
             return;
         }
 
-        for (int n = 0; n < t1.BatchSize(); ++n)
+        for (int n = 0; n < t1.Batch(); ++n)
         {
             cublasSgeam(s_CublasHandle,
                         CUBLAS_OP_N, CUBLAS_OP_N,
@@ -75,7 +75,7 @@ namespace Neuro
         int k = t1.Width();
 
         //treat depth as batch
-        int batches = t1.Depth() * t1.BatchSize();
+        int batches = t1.Depth() * t1.Batch();
         float alpha = 1, beta = 0;
 
         for (int b = 0; b < batches; ++b)
@@ -135,7 +135,7 @@ namespace Neuro
         int n = t.Width();
 
         //treat depth as batch
-        int batches = t.Depth() * t.BatchSize();
+        int batches = t.Depth() * t.Batch();
         float alpha = 1, beta = 0;
 
         for (int b = 0; b < batches; ++b)
@@ -294,7 +294,7 @@ namespace Neuro
         int batchLen = t.BatchLength();
         float alpha = 1, beta = 1;
 
-        for (int n = 0; n < t.BatchSize(); ++n)
+        for (int n = 0; n < t.Batch(); ++n)
         {
             cublasSgeam(s_CublasHandle,
                         CUBLAS_OP_N, CUBLAS_OP_N,
@@ -339,7 +339,7 @@ namespace Neuro
         cudnnTensorDescriptor_t inputDesc; cudnnCreateTensorDescriptor(&inputDesc);
         cudnnTensorDescriptor_t resultDesc; cudnnCreateTensorDescriptor(&resultDesc);
 
-        int n = input.BatchSize(), c = input.Height(), h = input.Depth(), w = input.Width(); // cuDNN expects values to be in Channel so we need to fake 'reshape' our tensor
+        int n = input.Batch(), c = input.Height(), h = input.Depth(), w = input.Width(); // cuDNN expects values to be in Channel so we need to fake 'reshape' our tensor
 
         cudnnSetTensor4dDescriptor(inputDesc,CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
         cudnnSetTensor4dDescriptor(resultDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
@@ -359,7 +359,7 @@ namespace Neuro
         cudnnTensorDescriptor_t outputGradientDesc; cudnnCreateTensorDescriptor(&outputGradientDesc);
         cudnnTensorDescriptor_t resultDesc; cudnnCreateTensorDescriptor(&resultDesc);
 
-        int n = output.BatchSize(), c = output.Height(), h = output.Depth(), w = output.Width(); // cuDNN expects values to be in Channel so we need to fake 'reshape' our tensor
+        int n = output.Batch(), c = output.Height(), h = output.Depth(), w = output.Width(); // cuDNN expects values to be in Channel so we need to fake 'reshape' our tensor
 
         cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
         cudnnSetTensor4dDescriptor(outputGradientDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);

@@ -24,7 +24,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Concatenate::FeedForwardInternal()
+    void Concatenate::FeedForwardInternal(bool training)
     {
         // output is already of proper shape thanks to LayerBase.FeedForward
         Tensor::Concat(m_Inputs, m_Output);

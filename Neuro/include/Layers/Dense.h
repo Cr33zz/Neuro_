@@ -34,7 +34,7 @@ namespace Neuro
 		virtual LayerBase* GetCloneInstance() const override;
 		virtual void OnClone(const LayerBase& source) override;
 		virtual void OnInit() override;
-        virtual void FeedForwardInternal() override;
+        virtual void FeedForwardInternal(bool training) override;
         virtual void BackPropInternal(Tensor& outputGradient) override;
 
 	private:
@@ -42,8 +42,8 @@ namespace Neuro
         Tensor m_Bias;
         bool m_UseBias = true;
 
-		Tensor m_WeightsGradient;
-        Tensor m_BiasGradient;
+		Tensor m_WeightsGrad;
+        Tensor m_BiasGrad;
         
         InitializerBase* m_WeightsInitializer = new GlorotUniform();
         InitializerBase* m_BiasInitializer = new Zeros();

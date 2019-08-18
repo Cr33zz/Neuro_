@@ -11,13 +11,11 @@ namespace Neuro
         // This constructor should only be used for input layer
         Flatten(const Shape& inputShape, const string& name = "");
 
-		const char* ClassName() const;
-
 	protected:
         Flatten();
 
 		virtual LayerBase* GetCloneInstance() const override;
-		virtual void FeedForwardInternal() override;
+		virtual void FeedForwardInternal(bool training) override;
 		virtual void BackPropInternal(Tensor& outputGradient) override;
 	};
 }
