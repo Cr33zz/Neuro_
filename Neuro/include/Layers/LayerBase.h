@@ -7,6 +7,7 @@
 #include "Tensors/Tensor.h"
 #include "Tensors/Shape.h"
 #include "ParametersAndGradients.h"
+#include "Stopwatch.h"
 
 namespace Neuro
 {
@@ -95,10 +96,10 @@ namespace Neuro
         string m_ClassName;
 		bool Initialized = false;        
 
-		/*Stopwatch FeedForwardTimer = new Stopwatch();
-		Stopwatch ActivationTimer = new Stopwatch();
-		Stopwatch BackPropTimer = new Stopwatch();
-		Stopwatch ActivationBackPropTimer = new Stopwatch();*/
+		Stopwatch m_FeedForwardTimer;
+		Stopwatch m_ActivationTimer;
+		Stopwatch m_BackPropTimer;
+		Stopwatch m_ActivationBackPropTimer;
 
 		static map<string, int> s_LayersCountPerType;
 

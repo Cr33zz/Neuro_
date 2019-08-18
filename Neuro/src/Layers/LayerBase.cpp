@@ -91,18 +91,15 @@ namespace Neuro
 		if (m_Output.GetShape() != outShape)
 			m_Output = Tensor(outShape);
 
-		//FeedForwardTimer.Start();
+		m_FeedForwardTimer.Start();
 		FeedForwardInternal(training);
-		//FeedForwardTimer.Stop();
+		m_FeedForwardTimer.Stop();
 
 		if (m_Activation)
 		{
-			//ActivationTimer.Start();
+			m_ActivationTimer.Start();
 			m_Activation->Compute(m_Output, m_Output);
-			//ActivationTimer.Stop();
-
-			/*if (NeuralNetwork::DebugMode)
-				Trace.WriteLine($"Activation({Activation.GetType().Name}) output:\n{Output}\n");*/
+			m_ActivationTimer.Stop();
 		}
 	}
 
@@ -145,17 +142,14 @@ namespace Neuro
 		// apply derivative of our activation function to the errors computed by previous layer
 		if (m_Activation)
 		{
-			//ActivationBackPropTimer.Start();
+			m_ActivationBackPropTimer.Start();
 			m_Activation->Derivative(m_Output, outputGradient, outputGradient);
-			//ActivationBackPropTimer.Stop();
-
-			/*if (NeuralNetwork::DebugMode)
-				Trace.WriteLine($"Activation({Activation.GetType().Name}) errors gradient:\n{outputGradient}\n");*/
+			m_ActivationBackPropTimer.Stop();
 		}
 
-		//BackPropTimer.Start();
+		m_BackPropTimer.Start();
 		BackPropInternal(outputGradient);
-		//BackPropTimer.Stop();
+		m_BackPropTimer.Stop();
 
 		return m_InputsGradient;
 	}

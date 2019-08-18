@@ -46,5 +46,11 @@
     <ClCompile Include="src\BatchNormLayerTests.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\DropoutLayerTests.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RandomTests.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
