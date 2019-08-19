@@ -4,20 +4,20 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Deconvolution::Deconvolution(LayerBase* inputLayer, int filterSize, int filtersNum, int stride, ActivationBase* activation, const string& name)
-        : LayerBase(__FUNCTION__, inputLayer, GetOutShape(inputLayer->OutputShape(), filterSize, filterSize, stride, filtersNum), activation, name)
+    Deconvolution::Deconvolution(LayerBase* inputLayer, int filterSize, int outputDepth, int stride, ActivationBase* activation, const string& name)
+        : LayerBase(__FUNCTION__, inputLayer, GetOutShape(inputLayer->OutputShape(), filterSize, filterSize, stride, outputDepth), activation, name)
     {
         m_FilterSize = filterSize;
-        m_FiltersNum = filtersNum;
+        m_OutputDepth = outputDepth;
         m_Stride = stride;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Deconvolution::Deconvolution(const Shape& inputShape, int filterSize, int filtersNum, int stride, ActivationBase* activation, const string& name)
-        : LayerBase(__FUNCTION__, inputShape, GetOutShape(inputShape, filterSize, filterSize, stride, filtersNum), activation, name)
+    Deconvolution::Deconvolution(const Shape& inputShape, int filterSize, int outputDepth, int stride, ActivationBase* activation, const string& name)
+        : LayerBase(__FUNCTION__, inputShape, GetOutShape(inputShape, filterSize, filterSize, stride, outputDepth), activation, name)
     {
         m_FilterSize = filterSize;
-        m_FiltersNum = filtersNum;
+        m_OutputDepth = outputDepth;
         m_Stride = stride;
     }
 
@@ -39,8 +39,8 @@ namespace Neuro
     {
         __super::OnInit();
 
-        m_Kernels = Tensor(Shape(m_FilterSize, m_FilterSize, InputShape().Depth(), m_FiltersNum));
-        m_Bias = Tensor(Shape(m_OutputShape.Width(), m_OutputShape.Height(), m_FiltersNum));
+        m_Kernels = Tensor(Shape(m_FilterSize, m_FilterSize, m_OutputDepth, InputShape().Depth()));
+        m_Bias = Tensor(Shape(m_OutputShape.Width(), m_OutputShape.Height(), m_OutputDepth));
         m_KernelsGradient = Tensor(m_Kernels.GetShape());
         m_BiasGradient = Tensor(m_Bias.GetShape());
 
@@ -65,7 +65,7 @@ namespace Neuro
         m_Bias = Tensor(sourceConv.m_Bias);
         m_UseBias = sourceConv.m_UseBias;
         m_FilterSize = sourceConv.m_FilterSize;
-        m_FiltersNum = sourceConv.m_FiltersNum;
+        m_OutputDepth = sourceConv.m_OutputDepth;
         m_Stride = sourceConv.m_Stride;
     }
 
@@ -81,16 +81,16 @@ namespace Neuro
     void Deconvolution::BackPropInternal(Tensor& outputGradient)
     {
         outputGradient.Conv2DTransposedInputsGradient(outputGradient, m_Kernels, m_Stride, Tensor::EPaddingType::Valid, m_InputsGradient[0]);
-        outputGradient.Conv2DTransposedKernelsGradient(*m_Inputs[0], outputGradient, m_Stride, Tensor::EPaddingType::Full, m_KernelsGradient);
+        outputGradient.Conv2DTransposedKernelsGradient(outputGradient, *m_Inputs[0], m_Stride, Tensor::EPaddingType::Valid, m_KernelsGradient);
 
         if (m_UseBias)
             m_BiasGradient.Add(outputGradient.SumBatches());
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Shape Deconvolution::GetOutShape(const Shape& inputShape, int filterWidth, int filterHeight, int stride, int filtersNum)
+    Shape Deconvolution::GetOutShape(const Shape& inputShape, int filterWidth, int filterHeight, int stride, int outputDepth)
     {
-        return Shape(inputShape.Width() + filterWidth - 1, inputShape.Height() + filterHeight - 1, filtersNum);
+        return Shape(inputShape.Width() + filterWidth - 1, inputShape.Height() + filterHeight - 1, outputDepth);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -115,7 +115,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     int Deconvolution::GetParamsNum() const
     {
-        return m_FilterSize * m_FilterSize * m_FiltersNum;
+        return m_FilterSize * m_FilterSize * m_OutputDepth;
     }
 
     //////////////////////////////////////////////////////////////////////////

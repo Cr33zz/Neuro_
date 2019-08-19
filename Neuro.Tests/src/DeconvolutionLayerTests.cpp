@@ -32,7 +32,7 @@ namespace NeuroTests
 
         LayerBase* CreateLayer()
         {
-            auto layer = new Deconvolution(Shape(3, 3, 4), 3, 4, 1);
+            auto layer = new Deconvolution(Shape(3, 3, 6), 4, 3, 1);
             layer->Init();
             layer->Kernels().FillWithRand();
             return layer;

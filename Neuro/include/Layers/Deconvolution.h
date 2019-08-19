@@ -10,9 +10,9 @@ namespace Neuro
     class Deconvolution : public LayerBase
     {
     public:
-        Deconvolution(LayerBase* inputLayer, int filterSize, int filtersNum, int stride, ActivationBase* activation = nullptr, const string& name = "");
+        Deconvolution(LayerBase* inputLayer, int filterSize, int outputDepth, int stride, ActivationBase* activation = nullptr, const string& name = "");
         // This constructor should only be used for input layer
-        Deconvolution(const Shape& inputShape, int filterSize, int filtersNum, int stride, ActivationBase* activation = nullptr, const string& name = "");
+        Deconvolution(const Shape& inputShape, int filterSize, int outputDepth, int stride, ActivationBase* activation = nullptr, const string& name = "");
         ~Deconvolution();
 
         virtual void CopyParametersTo(LayerBase& target, float tau) const override;
@@ -50,7 +50,7 @@ namespace Neuro
         }*/
 
     private:
-        static Shape GetOutShape(const Shape& inputShape, int filterWidth, int filterHeight, int stride, int filtersNum);
+        static Shape GetOutShape(const Shape& inputShape, int filterWidth, int filterHeight, int stride, int outputDepth);
 
         Tensor m_Kernels;
         Tensor m_Bias;
@@ -62,7 +62,7 @@ namespace Neuro
         InitializerBase* m_KernelInitializer = new GlorotUniform();
         InitializerBase* m_BiasInitializer = new Zeros();
 
-        int m_FiltersNum;
+        int m_OutputDepth;
         int m_FilterSize;
         int m_Stride;
     };

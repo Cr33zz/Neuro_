@@ -220,7 +220,7 @@ namespace NeuroTests
             net->Fit(inputs, outputs, batchSize, epochs, nullptr, nullptr, 0, Track::Nothing);
 
             for (size_t i = 0; i < inputs.size(); ++i)
-                Assert::IsTrue(outputs[i][0]->Equals(*net->Predict(inputs[i])[0], 0.01f));
+                Assert::IsTrue(outputs[i][0]->Equals(*net->Predict(inputs[i])[0], 0.02f));
 
             DeleteData(inputs);
             DeleteData(outputs);

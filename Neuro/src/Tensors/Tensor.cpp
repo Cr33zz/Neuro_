@@ -775,7 +775,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Conv2DTransposed(const Tensor& kernels, int stride, EPaddingType padding, Tensor& result) const
     {
-        assert(Depth() == kernels.Depth());
+        assert(Depth() == kernels.Batch());
         Conv2DInputsGradient(*this, kernels, stride, padding, result);
     }
 
@@ -799,7 +799,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Conv2DTransposedKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, EPaddingType padding, Tensor& kernelsGradient) const
     {
-        //???
+        kernelsGradient.Zero();
+        m_Op->Conv2DKernelsGradient(input, gradient, stride, padding, kernelsGradient);
     }
 
 	//////////////////////////////////////////////////////////////////////////
