@@ -1,24 +1,27 @@
 #include "Layers/Deconvolution.h"
+#include "Layers/Convolution.h"
 #include "Tensors/Tensor.h"
 
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Deconvolution::Deconvolution(LayerBase* inputLayer, int filterSize, int outputDepth, int stride, ActivationBase* activation, const string& name)
+    Deconvolution::Deconvolution(LayerBase* inputLayer, int filterSize, int outputDepth, int stride, Tensor::EPaddingType paddingMode, ActivationBase* activation, const string& name)
         : LayerBase(__FUNCTION__, inputLayer, GetOutShape(inputLayer->OutputShape(), filterSize, filterSize, stride, outputDepth), activation, name)
     {
         m_FilterSize = filterSize;
         m_OutputDepth = outputDepth;
         m_Stride = stride;
+        m_PaddingMode = paddingMode;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Deconvolution::Deconvolution(const Shape& inputShape, int filterSize, int outputDepth, int stride, ActivationBase* activation, const string& name)
+    Deconvolution::Deconvolution(const Shape& inputShape, int filterSize, int outputDepth, int stride, Tensor::EPaddingType paddingMode, ActivationBase* activation, const string& name)
         : LayerBase(__FUNCTION__, inputShape, GetOutShape(inputShape, filterSize, filterSize, stride, outputDepth), activation, name)
     {
         m_FilterSize = filterSize;
         m_OutputDepth = outputDepth;
         m_Stride = stride;
+        m_PaddingMode = paddingMode;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -60,19 +63,20 @@ namespace Neuro
     {
         __super::OnClone(source);
 
-        auto& sourceConv = static_cast<const Deconvolution&>(source);
-        m_Kernels = Tensor(sourceConv.m_Kernels);
-        m_Bias = Tensor(sourceConv.m_Bias);
-        m_UseBias = sourceConv.m_UseBias;
-        m_FilterSize = sourceConv.m_FilterSize;
-        m_OutputDepth = sourceConv.m_OutputDepth;
-        m_Stride = sourceConv.m_Stride;
+        auto& sourceDeconv = static_cast<const Deconvolution&>(source);
+        m_Kernels = Tensor(sourceDeconv.m_Kernels);
+        m_Bias = Tensor(sourceDeconv.m_Bias);
+        m_UseBias = sourceDeconv.m_UseBias;
+        m_FilterSize = sourceDeconv.m_FilterSize;
+        m_OutputDepth = sourceDeconv.m_OutputDepth;
+        m_Stride = sourceDeconv.m_Stride;
+        m_PaddingMode = sourceDeconv.m_PaddingMode;
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Deconvolution::FeedForwardInternal(bool training)
     {
-        m_Inputs[0]->Conv2DTransposed(m_Kernels, m_Stride, Tensor::EPaddingType::Full, m_Output);
+        m_Inputs[0]->Conv2DTransposed(m_Kernels, m_Stride, m_PaddingMode, m_Output);
         if (m_UseBias)
             m_Output.Add(m_Bias, m_Output);
     }
@@ -80,7 +84,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Deconvolution::BackPropInternal(Tensor& outputGradient)
     {
-        outputGradient.Conv2DTransposedInputsGradient(outputGradient, m_Kernels, m_Stride, Tensor::EPaddingType::Valid, m_InputsGradient[0]);
+        outputGradient.Conv2DTransposedInputsGradient(outputGradient, m_Kernels, m_Stride, Convolution::GetGradientPaddingMode(m_PaddingMode), m_InputsGradient[0]);
         outputGradient.Conv2DTransposedKernelsGradient(outputGradient, *m_Inputs[0], m_Stride, Tensor::EPaddingType::Valid, m_KernelsGradient);
 
         if (m_UseBias)
