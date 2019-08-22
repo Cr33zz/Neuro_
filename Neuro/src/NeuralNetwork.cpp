@@ -92,9 +92,9 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-    tensor_ptr_vec_t NeuralNetwork::Predict(const Tensor* input)
+    tensor_ptr_vec_t NeuralNetwork::Predict(const Tensor& input)
     {
-		m_Model->FeedForward({ input }, false);
+		m_Model->FeedForward({ &input }, false);
         return m_Model->GetOutputs();
     }
 
@@ -147,7 +147,7 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	void NeuralNetwork::Fit(const Tensor& input, const Tensor& output, int batchSize, int epochs, int verbose, int trackFlags, bool shuffle)
+	void NeuralNetwork::Fit(const Tensor& input, const Tensor& output, int batchSize, int epochs, const Tensor* validInputs, const Tensor* validOutputs, int verbose, int trackFlags, bool shuffle)
 	{
 		Fit({ &input }, { &output }, batchSize, epochs, nullptr, nullptr, verbose, trackFlags, shuffle);
 	}

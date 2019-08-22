@@ -33,7 +33,7 @@ public:
         Stopwatch timer;
         timer.Start();
 
-        net->Fit(input, output, 10, 1, Track::Nothing);
+        net->Fit(input, output, 10, 1, nullptr, nullptr, 1, Track::Nothing);
 
         timer.Stop();
         cout << "Training time " << timer.ElapsedMiliseconds() << "ms";

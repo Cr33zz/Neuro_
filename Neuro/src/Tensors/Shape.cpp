@@ -33,7 +33,13 @@ namespace Neuro
 		}
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    Neuro::Shape Shape::From(const Shape& shapeWithoutBatches, int batchSize)
+    {
+        return Shape(shapeWithoutBatches.Width(), shapeWithoutBatches.Height(), shapeWithoutBatches.Depth(), batchSize);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	Neuro::Shape Shape::Reshaped(int w, int h, int d, int n) const
 	{
 		int dimensions[4] = { w, h, d, n };

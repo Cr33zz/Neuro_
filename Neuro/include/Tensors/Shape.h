@@ -18,6 +18,7 @@ namespace Neuro
 
         static Shape From(const vector<int>& dimensions);
         static Shape From(const int* dimensions, int dimNum);
+        static Shape From(const Shape& shapeWithoutBatches, int batchSize);
 
 		static const int Auto = -1; // Automatically guesses
 

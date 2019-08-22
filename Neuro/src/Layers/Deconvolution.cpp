@@ -85,7 +85,7 @@ namespace Neuro
     void Deconvolution::BackPropInternal(Tensor& outputGradient)
     {
         outputGradient.Conv2DTransposedInputsGradient(outputGradient, m_Kernels, m_Stride, Convolution::GetGradientPaddingMode(m_PaddingMode), m_InputsGradient[0]);
-        outputGradient.Conv2DTransposedKernelsGradient(outputGradient, *m_Inputs[0], m_Stride, EPaddingMode::Valid, m_KernelsGradient);
+        outputGradient.Conv2DTransposedKernelsGradient(outputGradient, *m_Inputs[0], m_Stride, Convolution::GetGradientPaddingMode(m_PaddingMode), m_KernelsGradient);
 
         if (m_UseBias)
             m_BiasGradient.Add(outputGradient.SumBatches());
@@ -94,7 +94,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     Shape Deconvolution::GetOutShape(const Shape& inputShape, int filterWidth, int filterHeight, int stride, int outputDepth)
     {
-        return Shape(inputShape.Width() + filterWidth - 1, inputShape.Height() + filterHeight - 1, outputDepth);
+        return Shape(stride * (inputShape.Width() - 1) + filterWidth - 2, stride * (inputShape.Height() - 1) + filterWidth - 2, outputDepth);
     }
 
     //////////////////////////////////////////////////////////////////////////
