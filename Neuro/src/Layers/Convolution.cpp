@@ -82,7 +82,7 @@ namespace Neuro
 	void Convolution::BackPropInternal(Tensor& outputGradient)
 	{
 		outputGradient.Conv2DInputsGradient(outputGradient, m_Kernels, m_Stride, GetGradientPaddingMode(m_PaddingMode), m_InputsGradient[0]);
-		outputGradient.Conv2DKernelsGradient(*m_Inputs[0], outputGradient, m_Stride, Tensor::EPaddingType::Valid, m_KernelsGradient);
+		outputGradient.Conv2DKernelsGradient(*m_Inputs[0], outputGradient, m_Stride, m_PaddingMode, m_KernelsGradient);
 
 		if (m_UseBias)
 			m_BiasGradient.Add(outputGradient.SumBatches());

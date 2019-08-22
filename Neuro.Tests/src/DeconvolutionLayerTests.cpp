@@ -10,29 +10,49 @@ namespace NeuroTests
 {
     TEST_CLASS(DeconvolutionLayerTests)
     {
-        TEST_METHOD(InputGradient_1Batch)
+        TEST_METHOD(InputGradient_1Batch_Valid)
         {
-            Assert::IsTrue(TestTools::VerifyInputGradient(std::unique_ptr<LayerBase>(CreateLayer()).get()));
+            Assert::IsTrue(TestTools::VerifyInputGradient(std::unique_ptr<LayerBase>(CreateLayer(Tensor::EPaddingType::Valid)).get()));
         }
 
-        TEST_METHOD(InputGradient_3Batches)
+        TEST_METHOD(InputGradient_1Batch_Full)
         {
-            Assert::IsTrue(TestTools::VerifyInputGradient(std::unique_ptr<LayerBase>(CreateLayer()).get(), 3));
+            Assert::IsTrue(TestTools::VerifyInputGradient(std::unique_ptr<LayerBase>(CreateLayer(Tensor::EPaddingType::Full)).get()));
         }
 
-        TEST_METHOD(ParametersGradient_1Batch)
+        TEST_METHOD(InputGradient_1Batch_Same)
         {
-            Assert::IsTrue(TestTools::VerifyParametersGradient(std::unique_ptr<LayerBase>(CreateLayer()).get()));
+            Assert::IsTrue(TestTools::VerifyInputGradient(std::unique_ptr<LayerBase>(CreateLayer(Tensor::EPaddingType::Same)).get()));
         }
 
-        TEST_METHOD(ParametersGradient_3Batches)
+        TEST_METHOD(InputGradient_3Batches_Valid)
         {
-            Assert::IsTrue(TestTools::VerifyInputGradient(std::unique_ptr<LayerBase>(CreateLayer()).get(), 3));
+            Assert::IsTrue(TestTools::VerifyInputGradient(std::unique_ptr<LayerBase>(CreateLayer(Tensor::EPaddingType::Valid)).get(), 3));
         }
 
-        LayerBase* CreateLayer()
+        TEST_METHOD(ParametersGradient_1Batch_Valid)
         {
-            auto layer = new Deconvolution(Shape(3, 3, 6), 4, 3, 1);
+            Assert::IsTrue(TestTools::VerifyParametersGradient(std::unique_ptr<LayerBase>(CreateLayer(Tensor::EPaddingType::Valid)).get()));
+        }
+
+        TEST_METHOD(ParametersGradient_1Batch_Full)
+        {
+            Assert::IsTrue(TestTools::VerifyParametersGradient(std::unique_ptr<LayerBase>(CreateLayer(Tensor::EPaddingType::Full)).get()));
+        }
+
+        TEST_METHOD(ParametersGradient_1Batch_Same)
+        {
+            Assert::IsTrue(TestTools::VerifyParametersGradient(std::unique_ptr<LayerBase>(CreateLayer(Tensor::EPaddingType::Same)).get()));
+        }
+
+        TEST_METHOD(ParametersGradient_3Batches_Valid)
+        {
+            Assert::IsTrue(TestTools::VerifyInputGradient(std::unique_ptr<LayerBase>(CreateLayer(Tensor::EPaddingType::Valid)).get(), 3));
+        }
+
+        LayerBase* CreateLayer(Tensor::EPaddingType paddingMode)
+        {
+            auto layer = new Deconvolution(Shape(3, 3, 6), 4, 3, 1, paddingMode);
             layer->Init();
             layer->Kernels().FillWithRand();
             return layer;
