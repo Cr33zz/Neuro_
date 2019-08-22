@@ -1,8 +1,11 @@
 #pragma once
+#include "Types.h"
 
+#ifdef CUDA_ENABLED
 #include <vector>
 #include <cuda.h>
 #include <cuda_runtime.h>
+#endif
 
 namespace Neuro
 {
@@ -11,6 +14,7 @@ namespace Neuro
     template<typename T> 
     class CudaDeviceVariable
     {
+#ifdef CUDA_ENABLED
     public:
         CudaDeviceVariable(size_t length)
         {
@@ -67,5 +71,6 @@ namespace Neuro
         size_t m_Length = 0;
         size_t m_TypeSize = 0;
         bool m_IsOwner = false;
+#endif
     };
 }

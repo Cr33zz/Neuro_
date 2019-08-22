@@ -188,7 +188,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::Conv2D(const Tensor& t, const Tensor& kernels, int stride, Tensor::EPaddingType padding, Tensor& result) const
+	void TensorOpCpu::Conv2D(const Tensor& t, const Tensor& kernels, int stride, EPaddingMode padding, Tensor& result) const
 	{
 		t.CopyToHost();
 		kernels.CopyToHost();
@@ -216,7 +216,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, int stride, Tensor::EPaddingType padding, Tensor& inputGradients) const
+	void TensorOpCpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, int stride, EPaddingMode padding, Tensor& inputGradients) const
 	{
 		gradient.CopyToHost();
 		kernels.CopyToHost();
@@ -242,7 +242,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, Tensor::EPaddingType padding, Tensor& kernelsGradient) const
+	void TensorOpCpu::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, EPaddingMode padding, Tensor& kernelsGradient) const
 	{
 		input.CopyToHost();
 		gradient.CopyToHost();
@@ -268,7 +268,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::Pool(const Tensor& t, int filterSize, int stride, Tensor::EPoolType type, int paddingX, int paddingY, Tensor& result) const
+	void TensorOpCpu::Pool(const Tensor& t, int filterSize, int stride, EPoolingMode type, int paddingX, int paddingY, Tensor& result) const
 	{
 		t.CopyToHost();
         result.OverrideHost();
@@ -278,7 +278,7 @@ namespace Neuro
 		for (int outH = 0, h = -paddingY; outH < result.Height(); h += stride, ++outH)
 		for (int outW = 0, w = -paddingX; outW < result.Width(); w += stride, ++outW)
 		{
-			if (type == Tensor::EPoolType::Max)
+			if (type == EPoolingMode::Max)
 			{
 				float value = numeric_limits<float>().min();
 
@@ -288,7 +288,7 @@ namespace Neuro
 
 				result(outW, outH, outD, outN) = value;
 			}
-			else if (type == Tensor::EPoolType::Avg)
+			else if (type == EPoolingMode::Avg)
 			{
 				float sum = 0;
 				for (int poolY = 0; poolY < filterSize; ++poolY)
@@ -301,7 +301,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::PoolGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, Tensor::EPoolType type, int paddingX, int paddingY, Tensor& result) const
+    void TensorOpCpu::PoolGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, EPoolingMode type, int paddingX, int paddingY, Tensor& result) const
 	{
 		output.CopyToHost();
 		input.CopyToHost();
@@ -315,7 +315,7 @@ namespace Neuro
 		for (int outH = 0, h = -paddingY; outH < output.Height(); ++outH, h += stride)
 		for (int outW = 0, w = -paddingX; outW < output.Width(); ++outW, w += stride)
 		{
-			if (type == Tensor::EPoolType::Max)
+			if (type == EPoolingMode::Max)
 			{
 				for (int poolH = 0; poolH < filterSize; ++poolH)
 				for (int poolW = 0; poolW < filterSize; ++poolW)
@@ -325,7 +325,7 @@ namespace Neuro
 						result.TrySet(result.TryGet(numeric_limits<float>().min(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN), w + poolW, h + poolH, outD, outN);
 				}
 			}
-			else if (type == Tensor::EPoolType::Avg)
+			else if (type == EPoolingMode::Avg)
 			{
 				int filterElementsNum = filterSize * filterSize;
 

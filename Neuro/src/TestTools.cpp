@@ -21,7 +21,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	bool TestTools::VerifyInputGradient(LayerBase* layer, int batchSize)
 	{
-		Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
+		Tensor::SetDefaultOpMode(EOpMode::CPU);
 		auto inputs = GenerateInputsForLayer(layer, batchSize);
 
 		auto output = layer->FeedForward(inputs, true);
@@ -72,7 +72,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	bool TestTools::VerifyParametersGradient(LayerBase* layer, int batchSize)
 	{
-        Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
+        Tensor::SetDefaultOpMode(EOpMode::CPU);
         auto inputs = GenerateInputsForLayer(layer, batchSize);
 
         auto output = layer->FeedForward(inputs, true);
@@ -140,7 +140,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	bool TestTools::VerifyActivationFuncDerivative(const ActivationBase& func, int batchSize, Tensor::EOpMode mode)
+	bool TestTools::VerifyActivationFuncDerivative(const ActivationBase& func, int batchSize, EOpMode mode)
 	{
         Tensor::SetDefaultOpMode(mode);
 		auto input = Tensor(Shape(3, 3, 3, batchSize));
@@ -173,7 +173,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	bool TestTools::VerifyLossFuncDerivative(const LossBase& func, const Tensor& targetOutput, bool onlyPositiveOutput, int batchSize, float tolerance)
 	{
-        Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
+        Tensor::SetDefaultOpMode(EOpMode::CPU);
         auto output = Tensor(Shape(3, 3, 3, batchSize));
 		output.FillWithRand(10, onlyPositiveOutput ? 0.f : -1.f);
 
@@ -202,7 +202,7 @@ namespace Neuro
     template <typename F>
 	bool TestTools::VerifyLossFunc(const LossBase& func, const Tensor& targetOutput, F& testFunc, bool onlyPositiveOutput, int batchSize)
 	{
-        Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
+        Tensor::SetDefaultOpMode(EOpMode::CPU);
         auto output = Tensor(Shape(3, 3, 3, batchSize));
 		output.FillWithRand(10, onlyPositiveOutput ? 0 : -1);
 

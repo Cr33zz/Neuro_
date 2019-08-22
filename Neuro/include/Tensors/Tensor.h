@@ -21,32 +21,6 @@ namespace Neuro
     class Tensor
     {
 	public:
-		enum EOpMode
-		{
-			CPU,
-			MultiCPU,
-			GPU
-		};
-
-		enum ELocation
-		{
-			Host,
-			Device
-		};
-
-		enum EPaddingType
-		{
-			Valid, // output matrix's size will be decreased (depending on kernel size)
-			Same,  // output matrix's size will be the same (except for depth) as input matrix
-			Full,  // output matrix's size will be increased (depending on kernel size)
-		};
-
-		enum class EPoolType
-		{
-			Max,
-			Avg
-		};
-
 		Tensor();
         explicit Tensor(const Shape& shape);
         Tensor(const vector<float>&, const Shape& shape);
@@ -174,25 +148,25 @@ namespace Neuro
         void Rotated180(Tensor& result) const;
         Tensor Rotated180() const;
 
-        void Conv2D(const Tensor& kernels, int stride, EPaddingType padding, Tensor& result) const;
-        Tensor Conv2D(const Tensor& kernels, int stride, EPaddingType padding) const;
-        void Conv2DInputsGradient(const Tensor& gradient, const Tensor& kernels, int stride, EPaddingType padding, Tensor& inputsGradient) const;
-        void Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, EPaddingType padding, Tensor& kernelsGradient) const;
+        void Conv2D(const Tensor& kernels, int stride, EPaddingMode padding, Tensor& result) const;
+        Tensor Conv2D(const Tensor& kernels, int stride, EPaddingMode padding) const;
+        void Conv2DInputsGradient(const Tensor& gradient, const Tensor& kernels, int stride, EPaddingMode padding, Tensor& inputsGradient) const;
+        void Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, EPaddingMode padding, Tensor& kernelsGradient) const;
 
-        void Conv2DTransposed(const Tensor& kernels, int stride, EPaddingType padding, Tensor& result) const;
-        Tensor Conv2DTransposed(const Tensor& kernels, int stride, EPaddingType padding = EPaddingType::Full) const;
-        void Conv2DTransposedInputsGradient(const Tensor& gradient, const Tensor& kernels, int stride, EPaddingType padding, Tensor& inputsGradient) const;
-        void Conv2DTransposedKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, EPaddingType padding, Tensor& kernelsGradient) const;
+        void Conv2DTransposed(const Tensor& kernels, int stride, EPaddingMode padding, Tensor& result) const;
+        Tensor Conv2DTransposed(const Tensor& kernels, int stride, EPaddingMode padding = EPaddingMode::Full) const;
+        void Conv2DTransposedInputsGradient(const Tensor& gradient, const Tensor& kernels, int stride, EPaddingMode padding, Tensor& inputsGradient) const;
+        void Conv2DTransposedKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, EPaddingMode padding, Tensor& kernelsGradient) const;
 
-        void Pool(int filterSize, int stride, EPoolType type, EPaddingType padding, Tensor& result) const;
-        Tensor Pool(int filterSize, int stride, EPoolType type, EPaddingType padding) const;
+        void Pool(int filterSize, int stride, EPoolingMode type, EPaddingMode padding, Tensor& result) const;
+        Tensor Pool(int filterSize, int stride, EPoolingMode type, EPaddingMode padding) const;
         // Assuming result matrix is of the dimensions of input to pooling layer
-        void PoolGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, EPoolType type, EPaddingType padding, Tensor& result) const;
+        void PoolGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, EPoolingMode type, EPaddingMode padding, Tensor& result) const;
 
         string ToString() const;
         bool SameDimensionsExceptBatches(const Tensor& t) const;
 
-        static void GetPaddingParams(EPaddingType type, int width, int height, int kernelWidth, int kernelHeight, int stride, int& outHeight, int& outWidth, int& paddingX, int& paddingY);
+        static void GetPaddingParams(EPaddingMode type, int width, int height, int kernelWidth, int kernelHeight, int stride, int& outHeight, int& outWidth, int& paddingX, int& paddingY);
 
         //internal void Serialize(XmlElement parentElem, string name)
         //{

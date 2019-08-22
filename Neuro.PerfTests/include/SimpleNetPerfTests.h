@@ -12,7 +12,7 @@ class SimpleNetPerfTests
 public:
     static void Run()
     {
-        Tensor::SetDefaultOpMode(Tensor::EOpMode::MultiCPU);
+        Tensor::SetDefaultOpMode(EOpMode::MultiCPU);
 
         auto input1 = new Dense(2, 2, new Sigmoid(), "input_1");
         auto upperStream1 = new Dense(input1, 2, new Linear(), "upperStream_1");
@@ -22,8 +22,8 @@ public:
         auto net = new NeuralNetwork(model, "simple_flow");
         net->Optimize(new SGD(0.05f), new MeanSquareError());
 
-        vector<tensor_ptr_vec_t> inputs = { { new Tensor({ 0, 1 }, Shape(1, 2)) } };
-        vector<tensor_ptr_vec_t> outputs = { { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) } };
+        tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)) };
+        tensor_ptr_vec_t outputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
 
 		cout << net->GetModel()->Summary() << "\n";
 

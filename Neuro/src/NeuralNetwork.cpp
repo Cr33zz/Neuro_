@@ -147,17 +147,23 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	void NeuralNetwork::FitBatched(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, int batchSize, int epochs, int verbose, int trackFlags, bool shuffle)
+	void NeuralNetwork::Fit(const Tensor& input, const Tensor& output, int batchSize, int epochs, int verbose, int trackFlags, bool shuffle)
 	{
-		//Fit({ input }, { output }, batchSize, epochs, nullptr, nullptr, verbose, trackFlags, shuffle);
+		Fit({ &input }, { &output }, batchSize, epochs, nullptr, nullptr, verbose, trackFlags, shuffle);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void NeuralNetwork::Fit(const vector<tensor_ptr_vec_t>& inputs, const vector<tensor_ptr_vec_t>& outputs, int batchSize, int epochs, const vector<tensor_ptr_vec_t>* validInputs, const vector<tensor_ptr_vec_t>* validOutputs, int verbose, int trackFlags, bool shuffle)
+	void NeuralNetwork::Fit(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, int batchSize, int epochs, const tensor_ptr_vec_t* validInputs, const tensor_ptr_vec_t* validOutputs, int verbose, int trackFlags, bool shuffle)
 	{
-        assert(inputs.size() == outputs.size() && "Number of input and output samples must match.");
+        //assert(inputs.size() == m_Model->GetInputLayersCount());
+        assert(outputs.size() == m_Model->GetOutputLayersCount());
 
-		int samplesNum = (int)inputs.size();
+		int samplesNum = inputs[0]->Batch();
+        
+        for (auto inputTensor : inputs)
+            assert(inputTensor->Batch() == samplesNum && "Number of batches across all inputs must match.");
+        for (auto outputTensor : outputs)
+            assert(outputTensor->Batch() == samplesNum && "Number of batches across all outputs must match number or batches in inputs.");
 
 		if (batchSize < 0)
 			batchSize = samplesNum;
@@ -179,7 +185,7 @@ namespace Neuro
 
 		if (m_AccuracyFuncs.size() == 0)
 		{
-			for (int i = 0; i < (int)outputs[0].size(); ++i)
+			for (int i = 0; i < (int)outputs.size(); ++i)
 			{
 				m_AccuracyFuncs.push_back(nullptr);
 
@@ -334,18 +340,18 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	tensor_ptr_vec_t NeuralNetwork::GenerateBatch(const vector<tensor_ptr_vec_t>& inputs, const vector<int>& batchIndices)
+	tensor_ptr_vec_t NeuralNetwork::GenerateBatch(const tensor_ptr_vec_t& inputs, const vector<int>& batchIndices)
 	{
 		tensor_ptr_vec_t result; // result is a vector of tensors (1 per each input) with multiple (batchIndices.size()) batches in each one of them
 		
-		for (int i = 0; i < (int)inputs[0].size(); ++i)
+		for (int i = 0; i < (int)inputs.size(); ++i)
 		{
-            int batches = (int)batchIndices.size();
+            int batchSize = (int)batchIndices.size();
 
-			auto t = new Tensor(Shape(inputs[0][i]->Width(), inputs[0][i]->Height(), inputs[0][i]->Depth(), batches));
+			auto t = new Tensor(Shape(inputs[i]->Width(), inputs[i]->Height(), inputs[i]->Depth(), batchSize));
 
-            for (int b = 0; b < batches; ++b)
-				inputs[batchIndices[b]][i]->CopyBatchTo(0, b, *t);
+            for (int b = 0; b < batchSize; ++b)
+				inputs[i]->CopyBatchTo(batchIndices[b], b, *t);
 
 			result.push_back(t);
 		}

@@ -4,6 +4,7 @@
 
 namespace Neuro
 {
+#ifdef CUDA_ENABLED
     bool TensorOpGpu::s_Initialized = false;
     cudaDeviceProp TensorOpGpu::s_CudaDevProp;
     cublasHandle_t TensorOpGpu::s_CublasHandle = nullptr;
@@ -154,7 +155,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Conv2D(const Tensor& t, const Tensor& kernels, int stride, Tensor::EPaddingType padding, Tensor& result) const
+    void TensorOpGpu::Conv2D(const Tensor& t, const Tensor& kernels, int stride, EPaddingMode padding, Tensor& result) const
     {
         int outputWidth = 0, outputHeight = 0, paddingX = 0, paddingY = 0;
         Tensor::GetPaddingParams(padding, t.Width(), t.Height(), kernels.Width(), kernels.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
@@ -184,7 +185,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, int stride, Tensor::EPaddingType padding, Tensor& inputGradients) const
+    void TensorOpGpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, int stride, EPaddingMode padding, Tensor& inputGradients) const
     {
         int outputWidth = 0, outputHeight = 0, paddingX = 0, paddingY = 0;
         Tensor::GetPaddingParams(padding, gradient.Width(), gradient.Height(), kernels.Width(), kernels.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
@@ -214,7 +215,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, Tensor::EPaddingType padding, Tensor& kernelsGradient) const
+    void TensorOpGpu::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, EPaddingMode padding, Tensor& kernelsGradient) const
     {
         int outputWidth = 0, outputHeight = 0, paddingX = 0, paddingY = 0;
         Tensor::GetPaddingParams(padding, input.Width(), input.Height(), kernelsGradient.Width(), kernelsGradient.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
@@ -244,7 +245,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Pool(const Tensor& t, int filterSize, int stride, Tensor::EPoolType type, int paddingX, int paddingY, Tensor& result) const
+    void TensorOpGpu::Pool(const Tensor& t, int filterSize, int stride, EPoolingMode type, int paddingX, int paddingY, Tensor& result) const
     {
         t.CopyToDevice();
         result.CopyToDevice();
@@ -262,7 +263,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::PoolGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, Tensor::EPoolType type, int paddingX, int paddingY, Tensor& result) const
+    void TensorOpGpu::PoolGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, EPoolingMode type, int paddingX, int paddingY, Tensor& result) const
     {
         output.CopyToDevice();
         input.CopyToDevice();
@@ -370,9 +371,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    cudnnPoolingMode_t TensorOpGpu::GetCudnnPoolType(Tensor::EPoolType type)
+    cudnnPoolingMode_t TensorOpGpu::GetCudnnPoolType(EPoolingMode type)
     {
-        if (type == Tensor::EPoolType::Max)
+        if (type == EPoolingMode::Max)
             return CUDNN_POOLING_MAX;
         return CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING;
     }
@@ -398,4 +399,5 @@ namespace Neuro
     {
         return (int)ceil(count / (float)s_CudaDevProp.maxThreadsPerBlock);
     }
+#endif
 }

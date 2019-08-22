@@ -42,13 +42,13 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void UpSampling::FeedForwardInternal(bool training)
     {
-        //m_Inputs[0]->Pool(FilterSize, Stride, Type, Tensor::EPaddingType::Valid, m_Output);
+        //m_Inputs[0]->Pool(FilterSize, Stride, Type, EPaddingMode::Valid, m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void UpSampling::BackPropInternal(Tensor& outputGradient)
     {
-        //m_Inputs[0]->PoolGradient(m_Output, *m_Inputs[0], outputGradient, FilterSize, Stride, Type, Tensor::EPaddingType::Valid, m_InputsGradient[0]);
+        //m_Inputs[0]->PoolGradient(m_Output, *m_Inputs[0], outputGradient, FilterSize, Stride, Type, EPaddingMode::Valid, m_InputsGradient[0]);
     }
 
     //////////////////////////////////////////////////////////////////////////

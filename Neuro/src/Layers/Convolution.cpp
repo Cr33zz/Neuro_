@@ -4,7 +4,7 @@
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	Convolution::Convolution(LayerBase* inputLayer, int filterSize, int filtersNum, int stride, Tensor::EPaddingType paddingMode, ActivationBase* activation, const string& name)
+	Convolution::Convolution(LayerBase* inputLayer, int filterSize, int filtersNum, int stride, EPaddingMode paddingMode, ActivationBase* activation, const string& name)
 		: LayerBase(__FUNCTION__, inputLayer, GetOutShape(inputLayer->OutputShape(), filterSize, filterSize, stride, filtersNum), activation, name)
 	{
 		m_FilterSize = filterSize;
@@ -14,7 +14,7 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	Convolution::Convolution(const Shape& inputShape, int filterSize, int filtersNum, int stride, Tensor::EPaddingType paddingMode, ActivationBase* activation, const string& name)
+	Convolution::Convolution(const Shape& inputShape, int filterSize, int filtersNum, int stride, EPaddingMode paddingMode, ActivationBase* activation, const string& name)
 		: LayerBase(__FUNCTION__, inputShape, GetOutShape(inputShape, filterSize, filterSize, stride, filtersNum), activation, name)
 	{
 		m_FilterSize = filterSize;
@@ -94,12 +94,12 @@ namespace Neuro
 		return Shape((int)floor((float)(inputShape.Width() - filterWidth) / stride + 1), (int)floor((float)(inputShape.Height() - filterHeight) / stride + 1), filtersNum);
 	}
 
-    Neuro::Tensor::EPaddingType Convolution::GetGradientPaddingMode(Tensor::EPaddingType paddingMode)
+    Neuro::EPaddingMode Convolution::GetGradientPaddingMode(EPaddingMode paddingMode)
     {
-        if (paddingMode == Tensor::EPaddingType::Valid)
-            return Tensor::EPaddingType::Full;
-        if (paddingMode == Tensor::EPaddingType::Full)
-            return Tensor::EPaddingType::Valid;
+        if (paddingMode == EPaddingMode::Valid)
+            return EPaddingMode::Full;
+        if (paddingMode == EPaddingMode::Full)
+            return EPaddingMode::Valid;
         return paddingMode;
     }
 

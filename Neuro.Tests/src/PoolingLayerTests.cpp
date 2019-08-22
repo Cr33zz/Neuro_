@@ -10,25 +10,25 @@ namespace NeuroTests
     {
         TEST_METHOD(InputGradient_MaxPooling_1Batch)
         {
-            Assert::IsTrue(TestTools::VerifyInputGradient(CreateLayer(Tensor::EPoolType::Max)));
+            Assert::IsTrue(TestTools::VerifyInputGradient(CreateLayer(EPoolingMode::Max)));
         }
 
         TEST_METHOD(InputGradient_MaxPooling_3Batches)
         {
-            Assert::IsTrue(TestTools::VerifyInputGradient(CreateLayer(Tensor::EPoolType::Max), 3));
+            Assert::IsTrue(TestTools::VerifyInputGradient(CreateLayer(EPoolingMode::Max), 3));
         }
 
         TEST_METHOD(InputGradient_AvgPooling_1Batch)
         {
-            Assert::IsTrue(TestTools::VerifyInputGradient(CreateLayer(Tensor::EPoolType::Avg)));
+            Assert::IsTrue(TestTools::VerifyInputGradient(CreateLayer(EPoolingMode::Avg)));
         }
 
         TEST_METHOD(InputGradient_AvgPooling_3Batches)
         {
-            Assert::IsTrue(TestTools::VerifyInputGradient(CreateLayer(Tensor::EPoolType::Avg), 3));
+            Assert::IsTrue(TestTools::VerifyInputGradient(CreateLayer(EPoolingMode::Avg), 3));
         }
 
-        LayerBase* CreateLayer(Tensor::EPoolType poolType)
+        LayerBase* CreateLayer(EPoolingMode poolType)
         {
             return new Pooling(Shape(6, 6, 3), 2, 2, poolType);
         }
