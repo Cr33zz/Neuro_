@@ -12,7 +12,7 @@ class SimpleNetPerfTests
 public:
     static void Run()
     {
-        Tensor::SetDefaultOpMode(Tensor::EOpMode::MultiCPU);
+        Tensor::SetDefaultOpMode(EOpMode::MultiCPU);
 
         auto input1 = new Dense(2, 2, new Sigmoid(), "input_1");
         auto upperStream1 = new Dense(input1, 2, new Linear(), "upperStream_1");

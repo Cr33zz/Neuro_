@@ -5,7 +5,7 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Deconvolution::Deconvolution(LayerBase* inputLayer, int filterSize, int outputDepth, int stride, Tensor::EPaddingType paddingMode, ActivationBase* activation, const string& name)
+    Deconvolution::Deconvolution(LayerBase* inputLayer, int filterSize, int outputDepth, int stride, EPaddingMode paddingMode, ActivationBase* activation, const string& name)
         : LayerBase(__FUNCTION__, inputLayer, GetOutShape(inputLayer->OutputShape(), filterSize, filterSize, stride, outputDepth), activation, name)
     {
         m_FilterSize = filterSize;
@@ -15,7 +15,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Deconvolution::Deconvolution(const Shape& inputShape, int filterSize, int outputDepth, int stride, Tensor::EPaddingType paddingMode, ActivationBase* activation, const string& name)
+    Deconvolution::Deconvolution(const Shape& inputShape, int filterSize, int outputDepth, int stride, EPaddingMode paddingMode, ActivationBase* activation, const string& name)
         : LayerBase(__FUNCTION__, inputShape, GetOutShape(inputShape, filterSize, filterSize, stride, outputDepth), activation, name)
     {
         m_FilterSize = filterSize;
@@ -85,7 +85,7 @@ namespace Neuro
     void Deconvolution::BackPropInternal(Tensor& outputGradient)
     {
         outputGradient.Conv2DTransposedInputsGradient(outputGradient, m_Kernels, m_Stride, Convolution::GetGradientPaddingMode(m_PaddingMode), m_InputsGradient[0]);
-        outputGradient.Conv2DTransposedKernelsGradient(outputGradient, *m_Inputs[0], m_Stride, Tensor::EPaddingType::Valid, m_KernelsGradient);
+        outputGradient.Conv2DTransposedKernelsGradient(outputGradient, *m_Inputs[0], m_Stride, EPaddingMode::Valid, m_KernelsGradient);
 
         if (m_UseBias)
             m_BiasGradient.Add(outputGradient.SumBatches());

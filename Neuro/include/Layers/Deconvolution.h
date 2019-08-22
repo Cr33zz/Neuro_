@@ -10,9 +10,9 @@ namespace Neuro
     class Deconvolution : public LayerBase
     {
     public:
-        Deconvolution(LayerBase* inputLayer, int filterSize, int outputDepth, int stride = 1, Tensor::EPaddingType paddingMode = Tensor::EPaddingType::Full, ActivationBase* activation = nullptr, const string& name = "");
+        Deconvolution(LayerBase* inputLayer, int filterSize, int outputDepth, int stride = 1, EPaddingMode paddingMode = EPaddingMode::Full, ActivationBase* activation = nullptr, const string& name = "");
         // This constructor should only be used for input layer
-        Deconvolution(const Shape& inputShape, int filterSize, int outputDepth, int stride = 1, Tensor::EPaddingType paddingMode = Tensor::EPaddingType::Full, ActivationBase* activation = nullptr, const string& name = "");
+        Deconvolution(const Shape& inputShape, int filterSize, int outputDepth, int stride = 1, EPaddingMode paddingMode = EPaddingMode::Full, ActivationBase* activation = nullptr, const string& name = "");
         ~Deconvolution();
 
         virtual void CopyParametersTo(LayerBase& target, float tau) const override;
@@ -65,7 +65,7 @@ namespace Neuro
         int m_OutputDepth;
         int m_FilterSize;
         int m_Stride;
-        Tensor::EPaddingType m_PaddingMode;
+        EPaddingMode m_PaddingMode;
     };
 }
 

@@ -12,7 +12,7 @@ class AutoencoderNetwork
 public:
     static void Run()
     {
-        Tensor::SetDefaultOpMode(Tensor::EOpMode::MultiCPU);
+        Tensor::SetDefaultOpMode(EOpMode::MultiCPU);
 
         //Based on https://www.youtube.com/watch?v=6Lfra0Tym4M
 

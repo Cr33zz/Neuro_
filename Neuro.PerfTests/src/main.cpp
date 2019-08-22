@@ -8,10 +8,10 @@ int main()
     //TensorPerfTests::Run();
 
     Tensor input(Shape(27, 27, 2, 3)); input.FillWithRand();
-    Tensor output = input.Pool(3, 2, Tensor::EPoolType::Max, Tensor::EPaddingType::Valid);
+    Tensor output = input.Pool(3, 2, EPoolingMode::Max, EPaddingMode::Valid);
     Tensor outputGradient(output.GetShape()); outputGradient.FillWithRand();
 
-    bool res = TestTools::VerifyActivationFuncDerivative(ELU(1), 3, Tensor::EOpMode::GPU);
+    bool res = TestTools::VerifyActivationFuncDerivative(ELU(1), 3, EOpMode::GPU);
 
 	return 0;
 }

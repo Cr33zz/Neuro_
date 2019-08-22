@@ -12,7 +12,7 @@ class IrisNetwork
 public:
     static void Run()
     {
-        Tensor::SetDefaultOpMode(Tensor::EOpMode::MultiCPU);
+        Tensor::SetDefaultOpMode(EOpMode::MultiCPU);
 
         Shape inputShape(64, 64, 4);
         auto model = new Sequential();

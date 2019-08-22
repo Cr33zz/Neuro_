@@ -337,17 +337,17 @@ namespace NeuroTests
 
         static Tensor* ConvValidStride1(const Tensor& input, const Tensor& expectedParams)
         {
-            return new Tensor(input.Conv2D(expectedParams, 1, Tensor::EPaddingType::Valid));
+            return new Tensor(input.Conv2D(expectedParams, 1, EPaddingMode::Valid));
         }
 
         static Tensor* ConvValidStride2(const Tensor& input, const Tensor& expectedParams)
         {
-            return new Tensor(input.Conv2D(expectedParams, 2, Tensor::EPaddingType::Valid));
+            return new Tensor(input.Conv2D(expectedParams, 2, EPaddingMode::Valid));
         }
 
         static Tensor* ConvValidStride3(const Tensor& input, const Tensor& expectedParams)
         {
-            return new Tensor(input.Conv2D(expectedParams, 3, Tensor::EPaddingType::Valid));
+            return new Tensor(input.Conv2D(expectedParams, 3, EPaddingMode::Valid));
         }
 
         template<typename F>

@@ -12,13 +12,13 @@ class TensorPerfTests
 public:
     static void Run()
     {
-        /*Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
+        /*Tensor::SetDefaultOpMode(EOpMode::CPU);
         cout << "CPU\n";
         RunTest();*/
-        Tensor::SetDefaultOpMode(Tensor::EOpMode::MultiCPU);
+        Tensor::SetDefaultOpMode(EOpMode::MultiCPU);
         cout << "MultiCPU\n";
         RunTest();
-        Tensor::SetDefaultOpMode(Tensor::EOpMode::GPU);
+        Tensor::SetDefaultOpMode(EOpMode::GPU);
         cout << "GPU\n";
         RunTest();
 
