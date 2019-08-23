@@ -105,9 +105,6 @@
     <ClInclude Include="include\Layers\Concatenate.h">
       <Filter>include\Layers</Filter>
     </ClInclude>
-    <ClInclude Include="include\Layers\Convolution.h">
-      <Filter>include\Layers</Filter>
-    </ClInclude>
     <ClInclude Include="include\Layers\Dense.h">
       <Filter>include\Layers</Filter>
     </ClInclude>
@@ -124,9 +121,6 @@
       <Filter>include\Layers</Filter>
     </ClInclude>
     <ClInclude Include="include\Layers\Merge.h">
-      <Filter>include\Layers</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Layers\Pooling.h">
       <Filter>include\Layers</Filter>
     </ClInclude>
     <ClInclude Include="include\Models\Flow.h">
@@ -171,13 +165,19 @@
     <ClInclude Include="include\Layers\Dropout.h">
       <Filter>include\Layers</Filter>
     </ClInclude>
-    <ClInclude Include="include\Layers\Deconvolution.h">
-      <Filter>include\Layers</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Layers\UpSampling.h">
-      <Filter>include\Layers</Filter>
-    </ClInclude>
     <ClInclude Include="include\Layers\BatchNormalization.h">
+      <Filter>include\Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Layers\UpSampling2D.h">
+      <Filter>include\Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Layers\Pooling2D.h">
+      <Filter>include\Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Layers\Conv2D.h">
+      <Filter>include\Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Layers\Conv2DTranspose.h">
       <Filter>include\Layers</Filter>
     </ClInclude>
   </ItemGroup>
@@ -209,9 +209,6 @@
     <ClCompile Include="src\Layers\Concatenate.cpp">
       <Filter>src\Layers</Filter>
     </ClCompile>
-    <ClCompile Include="src\Layers\Convolution.cpp">
-      <Filter>src\Layers</Filter>
-    </ClCompile>
     <ClCompile Include="src\Layers\Dense.cpp">
       <Filter>src\Layers</Filter>
     </ClCompile>
@@ -228,9 +225,6 @@
       <Filter>src\Layers</Filter>
     </ClCompile>
     <ClCompile Include="src\Layers\Merge.cpp">
-      <Filter>src\Layers</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Layers\Pooling.cpp">
       <Filter>src\Layers</Filter>
     </ClCompile>
     <ClCompile Include="src\Models\Flow.cpp">
@@ -287,13 +281,19 @@
     <ClCompile Include="src\Layers\Dropout.cpp">
       <Filter>src\Layers</Filter>
     </ClCompile>
-    <ClCompile Include="src\Layers\Deconvolution.cpp">
-      <Filter>src\Layers</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Layers\UpSampling.cpp">
-      <Filter>src\Layers</Filter>
-    </ClCompile>
     <ClCompile Include="src\Layers\BatchNormalization.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Pooling2D.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Conv2D.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Conv2DTranspose.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\UpSampling2D.cpp">
       <Filter>src\Layers</Filter>
     </ClCompile>
   </ItemGroup>

@@ -163,7 +163,7 @@ namespace NeuroTests
         void TestConvolutionLayer(Shape inputShape, int kernelSize, int kernelsNum, int stride, int samples, int batchSize, int epochs, F& convFunc)
         {
             auto model = new Sequential();
-            model->AddLayer((new Convolution(inputShape, kernelSize, kernelsNum, stride, 0, new Linear()))->SetKernelInitializer(new Constant(1)));
+            model->AddLayer((new Conv2D(inputShape, kernelSize, kernelsNum, stride, 0, new Linear()))->SetKernelInitializer(new Constant(1)));
             auto net = new NeuralNetwork(model, "convolution_test", 7);
 
             auto expectedKernels = Tensor(Shape(kernelSize, kernelSize, inputShape.Depth(), kernelsNum));

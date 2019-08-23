@@ -16,9 +16,9 @@ public:
 
         Shape inputShape(64, 64, 4);
         auto model = new Sequential();
-        model->AddLayer(new Convolution(inputShape, 8, 32, 2, EPaddingMode::Valid, new ELU(1)));
-        model->AddLayer(new Convolution(model->LastLayer(), 4, 64, 2, EPaddingMode::Valid, new ELU(1)));
-        model->AddLayer(new Convolution(model->LastLayer(), 4, 128, 2, EPaddingMode::Valid, new ELU(1)));
+        model->AddLayer(new Conv2D(inputShape, 8, 32, 2, 0, new ELU(1)));
+        model->AddLayer(new Conv2D(model->LastLayer(), 4, 64, 2, 0, new ELU(1)));
+        model->AddLayer(new Conv2D(model->LastLayer(), 4, 128, 2, 0, new ELU(1)));
         model->AddLayer(new Flatten(model->LastLayer()));
         model->AddLayer(new Dense(model->LastLayer(), 512, new ELU(1)));
         model->AddLayer(new Dense(model->LastLayer(), 3, new Softmax()));

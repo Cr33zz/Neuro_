@@ -133,10 +133,10 @@ namespace NeuroTests
             Tensor t(Shape(27, 27, 2, 3)); t.FillWithRand();
             
             Tensor::SetDefaultOpMode(EOpMode::CPU);
-            Tensor r = t.Pool(3, 2, EPoolingMode::Max, 0);
+            Tensor r = t.Pool2D(3, 2, EPoolingMode::Max, 0);
 
             Tensor::SetDefaultOpMode(EOpMode::MultiCPU);
-            Tensor r2 = t.Pool(3, 2, EPoolingMode::Max, 0);
+            Tensor r2 = t.Pool2D(3, 2, EPoolingMode::Max, 0);
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -146,10 +146,10 @@ namespace NeuroTests
             Tensor t(Shape(27, 27, 2, 3)); t.FillWithRand();
 
             Tensor::SetDefaultOpMode(EOpMode::CPU);
-            Tensor r = t.Pool(3, 2, EPoolingMode::Avg, 0);
+            Tensor r = t.Pool2D(3, 2, EPoolingMode::Avg, 0);
 
             Tensor::SetDefaultOpMode(EOpMode::MultiCPU);
-            Tensor r2 = t.Pool(3, 2, EPoolingMode::Avg, 0);
+            Tensor r2 = t.Pool2D(3, 2, EPoolingMode::Avg, 0);
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -157,16 +157,16 @@ namespace NeuroTests
         TEST_METHOD(PoolGradient_Max_Valid_CompareWithCpuResult)
         {
             Tensor input(Shape(27, 27, 2, 3)); input.FillWithRand();
-            Tensor output = input.Pool(3, 2, EPoolingMode::Max, 0);
+            Tensor output = input.Pool2D(3, 2, EPoolingMode::Max, 0);
             Tensor outputGradient(output.GetShape()); outputGradient.FillWithRand();
 
             Tensor::SetDefaultOpMode(EOpMode::CPU);
             Tensor r(input.GetShape());
-            output.PoolGradient(output, input, outputGradient, 3, 2, EPoolingMode::Max, 0, r);
+            output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Max, 0, r);
 
             Tensor::SetDefaultOpMode(EOpMode::MultiCPU);
             Tensor r2(input.GetShape());
-            output.PoolGradient(output, input, outputGradient, 3, 2, EPoolingMode::Max, 0, r2);
+            output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Max, 0, r2);
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -174,16 +174,16 @@ namespace NeuroTests
         TEST_METHOD(PoolGradient_Avg_Valid_CompareWithCpuResult)
         {
             Tensor input(Shape(27, 27, 2, 3)); input.FillWithRand();
-            Tensor output = input.Pool(3, 2, EPoolingMode::Avg, 0);
+            Tensor output = input.Pool2D(3, 2, EPoolingMode::Avg, 0);
             Tensor outputGradient(output.GetShape()); outputGradient.FillWithRand();
 
             Tensor::SetDefaultOpMode(EOpMode::CPU);
             Tensor r(input.GetShape());
-            output.PoolGradient(output, input, outputGradient, 3, 2, EPoolingMode::Avg, 0, r);
+            output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Avg, 0, r);
 
             Tensor::SetDefaultOpMode(EOpMode::MultiCPU);
             Tensor r2(input.GetShape());
-            output.PoolGradient(output, input, outputGradient, 3, 2, EPoolingMode::Avg, 0, r2);
+            output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Avg, 0, r2);
 
             Assert::IsTrue(r.Equals(r2));
         }

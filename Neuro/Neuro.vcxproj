@@ -109,8 +109,8 @@
     <ClInclude Include="include\Initializers\Zeros.h" />
     <ClInclude Include="include\Layers\BatchNormalization.h" />
     <ClInclude Include="include\Layers\Concatenate.h" />
-    <ClInclude Include="include\Layers\Convolution.h" />
-    <ClInclude Include="include\Layers\Deconvolution.h" />
+    <ClInclude Include="include\Layers\Conv2D.h" />
+    <ClInclude Include="include\Layers\Conv2DTranspose.h" />
     <ClInclude Include="include\Layers\Dense.h" />
     <ClInclude Include="include\Layers\Dropout.h" />
     <ClInclude Include="include\Layers\Flatten.h" />
@@ -118,8 +118,8 @@
     <ClInclude Include="include\Layers\Lambda.h" />
     <ClInclude Include="include\Layers\LayerBase.h" />
     <ClInclude Include="include\Layers\Merge.h" />
-    <ClInclude Include="include\Layers\Pooling.h" />
-    <ClInclude Include="include\Layers\UpSampling.h" />
+    <ClInclude Include="include\Layers\Pooling2D.h" />
+    <ClInclude Include="include\Layers\UpSampling2D.h" />
     <ClInclude Include="include\Loss.h" />
     <ClInclude Include="include\Models\Flow.h" />
     <ClInclude Include="include\Models\ModelBase.h" />
@@ -154,8 +154,8 @@
     <ClCompile Include="src\Initializers\Zeros.cpp" />
     <ClCompile Include="src\Layers\BatchNormalization.cpp" />
     <ClCompile Include="src\Layers\Concatenate.cpp" />
-    <ClCompile Include="src\Layers\Convolution.cpp" />
-    <ClCompile Include="src\Layers\Deconvolution.cpp" />
+    <ClCompile Include="src\Layers\Conv2D.cpp" />
+    <ClCompile Include="src\Layers\Conv2DTranspose.cpp" />
     <ClCompile Include="src\Layers\Dense.cpp" />
     <ClCompile Include="src\Layers\Dropout.cpp" />
     <ClCompile Include="src\Layers\Flatten.cpp" />
@@ -163,8 +163,8 @@
     <ClCompile Include="src\Layers\Lambda.cpp" />
     <ClCompile Include="src\Layers\LayerBase.cpp" />
     <ClCompile Include="src\Layers\Merge.cpp" />
-    <ClCompile Include="src\Layers\Pooling.cpp" />
-    <ClCompile Include="src\Layers\UpSampling.cpp" />
+    <ClCompile Include="src\Layers\Pooling2D.cpp" />
+    <ClCompile Include="src\Layers\UpSampling2D.cpp" />
     <ClCompile Include="src\Loss.cpp" />
     <ClCompile Include="src\Models\Flow.cpp" />
     <ClCompile Include="src\Models\ModelBase.cpp" />

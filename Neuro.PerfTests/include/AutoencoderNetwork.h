@@ -18,9 +18,9 @@ public:
 
         Shape inputShape(28, 28, 1);
         auto model = new Sequential();
-        model->AddLayer(new Convolution(inputShape, 5, 10, 1, new ReLU()));
+        model->AddLayer(new Conv2D(inputShape, 5, 10, 1, new ReLU()));
         model->AddLayer(new Pooling(model->LastLayer(), 2));
-        model->AddLayer(new Convolution(model->LastLayer(), 2, 20, 1, new ReLU()));
+        model->AddLayer(new Conv2D(model->LastLayer(), 2, 20, 1, new ReLU()));
         model->AddLayer(new Pooling(model->LastLayer(), 2));
         model->AddLayer(new UpSampling(model->LastLayer(), 2));
         model->AddLayer(new Deconvolution(model->LastLayer(), 2, 20, 1, new ReLU()));

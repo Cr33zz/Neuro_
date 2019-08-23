@@ -52,7 +52,7 @@ namespace NeuroTests
 
         LayerBase* CreateLayer(int padding)
         {
-            auto layer = new Deconvolution(Shape(5, 5, 2), 3, 3, 1, padding);
+            auto layer = new Conv2DTranspose(Shape(5, 5, 2), 3, 3, 1, padding);
             layer->Init();
             layer->Kernels().FillWithRand();
             return layer;

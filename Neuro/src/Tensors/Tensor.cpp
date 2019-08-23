@@ -799,23 +799,23 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Pool(int filterSize, int stride, EPoolingMode type, int padding, Tensor& result) const
+	void Tensor::Pool2D(int filterSize, int stride, EPoolingMode type, int padding, Tensor& result) const
 	{
 		assert(result.Batch() == Batch());
 		m_Op->Pool(*this, filterSize, stride, type, padding, padding, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::Pool(int filterSize, int stride, EPoolingMode type, int padding) const
+	Tensor Tensor::Pool2D(int filterSize, int stride, EPoolingMode type, int padding) const
 	{
 		Tensor result(GetConvOutputShape(GetShape(), GetShape().Depth(), filterSize, filterSize, stride, padding, padding));
-		Pool(filterSize, stride, type, padding, result);
+		Pool2D(filterSize, stride, type, padding, result);
 
 		return result;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::PoolGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, EPoolingMode type, int padding, Tensor& result) const
+	void Tensor::Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, EPoolingMode type, int padding, Tensor& result) const
 	{
 		assert(output.SameDimensionsExceptBatches(outputGradient));
 		m_Op->PoolGradient(output, input, outputGradient, filterSize, stride, type, padding, padding, result);
@@ -882,6 +882,15 @@ namespace Neuro
     int Tensor::GetPadding(EPaddingMode paddingMode, int kernelSize)
     {
         return GetPadding(paddingMode, kernelSize, kernelSize).first;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Neuro::Shape Tensor::GetPooling2DOutputShape(const Shape& inputShape, int kernelWidth, int kernelHeight, int stride, int paddingX, int paddingY)
+    {
+        return Shape((int)floor((inputShape.Width() + 2 * paddingX - kernelWidth) / (float)stride) + 1, 
+                     (int)floor((inputShape.Height() + 2 * paddingY - kernelHeight) / (float)stride) + 1,
+                     inputShape.Depth(),
+                     inputShape.Batch());
     }
 
     //////////////////////////////////////////////////////////////////////////
