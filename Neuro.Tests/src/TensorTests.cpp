@@ -316,6 +316,18 @@ namespace NeuroTests
             Assert::IsTrue(result.Equals(correct));
         }
 
+        TEST_METHOD(UpSample2D_2)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            Tensor t1 = Tensor(Shape(2, 2, 1, 2)); t1.FillWithRange(0);
+
+            Tensor r = t1.UpSample2D(2);
+            Tensor correct = Tensor({ 0, 0, 1, 1, 0, 0, 1, 1, 2, 2, 3, 3, 2, 2, 3, 3, 4, 4, 5, 5, 4, 4, 5, 5, 6, 6, 7, 7, 6, 6, 7, 7 }, Shape(4, 4, 1, 2));
+
+            Assert::IsTrue(r.Equals(correct));
+        }
+
         TEST_METHOD(Clip_Max)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);

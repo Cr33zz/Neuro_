@@ -39,12 +39,12 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void UpSampling2D::FeedForwardInternal(bool training)
     {
-        //m_Inputs[0]->Pool(FilterSize, Stride, Type, EPaddingMode::Valid, m_Output);
+        m_Inputs[0]->UpSample2D(m_ScaleFactor, m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void UpSampling2D::BackPropInternal(Tensor& outputGradient)
     {
-        //m_Inputs[0]->PoolGradient(m_Output, *m_Inputs[0], outputGradient, FilterSize, Stride, Type, EPaddingMode::Valid, m_InputsGradient[0]);
+        outputGradient.UpSample2DGradient(outputGradient, m_ScaleFactor, m_InputsGradient[0]);
     }
 }

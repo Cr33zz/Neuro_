@@ -273,7 +273,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::Pool(const Tensor& t, int filterSize, int stride, EPoolingMode type, int paddingX, int paddingY, Tensor& result) const
+	void TensorOpCpu::Pool2D(const Tensor& t, int filterSize, int stride, EPoolingMode type, int paddingX, int paddingY, Tensor& result) const
 	{
 		t.CopyToHost();
         result.OverrideHost();
@@ -306,7 +306,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::PoolGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, EPoolingMode type, int paddingX, int paddingY, Tensor& result) const
+    void TensorOpCpu::Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, EPoolingMode type, int paddingX, int paddingY, Tensor& result) const
 	{
 		output.CopyToHost();
 		input.CopyToHost();
@@ -342,4 +342,28 @@ namespace Neuro
 			}
 		}
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::UpSample2D(const Tensor& t, int scaleFactor, Tensor& result) const
+    {
+        for (int n = 0; n < t.Batch(); ++n)
+        for (int d = 0; d < t.Depth(); ++d)
+        for (int h = 0; h < t.Height(); ++h)
+        for (int w = 0; w < t.Width(); ++w)
+        {
+            for (int outH = h * scaleFactor; outH < (h + 1) * scaleFactor; ++outH)
+            for (int outW = w * scaleFactor; outW < (w + 1) * scaleFactor; ++outW)
+                result(outW, outH, d, n) = t(w, h, d, n);
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::UpSample2DGradient(const Tensor& outputGradient, int scaleFactor, Tensor& result) const
+    {
+        for (int n = 0; n < outputGradient.Batch(); ++n)
+        for (int d = 0; d < outputGradient.Depth(); ++d)
+        for (int h = 0; h < outputGradient.Height(); ++h)
+        for (int w = 0; w < outputGradient.Width(); ++w)
+            result(w / scaleFactor, h / scaleFactor, d, n) += outputGradient(w, h, d, n);
+    }
 }

@@ -160,8 +160,11 @@ namespace Neuro
 
         void Pool2D(int filterSize, int stride, EPoolingMode type, int padding, Tensor& result) const;
         Tensor Pool2D(int filterSize, int stride, EPoolingMode type, int padding) const;
-        // Assuming result matrix is of the dimensions of input to pooling layer
         void Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, EPoolingMode type, int padding, Tensor& result) const;
+
+        void UpSample2D(int scaleFactor, Tensor& result) const;
+        Tensor UpSample2D(int scaleFactor) const;
+        void UpSample2DGradient(const Tensor& outputGradient, int scaleFactor, Tensor& result) const;
 
         string ToString() const;
         bool SameDimensionsExceptBatches(const Tensor& t) const;

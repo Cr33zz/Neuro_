@@ -802,7 +802,7 @@ namespace Neuro
 	void Tensor::Pool2D(int filterSize, int stride, EPoolingMode type, int padding, Tensor& result) const
 	{
 		assert(result.Batch() == Batch());
-		m_Op->Pool(*this, filterSize, stride, type, padding, padding, result);
+		m_Op->Pool2D(*this, filterSize, stride, type, padding, padding, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -818,10 +818,30 @@ namespace Neuro
 	void Tensor::Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, EPoolingMode type, int padding, Tensor& result) const
 	{
 		assert(output.SameDimensionsExceptBatches(outputGradient));
-		m_Op->PoolGradient(output, input, outputGradient, filterSize, stride, type, padding, padding, result);
+		m_Op->Pool2DGradient(output, input, outputGradient, filterSize, stride, type, padding, padding, result);
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::UpSample2D(int scaleFactor, Tensor& result) const
+    {
+        m_Op->UpSample2D(*this, scaleFactor, result);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::UpSample2D(int scaleFactor) const
+    {
+        Tensor result(Shape(Width() * scaleFactor, Height() * scaleFactor, Depth(), Batch()));
+        UpSample2D(scaleFactor, result);
+        return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::UpSample2DGradient(const Tensor& outputGradient, int scaleFactor, Tensor& result) const
+    {
+        m_Op->UpSample2DGradient(outputGradient, scaleFactor, result);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	std::string Tensor::ToString() const
 	{
 		string s = "";
