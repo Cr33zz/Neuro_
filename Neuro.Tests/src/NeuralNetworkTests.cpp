@@ -49,27 +49,27 @@ namespace NeuroTests
 
         TEST_METHOD(Single_Convolution_Layer_BS10_VS1)
         {
-            TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 1, 30, 10, 40, ConvValidStride1);
+            TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 1, 30, 10, 50, ConvValidStride1);
         }
 
         TEST_METHOD(Single_Convolution_Layer_BS1_VS1)
         {
-            TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 1, 30, 1, 15, ConvValidStride1);
+            TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 1, 30, 1, 50, ConvValidStride1);
         }
 
         TEST_METHOD(Single_Convolution_Layer_FullBatch_VS1)
         {
-            TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 1, 30, -1, 30, ConvValidStride1);
+            TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 1, 30, -1, 50, ConvValidStride1);
         }
 
         TEST_METHOD(Single_Convolution_Layer_BS10_VS2)
         {
-            TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 2, 30, 10, 40, ConvValidStride2);
+            TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 2, 30, 10, 50, ConvValidStride2);
         }
 
         TEST_METHOD(Single_Convolution_Layer_BS10_VS3)
         {
-            TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 3, 30, 10, 40, ConvValidStride3);
+            TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 3, 30, 10, 50, ConvValidStride3);
         }
 
         TEST_METHOD(Batching_No_Reminder)
@@ -150,7 +150,7 @@ namespace NeuroTests
             auto net = new NeuralNetwork(model, "deep_dense_test", 7);
 
             Tensor inputs(Shape::From(model->GetLayer(0)->InputShape(), samples));
-            inputs.FillWithRand(-1, -2, 2);
+            inputs.FillWithRand(10, -2, 2);
             Tensor outputs = inputs.Mul(1.7f);
             
             net->Optimize(new SGD(0.02f), new MeanSquareError());
@@ -163,7 +163,7 @@ namespace NeuroTests
         void TestConvolutionLayer(Shape inputShape, int kernelSize, int kernelsNum, int stride, int samples, int batchSize, int epochs, F& convFunc)
         {
             auto model = new Sequential();
-            model->AddLayer((new Convolution(inputShape, kernelSize, kernelsNum, stride, EPaddingMode::Valid, new Linear()))->SetKernelInitializer(new Constant(1)));
+            model->AddLayer((new Convolution(inputShape, kernelSize, kernelsNum, stride, 0, new Linear()))->SetKernelInitializer(new Constant(1)));
             auto net = new NeuralNetwork(model, "convolution_test", 7);
 
             auto expectedKernels = Tensor(Shape(kernelSize, kernelSize, inputShape.Depth(), kernelsNum));
