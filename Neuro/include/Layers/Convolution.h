@@ -9,9 +9,9 @@ namespace Neuro
     class Convolution : public LayerBase
     {
 	public:
-        Convolution(LayerBase* inputLayer, int filterSize, int filtersNum, int stride = 1, EPaddingMode paddingMode = EPaddingMode::Valid, ActivationBase* activation = nullptr, const string& name = "");
+        Convolution(LayerBase* inputLayer, int filterSize, int filtersNum, int stride = 1, int padding = EPaddingMode::Valid, ActivationBase* activation = nullptr, const string& name = "");
         // This constructor should only be used for input layer
-        Convolution(const Shape& inputShape, int filterSize, int filtersNum, int stride = 1, EPaddingMode paddingMode = EPaddingMode::Valid, ActivationBase* activation = nullptr, const string& name = "");
+        Convolution(const Shape& inputShape, int filterSize, int filtersNum, int stride = 1, int padding = EPaddingMode::Valid, ActivationBase* activation = nullptr, const string& name = "");
 		~Convolution();
 
 		virtual void CopyParametersTo(LayerBase& target, float tau) const override;
@@ -25,7 +25,7 @@ namespace Neuro
         Convolution* SetBiasInitializer(InitializerBase* initializer);
         Convolution* SetUseBias(bool useBias);
 
-        static EPaddingMode GetGradientPaddingMode(EPaddingMode paddingMode);
+        //static EPaddingMode GetGradientPaddingMode(int padding);
 
 	protected:
         Convolution();
@@ -51,8 +51,6 @@ namespace Neuro
         }*/
 
 	private:
-		static Shape GetOutShape(const Shape& inputShape, int filterWidth, int filterHeight, int stride, int filtersNum);
-
         Tensor m_Kernels;
         Tensor m_Bias;
         bool m_UseBias = true;
@@ -66,7 +64,7 @@ namespace Neuro
         int m_FiltersNum;
         int m_FilterSize;
         int m_Stride;
-        EPaddingMode m_PaddingMode;
+        int m_Padding;
 	};
 }
 

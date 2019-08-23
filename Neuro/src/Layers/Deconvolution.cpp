@@ -5,23 +5,23 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Deconvolution::Deconvolution(LayerBase* inputLayer, int filterSize, int outputDepth, int stride, EPaddingMode paddingMode, ActivationBase* activation, const string& name)
-        : LayerBase(__FUNCTION__, inputLayer, GetOutShape(inputLayer->OutputShape(), filterSize, filterSize, stride, outputDepth), activation, name)
+    Deconvolution::Deconvolution(LayerBase* inputLayer, int filterSize, int outputDepth, int stride, int padding, ActivationBase* activation, const string& name)
+        : LayerBase(__FUNCTION__, inputLayer, Tensor::GetConvTransposeOutputShape(inputLayer->OutputShape(), outputDepth, filterSize, filterSize, stride, padding, padding), activation, name)
     {
         m_FilterSize = filterSize;
         m_OutputDepth = outputDepth;
         m_Stride = stride;
-        m_PaddingMode = paddingMode;
+        m_Padding = padding;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Deconvolution::Deconvolution(const Shape& inputShape, int filterSize, int outputDepth, int stride, EPaddingMode paddingMode, ActivationBase* activation, const string& name)
-        : LayerBase(__FUNCTION__, inputShape, GetOutShape(inputShape, filterSize, filterSize, stride, outputDepth), activation, name)
+    Deconvolution::Deconvolution(const Shape& inputShape, int filterSize, int outputDepth, int stride, int padding, ActivationBase* activation, const string& name)
+        : LayerBase(__FUNCTION__, inputShape, Tensor::GetConvTransposeOutputShape(inputShape, outputDepth, filterSize, filterSize, stride, padding, padding), activation, name)
     {
         m_FilterSize = filterSize;
         m_OutputDepth = outputDepth;
         m_Stride = stride;
-        m_PaddingMode = paddingMode;
+        m_Padding = padding;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -70,13 +70,13 @@ namespace Neuro
         m_FilterSize = sourceDeconv.m_FilterSize;
         m_OutputDepth = sourceDeconv.m_OutputDepth;
         m_Stride = sourceDeconv.m_Stride;
-        m_PaddingMode = sourceDeconv.m_PaddingMode;
+        m_Padding = sourceDeconv.m_Padding;
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Deconvolution::FeedForwardInternal(bool training)
     {
-        m_Inputs[0]->Conv2DTransposed(m_Kernels, m_Stride, m_PaddingMode, m_Output);
+        m_Inputs[0]->Conv2DTransposed(m_Kernels, m_Stride, m_Padding, m_Output);
         if (m_UseBias)
             m_Output.Add(m_Bias, m_Output);
     }
@@ -84,17 +84,11 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Deconvolution::BackPropInternal(Tensor& outputGradient)
     {
-        outputGradient.Conv2DTransposedInputsGradient(outputGradient, m_Kernels, m_Stride, Convolution::GetGradientPaddingMode(m_PaddingMode), m_InputsGradient[0]);
-        outputGradient.Conv2DTransposedKernelsGradient(outputGradient, *m_Inputs[0], m_Stride, Convolution::GetGradientPaddingMode(m_PaddingMode), m_KernelsGradient);
+        outputGradient.Conv2DTransposedInputsGradient(outputGradient, m_Kernels, m_Stride, m_Padding, m_InputsGradient[0]);
+        outputGradient.Conv2DTransposedKernelsGradient(outputGradient, *m_Inputs[0], m_Stride, m_Padding, m_KernelsGradient);
 
         if (m_UseBias)
             m_BiasGradient.Add(outputGradient.SumBatches());
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    Shape Deconvolution::GetOutShape(const Shape& inputShape, int filterWidth, int filterHeight, int stride, int outputDepth)
-    {
-        return Shape(stride * (inputShape.Width() - 1) + filterWidth - 2, stride * (inputShape.Height() - 1) + filterWidth - 2, outputDepth);
     }
 
     //////////////////////////////////////////////////////////////////////////

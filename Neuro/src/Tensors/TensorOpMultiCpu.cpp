@@ -103,14 +103,11 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Conv2D(const Tensor& t, const Tensor& kernels, int stride, EPaddingMode padding, Tensor& result) const
+    void TensorOpMultiCpu::Conv2D(const Tensor& t, const Tensor& kernels, int stride, int paddingX, int paddingY, Tensor& result) const
     {
         t.CopyToHost();
         kernels.CopyToHost();
         result.OverrideHost();
-
-        int outputWidth = 0, outputHeight = 0, paddingX = 0, paddingY = 0;
-        Tensor::GetPaddingParams(padding, t.Width(), t.Height(), kernels.Width(), kernels.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
 
         parallel_for(0, t.Batch(), [&](int n)
         {
@@ -133,59 +130,63 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, int stride, EPaddingMode padding, Tensor& inputGradients) const
+    void TensorOpMultiCpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, int stride, int paddingX, int paddingY, Tensor& inputGradients) const
     {
         gradient.CopyToHost();
         kernels.CopyToHost();
         inputGradients.CopyToHost();
 
-        Tensor rotKernels = kernels.Rotated180();
-        padding = EPaddingMode::Full;
-
-        int outputWidth = 0, outputHeight = 0, paddingX = 0, paddingY = 0;
-        Tensor::GetPaddingParams(padding, gradient.Width(), gradient.Height(), kernels.Width(), kernels.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
-
-        parallel_for(0, gradient.Batch(), [&](int n)
+        parallel_for(0, gradient.Batch(), [&](int outN) {
+        for (int outD = 0; outD < gradient.Depth(); ++outD)
+        for (int outH = 0, h = -paddingY; outH < gradient.Height(); h += stride, ++outH)
+        for (int outW = 0, w = -paddingX; outW < gradient.Width(); w += stride, ++outW)
         {
-            for (int outH = 0, h = -paddingY; outH < inputGradients.Height(); h += stride, ++outH)
-            for (int outW = 0, w = -paddingX; outW < inputGradients.Width(); w += stride, ++outW)
-            parallel_for(0, inputGradients.Depth(), [&](int outD)
+            float chainGradient = gradient.Get(outW, outH, outD, outN);
+
+            for (int kernelH = 0; kernelH < kernels.Height(); ++kernelH)
             {
-                for (int kernelN = 0; kernelN < rotKernels.Batch(); ++kernelN)
-                for (int kernelH = 0; kernelH < rotKernels.Height(); ++kernelH)
-                for (int kernelW = 0; kernelW < rotKernels.Width(); ++kernelW)
-                    inputGradients(outW, outH, outD, n) += gradient.TryGet(0, w + kernelW, h + kernelH, kernelN, n) * rotKernels(kernelW, kernelH, outD, kernelN);
-            });
-        });
+                int inH = h + kernelH;
+                for (int kernelW = 0; kernelW < kernels.Width(); ++kernelW)
+                {
+                    int inW = w + kernelW;
+                    if (inH >= 0 && inH < inputGradients.Height() && inW >= 0 && inW < inputGradients.Width())
+                    {
+                        for (int kernelD = 0; kernelD < kernels.Depth(); ++kernelD)
+                            inputGradients(inW, inH, kernelD, outN) += kernels.Get(kernelW, kernelH, kernelD, outD) * chainGradient;
+                    }
+                }
+            }
+        }});
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, EPaddingMode padding, Tensor& kernelsGradient) const
+    void TensorOpMultiCpu::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, int paddingX, int paddingY, Tensor& kernelsGradient) const
     {
         input.CopyToHost();
         gradient.CopyToHost();
         kernelsGradient.CopyToHost();
 
-        int outputWidth = 0, outputHeight = 0, paddingX = 0, paddingY = 0;
-        Tensor::GetPaddingParams(padding, input.Width(), input.Height(), kernelsGradient.Width(), kernelsGradient.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
-
-        for (int n = 0; n < gradient.Batch(); ++n)
-        parallel_for(0, kernelsGradient.Batch(), [&](int outD)
+        parallel_for(0, gradient.Depth(), [&](int outD) {
+        for (int outN = 0; outN < gradient.Batch(); ++outN)
+        for (int outH = 0, h = -paddingY; outH < gradient.Height(); h += stride, ++outH)
+        for (int outW = 0, w = -paddingX; outW < gradient.Width(); w += stride, ++outW)
         {
-            for (int h = -paddingY, outH = 0; outH < gradient.Height(); h += stride, ++outH)
-            for (int w = -paddingX, outW = 0; outW < gradient.Width(); w += stride, ++outW)
-            {
-                float grad = gradient(outW, outH, outD, n);
+            float chainGradient = gradient.Get(outW, outH, outD, outN);
 
-                for (int kernelD = 0; kernelD < kernelsGradient.Depth(); ++kernelD)
-                for (int kernelH = 0; kernelH < kernelsGradient.Height(); ++kernelH)
+            for (int kernelH = 0; kernelH < kernelsGradient.Height(); ++kernelH)
+            {
+                int inH = h + kernelH;
                 for (int kernelW = 0; kernelW < kernelsGradient.Width(); ++kernelW)
                 {
-                    float kernGradVal = input.TryGet(0, w + kernelW, h + kernelH, kernelD, n) * grad;
-                    kernelsGradient(kernelW, kernelH, kernelD, outD) += kernGradVal;
+                    int inW = w + kernelW;
+                    if (inH >= 0 && inH < input.Height() && inW >= 0 && inW < input.Width())
+                    {
+                        for (int kernelD = 0; kernelD < kernelsGradient.Depth(); ++kernelD)
+                            kernelsGradient(kernelW, kernelH, kernelD, outD) += input.Get(inW, inH, kernelD, outN) * chainGradient;
+                    }
                 }
             }
-        });
+        }});
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -188,14 +188,11 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::Conv2D(const Tensor& t, const Tensor& kernels, int stride, EPaddingMode padding, Tensor& result) const
+	void TensorOpCpu::Conv2D(const Tensor& t, const Tensor& kernels, int stride, int paddingX, int paddingY, Tensor& result) const
 	{
 		t.CopyToHost();
 		kernels.CopyToHost();
         result.OverrideHost();
-
-		int outputWidth = 0, outputHeight = 0, paddingX = 0, paddingY = 0;
-		Tensor::GetPaddingParams(padding, t.Width(), t.Height(), kernels.Width(), kernels.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
 
 		for (int n = 0; n < t.Batch(); ++n)
 		{
@@ -216,55 +213,63 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, int stride, EPaddingMode padding, Tensor& inputGradients) const
+	void TensorOpCpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, int stride, int paddingX, int paddingY, Tensor& inputGradients) const
 	{
 		gradient.CopyToHost();
 		kernels.CopyToHost();
 		inputGradients.CopyToHost();
 
-		Tensor rotKernels = kernels.Rotated180();
+        for (int outN = 0; outN < gradient.Batch(); ++outN)
+        for (int outD = 0; outD < gradient.Depth(); ++outD)
+        for (int outH = 0, h = -paddingY; outH < gradient.Height(); h += stride, ++outH)
+        for (int outW = 0, w = -paddingX; outW < gradient.Width(); w += stride, ++outW)
+        {
+            float chainGradient = gradient.Get(outW, outH, outD, outN);
 
-		int outputWidth = 0, outputHeight = 0, paddingX = 0, paddingY = 0;
-		Tensor::GetPaddingParams(padding, gradient.Width(), gradient.Height(), kernels.Width(), kernels.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
-
-		for (int n = 0; n < gradient.Batch(); ++n)
-		{
-			for (int outH = 0, h = -paddingY; outH < inputGradients.Height(); h += stride, ++outH)
-			for (int outW = 0, w = -paddingX; outW < inputGradients.Width(); w += stride, ++outW)
-			for (int outD = 0; outD < inputGradients.Depth(); ++outD)
-			{
-				for (int kernelN = 0; kernelN < rotKernels.Batch(); ++kernelN)
-				for (int kernelH = 0; kernelH < rotKernels.Height(); ++kernelH)
-				for (int kernelW = 0; kernelW < rotKernels.Width(); ++kernelW)
-					inputGradients(outW, outH, outD, n) += gradient.TryGet(0, w + kernelW, h + kernelH, kernelN, n) * rotKernels(kernelW, kernelH, outD, kernelN);
-			}
-		}
+            for (int kernelH = 0; kernelH < kernels.Height(); ++kernelH)
+            {
+                int inH = h + kernelH;
+                for (int kernelW = 0; kernelW < kernels.Width(); ++kernelW)
+                {
+                    int inW = w + kernelW;
+                    if (inH >= 0 && inH < inputGradients.Height() && inW >= 0 && inW < inputGradients.Width())
+                    {
+                        for (int kernelD = 0; kernelD < kernels.Depth(); ++kernelD)
+                            inputGradients(inW, inH, kernelD, outN) += kernels.Get(kernelW, kernelH, kernelD, outD) * chainGradient;
+                    }
+                }
+            }
+        }
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, EPaddingMode padding, Tensor& kernelsGradient) const
+	void TensorOpCpu::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, int paddingX, int paddingY, Tensor& kernelsGradient) const
 	{
 		input.CopyToHost();
 		gradient.CopyToHost();
 		kernelsGradient.CopyToHost();
 
-		int outputWidth = 0, outputHeight = 0, paddingX = 0, paddingY = 0;
-		Tensor::GetPaddingParams(padding, input.Width(), input.Height(), kernelsGradient.Width(), kernelsGradient.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
+        for (int outN = 0; outN < gradient.Batch(); ++outN)
+        for (int outD = 0; outD < gradient.Depth(); ++outD)
+        for (int outH = 0, h = -paddingY; outH < gradient.Height(); h += stride, ++outH)
+        for (int outW = 0, w = -paddingX; outW < gradient.Width(); w += stride, ++outW)
+        {
+            float chainGradient = gradient.Get(outW, outH, outD, outN);
 
-		for (int kernelD = 0; kernelD < kernelsGradient.Depth(); ++kernelD)
-		for (int kernelH = 0; kernelH < kernelsGradient.Height(); ++kernelH)
-		for (int kernelW = 0; kernelW < kernelsGradient.Width(); ++kernelW)
-		for (int kernelN = 0; kernelN < kernelsGradient.Batch(); ++kernelN)
-		{
-			for (int outN = 0; outN < gradient.Batch(); ++outN)
-			for (int h = -paddingY, outH = 0; outH < gradient.Height(); h += stride, ++outH)
-			for (int w = -paddingX, outW = 0; outW < gradient.Width(); w += stride, ++outW)
-			{
-				float grad = gradient(outW, outH, kernelN, outN);
-				float kernGradVal = input.TryGet(0, w + kernelW, h + kernelH, kernelD, outN) * grad;
-				kernelsGradient(kernelW, kernelH, kernelD, kernelN) += kernGradVal;
-			}
-		}
+            for (int kernelH = 0; kernelH < kernelsGradient.Height(); ++kernelH)
+            {
+                int inH = h + kernelH;
+                for (int kernelW = 0; kernelW < kernelsGradient.Width(); ++kernelW)
+                {
+                    int inW = w + kernelW;
+                    if (inH >= 0 && inH < input.Height() && inW >= 0 && inW < input.Width())
+                    {
+                        for (int kernelD = 0; kernelD < kernelsGradient.Depth(); ++kernelD)
+                            kernelsGradient(kernelW, kernelH, kernelD, outD) += input.Get(inW, inH, kernelD, outN) * chainGradient;
+                    }
+                }
+            }
+        }
 	}
 
 	//////////////////////////////////////////////////////////////////////////

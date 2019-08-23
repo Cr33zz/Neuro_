@@ -155,11 +155,8 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Conv2D(const Tensor& t, const Tensor& kernels, int stride, EPaddingMode padding, Tensor& result) const
+    void TensorOpGpu::Conv2D(const Tensor& t, const Tensor& kernels, int stride, int paddingX, int paddingY, Tensor& result) const
     {
-        int outputWidth = 0, outputHeight = 0, paddingX = 0, paddingY = 0;
-        Tensor::GetPaddingParams(padding, t.Width(), t.Height(), kernels.Width(), kernels.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
-
         t.CopyToDevice();
         kernels.CopyToDevice();
         result.CopyToDevice();
@@ -185,11 +182,8 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, int stride, EPaddingMode padding, Tensor& inputGradients) const
+    void TensorOpGpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, int stride, int paddingX, int paddingY, Tensor& inputGradients) const
     {
-        int outputWidth = 0, outputHeight = 0, paddingX = 0, paddingY = 0;
-        Tensor::GetPaddingParams(padding, gradient.Width(), gradient.Height(), kernels.Width(), kernels.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
-
         gradient.CopyToDevice();
         kernels.CopyToDevice();
         inputGradients.CopyToDevice();
@@ -215,11 +209,8 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, EPaddingMode padding, Tensor& kernelsGradient) const
+    void TensorOpGpu::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, int paddingX, int paddingY, Tensor& kernelsGradient) const
     {
-        int outputWidth = 0, outputHeight = 0, paddingX = 0, paddingY = 0;
-        Tensor::GetPaddingParams(padding, input.Width(), input.Height(), kernelsGradient.Width(), kernelsGradient.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
-
         gradient.CopyToDevice();
         input.CopyToDevice();
         kernelsGradient.CopyToDevice();

@@ -4,23 +4,23 @@
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	Convolution::Convolution(LayerBase* inputLayer, int filterSize, int filtersNum, int stride, EPaddingMode paddingMode, ActivationBase* activation, const string& name)
-		: LayerBase(__FUNCTION__, inputLayer, GetOutShape(inputLayer->OutputShape(), filterSize, filterSize, stride, filtersNum), activation, name)
+	Convolution::Convolution(LayerBase* inputLayer, int filterSize, int filtersNum, int stride, int padding, ActivationBase* activation, const string& name)
+		: LayerBase(__FUNCTION__, inputLayer, Tensor::GetConvOutputShape(inputLayer->OutputShape(), filtersNum, filterSize, filterSize, stride, padding, padding), activation, name)
 	{
 		m_FilterSize = filterSize;
 		m_FiltersNum = filtersNum;
 		m_Stride = stride;
-        m_PaddingMode = paddingMode;
+        m_Padding = padding;
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	Convolution::Convolution(const Shape& inputShape, int filterSize, int filtersNum, int stride, EPaddingMode paddingMode, ActivationBase* activation, const string& name)
-		: LayerBase(__FUNCTION__, inputShape, GetOutShape(inputShape, filterSize, filterSize, stride, filtersNum), activation, name)
+	Convolution::Convolution(const Shape& inputShape, int filterSize, int filtersNum, int stride, int padding, ActivationBase* activation, const string& name)
+		: LayerBase(__FUNCTION__, inputShape, Tensor::GetConvOutputShape(inputShape, filtersNum, filterSize, filterSize, stride, padding, padding), activation, name)
 	{
 		m_FilterSize = filterSize;
 		m_FiltersNum = filtersNum;
 		m_Stride = stride;
-        m_PaddingMode = paddingMode;
+        m_Padding = padding;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -73,7 +73,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Convolution::FeedForwardInternal(bool training)
 	{
-		m_Inputs[0]->Conv2D(m_Kernels, m_Stride, m_PaddingMode, m_Output);
+		m_Inputs[0]->Conv2D(m_Kernels, m_Stride, m_Padding, m_Output);
 		if (m_UseBias)
 			m_Output.Add(m_Bias, m_Output);
 	}
@@ -81,27 +81,21 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Convolution::BackPropInternal(Tensor& outputGradient)
 	{
-		outputGradient.Conv2DInputsGradient(outputGradient, m_Kernels, m_Stride, GetGradientPaddingMode(m_PaddingMode), m_InputsGradient[0]);
-		outputGradient.Conv2DKernelsGradient(*m_Inputs[0], outputGradient, m_Stride, m_PaddingMode, m_KernelsGradient);
+		outputGradient.Conv2DInputsGradient(outputGradient, m_Kernels, m_Stride, m_Padding, m_InputsGradient[0]);
+		outputGradient.Conv2DKernelsGradient(*m_Inputs[0], outputGradient, m_Stride, m_Padding, m_KernelsGradient);
 
 		if (m_UseBias)
 			m_BiasGradient.Add(outputGradient.SumBatches());
 	}
 
-	//////////////////////////////////////////////////////////////////////////
-	Shape Convolution::GetOutShape(const Shape& inputShape, int filterWidth, int filterHeight, int stride, int filtersNum)
-	{
-		return Shape((int)floor((float)(inputShape.Width() - filterWidth) / stride + 1), (int)floor((float)(inputShape.Height() - filterHeight) / stride + 1), filtersNum);
-	}
-
-    Neuro::EPaddingMode Convolution::GetGradientPaddingMode(EPaddingMode paddingMode)
+    /*Neuro::EPaddingMode Convolution::GetGradientPaddingMode(int padding)
     {
         if (paddingMode == EPaddingMode::Valid)
             return EPaddingMode::Full;
         if (paddingMode == EPaddingMode::Full)
             return EPaddingMode::Valid;
         return paddingMode;
-    }
+    }*/
 
     //////////////////////////////////////////////////////////////////////////
 	void Convolution::GetParametersAndGradients(vector<ParametersAndGradients>& result)

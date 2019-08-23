@@ -741,102 +741,84 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-    void Tensor::Conv2D(const Tensor& kernels, int stride, EPaddingMode padding, Tensor& result) const
+    void Tensor::Conv2D(const Tensor& kernels, int stride, int padding, Tensor& result) const
 	{
 		assert(Depth() == kernels.Depth());
-		m_Op->Conv2D(*this, kernels, stride, padding, result);
+		m_Op->Conv2D(*this, kernels, stride, padding, padding, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::Conv2D(const Tensor& kernels, int stride, EPaddingMode padding) const
+	Tensor Tensor::Conv2D(const Tensor& kernels, int stride, int padding) const
 	{
-		int outputWidth = 0, outputHeight = 0, paddingX = 0, paddingY = 0;
-		GetPaddingParams(padding, Width(), Height(), kernels.Width(), kernels.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
-
-		Tensor result(Shape(outputWidth, outputHeight, kernels.Batch(), Batch()));
+		Tensor result(GetConvOutputShape(GetShape(), kernels.Batch(), kernels.Width(), kernels.Height(), stride, padding, padding));
 		Conv2D(kernels, stride, padding, result);
 		return result;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Conv2DInputsGradient(const Tensor& gradient, const Tensor& kernels, int stride, EPaddingMode padding, Tensor& inputsGradient) const
+	void Tensor::Conv2DInputsGradient(const Tensor& gradient, const Tensor& kernels, int stride, int padding, Tensor& inputsGradient) const
 	{
 		inputsGradient.Zero();
-		m_Op->Conv2DInputGradient(gradient, kernels, stride, padding, inputsGradient);
+		m_Op->Conv2DInputGradient(gradient, kernels, stride, padding, padding, inputsGradient);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, EPaddingMode padding, Tensor& kernelsGradient) const
+	void Tensor::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, int padding, Tensor& kernelsGradient) const
 	{
 		kernelsGradient.Zero();
-		m_Op->Conv2DKernelsGradient(input, gradient, stride, padding, kernelsGradient);
+		m_Op->Conv2DKernelsGradient(input, gradient, stride, padding, padding, kernelsGradient);
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::Conv2DTransposed(const Tensor& kernels, int stride, EPaddingMode padding, Tensor& result) const
+    void Tensor::Conv2DTransposed(const Tensor& kernels, int stride, int padding, Tensor& result) const
     {
         assert(Depth() == kernels.Batch());
         Conv2DInputsGradient(*this, kernels, stride, padding, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor Tensor::Conv2DTransposed(const Tensor& kernels, int stride, EPaddingMode padding) const
+    Tensor Tensor::Conv2DTransposed(const Tensor& kernels, int outputDepth, int stride, int padding) const
     {
-        int outputWidth = 0, outputHeight = 0, paddingX = 0, paddingY = 0;
-        GetPaddingParams(padding, Width(), Height(), kernels.Width(), kernels.Height(), stride, outputHeight, outputWidth, paddingX, paddingY);
-        Tensor result(Shape(outputWidth, outputHeight, kernels.Batch(), Batch()));
+        Tensor result(GetConvTransposeOutputShape(GetShape(), outputDepth, kernels.Width(), kernels.Height(), stride, padding, padding));
         Conv2DTransposed(kernels, stride, padding, result);
         return result;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::Conv2DTransposedInputsGradient(const Tensor& gradient, const Tensor& kernels, int stride, EPaddingMode padding, Tensor& inputsGradient) const
+    void Tensor::Conv2DTransposedInputsGradient(const Tensor& gradient, const Tensor& kernels, int stride, int padding, Tensor& inputsGradient) const
     {
         inputsGradient.Zero();
         gradient.Conv2D(kernels, stride, padding, inputsGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::Conv2DTransposedKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, EPaddingMode padding, Tensor& kernelsGradient) const
+    void Tensor::Conv2DTransposedKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, int padding, Tensor& kernelsGradient) const
     {
         kernelsGradient.Zero();
-        m_Op->Conv2DKernelsGradient(input, gradient, stride, padding, kernelsGradient);
+        m_Op->Conv2DKernelsGradient(input, gradient, stride, padding, padding, kernelsGradient);
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Pool(int filterSize, int stride, EPoolingMode type, EPaddingMode padding, Tensor& result) const
+	void Tensor::Pool(int filterSize, int stride, EPoolingMode type, int padding, Tensor& result) const
 	{
-		int outWidth = 0, outHeight = 0, paddingX = 0, paddingY = 0;
-		GetPaddingParams(padding, Width(), Height(), filterSize, filterSize, stride, outHeight, outWidth, paddingX, paddingY);
-
-		assert(result.Width() == outWidth);
-		assert(result.Height() == outHeight);
 		assert(result.Batch() == Batch());
-
-		m_Op->Pool(*this, filterSize, stride, type, paddingX, paddingY, result);
+		m_Op->Pool(*this, filterSize, stride, type, padding, padding, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::Pool(int filterSize, int stride, EPoolingMode type, EPaddingMode padding) const
+	Tensor Tensor::Pool(int filterSize, int stride, EPoolingMode type, int padding) const
 	{
-		int outWidth = 0, outHeight = 0, paddingX = 0, paddingY = 0;
-		GetPaddingParams(padding, Width(), Height(), filterSize, filterSize, stride, outHeight, outWidth, paddingX, paddingY);
-
-		Tensor result(Shape(outWidth, outHeight, Depth(), Batch()));
+		Tensor result(GetConvOutputShape(GetShape(), GetShape().Depth(), filterSize, filterSize, stride, padding, padding));
 		Pool(filterSize, stride, type, padding, result);
 
 		return result;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::PoolGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, EPoolingMode type, EPaddingMode padding, Tensor& result) const
+	void Tensor::PoolGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, EPoolingMode type, int padding, Tensor& result) const
 	{
 		assert(output.SameDimensionsExceptBatches(outputGradient));
-
-		int outWidth = 0, outHeight = 0, paddingX = 0, paddingY = 0;
-		GetPaddingParams(padding, result.Width(), result.Height(), filterSize, filterSize, stride, outHeight, outWidth, paddingX, paddingY);
-
-		m_Op->PoolGradient(output, input, outputGradient, filterSize, stride, type, paddingX, paddingY, result);
+		m_Op->PoolGradient(output, input, outputGradient, filterSize, stride, type, padding, padding, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -880,31 +862,71 @@ namespace Neuro
 		return Width() == t.Width() && Height() == t.Height() && Depth() == t.Depth();
 	}
 
-	//////////////////////////////////////////////////////////////////////////
-	void Tensor::GetPaddingParams(EPaddingMode type, int width, int height, int kernelWidth, int kernelHeight, int stride, int& outHeight, int& outWidth, int& paddingX, int& paddingY)
-	{
-		if (type == EPaddingMode::Valid)
-		{
-			outWidth = (int)floor((width - kernelWidth) / (float)stride + 1);
-			outHeight = (int)floor((height - kernelHeight) / (float)stride + 1);
-			paddingX = 0;
-			paddingY = 0;
-		}
-		else if (type == EPaddingMode::Same)
-		{
-			outWidth = width / stride;
-			outHeight = height / stride;
-			paddingX = (int)floor((float)kernelWidth / 2);
-			paddingY = (int)floor((float)kernelHeight / 2);
-		}
-		else //if (type == EPaddingMode.Full)
-		{
-			outWidth = (width + (kernelWidth - 1)) / stride;
-			outHeight = (height + (kernelHeight - 1)) / stride;
-			paddingX = kernelWidth - 1;
-			paddingY = kernelHeight - 1;
-		}
-	}
+    //////////////////////////////////////////////////////////////////////////
+    pair<int, int> Tensor::GetPadding(EPaddingMode paddingMode, int kernelWidth, int kernelHeight)
+    {
+        if (paddingMode == EPaddingMode::Valid)
+            return make_pair(0, 0);
+
+        if (paddingMode == EPaddingMode::Same)
+            return make_pair((int)floor((float)kernelWidth / 2), (int)floor((float)kernelHeight / 2));
+
+        if (paddingMode == EPaddingMode::Full)
+            return make_pair(kernelWidth - 1, kernelHeight - 1);
+
+        assert(false && "Unsupported padding mode!");
+        return make_pair(0, 0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    int Tensor::GetPadding(EPaddingMode paddingMode, int kernelSize)
+    {
+        return GetPadding(paddingMode, kernelSize, kernelSize).first;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Neuro::Shape Tensor::GetConvOutputShape(const Shape& inputShape, int kernelsNum, int kernelWidth, int kernelHeight, int stride, int paddingX, int paddingY)
+    {
+        return Shape((int)floor((inputShape.Width() + 2 * paddingX - kernelWidth) / (float)stride) + 1, 
+                     (int)floor((inputShape.Height() + 2 * paddingY - kernelHeight) / (float)stride) + 1,
+                     kernelsNum,
+                     inputShape.Batch());
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Shape Tensor::GetConvTransposeOutputShape(const Shape& inputShape, int outputDepth, int kernelWidth, int kernelHeight, int stride, int paddingX, int paddingY)
+    {
+        return Shape(stride * (inputShape.Width() - 1) + kernelWidth - 2 * paddingX, 
+                     stride * (inputShape.Height() - 1) + kernelHeight - 2 * paddingY, 
+                     outputDepth, 
+                     inputShape.Batch());
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+	//void Tensor::GetPaddingParams(EPaddingMode type, int width, int height, int kernelWidth, int kernelHeight, int stride, int& outHeight, int& outWidth, int& paddingX, int& paddingY)
+	//{
+	//	if (type == EPaddingMode::Valid)
+	//	{
+	//		outWidth = (int)floor((width - kernelWidth) / (float)stride + 1);
+	//		outHeight = (int)floor((height - kernelHeight) / (float)stride + 1);
+	//		paddingX = 0;
+	//		paddingY = 0;
+	//	}
+	//	else if (type == EPaddingMode::Same)
+	//	{
+	//		outWidth = width / stride;
+	//		outHeight = height / stride;
+	//		paddingX = (int)floor((float)kernelWidth / 2);
+	//		paddingY = (int)floor((float)kernelHeight / 2);
+	//	}
+	//	else //if (type == EPaddingMode.Full)
+	//	{
+	//		outWidth = (width + (kernelWidth - 1)) / stride;
+	//		outHeight = (height + (kernelHeight - 1)) / stride;
+	//		paddingX = kernelWidth - 1;
+	//		paddingY = kernelHeight - 1;
+	//	}
+	//}
 
 	//////////////////////////////////////////////////////////////////////////
 	float Tensor::GetFlat(int i)
