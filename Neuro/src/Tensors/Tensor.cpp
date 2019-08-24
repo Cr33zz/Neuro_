@@ -842,6 +842,24 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void Tensor::BatchNormalization(const Tensor& gamma, const Tensor& beta, const Tensor& runningMean, const Tensor& runningVar, Tensor& result) const
+    {
+        m_Op->BatchNormalization(*this, gamma, beta, runningMean, runningVar, result);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::BatchNormalizationTrain(const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveVariance, Tensor& result) const
+    {
+        m_Op->BatchNormalizationTrain(*this, gamma, beta, momentum, runningMean, runningVar, saveMean, saveVariance, result);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedVariance, Tensor& gammaGradient, Tensor& betaGradient, Tensor& inputGradient) const
+    {
+        m_Op->BatchNormalizationGradient(input, gamma, outputGradient, savedMean, savedVariance, gammaGradient, betaGradient, inputGradient);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	std::string Tensor::ToString() const
 	{
 		string s = "";

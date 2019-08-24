@@ -32,7 +32,7 @@ namespace NeuroTests
 
         LayerBase* CreateLayer()
         {
-            auto layer = new BatchNormalization(Shape(10, 5));
+            auto layer = new BatchNormalization(Shape(2, 5, 3));
             layer->Init();
             return layer;
         }

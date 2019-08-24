@@ -272,6 +272,34 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpMultiCpu::UpSample2D(const Tensor& t, int scaleFactor, Tensor& result) const
+    {
+        parallel_for(0, t.Batch(), [&](int n) {
+        parallel_for(0, t.Depth(), [&](int d) {
+        for (int h = 0; h < t.Height(); ++h)
+        for (int w = 0; w < t.Width(); ++w)
+        {
+            for (int outH = h * scaleFactor; outH < (h + 1) * scaleFactor; ++outH)
+            for (int outW = w * scaleFactor; outW < (w + 1) * scaleFactor; ++outW)
+                result(outW, outH, d, n) = t(w, h, d, n);
+        }
+        });
+        });
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpMultiCpu::UpSample2DGradient(const Tensor& outputGradient, int scaleFactor, Tensor& result) const
+    {
+        parallel_for(0, outputGradient.Batch(), [&](int n) {
+        parallel_for(0, outputGradient.Depth(), [&](int d) {
+        for (int h = 0; h < outputGradient.Height(); ++h)
+        for (int w = 0; w < outputGradient.Width(); ++w)
+            result(w / scaleFactor, h / scaleFactor, d, n) += outputGradient(w, h, d, n);
+        });
+        });
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpMultiCpu::Map(const function<float(float)>& func, const Tensor& t, Tensor& result) const
     {
         t.CopyToHost();

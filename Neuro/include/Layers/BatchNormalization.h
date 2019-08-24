@@ -24,20 +24,20 @@ namespace Neuro
         virtual void BackPropInternal(Tensor& outputGradient) override;
 
     private:
-        Tensor mu;
+        Tensor m_Mean;
         Tensor xmu;
         Tensor carre;
-        Tensor var;
+        Tensor m_Variance;
         Tensor sqrtvar;
         Tensor invvar;
         Tensor va2;
         Tensor va3;
         
-        Tensor m_Gamma = Tensor({ 1.f }, Shape(1));
-        Tensor m_Beta = Tensor({ 0 }, Shape(1));
+        Tensor m_Gamma;
+        Tensor m_Beta;
 
-        Tensor m_GammaGrad = Tensor(Shape(1));
-        Tensor m_BetaGrad = Tensor(Shape(1));
+        Tensor m_GammaGrad;
+        Tensor m_BetaGrad;
         
         Tensor m_RunningMean;
         Tensor m_RunningVar;

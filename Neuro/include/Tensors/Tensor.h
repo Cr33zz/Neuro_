@@ -166,6 +166,10 @@ namespace Neuro
         Tensor UpSample2D(int scaleFactor) const;
         void UpSample2DGradient(const Tensor& outputGradient, int scaleFactor, Tensor& result) const;
 
+        void BatchNormalization(const Tensor& gamma, const Tensor& beta, const Tensor& runningMean, const Tensor& runningVar, Tensor& result) const;
+        void BatchNormalizationTrain(const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveVariance, Tensor& result) const;
+        void BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedVariance, Tensor& gammaGradient, Tensor& betaGradient, Tensor& inputGradient) const;
+
         string ToString() const;
         bool SameDimensionsExceptBatches(const Tensor& t) const;
 

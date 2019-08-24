@@ -21,6 +21,9 @@ namespace Neuro
         virtual void Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, EPoolingMode type, int paddingX, int paddingY, Tensor& result) const;
         virtual void UpSample2D(const Tensor& t, int scaleFactor, Tensor& result) const;
         virtual void UpSample2DGradient(const Tensor& outputGradient, int scaleFactor, Tensor& result) const;
+        virtual void BatchNormalization(const Tensor& input, const Tensor& gamma, const Tensor& beta, const Tensor& runningMean, const Tensor& runningVar, Tensor& output) const;
+        virtual void BatchNormalizationTrain(const Tensor& input, const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveVariance, Tensor& output) const;
+        virtual void BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedVariance, Tensor& gammaGradient, Tensor& betaGradient, Tensor& inputGradient) const;
 		virtual void Map(const function<float(float)>& func, const Tensor& t, Tensor& result) const;
         virtual void Map(const function<float(float, float)>& func, const Tensor& t1, const Tensor& t2, Tensor& result) const;
         virtual void SumBatches(const Tensor& t, Tensor& result) const;
