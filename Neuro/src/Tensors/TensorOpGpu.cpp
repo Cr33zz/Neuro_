@@ -1,4 +1,5 @@
-﻿#include "Tensors/TensorOpGpu.h"
+﻿#include "Tools.h"
+#include "Tensors/TensorOpGpu.h"
 #include "Tensors/Cuda/CudaDeviceVariable.h"
 #include "Tensors/Cuda/CudaKernels.h"
 
@@ -275,6 +276,123 @@ namespace Neuro
 
         float alpha = 1, beta = 0;
         cudnnPoolingBackward(s_CudnnHandle, poolingDesc, &alpha, outputDesc, output.GetDevicePtr(), outputGradientDesc, outputGradient.GetDevicePtr(), inputDesc, input.GetDevicePtr(), &beta, resultDesc, result.GetDevicePtr());
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::BatchNormalization(const Tensor& input, const Tensor& gamma, const Tensor& beta, const Tensor& runningMean, const Tensor& runningVar, Tensor& output) const
+    {
+        input.CopyToDevice();
+        gamma.CopyToDevice();
+        beta.CopyToDevice();
+        runningMean.CopyToDevice();
+        runningVar.CopyToDevice();
+        output.CopyToDevice();
+
+        cudnnTensorDescriptor_t inputOutputDesc; cudnnCreateTensorDescriptor(&inputOutputDesc);
+        cudnnTensorDescriptor_t gammaBetaMeanVarDesc; cudnnCreateTensorDescriptor(&gammaBetaMeanVarDesc);
+
+        cudnnSetTensor4dDescriptor(inputOutputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
+        cudnnSetTensor4dDescriptor(gammaBetaMeanVarDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, gamma.GetShape().Dimensions[3], gamma.GetShape().Dimensions[2], gamma.GetShape().Dimensions[1], gamma.GetShape().Dimensions[0]);
+
+        float alpha = 1, _beta = 0;
+        cudnnBatchNormalizationForwardInference(
+            s_CudnnHandle,
+            CUDNN_BATCHNORM_SPATIAL,
+            &alpha,
+            &_beta,
+            inputOutputDesc,
+            input.GetDevicePtr(),
+            inputOutputDesc,
+            output.GetDevicePtr(),
+            gammaBetaMeanVarDesc,
+            gamma.GetDevicePtr(),
+            beta.GetDevicePtr(),            
+            runningMean.GetDevicePtr(),
+            runningVar.GetDevicePtr(),
+            _EPSILON
+        );
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::BatchNormalizationTrain(const Tensor& input, const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveVariance, Tensor& output) const
+    {
+        input.CopyToDevice();
+        gamma.CopyToDevice();
+        beta.CopyToDevice();
+        runningMean.CopyToDevice();
+        runningVar.CopyToDevice();
+        saveMean.CopyToDevice();
+        saveVariance.CopyToDevice();
+        output.CopyToDevice();
+
+        cudnnTensorDescriptor_t inputOutputDesc; cudnnCreateTensorDescriptor(&inputOutputDesc);
+        cudnnTensorDescriptor_t gammaBetaMeanVarDesc; cudnnCreateTensorDescriptor(&gammaBetaMeanVarDesc);
+
+        cudnnSetTensor4dDescriptor(inputOutputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
+        cudnnSetTensor4dDescriptor(gammaBetaMeanVarDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, gamma.GetShape().Dimensions[3], gamma.GetShape().Dimensions[2], gamma.GetShape().Dimensions[1], gamma.GetShape().Dimensions[0]);
+
+        float alpha = 1, _beta = 0;
+        cudnnBatchNormalizationForwardTraining(
+            s_CudnnHandle,
+            CUDNN_BATCHNORM_SPATIAL,
+            &alpha,
+            &_beta,
+            inputOutputDesc,
+            input.GetDevicePtr(),
+            inputOutputDesc,
+            output.GetDevicePtr(),
+            gammaBetaMeanVarDesc,
+            gamma.GetDevicePtr(),
+            beta.GetDevicePtr(),
+            momentum,
+            runningMean.GetDevicePtr(),
+            runningVar.GetDevicePtr(),
+            _EPSILON,
+            saveMean.GetDevicePtr(),
+            saveVariance.GetDevicePtr()
+        );
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedVariance, Tensor& gammaGradient, Tensor& betaGradient, Tensor& inputGradient) const
+    {
+        input.CopyToDevice();
+        gamma.CopyToDevice();
+        outputGradient.CopyToDevice();
+        savedMean.CopyToDevice();
+        savedVariance.CopyToDevice();
+        gammaGradient.CopyToDevice();
+        betaGradient.CopyToDevice();
+        inputGradient.CopyToDevice();
+
+        cudnnTensorDescriptor_t inputOutputGradientDesc; cudnnCreateTensorDescriptor(&inputOutputGradientDesc);
+        cudnnTensorDescriptor_t gammaBetaGradientDesc; cudnnCreateTensorDescriptor(&gammaBetaGradientDesc);
+
+        cudnnSetTensor4dDescriptor(inputOutputGradientDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
+        cudnnSetTensor4dDescriptor(gammaBetaGradientDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, gamma.GetShape().Dimensions[3], gamma.GetShape().Dimensions[2], gamma.GetShape().Dimensions[1], gamma.GetShape().Dimensions[0]);
+
+        float alpha = 1, beta = 0;
+        cudnnBatchNormalizationBackward(
+            s_CudnnHandle,
+            CUDNN_BATCHNORM_SPATIAL,
+            &alpha,
+            &beta,
+            &alpha,
+            &beta,
+            inputOutputGradientDesc,
+            input.GetDevicePtr(),
+            inputOutputGradientDesc,
+            outputGradient.GetDevicePtr(),
+            inputOutputGradientDesc,
+            inputGradient.GetDevicePtr(),
+            gammaBetaGradientDesc,
+            gamma.GetDevicePtr(),
+            gammaGradient.GetDevicePtr(),
+            betaGradient.GetDevicePtr(),
+            _EPSILON,
+            savedMean.GetDevicePtr(),
+            savedVariance.GetDevicePtr()
+        );
     }
 
     //////////////////////////////////////////////////////////////////////////

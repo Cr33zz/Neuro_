@@ -25,6 +25,9 @@ namespace Neuro
         virtual void Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, int paddingX, int paddingY, Tensor& kernelsGradient) const override;
         virtual void Pool2D(const Tensor& t, int filterSize, int stride, EPoolingMode type, int paddingX, int paddingY, Tensor& result) const override;
         virtual void Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, EPoolingMode type, int paddingX, int paddingY, Tensor& result) const override;
+        virtual void BatchNormalization(const Tensor& t, const Tensor& gamma, const Tensor& beta, const Tensor& runningMean, const Tensor& runningVar, Tensor& result) const override;
+        virtual void BatchNormalizationTrain(const Tensor& t, const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveVariance, Tensor& result) const override;
+        virtual void BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedVariance, Tensor& gammaGradient, Tensor& betaGradient, Tensor& inputGradient) const override;
         virtual void SumBatches(const Tensor& t, Tensor& result) const override;
         virtual void Elu(const Tensor& input, float alpha, Tensor& result) const override;
         virtual void EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& result) const override;
