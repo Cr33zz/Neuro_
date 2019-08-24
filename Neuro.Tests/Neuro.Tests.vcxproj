@@ -30,6 +30,7 @@
     <ClCompile Include="src\PoolingLayerTests.cpp" />
     <ClCompile Include="src\RandomTests.cpp" />
     <ClCompile Include="src\ShapeTests.cpp" />
+    <ClCompile Include="src\TensorOpGpuTests.cpp" />
     <ClCompile Include="src\TensorOpMultiCpuTests.cpp" />
     <ClCompile Include="src\TensorTests.cpp" />
     <ClCompile Include="src\UpSampling2DLayerTests.cpp" />

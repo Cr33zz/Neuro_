@@ -13,8 +13,8 @@ namespace Neuro
         virtual void Sub(const Tensor& t1, const Tensor& t2, Tensor& result) const;
         virtual void Mul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& result) const;
 		virtual void MulElem(const Tensor& t1, const Tensor& t2, Tensor& result) const;
-        virtual void Transpose(const Tensor& t, Tensor& result) const;
-        virtual void Conv2D(const Tensor& t, const Tensor& kernels, int stride, int paddingX, int paddingY, Tensor& result) const;
+        virtual void Transpose(const Tensor& input, Tensor& result) const;
+        virtual void Conv2D(const Tensor& input, const Tensor& kernels, int stride, int paddingX, int paddingY, Tensor& result) const;
         virtual void Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, int stride, int paddingX, int paddingY, Tensor& inputGradients) const;
         virtual void Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, int paddingX, int paddingY, Tensor& kernelsGradient) const;
         virtual void Pool2D(const Tensor& t, int filterSize, int stride, EPoolingMode type, int paddingX, int paddingY, Tensor& result) const;

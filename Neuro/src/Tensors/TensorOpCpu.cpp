@@ -89,16 +89,16 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::Transpose(const Tensor& t, Tensor& result) const
+	void TensorOpCpu::Transpose(const Tensor& input, Tensor& result) const
 	{
-		t.CopyToHost();
+		input.CopyToHost();
         result.OverrideHost();
 
-		for (int n = 0; n < t.Batch(); ++n)
-		for (int d = 0; d < t.Depth(); ++d)
-		for (int h = 0; h < t.Height(); ++h)
-		for (int w = 0; w < t.Width(); ++w)
-			result(h, w, d, n) = t(w, h, d, n);
+		for (int n = 0; n < input.Batch(); ++n)
+		for (int d = 0; d < input.Depth(); ++d)
+		for (int h = 0; h < input.Height(); ++h)
+		for (int w = 0; w < input.Width(); ++w)
+			result(h, w, d, n) = input(w, h, d, n);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -118,15 +118,23 @@ namespace Neuro
 	void TensorOpCpu::Map(const function<float(float, float)>& func, const Tensor& t1, const Tensor& t2, Tensor& result) const
 	{
 		t1.CopyToHost();
-		t2.CopyToHost();
+        t2.CopyToHost();
         result.OverrideHost();
 
         auto& t1Values = t1.GetValues();
         auto& t2Values = t2.GetValues();
         auto& resultValues = result.GetValues();
 
-		for (int i = 0; i < (int)t1Values.size(); ++i)
-			resultValues[i] = func(t1Values[i], t2Values[i]);
+        if (t2.Batch() == t1.Batch())
+        {
+            for (int i = 0; i < (int)t1Values.size(); ++i)
+                resultValues[i] = func(t1Values[i], t2Values[i]);
+            return;
+        }
+
+        for (int n = 0; n < t1.Batch(); ++n)
+        for (int i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
+            resultValues[idx] = func(t1Values[idx], t2Values[i]);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -190,13 +198,13 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::Conv2D(const Tensor& t, const Tensor& kernels, int stride, int paddingX, int paddingY, Tensor& result) const
+	void TensorOpCpu::Conv2D(const Tensor& input, const Tensor& kernels, int stride, int paddingX, int paddingY, Tensor& result) const
 	{
-		t.CopyToHost();
+		input.CopyToHost();
 		kernels.CopyToHost();
         result.OverrideHost();
 
-		for (int n = 0; n < t.Batch(); ++n)
+		for (int n = 0; n < input.Batch(); ++n)
 		{
 			for (int outD = 0; outD < kernels.Batch(); ++outD)
 			for (int h = -paddingY, outH = 0; outH < result.Height(); h += stride, ++outH)
@@ -207,7 +215,7 @@ namespace Neuro
 				for (int kernelD = 0; kernelD < kernels.Depth(); ++kernelD)
 				for (int kernelH = 0; kernelH < kernels.Height(); ++kernelH)
 				for (int kernelW = 0; kernelW < kernels.Width(); ++kernelW)
-					val += t.TryGet(0, w + kernelW, h + kernelH, kernelD, n) * kernels(kernelW, kernelH, kernelD, outD);
+					val += input.TryGet(0, w + kernelW, h + kernelH, kernelD, n) * kernels(kernelW, kernelH, kernelD, outD);
 
 				result(outW, outH, outD, n) = val;
 			}
@@ -280,18 +288,18 @@ namespace Neuro
 		t.CopyToHost();
         result.OverrideHost();
 
-		for (int outN = 0; outN < t.Batch(); ++outN)
+        for (int outN = 0; outN < t.Batch(); ++outN)
 		for (int outD = 0; outD < t.Depth(); ++outD)
 		for (int outH = 0, h = -paddingY; outH < result.Height(); h += stride, ++outH)
 		for (int outW = 0, w = -paddingX; outW < result.Width(); w += stride, ++outW)
 		{
 			if (type == EPoolingMode::Max)
 			{
-				float value = numeric_limits<float>().min();
+				float value = -numeric_limits<float>().max();
 
 				for (int poolY = 0; poolY < filterSize; ++poolY)
 				for (int poolX = 0; poolX < filterSize; ++poolX)
-					value = max(value, t.TryGet(numeric_limits<float>().min(), w + poolX, h + poolY, outD, outN));
+					value = max(value, t.TryGet(-numeric_limits<float>().max(), w + poolX, h + poolY, outD, outN));
 
 				result(outW, outH, outD, outN) = value;
 			}
@@ -327,9 +335,9 @@ namespace Neuro
 				for (int poolH = 0; poolH < filterSize; ++poolH)
 				for (int poolW = 0; poolW < filterSize; ++poolW)
 				{
-                    float value = input.TryGet(numeric_limits<float>().min(), w + poolW, h + poolH, outD, outN);
+                    float value = input.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN);
 					if (value == output(outW, outH, outD, outN))
-						result.TrySet(result.TryGet(numeric_limits<float>().min(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN), w + poolW, h + poolH, outD, outN);
+						result.TrySet(result.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN), w + poolW, h + poolH, outD, outN);
 				}
 			}
 			else if (type == EPoolingMode::Avg)
@@ -339,7 +347,7 @@ namespace Neuro
 				for (int poolH = 0; poolH < filterSize; ++poolH)
 				for (int poolW = 0; poolW < filterSize; ++poolW)
 				{
-					result.TrySet(result.TryGet(numeric_limits<float>().min(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN) / filterElementsNum, w + poolW, h + poolH, outD, outN);
+					result.TrySet(result.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN) / filterElementsNum, w + poolW, h + poolH, outD, outN);
 				}
 			}
 		}

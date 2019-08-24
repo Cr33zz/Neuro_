@@ -13,9 +13,10 @@ namespace Neuro
     using namespace std;
 
 	TensorOpCpu* Tensor::g_OpCpu = new TensorOpCpu();
-    TensorOpCpu* Tensor::g_OpMultiCpu = nullptr; //new TensorOpMultiCpu();
-    TensorOpCpu* Tensor::g_OpGpu = nullptr; //new TensorOpGpu();
+    TensorOpCpu* Tensor::g_OpMultiCpu = nullptr;
+    TensorOpCpu* Tensor::g_OpGpu = nullptr;
 	TensorOpCpu* Tensor::g_DefaultOpCpu = nullptr;
+    TensorOpCpu* Tensor::g_ForcedOp = nullptr;
 
 	//////////////////////////////////////////////////////////////////////////
 	Tensor::Tensor()
@@ -91,13 +92,25 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::SetDefaultOpMode(EOpMode mode)
 	{
-		g_DefaultOpCpu = GetOpMode(mode);
+		g_DefaultOpCpu = GetOpFromMode(mode);
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::SetForcedOpMode(EOpMode mode)
+    {
+        g_ForcedOp = GetOpFromMode(mode);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::ClearForcedOpMode()
+    {
+        g_ForcedOp = nullptr;
+    }
 
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::SetOpMode(EOpMode mode)
 	{
-		m_Op = GetOpMode(mode);
+		m_Op = GetOpFromMode(mode);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -125,7 +138,10 @@ namespace Neuro
 				m_Values[i] = min + (max - min) * rng.NextFloat();
 		};
 
-		fillUp(seed > 0 ? Random(seed) : Rng);
+        if (seed > 0)
+            fillUp(Random(seed));
+        else
+            fillUp(Rng);
 
 		return *this;
 	}
@@ -170,7 +186,7 @@ namespace Neuro
 		assert((!transposeT && Width() == t.Height()) || (transposeT && Width() == t.Width()));
 		assert(t.Depth() == Depth());
 
-		m_Op->Mul(false, transposeT, *this, t, result);
+		Op()->Mul(false, transposeT, *this, t, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -198,7 +214,7 @@ namespace Neuro
 	{
 		assert(SameDimensionsExceptBatches(t));
 
-		m_Op->MulElem(*this, t, result);
+		Op()->MulElem(*this, t, result);
 	}
 
 
@@ -274,7 +290,7 @@ namespace Neuro
 		assert(SameDimensionsExceptBatches(t));
 		assert(t.Batch() == result.Batch() || t.Batch() == 1);
 
-		m_Op->Add(alpha, *this, beta, t, result);
+		Op()->Add(alpha, *this, beta, t, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -321,7 +337,7 @@ namespace Neuro
 		assert(SameDimensionsExceptBatches(t));
 		assert(t.Batch() == result.Batch() || t.Batch() == 1);
 
-		m_Op->Sub(*this, t, result);
+		Op()->Sub(*this, t, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -394,7 +410,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Map(const function<float(float)>& func, Tensor& result) const
 	{
-		m_Op->Map(func, *this, result);
+		Op()->Map(func, *this, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -408,7 +424,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Map(const function<float(float, float)>& func, const Tensor& other, Tensor& result) const
 	{
-		m_Op->Map(func, *this, other, result);
+		Op()->Map(func, *this, other, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -423,7 +439,7 @@ namespace Neuro
 	Tensor Tensor::SumBatches() const
 	{
 		Tensor result(Shape(m_Shape.Width(), m_Shape.Height(), m_Shape.Depth(), 1));
-		m_Op->SumBatches(*this, result);
+		Op()->SumBatches(*this, result);
 		return result;
 	}
 
@@ -682,7 +698,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Transpose(Tensor& result) const
 	{
-		m_Op->Transpose(*this, result);
+		Op()->Transpose(*this, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -740,11 +756,32 @@ namespace Neuro
 		return result;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::NormalizedAcrossBatches(Tensor& result) const
+    {
+        float N = (float)Batch();
+        Tensor mean = SumBatches().Mul(1.f / N);
+        Tensor xmu = Sub(mean);
+        Tensor carre = xmu.Map([](float x) { return x * x; });
+        Tensor variance = carre.SumBatches().Mul(1.f / N);
+        Tensor sqrtvar = variance.Map([](float x) { return sqrt(x); });
+        Tensor invvar = sqrtvar.Map([](float x) { return 1.f / x; });
+        xmu.MulElem(invvar, result);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::NormalizedAcrossBatches() const
+    {
+        Tensor result(GetShape());
+        NormalizedAcrossBatches(result);
+        return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void Tensor::Conv2D(const Tensor& kernels, int stride, int padding, Tensor& result) const
 	{
 		assert(Depth() == kernels.Depth());
-		m_Op->Conv2D(*this, kernels, stride, padding, padding, result);
+		Op()->Conv2D(*this, kernels, stride, padding, padding, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -759,14 +796,14 @@ namespace Neuro
 	void Tensor::Conv2DInputsGradient(const Tensor& gradient, const Tensor& kernels, int stride, int padding, Tensor& inputsGradient) const
 	{
 		inputsGradient.Zero();
-		m_Op->Conv2DInputGradient(gradient, kernels, stride, padding, padding, inputsGradient);
+		Op()->Conv2DInputGradient(gradient, kernels, stride, padding, padding, inputsGradient);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, int padding, Tensor& kernelsGradient) const
 	{
 		kernelsGradient.Zero();
-		m_Op->Conv2DKernelsGradient(input, gradient, stride, padding, padding, kernelsGradient);
+		Op()->Conv2DKernelsGradient(input, gradient, stride, padding, padding, kernelsGradient);
 	}
 
     //////////////////////////////////////////////////////////////////////////
@@ -795,14 +832,14 @@ namespace Neuro
     void Tensor::Conv2DTransposedKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, int padding, Tensor& kernelsGradient) const
     {
         kernelsGradient.Zero();
-        m_Op->Conv2DKernelsGradient(input, gradient, stride, padding, padding, kernelsGradient);
+        Op()->Conv2DKernelsGradient(input, gradient, stride, padding, padding, kernelsGradient);
     }
 
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Pool2D(int filterSize, int stride, EPoolingMode type, int padding, Tensor& result) const
 	{
 		assert(result.Batch() == Batch());
-		m_Op->Pool2D(*this, filterSize, stride, type, padding, padding, result);
+		Op()->Pool2D(*this, filterSize, stride, type, padding, padding, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -818,13 +855,13 @@ namespace Neuro
 	void Tensor::Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, EPoolingMode type, int padding, Tensor& result) const
 	{
 		assert(output.SameDimensionsExceptBatches(outputGradient));
-		m_Op->Pool2DGradient(output, input, outputGradient, filterSize, stride, type, padding, padding, result);
+		Op()->Pool2DGradient(output, input, outputGradient, filterSize, stride, type, padding, padding, result);
 	}
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::UpSample2D(int scaleFactor, Tensor& result) const
     {
-        m_Op->UpSample2D(*this, scaleFactor, result);
+        Op()->UpSample2D(*this, scaleFactor, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -838,25 +875,25 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::UpSample2DGradient(const Tensor& outputGradient, int scaleFactor, Tensor& result) const
     {
-        m_Op->UpSample2DGradient(outputGradient, scaleFactor, result);
+        Op()->UpSample2DGradient(outputGradient, scaleFactor, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::BatchNormalization(const Tensor& gamma, const Tensor& beta, const Tensor& runningMean, const Tensor& runningVar, Tensor& result) const
     {
-        m_Op->BatchNormalization(*this, gamma, beta, runningMean, runningVar, result);
+        Op()->BatchNormalization(*this, gamma, beta, runningMean, runningVar, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::BatchNormalizationTrain(const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveVariance, Tensor& result) const
     {
-        m_Op->BatchNormalizationTrain(*this, gamma, beta, momentum, runningMean, runningVar, saveMean, saveVariance, result);
+        Op()->BatchNormalizationTrain(*this, gamma, beta, momentum, runningMean, runningVar, saveMean, saveVariance, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedVariance, Tensor& gammaGradient, Tensor& betaGradient, Tensor& inputGradient) const
     {
-        m_Op->BatchNormalizationGradient(input, gamma, outputGradient, savedMean, savedVariance, gammaGradient, betaGradient, inputGradient);
+        Op()->BatchNormalizationGradient(input, gamma, outputGradient, savedMean, savedVariance, gammaGradient, betaGradient, inputGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1117,7 +1154,7 @@ namespace Neuro
 	{
 		CopyToHost();
 		maxIndex = -1;
-		float maxValue = numeric_limits<float>().min();
+		float maxValue = -numeric_limits<float>().max();
 
 		if (batch < 0)
 		{
@@ -1146,25 +1183,25 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Elu(float alpha, Tensor& result) const
 	{
-		m_Op->Elu(*this, alpha, result);
+		Op()->Elu(*this, alpha, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& result) const
 	{
-		m_Op->EluGradient(output, outputGradient, alpha, result);
+		Op()->EluGradient(output, outputGradient, alpha, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Softmax(Tensor& result) const
 	{
-		m_Op->Softmax(*this, result);
+		Op()->Softmax(*this, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
 	{
-		m_Op->SoftmaxGradient(output, outputGradient, result);
+		Op()->SoftmaxGradient(output, outputGradient, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -1214,7 +1251,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-	Neuro::TensorOpCpu* Tensor::GetOpMode(EOpMode mode)
+	Neuro::TensorOpCpu* Tensor::GetOpFromMode(EOpMode mode)
 	{
 		switch (mode)
 		{

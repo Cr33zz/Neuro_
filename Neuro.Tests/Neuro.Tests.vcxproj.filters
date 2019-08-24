@@ -52,5 +52,8 @@
     <ClCompile Include="src\UpSampling2DLayerTests.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\TensorOpGpuTests.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

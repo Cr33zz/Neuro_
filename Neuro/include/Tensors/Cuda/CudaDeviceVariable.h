@@ -26,7 +26,7 @@ namespace Neuro
 
         CudaDeviceVariable(const CudaDeviceVariable<T>& var, size_t lengthOffset)
         {
-            m_DevPtr = (T*)var.m_DevPtr + lengthOffset * var.m_TypeSize;
+            m_DevPtr = (T*)var.m_DevPtr + lengthOffset;
             m_TypeSize = var.m_TypeSize;
             m_Length = var.m_Length - lengthOffset;
             m_IsOwner = false;

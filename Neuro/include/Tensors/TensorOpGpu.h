@@ -19,8 +19,8 @@ namespace Neuro
 
         virtual void Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& result) const override;
         virtual void Mul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& result) const override;
-        virtual void Transpose(const Tensor& t, Tensor& result) const override;
-        virtual void Conv2D(const Tensor& t, const Tensor& kernels, int stride, int paddingX, int paddingY, Tensor& result) const override;
+        virtual void Transpose(const Tensor& input, Tensor& result) const override;
+        virtual void Conv2D(const Tensor& input, const Tensor& kernels, int stride, int paddingX, int paddingY, Tensor& result) const override;
         virtual void Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, int stride, int paddingX, int paddingY, Tensor& inputGradients) const override;
         virtual void Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, int paddingX, int paddingY, Tensor& kernelsGradient) const override;
         virtual void Pool2D(const Tensor& t, int filterSize, int stride, EPoolingMode type, int paddingX, int paddingY, Tensor& result) const override;
@@ -38,6 +38,8 @@ namespace Neuro
         static cudnnPoolingMode_t GetCudnnPoolType(EPoolingMode type);
         static void GetKernelRunParams(int count, dim3& blocks, dim3& threads);
         static int GetBlocksNum(int count);
+        static void CudaAssert(cudaError_t code);
+        static void CudnnAssert(cudnnStatus_t code);
 
         static bool s_Initialized;
         static cudaDeviceProp s_CudaDevProp;

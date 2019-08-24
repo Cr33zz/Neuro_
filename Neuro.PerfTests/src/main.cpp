@@ -7,11 +7,23 @@ int main()
 	//SimpleNetPerfTests::Run();
     //TensorPerfTests::Run();
 
-    Tensor input(Shape(27, 27, 2, 3)); input.FillWithRand();
-    Tensor output = input.Pool2D(3, 2, EPoolingMode::Max, 0);
-    Tensor outputGradient(output.GetShape()); outputGradient.FillWithRand();
+    Tensor::SetDefaultOpMode(EOpMode::CPU);
+    Tensor input(Shape(2, 2, 3, 3)); input.FillWithRand();
+    Tensor gamma(Shape(2, 2, 3, 1)); gamma.FillWithRand();
+    Tensor beta(Shape(2, 2, 3, 1)); beta.FillWithRand();
+    Tensor runningMean(Shape(2, 2, 3, 1)); runningMean.FillWithRand();
+    Tensor runningVariance(Shape(2, 2, 3, 1)); runningVariance.FillWithRand(-1, 0, 1);
 
-    bool res = TestTools::VerifyActivationFuncDerivative(ELU(1), 3, EOpMode::GPU);
+    Tensor result(input.GetShape());
+    input.BatchNormalization(gamma, beta, runningMean, runningVariance, result);
+
+    Tensor::SetDefaultOpMode(EOpMode::CPU);
+    input.SetOpMode(EOpMode::GPU);
+    Tensor result2(input.GetShape());
+    input.BatchNormalization(gamma, beta, runningMean, runningVariance, result2);
+
+    bool eq = result.Equals(result2);
+
 
 	return 0;
 }

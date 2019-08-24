@@ -29,6 +29,9 @@ namespace Neuro
         Tensor(string bmpFile, bool grayScale);
 
 		static void SetDefaultOpMode(EOpMode mode);
+        static void SetForcedOpMode(EOpMode mode);
+        static void ClearForcedOpMode();
+
         void SetOpMode(EOpMode mode);
 
         int Width() const { return m_Shape.Width(); };
@@ -147,6 +150,9 @@ namespace Neuro
         Tensor FlattenVert() const;
         void Rotated180(Tensor& result) const;
         Tensor Rotated180() const;
+
+        void NormalizedAcrossBatches(Tensor& result) const;
+        Tensor NormalizedAcrossBatches() const;
 
         void Conv2D(const Tensor& kernels, int stride, int padding, Tensor& result) const;
         Tensor Conv2D(const Tensor& kernels, int stride, int padding) const;
@@ -267,9 +273,12 @@ namespace Neuro
         mutable vector<float_t> m_Values;
 		Shape m_Shape;
 
-		static TensorOpCpu* GetOpMode(EOpMode mode);
+        TensorOpCpu* Op() const { return g_ForcedOp ? g_ForcedOp : m_Op; }
+
+		static TensorOpCpu* GetOpFromMode(EOpMode mode);
 
 		static TensorOpCpu* g_DefaultOpCpu;
+        static TensorOpCpu* g_ForcedOp;
 		static TensorOpCpu* g_OpCpu;
         static TensorOpCpu* g_OpMultiCpu;
         static TensorOpCpu* g_OpGpu;

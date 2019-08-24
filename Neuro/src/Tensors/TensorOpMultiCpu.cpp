@@ -86,30 +86,30 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Transpose(const Tensor& t, Tensor& result) const
+    void TensorOpMultiCpu::Transpose(const Tensor& input, Tensor& result) const
     {
-        t.CopyToHost();
+        input.CopyToHost();
         result.OverrideHost();
 
-        parallel_for(0, t.Batch(), [&](int n)
+        parallel_for(0, input.Batch(), [&](int n)
         {
-            parallel_for(0, t.Depth(), [&](int d)
+            parallel_for(0, input.Depth(), [&](int d)
             {
-                for (int h = 0; h < t.Height(); ++h)
-                for (int w = 0; w < t.Width(); ++w)
-                    result(h, w, d, n) = t(w, h, d, n);
+                for (int h = 0; h < input.Height(); ++h)
+                for (int w = 0; w < input.Width(); ++w)
+                    result(h, w, d, n) = input(w, h, d, n);
             });
         });
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Conv2D(const Tensor& t, const Tensor& kernels, int stride, int paddingX, int paddingY, Tensor& result) const
+    void TensorOpMultiCpu::Conv2D(const Tensor& input, const Tensor& kernels, int stride, int paddingX, int paddingY, Tensor& result) const
     {
-        t.CopyToHost();
+        input.CopyToHost();
         kernels.CopyToHost();
         result.OverrideHost();
 
-        parallel_for(0, t.Batch(), [&](int n)
+        parallel_for(0, input.Batch(), [&](int n)
         {
             parallel_for(0, kernels.Batch(), [&](int outD)
             {
@@ -121,7 +121,7 @@ namespace Neuro
                     for (int kernelD = 0; kernelD < kernels.Depth(); ++kernelD)
                     for (int kernelH = 0; kernelH < kernels.Height(); ++kernelH)
                     for (int kernelW = 0; kernelW < kernels.Width(); ++kernelW)
-                        val += t.TryGet(0, w + kernelW, h + kernelH, kernelD, n) * kernels(kernelW, kernelH, kernelD, outD);
+                        val += input.TryGet(0, w + kernelW, h + kernelH, kernelD, n) * kernels(kernelW, kernelH, kernelD, outD);
 
                     result(outW, outH, outD, n) = val;
                 }
@@ -325,9 +325,19 @@ namespace Neuro
         auto& t2Values = t2.GetValues();
         auto& resultValues = result.GetValues();
 
-        parallel_for(0, (int)t1Values.size(), [&](int i)
+        if (t2.Batch() == t1.Batch())
         {
-            resultValues[i] = func(t1Values[i], t2Values[i]);
+            parallel_for(0, (int)t1Values.size(), [&](int i)
+            {
+                resultValues[i] = func(t1Values[i], t2Values[i]);
+            });
+            return;
+        }
+
+        parallel_for(0, t1.Batch(), [&](int n)
+        {
+            for (int i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
+                resultValues[idx] = func(t1Values[idx], t2Values[i]);
         });
     }
 

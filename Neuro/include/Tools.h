@@ -154,7 +154,7 @@ namespace Neuro
     //    }
     //}
 
-    void LoadCSVData(const string& filename, int outputsNum, vector<tensor_ptr_vec_t>& inputs, vector<tensor_ptr_vec_t>& outputs, bool outputsOneHotEncoded = false);
+    void LoadCSVData(const string& filename, int outputsNum, Tensor& inputs, Tensor& outputs, bool outputsOneHotEncoded = false);
 
     //static vector<Data> MergeData(const vector<Data>& dataList, int batchSize = -1)
     //{

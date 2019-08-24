@@ -13,10 +13,10 @@ namespace NeuroTests
             Tensor t1(Shape(82, 40, 3, 3)); t1.FillWithRand();
             Tensor t2(Shape(40, 82, 3)); t2.FillWithRand();
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
+            Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor r = t1.Mul(t2);
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::GPU);
+            Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor r2 = t1.Mul(t2);
 
             Assert::IsTrue(r.Equals(r2));
@@ -27,10 +27,10 @@ namespace NeuroTests
             Tensor t1(Shape(8, 9, 3, 3)); t1.FillWithRand();
             Tensor t2(Shape(8, 9, 3, 1)); t2.FillWithRand();
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
+            Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor r = t1.Add(t2);
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::GPU);
+            Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor r2 = t1.Add(t2);
 
             Assert::IsTrue(r.Equals(r2));
@@ -41,10 +41,10 @@ namespace NeuroTests
             Tensor t1(Shape(8, 9, 3, 3)); t1.FillWithRand();
             Tensor t2(Shape(8, 9, 3, 3)); t2.FillWithRand();
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
+            Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor r = t1.Add(t2);
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::GPU);
+            Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor r2 = t1.Add(t2);
 
             Assert::IsTrue(r.Equals(r2));
@@ -55,10 +55,10 @@ namespace NeuroTests
             Tensor t1(Shape(8, 9, 3, 3)); t1.FillWithRand();
             Tensor t2(Shape(8, 9, 3, 1)); t2.FillWithRand();
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
+            Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor r = t1.Sub(t2);
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::GPU);
+            Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor r2 = t1.Sub(t2);
 
             Assert::IsTrue(r.Equals(r2));
@@ -69,10 +69,10 @@ namespace NeuroTests
             Tensor t1(Shape(8, 9, 3, 3)); t1.FillWithRand();
             Tensor t2(Shape(8, 9, 3, 3)); t2.FillWithRand();
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
+            Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor r = t1.Sub(t2);
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::GPU);
+            Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor r2 = t1.Sub(t2);
 
             Assert::IsTrue(r.Equals(r2));
@@ -83,11 +83,11 @@ namespace NeuroTests
             Tensor t(Shape(26, 26, 3, 3)); t.FillWithRand();
             Tensor kernals(Shape(3, 3, 3, 2)); kernals.FillWithRand();
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
-            Tensor r = t.Conv2D(kernals, 1, Tensor::EPaddingType::Valid);
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            Tensor r = t.Conv2D(kernals, 1, 0);
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::GPU);
-            Tensor r2 = t.Conv2D(kernals, 1, Tensor::EPaddingType::Valid);
+            Tensor::SetForcedOpMode(EOpMode::GPU);
+            Tensor r2 = t.Conv2D(kernals, 1, 0);
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -99,13 +99,13 @@ namespace NeuroTests
             Tensor kernels(Shape(3, 3, 3, 2)); kernels.FillWithRand();
             Tensor gradient(output); gradient.FillWithRand();
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
+            Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor inputGradient(input);
-            gradient.Conv2DInputsGradient(gradient, kernels, 1, Tensor::EPaddingType::Valid, inputGradient);
+            gradient.Conv2DInputsGradient(gradient, kernels, 1, 0, inputGradient);
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::GPU);
+            Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor inputGradient2(input);
-            gradient.Conv2DInputsGradient(gradient, kernels, 1, Tensor::EPaddingType::Valid, inputGradient2);
+            gradient.Conv2DInputsGradient(gradient, kernels, 1, 0, inputGradient2);
 
             Assert::IsTrue(inputGradient.Equals(inputGradient2));
         }
@@ -117,39 +117,39 @@ namespace NeuroTests
             Tensor kernels(Shape(3, 3, 3, 2)); kernels.FillWithRand();
             Tensor gradient(output); gradient.FillWithRand();
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
+            Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor kernelsGradient(kernels);
-            input.Conv2DKernelsGradient(input, gradient, 1, Tensor::EPaddingType::Valid, kernelsGradient);
+            input.Conv2DKernelsGradient(input, gradient, 1, 0, kernelsGradient);
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::GPU);
+            Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor kernelsGradient2(kernels);
-            input.Conv2DKernelsGradient(input, gradient, 1, Tensor::EPaddingType::Valid, kernelsGradient2);
+            input.Conv2DKernelsGradient(input, gradient, 1, 0, kernelsGradient2);
 
             Assert::IsTrue(kernelsGradient.Equals(kernelsGradient2));
         }
 
         TEST_METHOD(Pool_Max_Valid_CompareWithCpuResult)
         {
-            Tensor t(Shape(27, 27, 2, 3)); t.FillWithRand();
+            Tensor t(Shape(27, 27, 2, 3)); t.FillWithRand(10);
             
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
-            Tensor r = t.Pool(3, 2, Tensor::EPoolType::Max, Tensor::EPaddingType::Valid);
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            Tensor r = t.Pool2D(3, 2, EPoolingMode::Max, 0);
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::GPU);
-            Tensor r2 = t.Pool(3, 2, Tensor::EPoolType::Max, Tensor::EPaddingType::Valid);
+            Tensor::SetForcedOpMode(EOpMode::GPU);
+            Tensor r2 = t.Pool2D(3, 2, EPoolingMode::Max, 0);
 
             Assert::IsTrue(r.Equals(r2));
         }
 
         TEST_METHOD(Pool_Avg_Valid_CompareWithCpuResult)
         {
-            Tensor t(Shape(27, 27, 2, 3)); t.FillWithRand();
+            Tensor t(Shape(27, 27, 2, 3)); t.FillWithRand(10);
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
-            Tensor r = t.Pool(3, 2, Tensor::EPoolType::Avg, Tensor::EPaddingType::Valid);
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            Tensor r = t.Pool2D(3, 2, EPoolingMode::Avg, 0);
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::GPU);
-            Tensor r2 = t.Pool(3, 2, Tensor::EPoolType::Avg, Tensor::EPaddingType::Valid);
+            Tensor::SetForcedOpMode(EOpMode::GPU);
+            Tensor r2 = t.Pool2D(3, 2, EPoolingMode::Avg, 0);
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -157,16 +157,16 @@ namespace NeuroTests
         TEST_METHOD(PoolGradient_Max_Valid_CompareWithCpuResult)
         {
             Tensor input(Shape(27, 27, 2, 3)); input.FillWithRand();
-            Tensor output = input.Pool(3, 2, Tensor::EPoolType::Max, Tensor::EPaddingType::Valid);
+            Tensor output = input.Pool2D(3, 2, EPoolingMode::Max, 0);
             Tensor outputGradient(output.GetShape()); outputGradient.FillWithRand();
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
+            Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor r(input.GetShape());
-            output.PoolGradient(output, input, outputGradient, 3, 2, Tensor::EPoolType::Max, Tensor::EPaddingType::Valid, r);
+            output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Max, 0, r);
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::GPU);
+            Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor r2(input.GetShape());
-            output.PoolGradient(output, input, outputGradient, 3, 2, Tensor::EPoolType::Max, Tensor::EPaddingType::Valid, r2);
+            output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Max, 0, r2);
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -174,18 +174,38 @@ namespace NeuroTests
         TEST_METHOD(PoolGradient_Avg_Valid_CompareWithCpuResult)
         {
             Tensor input(Shape(27, 27, 2, 3)); input.FillWithRand();
-            Tensor output = input.Pool(3, 2, Tensor::EPoolType::Avg, Tensor::EPaddingType::Valid);
+            Tensor output = input.Pool2D(3, 2, EPoolingMode::Avg, 0);
             Tensor outputGradient(output.GetShape()); outputGradient.FillWithRand();
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::CPU);
+            Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor r(input.GetShape());
-            output.PoolGradient(output, input, outputGradient, 3, 2, Tensor::EPoolType::Avg, Tensor::EPaddingType::Valid, r);
+            output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Avg, 0, r);
 
-            Tensor::SetDefaultOpMode(Tensor::EOpMode::GPU);
+            Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor r2(input.GetShape());
-            output.PoolGradient(output, input, outputGradient, 3, 2, Tensor::EPoolType::Avg, Tensor::EPaddingType::Valid, r2);
+            output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Avg, 0, r2);
 
             Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(BatchNormalization_CompareWithCpuResult)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+            Tensor input(Shape(2, 2, 3, 3)); input.FillWithRand();
+            Tensor gamma(Shape(2, 2, 3, 1)); gamma.FillWithRand();
+            Tensor beta(Shape(2, 2, 3, 1)); beta.FillWithRand();
+            Tensor runningMean(Shape(2, 2, 3, 1)); runningMean.FillWithRand();
+            Tensor runningVariance(Shape(2, 2, 3, 1)); runningVariance.FillWithRand(-1, 0, 1);
+
+            Tensor result(input.GetShape());
+            input.BatchNormalization(gamma, beta, runningMean, runningVariance, result);
+
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+            input.SetOpMode(EOpMode::GPU);
+            Tensor result2(input.GetShape());
+            input.BatchNormalization(gamma, beta, runningMean, runningVariance, result2);
+
+            Assert::IsTrue(result.Equals(result2));
         }
     };
 }

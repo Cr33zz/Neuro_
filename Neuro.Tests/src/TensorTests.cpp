@@ -361,6 +361,18 @@ namespace NeuroTests
                 Assert::AreEqual((double)result.GetFlat(i), (double)-t.GetFlat(i), 1e-7);
         }
 
+        TEST_METHOD(NormalizedAcrossBatches)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ 0, 0, 1, 1 }, Shape(2, 1, 1, 2));
+            auto result = t.NormalizedAcrossBatches();
+            Tensor correct({ -1, -1, 1, 1 }, t.GetShape());
+
+            for (int i = 0; i < t.GetShape().Length; ++i)
+                Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 1e-7);
+        }
+
         TEST_METHOD(Sum_Per_Batch)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);

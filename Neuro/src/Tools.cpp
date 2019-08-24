@@ -98,32 +98,43 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void LoadCSVData(const string& filename, int outputsNum, vector<tensor_ptr_vec_t>& inputs, vector<tensor_ptr_vec_t>& outputs, bool outputsOneHotEncoded /*= false*/)
+    void LoadCSVData(const string& filename, int outputsNum, Tensor& inputs, Tensor& outputs, bool outputsOneHotEncoded)
     {
         ifstream infile(filename.c_str());
         string line;
+
+        vector<float> inputValues;
+        vector<float> outputValues;
+        int batches = 0;
+        int inputBatchSize = 0;
 
         while (getline(infile, line))
         {
             auto tmp = Split(line, ",");
 
-            auto input = new Tensor(Shape(1, (int)tmp.size() - (outputsOneHotEncoded ? 1 : outputsNum)));
-            auto output = new Tensor(Shape(1, outputsNum));
+            ++batches;
+            inputBatchSize = (int)tmp.size() - (outputsOneHotEncoded ? 1 : outputsNum);
 
-            for (int i = 0; i < input->Length(); ++i)
-                (*input)(0, i) = (float)atof(tmp[i].c_str());
+            auto output = new Tensor();
+
+            for (int i = 0; i < inputBatchSize; ++i)
+                inputValues.push_back((float)atof(tmp[i].c_str()));
 
             for (int i = 0; i < (outputsOneHotEncoded ? 1 : outputsNum); ++i)
             {
-                float v = (float)atof(tmp[input->Length() + i].c_str());
-                if (outputsOneHotEncoded)
-                    (*output)(0, (int)v) = 1;
-                else
-                    (*output)(0, i) = v;
-            }
+                float v = (float)atof(tmp[inputBatchSize + i].c_str());
 
-            inputs.push_back({ input });
-            outputs.push_back({ output });
+                if (outputsOneHotEncoded)
+                {
+                    for (int e = 0; e < outputsNum; ++e)
+                        outputValues.push_back(e == (int)v ? 1.f : 0.f);
+                }
+                else
+                    outputValues.push_back(v);
+            }
         }
+
+        inputs = Tensor(inputValues, Shape(1, inputBatchSize, 1, batches));
+        outputs = Tensor(outputValues, Shape(1, outputsNum, 1, batches));
     }
 }

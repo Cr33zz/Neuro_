@@ -21,7 +21,7 @@ namespace Neuro
         //private ChartArea ChartArea = new ChartArea();
         //private Legend Legend = new Legend("leg");
         float m_DataMinX = numeric_limits<float>().max();
-        float m_DataMaxX = numeric_limits<float>().min();
+        float m_DataMaxX = -numeric_limits<float>().max();
         string m_OutputFileName;
     };
 }

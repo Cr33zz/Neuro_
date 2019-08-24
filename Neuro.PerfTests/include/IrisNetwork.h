@@ -22,12 +22,14 @@ public:
         model->AddLayer(new Dropout(model->LastLayer(), 0.2f));
         model->AddLayer(new Dense(model->LastLayer(), 3, new Softmax()));
         auto net = new NeuralNetwork(model, "test");
-        net->Optimize(new Adam(), new CrossEntropy());
+        net->Optimize(new Adam(), new BinaryCrossEntropy());
 
-        vector<tensor_ptr_vec_t> inputs;
-        vector<tensor_ptr_vec_t> outputs;
+        Tensor inputs;
+        Tensor outputs;
 
         LoadCSVData("iris_data.csv", 1, inputs, outputs, true);
+
+        inputs.NormalizedAcrossBatches(inputs);
 
         Stopwatch timer;
         timer.Start();
