@@ -11,13 +11,14 @@ namespace Neuro
 	public:
 		Random(unsigned int seed = 0);
 
-		int Next(int max) const;
-		int Next(int min, int max) const;
-		float NextFloat() const;
-		float NextFloat(float max) const;
-		float NextFloat(float min, float max) const;
+		int Next(int max);
+		int Next(int min, int max);
+		float NextFloat();
+		float NextFloat(float max);
+		float NextFloat(float min, float max);
 
 	private:
-		mutable mt19937 m_Engine;
+		mt19937 m_Engine;
+        int m_GeneratedNumbersCount = 0;
 	};
 }
