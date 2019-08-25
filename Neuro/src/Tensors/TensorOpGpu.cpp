@@ -46,29 +46,39 @@ namespace Neuro
 
         if (t2.Batch() == t1.Batch())
         {
-            cublasSgeam(
+            CUDA_CHECK(cublasSgeam(
                 s_CublasHandle,
-                CUBLAS_OP_N, CUBLAS_OP_N,
-                t1.Length(), 1,
+                CUBLAS_OP_N, 
+                CUBLAS_OP_N,
+                t1.Length(), 
+                1,
                 &alpha,
-                t1.GetDevicePtr(), t1.Length(),
+                t1.GetDevicePtr(), 
+                t1.Length(),
                 &beta,
-                t2.GetDevicePtr(), t2.Length(),
-                result.GetDevicePtr(), result.Length());
+                t2.GetDevicePtr(), 
+                t2.Length(),
+                result.GetDevicePtr(), 
+                result.Length()));
             return;
         }
 
         for (int n = 0; n < t1.Batch(); ++n)
         {
-            cublasSgeam(
+            CUDA_CHECK(cublasSgeam(
                 s_CublasHandle,
-                CUBLAS_OP_N, CUBLAS_OP_N,
-                t1.BatchLength(), 1,
+                CUBLAS_OP_N, 
+                CUBLAS_OP_N,
+                t1.BatchLength(), 
+                1,
                 &alpha,
-                CudaDeviceVariable<float>(t1.GetDeviceVar(), n * t1.BatchLength()).GetDevicePtr(), t1.BatchLength(),
+                CudaDeviceVariable<float>(t1.GetDeviceVar(), n * t1.BatchLength()).GetDevicePtr(), 
+                t1.BatchLength(),
                 &beta,
-                t2.GetDevicePtr(), t2.BatchLength(),
-                CudaDeviceVariable<float>(result.GetDeviceVar(), n * result.BatchLength()).GetDevicePtr(), result.BatchLength());
+                t2.GetDevicePtr(), 
+                t2.BatchLength(),
+                CudaDeviceVariable<float>(result.GetDeviceVar(), n * result.BatchLength()).GetDevicePtr(), 
+                result.BatchLength()));
         }
     }
 
@@ -83,27 +93,32 @@ namespace Neuro
         int n = t2.Width();
         int k = t1.Width();
 
-        //treat depth as batch
         float alpha = 1, beta = 0;
 
-        for (int n = 0; n < max(t1.Batch(), t2.Batch()); ++n)
+        for (int b = 0; b < max(t1.Batch(), t2.Batch()); ++b)
         {
-            int t1N = min(n, t1.Batch() - 1);
-            int t2N = min(n, t2.Batch() - 1);
+            int t1B = min(b, t1.Batch() - 1);
+            int t2B = min(b, t2.Batch() - 1);
 
             for (int d = 0; d < t1.Depth(); ++d)
             {
-                cublasGemmEx(
+                CUDA_CHECK(cublasGemmEx(
                     s_CublasHandle,
                     transposeT2 ? CUBLAS_OP_T : CUBLAS_OP_N,
                     transposeT1 ? CUBLAS_OP_T : CUBLAS_OP_N,
-                    n, m, k,  // trick to convert row major to column major
+                    n, 
+                    m, 
+                    k,  // trick to convert row major to column major
                     &alpha,
-                    CudaDeviceVariable<float>(t2.GetDeviceVar(), d * t2.GetShape().Dim0Dim1 + t2N * t2.BatchLength()).GetDevicePtr(), CUDA_R_32F, n,
-                    CudaDeviceVariable<float>(t1.GetDeviceVar(), d * t1.GetShape().Dim0Dim1 + t1N * t1.BatchLength()).GetDevicePtr(), CUDA_R_32F, k,
+                    CudaDeviceVariable<float>(t2.GetDeviceVar(), d * t2.GetShape().Dim0Dim1 + t2B * t2.BatchLength()).GetDevicePtr(), CUDA_R_32F, 
+                    n,
+                    CudaDeviceVariable<float>(t1.GetDeviceVar(), d * t1.GetShape().Dim0Dim1 + t1B * t1.BatchLength()).GetDevicePtr(), CUDA_R_32F, 
+                    k,
                     &beta,
-                    CudaDeviceVariable<float>(result.GetDeviceVar(), d * result.GetShape().Dim0Dim1 + n * result.BatchLength()).GetDevicePtr(), CUDA_R_32F, n,
-                    CUDA_R_32F, CUBLAS_GEMM_DEFAULT);
+                    CudaDeviceVariable<float>(result.GetDeviceVar(), d * result.GetShape().Dim0Dim1 + b * result.BatchLength()).GetDevicePtr(), CUDA_R_32F, 
+                    n,
+                    CUDA_R_32F, 
+                    CUBLAS_GEMM_DEFAULT));
             }
         }
 
@@ -157,15 +172,19 @@ namespace Neuro
         {
             CudaDeviceVariable<float> tVar(input.GetDeviceVar(), b * input.GetShape().Dim0Dim1);
 
-            cublasSgeam(
+            CUDA_CHECK(cublasSgeam(
                 s_CublasHandle,
                 CUBLAS_OP_T,
-                CUBLAS_OP_N, m, n,  // trick to convert row major to column major
+                CUBLAS_OP_N, 
+                m, 
+                n,  // trick to convert row major to column major
                 &alpha,
-                tVar.GetDevicePtr(), n,
+                tVar.GetDevicePtr(), 
+                n,
                 &beta,
-                tVar.GetDevicePtr(), m,
-                CudaDeviceVariable<float>(result.GetDeviceVar(), b * result.GetShape().Dim0Dim1).GetDevicePtr(), m);
+                tVar.GetDevicePtr(), 
+                m,
+                CudaDeviceVariable<float>(result.GetDeviceVar(), b * result.GetShape().Dim0Dim1).GetDevicePtr(), m));
         }
     }
 
@@ -194,7 +213,7 @@ namespace Neuro
         output.m_GpuData.UpdateWorkspace(output.m_GpuData.m_ConvWorkspace, workspaceSize);
 
         float alpha = 1, beta = 0;
-        CUDNN_CHECK(cudnnConvolutionForward(
+        CUDA_CHECK(cudnnConvolutionForward(
             s_CudnnHandle, 
             &alpha, 
             inputDesc, 
@@ -235,7 +254,7 @@ namespace Neuro
         inputGradients.m_GpuData.UpdateWorkspace(inputGradients.m_GpuData.m_ConvBackWorkspace, workspaceSize);
 
         float alpha = 1, beta = 0;
-        CUDNN_CHECK(cudnnConvolutionBackwardData(
+        CUDA_CHECK(cudnnConvolutionBackwardData(
             s_CudnnHandle, 
             &alpha, 
             kernelsDesc, 
@@ -276,7 +295,7 @@ namespace Neuro
         kernelsGradient.m_GpuData.UpdateWorkspace(kernelsGradient.m_GpuData.m_ConvBackKernelWorkspace, workspaceSize);
 
         float alpha = 1, beta = 0;
-        CUDNN_CHECK(cudnnConvolutionBackwardFilter(
+        CUDA_CHECK(cudnnConvolutionBackwardFilter(
             s_CudnnHandle, 
             &alpha, 
             inputDesc, 
@@ -293,29 +312,29 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Pool2D(const Tensor& t, int filterSize, int stride, EPoolingMode type, int paddingX, int paddingY, Tensor& result) const
+    void TensorOpGpu::Pool2D(const Tensor& input, int filterSize, int stride, EPoolingMode type, int paddingX, int paddingY, Tensor& output) const
     {
-        t.CopyToDevice();
-        result.CopyToDevice();
+        input.CopyToDevice();
+        output.CopyToDevice();
 
         cudnnPoolingDescriptor_t poolingDesc; cudnnCreatePoolingDescriptor(&poolingDesc);
-        cudnnTensorDescriptor_t tDesc; cudnnCreateTensorDescriptor(&tDesc);
-        cudnnTensorDescriptor_t resultDesc; cudnnCreateTensorDescriptor(&resultDesc);
+        cudnnTensorDescriptor_t inputDesc; cudnnCreateTensorDescriptor(&inputDesc);
+        cudnnTensorDescriptor_t outputDesc; cudnnCreateTensorDescriptor(&outputDesc);
 
         cudnnSetPooling2dDescriptor(poolingDesc, GetCudnnPoolType(type), CUDNN_NOT_PROPAGATE_NAN, filterSize, filterSize, paddingX, paddingY, stride, stride);
-        cudnnSetTensor4dDescriptor(tDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, t.GetShape().Dimensions[3], t.GetShape().Dimensions[2], t.GetShape().Dimensions[1], t.GetShape().Dimensions[0]);
-        cudnnSetTensor4dDescriptor(resultDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, result.GetShape().Dimensions[3], result.GetShape().Dimensions[2], result.GetShape().Dimensions[1], result.GetShape().Dimensions[0]);
+        cudnnSetTensor4dDescriptor(inputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
+        cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, output.GetShape().Dimensions[3], output.GetShape().Dimensions[2], output.GetShape().Dimensions[1], output.GetShape().Dimensions[0]);
 
         float alpha = 1, beta = 0;
-        cudnnPoolingForward(
+        CUDA_CHECK(cudnnPoolingForward(
             s_CudnnHandle, 
             poolingDesc, 
             &alpha, 
-            tDesc, 
-            t.GetDevicePtr(), 
+            inputDesc, 
+            input.GetDevicePtr(), 
             &beta, 
-            resultDesc, 
-            result.GetDevicePtr());
+            outputDesc, 
+            output.GetDevicePtr()));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -339,7 +358,19 @@ namespace Neuro
         cudnnSetTensor4dDescriptor(resultDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, result.GetShape().Dimensions[3], result.GetShape().Dimensions[2], result.GetShape().Dimensions[1], result.GetShape().Dimensions[0]);
 
         float alpha = 1, beta = 0;
-        cudnnPoolingBackward(s_CudnnHandle, poolingDesc, &alpha, outputDesc, output.GetDevicePtr(), outputGradientDesc, outputGradient.GetDevicePtr(), inputDesc, input.GetDevicePtr(), &beta, resultDesc, result.GetDevicePtr());
+        CUDA_CHECK(cudnnPoolingBackward(
+            s_CudnnHandle, 
+            poolingDesc, 
+            &alpha, 
+            outputDesc, 
+            output.GetDevicePtr(), 
+            outputGradientDesc, 
+            outputGradient.GetDevicePtr(), 
+            inputDesc, 
+            input.GetDevicePtr(), 
+            &beta, 
+            resultDesc, 
+            result.GetDevicePtr()));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -359,7 +390,7 @@ namespace Neuro
         cudnnSetTensor4dDescriptor(gammaBetaMeanVarDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, gamma.GetShape().Dimensions[3], gamma.GetShape().Dimensions[2], gamma.GetShape().Dimensions[1], gamma.GetShape().Dimensions[0]);
 
         float alpha = 1, _beta = 0;
-        cudnnBatchNormalizationForwardInference(
+        CUDA_CHECK(cudnnBatchNormalizationForwardInference(
             s_CudnnHandle,
             CUDNN_BATCHNORM_SPATIAL,
             &alpha,
@@ -373,7 +404,7 @@ namespace Neuro
             beta.GetDevicePtr(),            
             runningMean.GetDevicePtr(),
             runningVar.GetDevicePtr(),
-            _EPSILON);
+            _EPSILON));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -395,7 +426,7 @@ namespace Neuro
         cudnnSetTensor4dDescriptor(gammaBetaMeanVarDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, gamma.GetShape().Dimensions[3], gamma.GetShape().Dimensions[2], gamma.GetShape().Dimensions[1], gamma.GetShape().Dimensions[0]);
 
         float alpha = 1, _beta = 0;
-        cudnnBatchNormalizationForwardTraining(
+        CUDA_CHECK(cudnnBatchNormalizationForwardTraining(
             s_CudnnHandle,
             CUDNN_BATCHNORM_SPATIAL,
             &alpha,
@@ -412,7 +443,7 @@ namespace Neuro
             runningVar.GetDevicePtr(),
             _EPSILON,
             saveMean.GetDevicePtr(),
-            saveVariance.GetDevicePtr());
+            saveVariance.GetDevicePtr()));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -434,7 +465,7 @@ namespace Neuro
         cudnnSetTensor4dDescriptor(gammaBetaGradientDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, gamma.GetShape().Dimensions[3], gamma.GetShape().Dimensions[2], gamma.GetShape().Dimensions[1], gamma.GetShape().Dimensions[0]);
 
         float alpha = 1, beta = 0;
-        cudnnBatchNormalizationBackward(
+        CUDA_CHECK(cudnnBatchNormalizationBackward(
             s_CudnnHandle,
             CUDNN_BATCHNORM_SPATIAL,
             &alpha,
@@ -453,7 +484,7 @@ namespace Neuro
             betaGradient.GetDevicePtr(),
             _EPSILON,
             savedMean.GetDevicePtr(),
-            savedVariance.GetDevicePtr());
+            savedVariance.GetDevicePtr()));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -467,7 +498,7 @@ namespace Neuro
 
         for (int n = 0; n < t.Batch(); ++n)
         {
-            cublasSgeam(
+            CUDA_CHECK(cublasSgeam(
                 s_CublasHandle,
                 CUBLAS_OP_N, CUBLAS_OP_N,
                 batchLen, 1,
@@ -475,7 +506,7 @@ namespace Neuro
                 CudaDeviceVariable<float>(t.GetDeviceVar(), n * batchLen).GetDevicePtr(), batchLen,
                 &beta,
                 result.GetDevicePtr(), batchLen,
-                result.GetDevicePtr(), batchLen);
+                result.GetDevicePtr(), batchLen));
         }
     }
 
@@ -517,7 +548,7 @@ namespace Neuro
         cudnnSetTensor4dDescriptor(resultDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
 
         float alpha = 1, beta = 0;
-        cudnnSoftmaxForward(
+        CUDA_CHECK(cudnnSoftmaxForward(
             s_CudnnHandle, 
             CUDNN_SOFTMAX_ACCURATE, 
             CUDNN_SOFTMAX_MODE_CHANNEL, 
@@ -526,7 +557,7 @@ namespace Neuro
             input.GetDevicePtr(), 
             &beta, 
             resultDesc, 
-            result.GetDevicePtr());
+            result.GetDevicePtr()));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -547,7 +578,7 @@ namespace Neuro
         cudnnSetTensor4dDescriptor(resultDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
 
         float alpha = 1, beta = 0;
-        cudnnSoftmaxBackward(
+        CUDA_CHECK(cudnnSoftmaxBackward(
             s_CudnnHandle, 
             CUDNN_SOFTMAX_ACCURATE, 
             CUDNN_SOFTMAX_MODE_CHANNEL, 
@@ -558,7 +589,7 @@ namespace Neuro
             outputGradient.GetDevicePtr(), 
             &beta, 
             resultDesc, 
-            result.GetDevicePtr());
+            result.GetDevicePtr()));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -595,24 +626,30 @@ namespace Neuro
     void TensorOpGpu::CudaAssert(cudaError_t code)
     {
         if (code != cudaSuccess)
-        {
-            stringstream ss;
-            ss << "Cuda error: " << cudaGetErrorString(code) << endl;
-            OutputDebugString(ss.str().c_str());
-            assert(false);
-        }
+            CudaAssert(cudaGetErrorString(code));
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::CudnnAssert(cudnnStatus_t status)
+    void TensorOpGpu::CudaAssert(cublasStatus_t status)
+    {
+        if (status != CUBLAS_STATUS_SUCCESS)
+            CudaAssert(to_string(status).c_str());
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::CudaAssert(cudnnStatus_t status)
     {
         if (status != CUDNN_STATUS_SUCCESS)
-        {
-            stringstream ss; 
-            ss << "Cudnn error: " << cudnnGetErrorString(status) << endl; 
-            OutputDebugString(ss.str().c_str());
-            assert(false);
-        }
+            CudaAssert(cudnnGetErrorString(status));
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::CudaAssert(const char* error)
+    {
+        stringstream ss;
+        ss << "CUDA error: " << error << endl;
+        OutputDebugString(ss.str().c_str());
+        assert(false);
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -38,8 +38,11 @@ namespace Neuro
         static cudnnPoolingMode_t GetCudnnPoolType(EPoolingMode type);
         static void GetKernelRunParams(int count, dim3& blocks, dim3& threads);
         static int GetBlocksNum(int count);
+
         static void CudaAssert(cudaError_t code);
-        static void CudnnAssert(cudnnStatus_t status);
+        static void CudaAssert(cudnnStatus_t status);
+        static void CudaAssert(cublasStatus_t status);
+        static void CudaAssert(const char* error);
         static void CudnnLog(cudnnSeverity_t sev, void *udata, const cudnnDebug_t *dbg, const char *msg);
 
         static bool s_Initialized;
@@ -49,10 +52,8 @@ namespace Neuro
 
 #ifdef _DEBUG
 #   define CUDA_CHECK(op) CudaAssert(op)
-#   define CUDNN_CHECK(op) CudnnAssert(op)
 #else
 #   define CUDA_CHECK(op) op
-#   define CUDNN_CHECK(op) op
 #endif
 #endif
     };
