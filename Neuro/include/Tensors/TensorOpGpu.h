@@ -20,7 +20,7 @@ namespace Neuro
         virtual void Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& result) const override;
         virtual void Mul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& result) const override;
         virtual void Transpose(const Tensor& input, Tensor& result) const override;
-        virtual void Conv2D(const Tensor& input, const Tensor& kernels, int stride, int paddingX, int paddingY, Tensor& result) const override;
+        virtual void Conv2D(const Tensor& input, const Tensor& kernels, int stride, int paddingX, int paddingY, Tensor& output) const override;
         virtual void Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, int stride, int paddingX, int paddingY, Tensor& inputGradients) const override;
         virtual void Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, int paddingX, int paddingY, Tensor& kernelsGradient) const override;
         virtual void Pool2D(const Tensor& t, int filterSize, int stride, EPoolingMode type, int paddingX, int paddingY, Tensor& result) const override;
@@ -39,12 +39,21 @@ namespace Neuro
         static void GetKernelRunParams(int count, dim3& blocks, dim3& threads);
         static int GetBlocksNum(int count);
         static void CudaAssert(cudaError_t code);
-        static void CudnnAssert(cudnnStatus_t code);
+        static void CudnnAssert(cudnnStatus_t status);
+        static void CudnnLog(cudnnSeverity_t sev, void *udata, const cudnnDebug_t *dbg, const char *msg);
 
         static bool s_Initialized;
         static cudaDeviceProp s_CudaDevProp;
         static cublasHandle_t s_CublasHandle;
         static cudnnHandle_t s_CudnnHandle;
+
+#ifdef _DEBUG
+#   define CUDA_CHECK(op) CudaAssert(op)
+#   define CUDNN_CHECK(op) CudnnAssert(op)
+#else
+#   define CUDA_CHECK(op) op
+#   define CUDNN_CHECK(op) op
+#endif
 #endif
     };
 }

@@ -92,6 +92,20 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
+        TEST_METHOD(Conv2D_Same_CompareWithCpuResult)
+        {
+            Tensor t(Shape(26, 26, 3, 3)); t.FillWithRand();
+            Tensor kernals(Shape(3, 3, 3, 2)); kernals.FillWithRand();
+
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            Tensor r = t.Conv2D(kernals, 1, 1);
+
+            Tensor::SetForcedOpMode(EOpMode::GPU);
+            Tensor r2 = t.Conv2D(kernals, 1, 1);
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
         TEST_METHOD(Conv2DInputGradient_CompareWithCpuResult)
         {
             Tensor output(Shape(24, 24, 2, 3)); output.FillWithRand();
@@ -112,10 +126,10 @@ namespace NeuroTests
 
         TEST_METHOD(Conv2DKernelsGradient_CompareWithCpuResult)
         {
-            Tensor output(Shape(24, 24, 2, 3)); output.FillWithRand();
-            Tensor input(Shape(26, 26, 3, 3)); input.FillWithRand();
-            Tensor kernels(Shape(3, 3, 3, 2)); kernels.FillWithRand();
-            Tensor gradient(output); gradient.FillWithRand();
+            Tensor output(Shape(24, 24, 2, 3)); output.FillWithRand(10);
+            Tensor input(Shape(26, 26, 3, 3)); input.FillWithRand(11);
+            Tensor kernels(Shape(3, 3, 3, 2)); kernels.FillWithRand(12);
+            Tensor gradient(output); gradient.FillWithRand(13);
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor kernelsGradient(kernels);
@@ -125,7 +139,8 @@ namespace NeuroTests
             Tensor kernelsGradient2(kernels);
             input.Conv2DKernelsGradient(input, gradient, 1, 0, kernelsGradient2);
 
-            Assert::IsTrue(kernelsGradient.Equals(kernelsGradient2));
+            //CuDNN is generating marginally different results than CPU
+            Assert::IsTrue(kernelsGradient.Equals(kernelsGradient2, 0.0001f));
         }
 
         TEST_METHOD(Pool_Max_Valid_CompareWithCpuResult)
@@ -190,18 +205,17 @@ namespace NeuroTests
 
         TEST_METHOD(BatchNormalization_CompareWithCpuResult)
         {
-            Tensor::SetDefaultOpMode(EOpMode::CPU);
             Tensor input(Shape(2, 2, 3, 3)); input.FillWithRand();
             Tensor gamma(Shape(2, 2, 3, 1)); gamma.FillWithRand();
             Tensor beta(Shape(2, 2, 3, 1)); beta.FillWithRand();
             Tensor runningMean(Shape(2, 2, 3, 1)); runningMean.FillWithRand();
             Tensor runningVariance(Shape(2, 2, 3, 1)); runningVariance.FillWithRand(-1, 0, 1);
 
+            Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor result(input.GetShape());
             input.BatchNormalization(gamma, beta, runningMean, runningVariance, result);
 
-            Tensor::SetDefaultOpMode(EOpMode::CPU);
-            input.SetOpMode(EOpMode::GPU);
+            Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor result2(input.GetShape());
             input.BatchNormalization(gamma, beta, runningMean, runningVariance, result2);
 

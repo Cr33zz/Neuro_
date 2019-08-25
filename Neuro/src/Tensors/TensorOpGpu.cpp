@@ -1,4 +1,8 @@
-﻿#include "Tools.h"
+﻿#include <sstream>
+#include <windows.h>
+#include <debugapi.h>
+
+#include "Tools.h"
 #include "Tensors/TensorOpGpu.h"
 #include "Tensors/Cuda/CudaDeviceVariable.h"
 #include "Tensors/Cuda/CudaKernels.h"
@@ -27,6 +31,7 @@ namespace Neuro
                 cudnnCreate(&s_CudnnHandle);
                 cudaGetDeviceProperties(&s_CudaDevProp, 0);
 
+                cudnnSetCallback(CUDNN_SEV_INFO_EN, nullptr, CudnnLog);
                 //cout << "GPU: " << s_CudaDevProp.name << "(tpb: " << s_CudaDevProp.maxThreadsPerBlock << ")\n";
             }
         }
@@ -165,30 +170,31 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Conv2D(const Tensor& input, const Tensor& kernels, int stride, int paddingX, int paddingY, Tensor& result) const
+    void TensorOpGpu::Conv2D(const Tensor& input, const Tensor& kernels, int stride, int paddingX, int paddingY, Tensor& output) const
     {
         input.CopyToDevice();
         kernels.CopyToDevice();
-        result.CopyToDevice();
+        output.CopyToDevice();
 
         cudnnConvolutionDescriptor_t convolutionDesc; cudnnCreateConvolutionDescriptor(&convolutionDesc);
         cudnnTensorDescriptor_t inputDesc; cudnnCreateTensorDescriptor(&inputDesc);
         cudnnFilterDescriptor_t kernelsDesc; cudnnCreateFilterDescriptor(&kernelsDesc);
-        cudnnTensorDescriptor_t resultDesc; cudnnCreateTensorDescriptor(&resultDesc);
+        cudnnTensorDescriptor_t outputDesc; cudnnCreateTensorDescriptor(&outputDesc);
 
         cudnnSetConvolution2dDescriptor(convolutionDesc, paddingY, paddingX, stride, stride, 1, 1, CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT);
         cudnnSetTensor4dDescriptor(inputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
         cudnnSetFilter4dDescriptor(kernelsDesc, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW, kernels.GetShape().Dimensions[3], kernels.GetShape().Dimensions[2], kernels.GetShape().Dimensions[1], kernels.GetShape().Dimensions[0]);
-        cudnnSetTensor4dDescriptor(resultDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, result.GetShape().Dimensions[3], result.GetShape().Dimensions[2], result.GetShape().Dimensions[1], result.GetShape().Dimensions[0]);
+        cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, output.GetShape().Dimensions[3], output.GetShape().Dimensions[2], output.GetShape().Dimensions[1], output.GetShape().Dimensions[0]);
 
         cudnnConvolutionFwdAlgo_t algo;
-        cudnnGetConvolutionForwardAlgorithm(s_CudnnHandle, inputDesc, kernelsDesc, convolutionDesc, resultDesc, CUDNN_CONVOLUTION_FWD_PREFER_FASTEST, 0, &algo);
+        cudnnGetConvolutionForwardAlgorithm(s_CudnnHandle, inputDesc, kernelsDesc, convolutionDesc, outputDesc, CUDNN_CONVOLUTION_FWD_PREFER_FASTEST, 0, &algo);
+
         size_t workspaceSize;
-        cudnnGetConvolutionForwardWorkspaceSize(s_CudnnHandle, inputDesc, kernelsDesc, convolutionDesc, resultDesc, algo, &workspaceSize);
-        result.m_GpuData.UpdateWorkspace(result.m_GpuData.m_ConvWorkspace, workspaceSize);
+        cudnnGetConvolutionForwardWorkspaceSize(s_CudnnHandle, inputDesc, kernelsDesc, convolutionDesc, outputDesc, algo, &workspaceSize);
+        output.m_GpuData.UpdateWorkspace(output.m_GpuData.m_ConvWorkspace, workspaceSize);
 
         float alpha = 1, beta = 0;
-        CudnnAssert(cudnnConvolutionForward(
+        CUDNN_CHECK(cudnnConvolutionForward(
             s_CudnnHandle, 
             &alpha, 
             inputDesc, 
@@ -197,11 +203,11 @@ namespace Neuro
             kernels.GetDevicePtr(), 
             convolutionDesc, 
             algo, 
-            result.m_GpuData.m_ConvWorkspace, 
+            output.m_GpuData.m_ConvWorkspace->GetDevicePtr(), 
             workspaceSize, 
             &beta, 
-            resultDesc, 
-            result.GetDevicePtr()));
+            outputDesc, 
+            output.GetDevicePtr()));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -223,12 +229,13 @@ namespace Neuro
 
         cudnnConvolutionBwdDataAlgo_t algo;
         cudnnGetConvolutionBackwardDataAlgorithm(s_CudnnHandle, kernelsDesc, gradientDesc, convolutionDesc, inputGradientsDesc, CUDNN_CONVOLUTION_BWD_DATA_PREFER_FASTEST, 0, &algo);
+
         size_t workspaceSize;
         cudnnGetConvolutionBackwardDataWorkspaceSize(s_CudnnHandle, kernelsDesc, gradientDesc, convolutionDesc, inputGradientsDesc, algo, &workspaceSize);
         inputGradients.m_GpuData.UpdateWorkspace(inputGradients.m_GpuData.m_ConvBackWorkspace, workspaceSize);
 
         float alpha = 1, beta = 0;
-        cudnnConvolutionBackwardData(
+        CUDNN_CHECK(cudnnConvolutionBackwardData(
             s_CudnnHandle, 
             &alpha, 
             kernelsDesc, 
@@ -237,11 +244,11 @@ namespace Neuro
             gradient.GetDevicePtr(), 
             convolutionDesc, 
             algo, 
-            inputGradients.m_GpuData.m_ConvBackWorkspace, 
+            inputGradients.m_GpuData.m_ConvBackWorkspace->GetDevicePtr(),
             workspaceSize, 
             &beta, 
             inputGradientsDesc, 
-            inputGradients.GetDevicePtr());
+            inputGradients.GetDevicePtr()));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -263,12 +270,13 @@ namespace Neuro
 
         cudnnConvolutionBwdFilterAlgo_t algo;
         cudnnGetConvolutionBackwardFilterAlgorithm(s_CudnnHandle, inputDesc, gradientDesc, convolutionDesc, kernelsGradientsDesc, CUDNN_CONVOLUTION_BWD_FILTER_PREFER_FASTEST, 0, &algo);
+
         size_t workspaceSize;
         cudnnGetConvolutionBackwardFilterWorkspaceSize(s_CudnnHandle, inputDesc, gradientDesc, convolutionDesc, kernelsGradientsDesc, algo, &workspaceSize);
         kernelsGradient.m_GpuData.UpdateWorkspace(kernelsGradient.m_GpuData.m_ConvBackKernelWorkspace, workspaceSize);
 
         float alpha = 1, beta = 0;
-        cudnnConvolutionBackwardFilter(
+        CUDNN_CHECK(cudnnConvolutionBackwardFilter(
             s_CudnnHandle, 
             &alpha, 
             inputDesc, 
@@ -277,11 +285,11 @@ namespace Neuro
             gradient.GetDevicePtr(), 
             convolutionDesc, 
             algo, 
-            kernelsGradient.m_GpuData.m_ConvBackKernelWorkspace, 
+            kernelsGradient.m_GpuData.m_ConvBackKernelWorkspace->GetDevicePtr(),
             workspaceSize, 
             &beta, 
             kernelsGradientsDesc, 
-            kernelsGradient.GetDevicePtr());
+            kernelsGradient.GetDevicePtr()));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -587,14 +595,31 @@ namespace Neuro
     void TensorOpGpu::CudaAssert(cudaError_t code)
     {
         if (code != cudaSuccess)
-            assert(false && cudaGetErrorString(code));
+        {
+            stringstream ss;
+            ss << "Cuda error: " << cudaGetErrorString(code) << endl;
+            OutputDebugString(ss.str().c_str());
+            assert(false);
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::CudnnAssert(cudnnStatus_t code)
+    void TensorOpGpu::CudnnAssert(cudnnStatus_t status)
     {
-        if (code != CUDNN_STATUS_SUCCESS)
-            assert(false && cudnnGetErrorString(code));
+        if (status != CUDNN_STATUS_SUCCESS)
+        {
+            stringstream ss; 
+            ss << "Cudnn error: " << cudnnGetErrorString(status) << endl; 
+            OutputDebugString(ss.str().c_str());
+            assert(false);
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::CudnnLog(cudnnSeverity_t sev, void *udata, const cudnnDebug_t *dbg, const char *msg)
+    {
+        OutputDebugString(msg);
+        OutputDebugString("\n");
     }
 
 #endif

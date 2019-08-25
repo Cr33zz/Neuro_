@@ -250,13 +250,15 @@ namespace Neuro
         {
             ~GPUData();
 
-            void UpdateWorkspace(CudaDeviceVariable<char>*& workspace, size_t size);            
+            void UpdateWorkspace(CudaDeviceVariable<char>*& workspace, size_t size);
 
             CudaDeviceVariable<float>* m_DeviceVar = nullptr;
             CudaDeviceVariable<char>* m_ConvWorkspace = nullptr;
             CudaDeviceVariable<char>* m_ConvBackWorkspace = nullptr;
             CudaDeviceVariable<char>* m_ConvBackKernelWorkspace = nullptr;
-		};
+        };
+
+        GPUData& GetGpuData() { return m_GpuData; }
 
         void CopyToDevice() const;
         void CopyToHost() const;
