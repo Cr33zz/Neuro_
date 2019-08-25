@@ -34,8 +34,7 @@ namespace Neuro
             if (m_Mask.GetShape() != m_Inputs[0]->GetShape())
                 m_Mask = Tensor(m_Inputs[0]->GetShape());
 
-            m_Mask.FillWithFunc([&](){ return (Rng.NextFloat() < m_Prob ? 0.f : 1.f) / m_Prob; });
-            m_Inputs[0]->MulElem(m_Mask, m_Output);
+            m_Inputs[0]->Dropout(m_Prob, m_Mask, m_Output);
         }
         else
         {
@@ -46,6 +45,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Dropout::BackPropInternal(Tensor& outputGradient)
     {
-        outputGradient.MulElem(m_Mask, m_InputsGradient[0]);
+        outputGradient.DropoutGradient(outputGradient, m_Mask, m_InputsGradient[0]);
     }
 }

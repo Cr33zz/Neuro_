@@ -164,17 +164,20 @@ namespace Neuro
         void Conv2DTransposedInputsGradient(const Tensor& gradient, const Tensor& kernels, int stride, int padding, Tensor& inputsGradient) const;
         void Conv2DTransposedKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, int padding, Tensor& kernelsGradient) const;
 
-        void Pool2D(int filterSize, int stride, EPoolingMode type, int padding, Tensor& result) const;
+        void Pool2D(int filterSize, int stride, EPoolingMode type, int padding, Tensor& output) const;
         Tensor Pool2D(int filterSize, int stride, EPoolingMode type, int padding) const;
         void Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, EPoolingMode type, int padding, Tensor& result) const;
 
-        void UpSample2D(int scaleFactor, Tensor& result) const;
+        void UpSample2D(int scaleFactor, Tensor& output) const;
         Tensor UpSample2D(int scaleFactor) const;
-        void UpSample2DGradient(const Tensor& outputGradient, int scaleFactor, Tensor& result) const;
+        void UpSample2DGradient(const Tensor& outputGradient, int scaleFactor, Tensor& inputGradient) const;
 
         void BatchNormalization(const Tensor& gamma, const Tensor& beta, const Tensor& runningMean, const Tensor& runningVar, Tensor& result) const;
-        void BatchNormalizationTrain(const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveVariance, Tensor& result) const;
-        void BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedVariance, Tensor& gammaGradient, Tensor& betaGradient, Tensor& inputGradient) const;
+        void BatchNormalizationTrain(const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const;
+        void BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, Tensor& inputGradient) const;
+
+        void Dropout(float prob, Tensor& saveMask, Tensor& output) const;
+        void DropoutGradient(const Tensor& outputGradient, const Tensor& savedMask, Tensor& inputGradient) const;
 
         string ToString() const;
         bool SameDimensionsExceptBatches(const Tensor& t) const;

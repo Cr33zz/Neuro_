@@ -154,15 +154,15 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::Elu(const Tensor& input, float alpha, Tensor& result) const
+	void TensorOpCpu::Elu(const Tensor& input, float alpha, Tensor& output) const
 	{
-        input.Map([&](float x) { return x >= 0 ? x : alpha * ((float)exp(x) - 1); }, result);
+        input.Map([&](float x) { return x >= 0 ? x : alpha * ((float)exp(x) - 1); }, output);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& result) const
+	void TensorOpCpu::EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const
 	{
-        output.Map([&](float x, float x2) { return (x > 0 ? 1 : (x + alpha)) * x2; }, outputGradient, result);
+        output.Map([&](float x, float x2) { return (x > 0 ? 1 : (x + alpha)) * x2; }, outputGradient, inputGradient);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -186,15 +186,15 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
+	void TensorOpCpu::SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const
 	{
 		output.CopyToHost();
 		outputGradient.CopyToHost();
-        result.OverrideHost();
+        inputGradient.OverrideHost();
 
 		Tensor outputReshaped = output.Reshaped(Shape(1, Shape::Auto, 1, output.Batch()));
 		Tensor jacob = outputReshaped.DiagFlat().Sub(outputReshaped.Mul(outputReshaped.Transposed()));
-		jacob.Mul(outputGradient, result);
+		jacob.Mul(outputGradient, inputGradient);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -283,15 +283,15 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::Pool2D(const Tensor& t, int filterSize, int stride, EPoolingMode type, int paddingX, int paddingY, Tensor& result) const
+	void TensorOpCpu::Pool2D(const Tensor& input, int filterSize, int stride, EPoolingMode type, int paddingX, int paddingY, Tensor& output) const
 	{
-		t.CopyToHost();
-        result.OverrideHost();
+		input.CopyToHost();
+        output.OverrideHost();
 
-        for (int outN = 0; outN < t.Batch(); ++outN)
-		for (int outD = 0; outD < t.Depth(); ++outD)
-		for (int outH = 0, h = -paddingY; outH < result.Height(); h += stride, ++outH)
-		for (int outW = 0, w = -paddingX; outW < result.Width(); w += stride, ++outW)
+        for (int outN = 0; outN < input.Batch(); ++outN)
+		for (int outD = 0; outD < input.Depth(); ++outD)
+		for (int outH = 0, h = -paddingY; outH < output.Height(); h += stride, ++outH)
+		for (int outW = 0, w = -paddingX; outW < output.Width(); w += stride, ++outW)
 		{
 			if (type == EPoolingMode::Max)
 			{
@@ -299,18 +299,18 @@ namespace Neuro
 
 				for (int poolY = 0; poolY < filterSize; ++poolY)
 				for (int poolX = 0; poolX < filterSize; ++poolX)
-					value = max(value, t.TryGet(-numeric_limits<float>().max(), w + poolX, h + poolY, outD, outN));
+					value = max(value, input.TryGet(-numeric_limits<float>().max(), w + poolX, h + poolY, outD, outN));
 
-				result(outW, outH, outD, outN) = value;
+				output(outW, outH, outD, outN) = value;
 			}
 			else if (type == EPoolingMode::Avg)
 			{
 				float sum = 0;
 				for (int poolY = 0; poolY < filterSize; ++poolY)
                 for (int poolX = 0; poolX < filterSize; ++poolX)
-                    sum += t.TryGet(0, w + poolX, h + poolY, outD, outN);
+                    sum += input.TryGet(0, w + poolX, h + poolY, outD, outN);
 
-				result(outW, outH, outD, outN) = sum / (filterSize * filterSize);
+				output(outW, outH, outD, outN) = sum / (filterSize * filterSize);
 			}
 		}
 	}
@@ -354,27 +354,27 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::UpSample2D(const Tensor& t, int scaleFactor, Tensor& result) const
+    void TensorOpCpu::UpSample2D(const Tensor& input, int scaleFactor, Tensor& output) const
     {
-        for (int n = 0; n < t.Batch(); ++n)
-        for (int d = 0; d < t.Depth(); ++d)
-        for (int h = 0; h < t.Height(); ++h)
-        for (int w = 0; w < t.Width(); ++w)
+        for (int n = 0; n < input.Batch(); ++n)
+        for (int d = 0; d < input.Depth(); ++d)
+        for (int h = 0; h < input.Height(); ++h)
+        for (int w = 0; w < input.Width(); ++w)
         {
             for (int outH = h * scaleFactor; outH < (h + 1) * scaleFactor; ++outH)
             for (int outW = w * scaleFactor; outW < (w + 1) * scaleFactor; ++outW)
-                result(outW, outH, d, n) = t(w, h, d, n);
+                output(outW, outH, d, n) = input(w, h, d, n);
         }
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::UpSample2DGradient(const Tensor& outputGradient, int scaleFactor, Tensor& result) const
+    void TensorOpCpu::UpSample2DGradient(const Tensor& outputGradient, int scaleFactor, Tensor& inputGradient) const
     {
         for (int n = 0; n < outputGradient.Batch(); ++n)
         for (int d = 0; d < outputGradient.Depth(); ++d)
         for (int h = 0; h < outputGradient.Height(); ++h)
         for (int w = 0; w < outputGradient.Width(); ++w)
-            result(w / scaleFactor, h / scaleFactor, d, n) += outputGradient(w, h, d, n);
+            inputGradient(w / scaleFactor, h / scaleFactor, d, n) += outputGradient(w, h, d, n);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -386,44 +386,57 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::BatchNormalizationTrain(const Tensor& input, const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveVariance, Tensor& output) const
+    void TensorOpCpu::BatchNormalizationTrain(const Tensor& input, const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& output) const
     {
         float N = (float)input.Batch();
         saveMean = input.SumBatches().Mul(1.f / N);
         Tensor xmu = input.Sub(saveMean);
         Tensor carre = xmu.Map([](float x) { return x * x; });
-        saveVariance = carre.SumBatches().Mul(1.f / N);
-        Tensor sqrtvar = saveVariance.Map([](float x) { return sqrt(x); });
-        Tensor invvar = sqrtvar.Map([](float x) { return 1.f / x; });
-        Tensor va2 = xmu.MulElem(invvar);
+        Tensor variance = carre.SumBatches().Mul(1.f / N);
+        Tensor sqrtvar = variance.Map([](float x) { return sqrt(x); });
+        saveInvVariance = sqrtvar.Map([](float x) { return 1.f / x; });
+        Tensor va2 = xmu.MulElem(saveInvVariance);
         va2.MulElem(gamma).Add(beta, output);
 
         runningMean.Map([&](float x1, float x2) { return momentum * x1 + (1.f - momentum) * x2; }, saveMean, runningMean);
-        runningVar.Map([&](float x1, float x2) { return momentum * x1 + (1.f - momentum) * x2; }, saveVariance, runningVar);
+        runningVar.Map([&](float x1, float x2) { return momentum * x1 + (1.f - momentum) * x2; }, variance, runningVar);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedVariance, Tensor& gammaGradient, Tensor& betaGradient, Tensor& inputGradient) const
+    void TensorOpCpu::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, Tensor& inputGradient) const
     {
         float N = (float)outputGradient.Batch();
 
         Tensor xmu = input.Sub(savedMean);
-        Tensor carre = xmu.Map([](float x) { return x * x; });
-        Tensor sqrtvar = savedVariance.Map([](float x) { return sqrt(x); });
-        Tensor invvar = sqrtvar.Map([](float x) { return 1.f / x; });
-        Tensor va2 = xmu.MulElem(invvar);
+        Tensor carre = xmu.Map([](float x) { return x * x; });        
+        Tensor va2 = xmu.MulElem(savedInvVariance);
+        Tensor variance = carre.SumBatches().Mul(1.f / N);
+        Tensor sqrtvar = variance.Map([](float x) { return sqrt(x); });
 
         betaGradient = outputGradient.SumBatches();
         gammaGradient = va2.MulElem(outputGradient).SumBatches();
 
         Tensor dva2 = outputGradient.MulElem(gamma);
-        Tensor dxmu = dva2.MulElem(invvar);
+        Tensor dxmu = dva2.MulElem(savedInvVariance);
         Tensor dinvvar = xmu.MulElem(dva2).SumBatches();
         Tensor dsqrtvar = dinvvar.Map([&](float x1, float x2) { return -1.f / (x2*x2) * x1; }, sqrtvar);
-        Tensor dvar = dsqrtvar.Map([&](float x1, float x2) { return 0.5f * pow(x2 + _EPSILON, -0.5f) * x1; }, savedVariance);
+        Tensor dvar = dsqrtvar.Map([&](float x1, float x2) { return 0.5f * pow(x2 + _EPSILON, -0.5f) * x1; }, variance);
         Tensor dcarre = Tensor(carre.GetShape()).FillWithValue(1).MulElem(dvar).Mul(1.f / N);
         dxmu.Add(xmu.MulElem(dcarre).Mul(2), dxmu);
         Tensor dmu = dxmu.SumBatches().Negated();
         dxmu.Add(Tensor(dxmu.GetShape()).FillWithValue(1).MulElem(dmu).Mul(1.f / N), inputGradient);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Dropout(const Tensor& input, float prob, Tensor& saveMask, Tensor& output)
+    {
+        saveMask.FillWithFunc([&]() { return (g_Rng.NextFloat() < prob ? 0.f : 1.f) / prob; });
+        input.MulElem(saveMask, output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::DropoutGradient(const Tensor& outputGradient, const Tensor& savedMask, Tensor& inputGradient)
+    {
+        outputGradient.MulElem(savedMask, inputGradient);
     }
 }

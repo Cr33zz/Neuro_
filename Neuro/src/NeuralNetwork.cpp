@@ -25,7 +25,7 @@ namespace Neuro
         if (seed > 0)
         {
             m_Seed = seed;
-            Rng = Random(seed);
+            g_Rng = Random(seed);
         }
     }
 
@@ -217,7 +217,7 @@ namespace Neuro
 
 			// no point shuffling stuff when we have single batch
 			if (samplesNum > 1 && shuffle)
-                random_shuffle(indices.begin(), indices.end(), [](size_t max) { return Rng.Next((int)max); });
+                random_shuffle(indices.begin(), indices.end(), [](size_t max) { return g_Rng.Next((int)max); });
 
 			for (int b = 0; b < batchesNum; ++b)
 			{

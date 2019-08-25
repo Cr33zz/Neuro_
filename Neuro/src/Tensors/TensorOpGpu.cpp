@@ -392,7 +392,7 @@ namespace Neuro
         float alpha = 1, _beta = 0;
         CUDA_CHECK(cudnnBatchNormalizationForwardInference(
             s_CudnnHandle,
-            CUDNN_BATCHNORM_SPATIAL,
+            CUDNN_BATCHNORM_PER_ACTIVATION,
             &alpha,
             &_beta,
             inputOutputDesc,
@@ -408,7 +408,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::BatchNormalizationTrain(const Tensor& input, const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveVariance, Tensor& output) const
+    void TensorOpGpu::BatchNormalizationTrain(const Tensor& input, const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& output) const
     {
         input.CopyToDevice();
         gamma.CopyToDevice();
@@ -416,7 +416,7 @@ namespace Neuro
         runningMean.CopyToDevice();
         runningVar.CopyToDevice();
         saveMean.CopyToDevice();
-        saveVariance.CopyToDevice();
+        saveInvVariance.CopyToDevice();
         output.CopyToDevice();
 
         cudnnTensorDescriptor_t inputOutputDesc; cudnnCreateTensorDescriptor(&inputOutputDesc);
@@ -428,7 +428,7 @@ namespace Neuro
         float alpha = 1, _beta = 0;
         CUDA_CHECK(cudnnBatchNormalizationForwardTraining(
             s_CudnnHandle,
-            CUDNN_BATCHNORM_SPATIAL,
+            CUDNN_BATCHNORM_PER_ACTIVATION,
             &alpha,
             &_beta,
             inputOutputDesc,
@@ -443,17 +443,17 @@ namespace Neuro
             runningVar.GetDevicePtr(),
             _EPSILON,
             saveMean.GetDevicePtr(),
-            saveVariance.GetDevicePtr()));
+            saveInvVariance.GetDevicePtr()));
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedVariance, Tensor& gammaGradient, Tensor& betaGradient, Tensor& inputGradient) const
+    void TensorOpGpu::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, Tensor& inputGradient) const
     {
         input.CopyToDevice();
         gamma.CopyToDevice();
         outputGradient.CopyToDevice();
         savedMean.CopyToDevice();
-        savedVariance.CopyToDevice();
+        savedInvVariance.CopyToDevice();
         gammaGradient.CopyToDevice();
         betaGradient.CopyToDevice();
         inputGradient.CopyToDevice();
@@ -467,7 +467,7 @@ namespace Neuro
         float alpha = 1, beta = 0;
         CUDA_CHECK(cudnnBatchNormalizationBackward(
             s_CudnnHandle,
-            CUDNN_BATCHNORM_SPATIAL,
+            CUDNN_BATCHNORM_PER_ACTIVATION,
             &alpha,
             &beta,
             &alpha,
@@ -484,7 +484,7 @@ namespace Neuro
             betaGradient.GetDevicePtr(),
             _EPSILON,
             savedMean.GetDevicePtr(),
-            savedVariance.GetDevicePtr()));
+            savedInvVariance.GetDevicePtr()));
     }
 
     //////////////////////////////////////////////////////////////////////////

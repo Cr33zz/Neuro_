@@ -132,16 +132,19 @@ namespace Neuro
 	{
 		OverrideHost();
 
-		auto fillUp = [&](const Random& rng)
+		auto fillUp = [&](Random& rng)
 		{
 			for (int i = 0; i < m_Values.size(); ++i)
 				m_Values[i] = min + (max - min) * rng.NextFloat();
 		};
 
         if (seed > 0)
-            fillUp(Random(seed));
+        {
+            Random tmpRng(seed);
+            fillUp(tmpRng);
+        }
         else
-            fillUp(Rng);
+            fillUp(g_Rng);
 
 		return *this;
 	}
@@ -836,10 +839,10 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Pool2D(int filterSize, int stride, EPoolingMode type, int padding, Tensor& result) const
+	void Tensor::Pool2D(int filterSize, int stride, EPoolingMode type, int padding, Tensor& output) const
 	{
-		assert(result.Batch() == Batch());
-		Op()->Pool2D(*this, filterSize, stride, type, padding, padding, result);
+		assert(output.Batch() == Batch());
+		Op()->Pool2D(*this, filterSize, stride, type, padding, padding, output);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -859,9 +862,9 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::UpSample2D(int scaleFactor, Tensor& result) const
+    void Tensor::UpSample2D(int scaleFactor, Tensor& output) const
     {
-        Op()->UpSample2D(*this, scaleFactor, result);
+        Op()->UpSample2D(*this, scaleFactor, output);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -873,9 +876,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::UpSample2DGradient(const Tensor& outputGradient, int scaleFactor, Tensor& result) const
+    void Tensor::UpSample2DGradient(const Tensor& outputGradient, int scaleFactor, Tensor& inputGradient) const
     {
-        Op()->UpSample2DGradient(outputGradient, scaleFactor, result);
+        Op()->UpSample2DGradient(outputGradient, scaleFactor, inputGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -885,15 +888,27 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::BatchNormalizationTrain(const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveVariance, Tensor& result) const
+    void Tensor::BatchNormalizationTrain(const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const
     {
-        Op()->BatchNormalizationTrain(*this, gamma, beta, momentum, runningMean, runningVar, saveMean, saveVariance, result);
+        Op()->BatchNormalizationTrain(*this, gamma, beta, momentum, runningMean, runningVar, saveMean, saveInvVariance, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedVariance, Tensor& gammaGradient, Tensor& betaGradient, Tensor& inputGradient) const
+    void Tensor::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, Tensor& inputGradient) const
     {
-        Op()->BatchNormalizationGradient(input, gamma, outputGradient, savedMean, savedVariance, gammaGradient, betaGradient, inputGradient);
+        Op()->BatchNormalizationGradient(input, gamma, outputGradient, savedMean, savedInvVariance, gammaGradient, betaGradient, inputGradient);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Dropout(float prob, Tensor& saveMask, Tensor& output) const
+    {
+        Op()->Dropout(*this, prob, saveMask, output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::DropoutGradient(const Tensor& outputGradient, const Tensor& savedMask, Tensor& inputGradient) const
+    {
+        Op()->DropoutGradient(outputGradient, savedMask, inputGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////
