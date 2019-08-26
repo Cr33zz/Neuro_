@@ -14,7 +14,6 @@ public:
     {
         Tensor::SetDefaultOpMode(EOpMode::MultiCPU);
 
-        Shape inputShape(64, 64, 4);
         auto model = new Sequential();
         model->AddLayer(new Dense(4, 1000, new ReLU()));
         model->AddLayer(new Dense(model->LastLayer(), 500, new ReLU()));
@@ -27,7 +26,7 @@ public:
         Tensor inputs;
         Tensor outputs;
 
-        LoadCSVData("iris_data.csv", 1, inputs, outputs, true);
+        LoadCSVData("data/iris_data.csv", 3, inputs, outputs, true);
 
         inputs.NormalizedAcrossBatches(inputs);
 
