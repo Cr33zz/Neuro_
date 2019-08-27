@@ -111,9 +111,13 @@ namespace Neuro
 		float Avg(int batch = -1) const;
         Tensor AvgPerBatch() const;
 
-		float Max(int batch = -1) const;
-        Tensor MaxPerBatch() const;
+        Tensor Max(EAxis axis, int batch = -1, Tensor* maxIndex = nullptr) const;
+        Tensor Min(EAxis axis, int batch = -1, Tensor* minIndex = nullptr) const;
 
+        // For Feature axis it will be batch index, for Sample axis it will be flat element index within a batch
+        Tensor ArgMax(EAxis axis, int batch = -1) const;
+        Tensor ArgMin(EAxis axis, int batch = -1) const;
+        
         static Tensor MergeIntoBatch(const vector<Tensor>& tensors);
         // In case number of tensors is smaller than forcedDepth, first tensor will be repeated to account for missing tensors
         static Tensor MergeIntoDepth(const vector<Tensor>& tensors, int forcedDepth = 0);
@@ -130,11 +134,7 @@ namespace Neuro
         static void MergeMinMaxGradient(const Tensor& output, const tensor_ptr_vec_t& inputs, const Tensor& outputGradient, vector<Tensor>& results);
         static void MergeSumGradient(const Tensor& output, const tensor_ptr_vec_t& inputs, const Tensor& outputGradient, vector<Tensor>& results);
         static void MergeAvgGradient(const Tensor& output, const tensor_ptr_vec_t& inputs, const Tensor& outputGradient, vector<Tensor>& results);
-
-        void Normalized(Tensor& result) const;
-        // ArgMax will return local index inside given batch if batch is not -1
-        int ArgMax(int batch = -1) const;
-        Tensor ArgMaxPerBatch() const;
+        
         Tensor Transposed() const;
         void Transpose(Tensor& result) const;
 
@@ -151,8 +151,11 @@ namespace Neuro
         void Rotated180(Tensor& result) const;
         Tensor Rotated180() const;
 
-        void NormalizedAcrossBatches(Tensor& result) const;
-        Tensor NormalizedAcrossBatches() const;
+        pair<Tensor, Tensor> Normalized(Tensor& result, float rangeMin = 0, float rangeMax = 1, Tensor* min = nullptr, Tensor* max = nullptr, EAxis axis = EAxis::Feature) const;
+        Tensor Normalized(float rangeMin = 0, float rangeMax = 1, Tensor* min = nullptr, Tensor* max = nullptr, EAxis axis = EAxis::Feature) const;
+
+        pair<Tensor, Tensor> Standardized(Tensor& result, Tensor* mean = nullptr, Tensor* invVariance = nullptr, EAxis axis = EAxis::Feature) const;
+        Tensor Standardized(Tensor* mean = nullptr, Tensor* invVariance = nullptr, EAxis axis = EAxis::Feature) const;
 
         void Conv2D(const Tensor& kernels, int stride, int padding, Tensor& result) const;
         Tensor Conv2D(const Tensor& kernels, int stride, int padding) const;
@@ -241,8 +244,7 @@ namespace Neuro
         void CopyDepthTo(int depthId, int batchId, int targetDepthId, int targetBatchId, Tensor& result) const;
         Tensor GetBatch(int batchId) const;
         Tensor GetDepth(int depthId, int batchId = 0) const;
-        bool Equals(const Tensor& other, float epsilon = 0.00001f) const;
-        float GetMaxData(int batch, int& maxIndex) const;
+        bool Equals(const Tensor& other, float epsilon = 0.00001f) const;        
         void Elu(float alpha, Tensor& result) const;
         void EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& result) const;
         void Softmax(Tensor& result) const;

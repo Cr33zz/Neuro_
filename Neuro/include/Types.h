@@ -45,4 +45,17 @@ namespace Neuro
         Max,
         Avg
     };
+
+    enum ENormalizationMode
+    {
+        MinMax,
+        StandardScore,
+    };
+
+    enum EAxis
+    {
+        Global, // across whole tensor
+        Sample, // across single batch
+        Feature, // across batches
+    };
 }

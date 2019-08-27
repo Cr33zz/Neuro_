@@ -72,9 +72,11 @@ namespace Neuro
 
         while ((pos = str.find(delimiter, lastPos)) != string::npos)
         {
-            result.push_back(str.substr(lastPos, pos));
+            result.push_back(str.substr(lastPos, pos - lastPos));
             lastPos = pos + delimiter.length();
         }
+
+        result.push_back(str.substr(lastPos, str.length() - lastPos));
 
         return result;
     }
@@ -110,12 +112,13 @@ namespace Neuro
 
         while (getline(infile, line))
         {
+            if (line.empty())
+                continue;
+
             auto tmp = Split(line, ",");
 
             ++batches;
             inputBatchSize = (int)tmp.size() - (outputsOneHotEncoded ? 1 : outputsNum);
-
-            auto output = new Tensor();
 
             for (int i = 0; i < inputBatchSize; ++i)
                 inputValues.push_back((float)atof(tmp[i].c_str()));

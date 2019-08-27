@@ -344,7 +344,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpMultiCpu::SumBatches(const Tensor& t, Tensor& result) const
     {
-        t.CopyToHost();
+        __super::SumBatches(t, result);
+        /*t.CopyToHost();
         result.OverrideHost();
 
         auto& tValues = t.GetValues();
@@ -352,11 +353,10 @@ namespace Neuro
 
         int batchLen = t.BatchLength();
 
-        parallel_for(0, result.Batch(), [&](int n)
-        {
-            for (int i = 0, idx = n * batchLen; i < batchLen; ++i, ++idx)
+        parallel_for(0, batchLen, [&](int i) {
+        for (int b = 0, idx = 0; b < t.Batch(); ++b, idx += batchLen)
                 resultValues[i] += tValues[idx];
-        });
+        });*/
     }
 
 }

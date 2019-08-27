@@ -361,17 +361,17 @@ namespace NeuroTests
                 Assert::AreEqual((double)result.GetFlat(i), (double)-t.GetFlat(i), 1e-7);
         }
 
-        TEST_METHOD(NormalizedAcrossBatches)
+        /*TEST_METHOD(Normalized)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
-            auto t = Tensor({ 0, 0, 1, 1 }, Shape(2, 1, 1, 2));
+            auto t = Tensor({ 0, 4.6f, 1, 12.1f }, Shape(2, 1, 1, 2));
             auto result = t.NormalizedAcrossBatches();
             Tensor correct({ -1, -1, 1, 1 }, t.GetShape());
 
             for (int i = 0; i < t.GetShape().Length; ++i)
-                Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 1e-7);
-        }
+                Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
+        }*/
 
         TEST_METHOD(Sum_Per_Batch)
         {
@@ -470,24 +470,49 @@ namespace NeuroTests
         }
         
 
-        TEST_METHOD(ArgMax)
+        TEST_METHOD(ArgMax_Feature)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
-            auto t = Tensor({ -20, 1, 5, 5, 6, -1, 3, 4, 2, 1, 16, 5, 3, 1, 10, 11 }, Shape(2, 2, 1, 4));
+            auto t = Tensor({ -20,  1,  5,  5, 
+                                6, -1,  3,  4, 
+                                2,  1, 16,  5, 
+                                3,  1, 10, 11 }, Shape(2, 2, 1, 4));
 
-            Assert::AreEqual(t.ArgMax(), 10);
+            Tensor result = t.ArgMax(EAxis::Feature);
+            Tensor correct({ 1, 0, 2, 3 });
+
+            Assert::IsTrue(result.Equals(correct));
         }
 
-        TEST_METHOD(ArgMax_Per_Batch)
+        TEST_METHOD(ArgMax_Sample_SingleBatch)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
-            auto t = Tensor({ -20, 1, 5, 5, 6, -1, 3, 4, 2, 1, 16, 5, 3, 1, 10, 11 }, Shape(2, 2, 1, 4));
-            vector<float> maxes = { 2, 0, 2, 3 };
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4,
+                                2,  1, 16,  5,
+                                3,  1, 10, 11 }, Shape(2, 2, 1, 4));
 
-            for (int i = 0; i < t.Batch(); ++i)
-                Assert::AreEqual((double)t.ArgMax(i), (double)maxes[i]);
+            Tensor result = t.ArgMax(EAxis::Sample, 0);
+            Tensor correct({ 2 });
+
+            Assert::IsTrue(result.Equals(correct));
+        }
+
+        TEST_METHOD(ArgMax_Sample)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4,
+                                2,  1, 16,  5,
+                                3,  1, 10, 11 }, Shape(2, 2, 1, 4));
+
+            Tensor result = t.ArgMax(EAxis::Sample);
+            Tensor correct({ 2, 0, 2, 3 });
+
+            Assert::IsTrue(result.Equals(correct));
         }
 
         TEST_METHOD(CopyBatchTo)
