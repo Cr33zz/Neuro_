@@ -26,9 +26,12 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	int AccCategoricalClassificationEquality(const Tensor& target, const Tensor& output)
 	{
+        Tensor targetArgMax = target.ArgMax(EAxis::Sample);
+        Tensor outputArgMax = output.ArgMax(EAxis::Sample);
+
 		int hits = 0;
-		for (int n = 0; n < output.Batch(); ++n)
-			hits += target.ArgMax(n) == output.ArgMax(n) ? 1 : 0;
+		for (int i = 0; i < targetArgMax.Length(); ++i)
+			hits += targetArgMax(i) == outputArgMax(i) ? 1 : 0;
 		return hits;
 	}
 

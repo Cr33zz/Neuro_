@@ -171,7 +171,7 @@ namespace Neuro
 		input.CopyToHost();
         result.OverrideHost();
 
-		Tensor shifted = input.Sub(input.Max());
+		Tensor shifted = input.Sub(input.Max(EAxis::Global)(0));
         Tensor exps = shifted.Map([&](float x) { return (float)exp(x); });
 
 		for (int n = 0; n < input.Batch(); ++n)

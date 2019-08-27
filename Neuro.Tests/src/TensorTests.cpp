@@ -468,8 +468,52 @@ namespace NeuroTests
 
             Assert::IsTrue(result.Equals(correct));
         }
-        
 
+        TEST_METHOD(Max_Feature)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4,
+                                2,  1, 16,  5,
+                                3,  1, 10, 11 }, Shape(2, 2, 1, 4));
+
+            Tensor result = t.Max(EAxis::Feature);
+            Tensor correct({ 6, 1, 16, 11 }, Shape(2, 2));
+
+            Assert::IsTrue(result.Equals(correct));
+        }
+
+        TEST_METHOD(Max_Sample_SingleBatch)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4,
+                                2,  1, 16,  5,
+                                3,  1, 10, 11 }, Shape(2, 2, 1, 4));
+
+            Tensor result = t.Max(EAxis::Sample, 0);
+            Tensor correct({ 5 }, Shape(1));
+
+            Assert::IsTrue(result.Equals(correct));
+        }
+
+        TEST_METHOD(Max_Sample)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4,
+                                2,  1, 16,  5,
+                                3,  1, 10, 11 }, Shape(2, 2, 1, 4));
+
+            Tensor result = t.Max(EAxis::Sample);
+            Tensor correct({ 5, 6, 16, 11 }, Shape(4));
+
+            Assert::IsTrue(result.Equals(correct));
+        }
+        
         TEST_METHOD(ArgMax_Feature)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
@@ -480,7 +524,7 @@ namespace NeuroTests
                                 3,  1, 10, 11 }, Shape(2, 2, 1, 4));
 
             Tensor result = t.ArgMax(EAxis::Feature);
-            Tensor correct({ 1, 0, 2, 3 });
+            Tensor correct({ 1, 0, 2, 3 }, Shape(2, 2));
 
             Assert::IsTrue(result.Equals(correct));
         }
@@ -495,7 +539,7 @@ namespace NeuroTests
                                 3,  1, 10, 11 }, Shape(2, 2, 1, 4));
 
             Tensor result = t.ArgMax(EAxis::Sample, 0);
-            Tensor correct({ 2 });
+            Tensor correct({ 2 }, Shape(1));
 
             Assert::IsTrue(result.Equals(correct));
         }
@@ -510,7 +554,97 @@ namespace NeuroTests
                                 3,  1, 10, 11 }, Shape(2, 2, 1, 4));
 
             Tensor result = t.ArgMax(EAxis::Sample);
-            Tensor correct({ 2, 0, 2, 3 });
+            Tensor correct({ 2, 0, 2, 3 }, Shape(4));
+
+            Assert::IsTrue(result.Equals(correct));
+        }
+
+        TEST_METHOD(Min_Feature)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4,
+                                2,  1, 16,  5,
+                                3,  1, 10, 11 }, Shape(2, 2, 1, 4));
+
+            Tensor result = t.Min(EAxis::Feature);
+            Tensor correct({ -20, -1, 3, 4 }, Shape(2, 2));
+
+            Assert::IsTrue(result.Equals(correct));
+        }
+
+        TEST_METHOD(Min_Sample_SingleBatch)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4,
+                                2,  1, 16,  5,
+                                3,  1, 10, 11 }, Shape(2, 2, 1, 4));
+
+            Tensor result = t.Min(EAxis::Sample, 0);
+            Tensor correct({ -20 }, Shape(1));
+
+            Assert::IsTrue(result.Equals(correct));
+        }
+
+        TEST_METHOD(Min_Sample)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4,
+                                2,  1, 16,  5,
+                                3,  1, 10, 11 }, Shape(2, 2, 1, 4));
+
+            Tensor result = t.Min(EAxis::Sample);
+            Tensor correct({ -20, -1, 1, 1 }, Shape(4));
+
+            Assert::IsTrue(result.Equals(correct));
+        }
+
+        TEST_METHOD(ArgMin_Feature)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4,
+                                2,  1, 16,  5,
+                                3,  1, 10, 11 }, Shape(2, 2, 1, 4));
+
+            Tensor result = t.ArgMin(EAxis::Feature);
+            Tensor correct({ 0, 1, 1, 1 }, Shape(2, 2));
+
+            Assert::IsTrue(result.Equals(correct));
+        }
+
+        TEST_METHOD(ArgMin_Sample_SingleBatch)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4,
+                                2,  1, 16,  5,
+                                3,  1, 10, 11 }, Shape(2, 2, 1, 4));
+
+            Tensor result = t.ArgMin(EAxis::Sample, 0);
+            Tensor correct({ 0 }, Shape(1));
+
+            Assert::IsTrue(result.Equals(correct));
+        }
+
+        TEST_METHOD(ArgMin_Sample)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4,
+                                2,  1, 16,  5,
+                                3,  1, 10, 11 }, Shape(2, 2, 1, 4));
+
+            Tensor result = t.ArgMin(EAxis::Sample);
+            Tensor correct({ 0, 1, 1, 1 }, Shape(4));
 
             Assert::IsTrue(result.Equals(correct));
         }
