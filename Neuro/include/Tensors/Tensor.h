@@ -151,6 +151,10 @@ namespace Neuro
         void Rotated180(Tensor& result) const;
         Tensor Rotated180() const;
 
+        // Returns norm value used to normalize data
+        Tensor Normalized(EAxis axis, Tensor& result, ENormMode normMode = ENormMode::L2, Tensor* savedNorm = nullptr) const;
+        // Returns normalized tensor
+        Tensor Normalized(EAxis axis, ENormMode normMode = ENormMode::L2, Tensor* savedNorm = nullptr) const;
         pair<Tensor, Tensor> NormalizedMinMax(EAxis axis, Tensor& result, float scaleMin = 0, float scaleMax = 1, Tensor* savedMin = nullptr, Tensor* savedMax = nullptr) const;
         Tensor NormalizedMinMax(EAxis axis, float scaleMin = 0, float scaleMax = 1, Tensor* savedMin = nullptr, Tensor* savedMax = nullptr) const;
         pair<Tensor, Tensor> Standardized(EAxis axis, Tensor& result, Tensor* mean = nullptr, Tensor* invVariance = nullptr) const;

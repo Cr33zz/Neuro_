@@ -650,7 +650,109 @@ namespace Neuro
 			results[i].Div((float)results.size(), results[i]);
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::Normalized(EAxis axis, Tensor& result, ENormMode normMode, Tensor* savedNorm) const
+    {
+        CopyToHost();
+        result.OverrideHost();
+
+        assert(result.GetShape() == GetShape());
+            
+        if (axis == EAxis::Sample)
+        {
+            Tensor norm;
+            
+            if (savedNorm)
+                norm = *savedNorm;
+            else
+            {
+                norm = Tensor(Shape(Batch()));
+                norm.FillWithValue(0);
+
+                for (int n = 0; n < Batch(); ++n)
+                for (int i = 0, idx = n * BatchLength(); i < BatchLength(); ++i, ++idx)
+                    norm(n) += normMode == ENormMode::L1 ? m_Values[idx] : (m_Values[idx] * m_Values[idx]);
+
+                if (normMode == ENormMode::L2)
+                {
+                    for (int i = 0; i < norm.Length(); ++i)
+                        norm.m_Values[i] = sqrt(norm.m_Values[i]);
+                }
+            }
+        
+            for (int n = 0; n < Batch(); ++n)
+            for (int i = 0, idx = n * BatchLength(); i < BatchLength(); ++i, ++idx)
+                result.m_Values[idx] = m_Values[idx] / norm(n);
+
+            return norm;
+        }
+        else if (axis == EAxis::Feature)
+        {
+            Tensor norm;
+
+            if (savedNorm)
+                norm = *savedNorm;
+            else
+            {
+                norm = Tensor(Shape(Width(), Height(), Depth(), 1));
+                norm.FillWithValue(0);
+
+                for (int n = 0; n < Batch(); ++n)
+                for (int d = 0; d < Depth(); ++d)
+                for (int h = 0; h < Height(); ++h)
+                for (int w = 0; w < Width(); ++w)
+                    norm(w, h, d) += normMode == ENormMode::L1 ? Get(w, h, d, n) : (Get(w, h, d, n) * Get(w, h, d, n));
+
+                if (normMode == ENormMode::L2)
+                {
+                    for (int i = 0; i < norm.Length(); ++i)
+                        norm.m_Values[i] = sqrt(norm.m_Values[i]);
+                }
+            }
+
+            for (int n = 0; n < Batch(); ++n)
+            for (int d = 0; d < Depth(); ++d)
+            for (int h = 0; h < Height(); ++h)
+            for (int w = 0; w < Width(); ++w)
+                result(w, h, d, n) = Get(w, h, d, n) / norm(w, h, d);
+
+            return norm;
+        }
+        else //if (axis == EAxis::Global)
+        {
+            Tensor norm;
+
+            if (savedNorm)
+                norm = *savedNorm;
+            else
+            {
+                norm = Tensor({ 0 }, Shape(1));
+                for (int i = 0; i < Length(); ++i)
+                    norm(0) += normMode == ENormMode::L1 ? m_Values[i] : (m_Values[i] * m_Values[i]);
+
+                if (normMode == ENormMode::L2)
+                {
+                    for (int i = 0; i < norm.Length(); ++i)
+                        norm.m_Values[i] = sqrt(norm.m_Values[i]);
+                }
+            }
+
+            for (int i = 0; i < Length(); ++i)
+                result.m_Values[i] = m_Values[i] / norm(0);
+
+            return norm;
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::Normalized(EAxis axis, ENormMode normMode, Tensor* savedNorm) const
+    {
+        Tensor result(GetShape());
+        Normalized(axis, result, normMode, savedNorm);
+        return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     pair<Tensor, Tensor> Tensor::NormalizedMinMax(EAxis axis, Tensor& result, float scaleMin, float scaleMax, Tensor* savedMin, Tensor* savedMax) const
     {
         CopyToHost();

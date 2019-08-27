@@ -361,6 +361,55 @@ namespace NeuroTests
                 Assert::AreEqual((double)result.GetFlat(i), (double)-t.GetFlat(i), 1e-7);
         }
 
+        TEST_METHOD(Normalized_Sample_L1)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4,
+                                2,  1, 16,  5 }, Shape(2, 2, 1, 3));
+
+            auto result = t.Normalized(EAxis::Sample, ENormMode::L1);
+            Tensor correct({ 0, 0.84f, 1, 1,
+                             1, 0, 0.5714f, 0.7142f,
+                             0.0666f, 0, 1, 0.2666f }, t.GetShape());
+
+            for (int i = 0; i < t.GetShape().Length; ++i)
+                Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
+        }
+
+        TEST_METHOD(Normalized_Feature_L1)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4,
+                                2,  1, 16,  5 }, Shape(2, 2, 1, 3));
+
+            auto result = t.NormalizedMinMax(EAxis::Feature);
+            Tensor correct({ 0, 1, 0.1538f, 1,
+                             1, 0, 0, 0,
+                             0.8461f, 1, 1, 1 }, t.GetShape());
+
+            for (int i = 0; i < t.GetShape().Length; ++i)
+                Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
+        }
+
+        TEST_METHOD(Normalized_Global_L1)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4 }, Shape(2, 2, 1, 2));
+
+            auto result = t.NormalizedMinMax(EAxis::Global);
+            Tensor correct({ 0, 0.8076f, 0.9615f, 0.9615f,
+                             1, 0.7307f, 0.8846f, 0.9230f }, t.GetShape());
+
+            for (int i = 0; i < t.GetShape().Length; ++i)
+                Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
+        }
+
         TEST_METHOD(NormalizedMinMax_Sample)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);

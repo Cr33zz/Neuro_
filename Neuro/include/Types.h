@@ -46,10 +46,10 @@ namespace Neuro
         Avg
     };
 
-    enum ENormalizationMode
+    enum ENormMode
     {
-        MinMax,
-        StandardScore,
+        L1,
+        L2,
     };
 
     enum EAxis
