@@ -151,11 +151,10 @@ namespace Neuro
         void Rotated180(Tensor& result) const;
         Tensor Rotated180() const;
 
-        pair<Tensor, Tensor> Normalized(Tensor& result, float rangeMin = 0, float rangeMax = 1, Tensor* min = nullptr, Tensor* max = nullptr, EAxis axis = EAxis::Feature) const;
-        Tensor Normalized(float rangeMin = 0, float rangeMax = 1, Tensor* min = nullptr, Tensor* max = nullptr, EAxis axis = EAxis::Feature) const;
-
-        pair<Tensor, Tensor> Standardized(Tensor& result, Tensor* mean = nullptr, Tensor* invVariance = nullptr, EAxis axis = EAxis::Feature) const;
-        Tensor Standardized(Tensor* mean = nullptr, Tensor* invVariance = nullptr, EAxis axis = EAxis::Feature) const;
+        pair<Tensor, Tensor> NormalizedMinMax(EAxis axis, Tensor& result, float scaleMin = 0, float scaleMax = 1, Tensor* savedMin = nullptr, Tensor* savedMax = nullptr) const;
+        Tensor NormalizedMinMax(EAxis axis, float scaleMin = 0, float scaleMax = 1, Tensor* savedMin = nullptr, Tensor* savedMax = nullptr) const;
+        pair<Tensor, Tensor> Standardized(EAxis axis, Tensor& result, Tensor* mean = nullptr, Tensor* invVariance = nullptr) const;
+        Tensor Standardized(EAxis axis, Tensor* mean = nullptr, Tensor* invVariance = nullptr) const;
 
         void Conv2D(const Tensor& kernels, int stride, int padding, Tensor& result) const;
         Tensor Conv2D(const Tensor& kernels, int stride, int padding) const;

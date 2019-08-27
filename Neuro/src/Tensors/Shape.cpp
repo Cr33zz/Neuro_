@@ -65,7 +65,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	int Shape::GetIndex(int w, int h /*= 0*/, int d /*= 0*/, int n /*= 0*/) const
+	int Shape::GetIndex(int w, int h, int d, int n) const
 	{
 		assert(w < Width());
 		assert(h < Height());

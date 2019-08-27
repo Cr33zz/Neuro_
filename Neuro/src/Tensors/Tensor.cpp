@@ -651,55 +651,112 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-    pair<Tensor, Tensor> Tensor::Normalized(Tensor& result, float rangeMin, float rangeMax, Tensor* savedMin, Tensor* savedMax, EAxis axis) const
+    pair<Tensor, Tensor> Tensor::NormalizedMinMax(EAxis axis, Tensor& result, float scaleMin, float scaleMax, Tensor* savedMin, Tensor* savedMax) const
     {
         CopyToHost();
         result.OverrideHost();
 
         assert(result.GetShape() == GetShape());
+            
+        const float rangeSpread = scaleMax - scaleMin;
+
+        Tensor min = savedMin ? *savedMin : Min(axis);
+        Tensor max = savedMax ? *savedMax : Max(axis);
 
         if (axis == EAxis::Sample)
         {
-            Tensor min = savedMin ? *savedMin : Min(axis);
-            Tensor max = savedMax ? *savedMax : Max(axis);
-
             assert(min.Width() == Batch());
             assert(max.Width() == Batch());
 
             for (int n = 0; n < Batch(); ++n)
             {
-                //(((val - valmin) / (valmax - valmin)) * (max - min)) + min
+                const float minVal = min(n);
+                const float spread = max(n) - minVal;
+                
                 for (int i = 0, idx = n * BatchLength(); i < BatchLength(); ++i, ++idx)
-                {
-                    if (m_Values[idx] < minValue(0, 0, 0, outN))
-                    {
-                        minValue.Set(m_Values[idx], 0, 0, 0, outN);
-                        if (minIndex)
-                            (*minIndex)(0, 0, 0, outN) = (float)i;
-                    }
-                }
+                    result.m_Values[idx] = rangeSpread * (m_Values[idx] - minVal) / spread + scaleMin;
             }
-            float sum2 = 0;
+        }
+        else if (axis == EAxis::Feature)
+        {
+            assert(SameDimensionsExceptBatches(min) && min.Batch() == 1);
+            assert(SameDimensionsExceptBatches(max) && max.Batch() == 1);
+
+            for (int d = 0; d < Depth(); ++d)
+            for (int h = 0; h < Height(); ++h)
+            for (int w = 0; w < Width(); ++w)
+            {
+                const float minVal = min(w, h, d);
+                const float spread = max(w, h, d) - minVal;
+
+                for (int n = 0; n < Batch(); ++n)
+                    result(w, h, d, n) = rangeSpread * (Get(w, h, d, n) - minVal) / spread + scaleMin;
+            }
+        }
+        else //if (axis == EAxis::Global)
+        {
+            const float minVal = min(0);
+            const float spread = max(0) - minVal;
+
             for (int i = 0; i < Length(); ++i)
-                sum2 += m_Values[i];
-            float norm = sqrt(sum2);
+                result.m_Values[i] = rangeSpread * (m_Values[i] - minVal) / spread + scaleMin;
+        }
 
-            Map([&](float x) { return x / norm; }, result);
-        }*/
-
-        return make_pair(Tensor(), Tensor());
+        return make_pair(min, max);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor Tensor::Normalized(float rangeMin, float rangeMax, Tensor* min, Tensor* max, EAxis axis) const
+    Tensor Tensor::NormalizedMinMax(EAxis axis, float scaleMin, float scaleMax, Tensor* savedMin, Tensor* savedMax) const
     {
-        return Tensor();
+        Tensor result(GetShape());
+        NormalizedMinMax(axis, result, scaleMin, scaleMax, savedMin, savedMax);
+        return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    pair<Tensor, Tensor> Tensor::Standardized(EAxis axis, Tensor& result, Tensor* mean, Tensor* invVariance) const
+    {
+        if (axis == EAxis::Feature)
+        {
+            if (mean && invVariance)
+            {
+                Tensor xmu = Sub(*mean);
+                xmu.MulElem(*invVariance, result);
+                return make_pair(*mean, *invVariance);
+            }
+
+            float n = (float)Batch();
+            Tensor xmean = SumBatches().Mul(1.f / n);
+            Tensor xmu = Sub(xmean);
+            Tensor variance = xmu.Map([](float x) { return x * x; }).SumBatches().Mul(1.f / n);
+            Tensor invVar = variance.Map([](float x) { return 1.f / x; });
+            xmu.MulElem(invVar, result);
+            return make_pair(xmean, invVar);
+        }
+        else
+        {
+            assert(false && "Axis not supported!");
+            return make_pair(Tensor(), Tensor());
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::Standardized(EAxis axis, Tensor* mean, Tensor* invVariance) const
+    {
+        Tensor result(GetShape());
+        Standardized(axis, result, mean, invVariance);
+        return result;
     }
 
     //////////////////////////////////////////////////////////////////////////
     Tensor Tensor::ArgMax(EAxis axis, int batch) const
 	{
-        Tensor maxIndex(Shape(batch < 0 ? Batch() : 1));
+        Tensor maxIndex(Shape(1));
+        if (axis == EAxis::Sample && batch < 0)
+            maxIndex = Tensor(Shape(Batch()));
+        else if (axis == EAxis::Feature)
+            maxIndex = Tensor(Shape(Width(), Height(), Depth(), 1));
+            
 		Max(axis, batch, &maxIndex);
 		return maxIndex;
 	}
@@ -707,7 +764,12 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     Tensor Tensor::ArgMin(EAxis axis, int batch) const
     {
-        Tensor minIndex(Shape(1, 1, 1, batch < 0 ? Batch() : 1));
+        Tensor minIndex(Shape(1));
+        if (axis == EAxis::Sample && batch < 0)
+            minIndex = Tensor(Shape(Batch()));
+        else if (axis == EAxis::Feature)
+            minIndex = Tensor(Shape(Width(), Height(), Depth(), 1));
+
         Min(axis, batch, &minIndex);
         return minIndex;
     }
@@ -780,41 +842,6 @@ namespace Neuro
 		Rotated180(result);
 		return result;
 	}
-
-    //////////////////////////////////////////////////////////////////////////
-    pair<Tensor,Tensor> Tensor::Standardized(Tensor& result, Tensor* mean, Tensor* invVariance, EAxis axis) const
-    {
-        if (axis == EAxis::Feature)
-        {
-            if (mean && invVariance)
-            {
-                Tensor xmu = Sub(*mean);
-                xmu.MulElem(*invVariance, result);
-                return make_pair(*mean, *invVariance);
-            }
-
-            float n = (float)Batch();
-            Tensor xmean = SumBatches().Mul(1.f / n);
-            Tensor xmu = Sub(xmean);
-            Tensor variance = xmu.Map([](float x) { return x * x; }).SumBatches().Mul(1.f / n);
-            Tensor invVar = variance.Map([](float x) { return 1.f / x; });
-            xmu.MulElem(invVar, result);
-            return make_pair(xmean, invVar);
-        }
-        else
-        {
-            assert(false && "Axis not supported!");
-            return make_pair(Tensor(), Tensor());
-        }
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    Tensor Tensor::Standardized(Tensor* mean, Tensor* invVariance, EAxis axis) const
-    {
-        Tensor result(GetShape());
-        Standardized(result, mean, invVariance, axis);
-        return result;
-    }
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Conv2D(const Tensor& kernels, int stride, int padding, Tensor& result) const
@@ -1216,30 +1243,30 @@ namespace Neuro
             assert(!maxIndex || maxIndex->GetShape() == maxValue.GetShape());
 
             int batchMin = batch < 0 ? 0 : batch;
-            int batchMax = batch < 0 ? Batch() : batch;
+            int batchMax = batch < 0 ? Batch() : (batch + 1);
             int batchLen = BatchLength();
 
             for (int n = batchMin, outN = 0; n < batchMax; ++n, ++outN)
             {
                 for (int i = 0, idx = n * batchLen; i < batchLen; ++i, ++idx)
                 {
-                    if (m_Values[idx] > maxValue(0, 0, 0, outN))
+                    if (m_Values[idx] > maxValue(outN))
                     {
-                        maxValue.Set(m_Values[idx], 0, 0, 0, outN);
+                        maxValue(outN) = m_Values[idx];
                         if (maxIndex)
-                            (*maxIndex)(0, 0, 0, outN) = (float)i;
+                            (*maxIndex)(outN) = (float)i;
                     }
                 }
             }
         
             return maxValue;
         }
-        if (axis == EAxis::Feature)
+        else if (axis == EAxis::Feature)
         {
             Tensor maxValue(Shape(Width(), Height(), Depth(), 1));
             maxValue.FillWithValue(-numeric_limits<float>().max());
 
-            assert(!maxIndex || maxIndex->GetShape() == maxValue.GetShape());
+            assert(!maxIndex || SameDimensionsExceptBatches(*maxIndex));
 
             for (int n = 0; n < Batch(); ++n)
 		    for (int d = 0; d < Depth(); ++d)
@@ -1247,7 +1274,7 @@ namespace Neuro
 		    for (int w = 0; w < Width(); ++w)
             {
                 float val = Get(w, h, d, n);
-                if (val > maxValue(w, h, d, n))
+                if (val > maxValue(w, h, d))
                 {
                     maxValue.Set(val, w, h, d);
                     if (maxIndex)
@@ -1257,7 +1284,7 @@ namespace Neuro
 
             return maxValue;
         }
-        //if (axis == EAxis::Global)
+        else //if (axis == EAxis::Global)
         {
             Tensor maxValue({ -numeric_limits<float>().max() }, Shape(1));
 
@@ -1293,25 +1320,25 @@ namespace Neuro
             assert(!minIndex || minIndex->GetShape() == minValue.GetShape());
 
             int batchMin = batch < 0 ? 0 : batch;
-            int batchMax = batch < 0 ? Batch() : batch;
+            int batchMax = batch < 0 ? Batch() : (batch + 1);
             int batchLen = BatchLength();
 
             for (int n = batchMin, outN = 0; n < batchMax; ++n, ++outN)
             {
                 for (int i = 0, idx = n * batchLen; i < batchLen; ++i, ++idx)
                 {
-                    if (m_Values[idx] < minValue(0, 0, 0, outN))
+                    if (m_Values[idx] < minValue(outN))
                     {
-                        minValue.Set(m_Values[idx], 0, 0, 0, outN);
+                        minValue(outN) = m_Values[idx];
                         if (minIndex)
-                            (*minIndex)(0, 0, 0, outN) = (float)i;
+                            (*minIndex)(outN) = (float)i;
                     }
                 }
             }
 
             return minValue;
         }
-        if (axis == EAxis::Feature)
+        else if (axis == EAxis::Feature)
         {
             Tensor minValue(Shape(Width(), Height(), Depth(), 1));
             minValue.FillWithValue(numeric_limits<float>().max());
@@ -1319,22 +1346,22 @@ namespace Neuro
             assert(!minIndex || minIndex->GetShape() == minValue.GetShape());
 
             for (int n = 0; n < Batch(); ++n)
-                for (int d = 0; d < Depth(); ++d)
-                    for (int h = 0; h < Height(); ++h)
-                        for (int w = 0; w < Width(); ++w)
-                        {
-                            float val = Get(w, h, d, n);
-                            if (val < minValue(w, h, d, n))
-                            {
-                                minValue.Set(val, w, h, d);
-                                if (minIndex)
-                                    (*minIndex)(w, h, d) = (float)n;
-                            }
-                        }
+            for (int d = 0; d < Depth(); ++d)
+            for (int h = 0; h < Height(); ++h)
+            for (int w = 0; w < Width(); ++w)
+            {
+                float val = Get(w, h, d, n);
+                if (val < minValue(w, h, d))
+                {
+                    minValue.Set(val, w, h, d);
+                    if (minIndex)
+                        (*minIndex)(w, h, d) = (float)n;
+                }
+            }
 
             return minValue;
         }
-        //if (axis == EAxis::Global)
+        else //if (axis == EAxis::Global)
         {
             Tensor minValue({ numeric_limits<float>().max() }, Shape(1));
 
