@@ -370,9 +370,9 @@ namespace NeuroTests
                                 2,  1, 16,  5 }, Shape(2, 2, 1, 3));
 
             auto result = t.NormalizedMinMax(EAxis::Sample);
-            Tensor correct({ 0, 0.84, 1, 1,
-                             1, 0, 0.5714, 0.7142,
-                             0.0666, 0, 1, 0.2666 }, t.GetShape());
+            Tensor correct({ 0, 0.84f, 1, 1,
+                             1, 0, 0.5714f, 0.7142f,
+                             0.0666f, 0, 1, 0.2666f }, t.GetShape());
 
             for (int i = 0; i < t.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
@@ -387,9 +387,9 @@ namespace NeuroTests
                                 2,  1, 16,  5 }, Shape(2, 2, 1, 3));
 
             auto result = t.NormalizedMinMax(EAxis::Feature);
-            Tensor correct({ 0, 1, 0.1538, 1,
+            Tensor correct({ 0, 1, 0.1538f, 1,
                              1, 0, 0, 0,
-                             0.8461, 1, 1, 1 }, t.GetShape());
+                             0.8461f, 1, 1, 1 }, t.GetShape());
 
             for (int i = 0; i < t.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
@@ -403,8 +403,23 @@ namespace NeuroTests
                                 6, -1,  3,  4 }, Shape(2, 2, 1, 2));
 
             auto result = t.NormalizedMinMax(EAxis::Global);
-            Tensor correct({ 0, 0.8076, 0.9615, 0.9615,
-                             1, 0.7307, 0.8846, 0.9230 }, t.GetShape());
+            Tensor correct({ 0, 0.8076f, 0.9615f, 0.9615f,
+                             1, 0.7307f, 0.8846f, 0.9230f }, t.GetShape());
+
+            for (int i = 0; i < t.GetShape().Length; ++i)
+                Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
+        }
+
+        TEST_METHOD(NormalizedMinMax_Global_0_255)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ 0,  0.3f,  0.5f,  0.1f,
+                              0.6f, 0.1f,  1,  0.8f }, Shape(2, 2, 1, 2));
+
+            auto result = t.NormalizedMinMax(EAxis::Global, 0, 255);
+            Tensor correct({ 0, 76.5f, 127.5f, 25.5f,
+                             153, 25.5f, 255, 204 }, t.GetShape());
 
             for (int i = 0; i < t.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
