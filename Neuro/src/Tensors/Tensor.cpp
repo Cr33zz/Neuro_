@@ -186,21 +186,17 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     Tensor Tensor::ToNCHW() const
     {
-        Tensor result(*this);
+        Tensor result(GetShape());
 
-        for (int i = 0; i < m_Values.size(); ++i)
+        int i = 0;
+        for (int n = 0; n < Batch(); ++n)
+        for (int h = 0; h < Height(); ++h)
+        for (int w = 0; w < Width(); ++w)
         {
-            /*int elem = i / Depth();
-
-            int n = elem / Width() * Height();
-            int h = (elem - n * Width() * Height()) / Height();
-            int w = (elem - n * Width() * Height()) % Height();
-            int d = i % Depth();
-            result(w, h, d, n) = m_Values[i];*/
-
-
-            int d = i % Depth();
-            result.m_Values[i / Depth() + d * m_Shape.Dim0Dim1] = m_Values[i];
+            for (int j = 0; j < Depth(); ++j, ++i)
+            {
+                result(w, h, j, n) = m_Values[i];
+            }
         }
 
         return result;
@@ -209,21 +205,17 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     Tensor Tensor::ToNHWC() const
     {
-        Tensor result(*this);
+        Tensor result(GetShape());
 
-        for (int i = 0; i < m_Values.size(); ++i)
+        int i = 0;
+        for (int n = 0; n < Batch(); ++n)
+        for (int h = 0; h < Height(); ++h)
+        for (int w = 0; w < Width(); ++w)
         {
-            /*int elem = i / Depth();
-
-            int n = elem / Width() * Height();
-            int h = (elem - n * Width() * Height()) / Height();
-            int w = (elem - n * Width() * Height()) % Height();
-            int d = i % Depth();
-            result(w, h, d, n) = m_Values[i];*/
-
-
-            int d = i % m_Shape.Dim0Dim1;
-            result.m_Values[i / m_Shape.Dim0Dim1 + d * Depth()] = m_Values[i];
+            for (int j = 0; j < Depth(); ++j, ++i)
+            {
+                result.m_Values[i] = Get(w, h, j, n);
+            }
         }
 
         return result;
