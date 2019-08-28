@@ -1055,6 +1055,28 @@ namespace NeuroTests
                 Assert::IsTrue(inputs[i].Equals(correctInputs[i]));
         }
 
+        TEST_METHOD(ToNCHW)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ 1,1,1,2,2,2,3,3,3,4,4,4 }, Shape(2, 1, 3, 2));
+            Tensor result = t.ToNCHW();
+            Tensor correct({ 1,2,3,4,1,2,3,4,1,2,3,4 }, Shape(2, 1, 3, 2));
+
+            Assert::IsTrue(result.Equals(correct));
+        }
+
+        TEST_METHOD(ToNHWC)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ 1,2,3,4,1,2,3,4,1,2,3,4 }, Shape(2, 1, 3, 2));
+            Tensor result = t.ToNHWC();
+            Tensor correct({ 1,1,1,2,2,2,3,3,3,4,4,4 }, Shape(2, 1, 3, 2));
+
+            Assert::IsTrue(result.Equals(correct));
+        }
+
         TEST_METHOD(Serialize_Deserialize)
         {
             /*string tempFilename = "tensor_tmp.txt";

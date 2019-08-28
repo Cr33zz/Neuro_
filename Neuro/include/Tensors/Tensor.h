@@ -18,6 +18,9 @@ namespace Neuro
 
 	using namespace std;
 
+    // This is HCHW tenssor (meaning height is changing the most frequently and batch is changing the least frequently). This is just an interpretation of data.
+    // Nothing prevents user from loading an image which is usually in NHWC (channels are changing the most frequently because images are usually stored as sequence
+    // of RGB values for each pixel); however, before using it as an input to convolutional neural network such tensor should be converted to HCHW.
     class Tensor
     {
 	public:
@@ -66,6 +69,11 @@ namespace Neuro
         Tensor& FillWithFunc(const function<float()>& func);
 
         void Zero();
+
+        // Converts to NCHW assuming the data is in NHWC format. Shape remains unchanged.
+        Tensor ToNCHW() const;
+        // Converts to NHWC assuming the data is in NCHW format. Shape remains unchanged.
+        Tensor ToNHWC() const;
 	
 	private:
         void Mul(bool transposeT, const Tensor& t, Tensor& result) const;
@@ -104,12 +112,9 @@ namespace Neuro
 		Tensor Map(const function<float(float, float)>& func, const Tensor& other) const;
 
         Tensor Sum(EAxis axis, int batch = -1) const;
-
 		Tensor Avg(EAxis axis, int batch = -1) const;
-
         Tensor Max(EAxis axis, int batch = -1, Tensor* maxIndex = nullptr) const;
         Tensor Min(EAxis axis, int batch = -1, Tensor* minIndex = nullptr) const;
-
         // For Feature axis it will be batch index, for Sample axis it will be flat element index within a batch
         Tensor ArgMax(EAxis axis, int batch = -1) const;
         Tensor ArgMin(EAxis axis, int batch = -1) const;
