@@ -330,7 +330,7 @@ namespace Neuro
         {
             losses.push_back(Tensor(modelOutputs[i]->GetShape()));
             m_LossFuncs[i]->Compute(*outputs[i], *modelOutputs[i], losses[i]);
-            trainError += losses[i].Sum() / modelOutputs[i]->BatchLength();
+            trainError += losses[i].Sum(EAxis::Global)(0) / modelOutputs[i]->BatchLength();
             trainHits += m_AccuracyFuncs[i] ? m_AccuracyFuncs[i](*outputs[i], *modelOutputs[i]) : 0;
             m_LossFuncs[i]->Derivative(*outputs[i], *modelOutputs[i], losses[i]);
         }

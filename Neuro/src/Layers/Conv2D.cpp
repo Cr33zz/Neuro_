@@ -85,7 +85,7 @@ namespace Neuro
 		outputGradient.Conv2DKernelsGradient(*m_Inputs[0], outputGradient, m_Stride, m_Padding, m_KernelsGradient);
 
 		if (m_UseBias)
-			m_BiasGradient.Add(outputGradient.SumBatches());
+			m_BiasGradient.Add(outputGradient.Sum(EAxis::Feature));
 	}
 
     /*Neuro::EPaddingMode Convolution::GetGradientPaddingMode(int padding)

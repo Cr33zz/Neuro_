@@ -103,13 +103,9 @@ namespace Neuro
 		void Map(const function<float(float, float)>&, const Tensor& other, Tensor& result) const;
 		Tensor Map(const function<float(float, float)>& func, const Tensor& other) const;
 
-        Tensor SumBatches() const;
-        float Sum(int batch = -1) const;
-        Tensor SumPerBatch() const;
+        Tensor Sum(EAxis axis, int batch = -1) const;
 
-        Tensor AvgBatches() const;
-		float Avg(int batch = -1) const;
-        Tensor AvgPerBatch() const;
+		Tensor Avg(EAxis axis, int batch = -1) const;
 
         Tensor Max(EAxis axis, int batch = -1, Tensor* maxIndex = nullptr) const;
         Tensor Min(EAxis axis, int batch = -1, Tensor* minIndex = nullptr) const;

@@ -176,7 +176,7 @@ namespace Neuro
 
 		for (int n = 0; n < input.Batch(); ++n)
 		{
-			float sum = exps.Sum(n);
+			float sum = exps.Sum(EAxis::Sample, n)(0);
 
 			for (int d = 0; d < input.Depth(); ++d)
 			for (int h = 0; h < input.Height(); ++h)
@@ -388,11 +388,10 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::BatchNormalizationTrain(const Tensor& input, const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& output) const
     {
-        float N = (float)input.Batch();
-        saveMean = input.SumBatches().Mul(1.f / N);
+        saveMean = input.Avg(EAxis::Feature);
         Tensor xmu = input.Sub(saveMean);
         Tensor carre = xmu.Map([](float x) { return x * x; });
-        Tensor variance = carre.SumBatches().Mul(1.f / N);
+        Tensor variance = carre.Avg(EAxis::Feature);
         Tensor sqrtvar = variance.Map([](float x) { return sqrt(x); });
         saveInvVariance = sqrtvar.Map([](float x) { return 1.f / x; });
         Tensor va2 = xmu.MulElem(saveInvVariance);
@@ -405,26 +404,26 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, Tensor& inputGradient) const
     {
-        float N = (float)outputGradient.Batch();
+        float n = (float)outputGradient.Batch();
 
         Tensor xmu = input.Sub(savedMean);
         Tensor carre = xmu.Map([](float x) { return x * x; });        
         Tensor va2 = xmu.MulElem(savedInvVariance);
-        Tensor variance = carre.SumBatches().Mul(1.f / N);
+        Tensor variance = carre.Avg(EAxis::Feature);
         Tensor sqrtvar = variance.Map([](float x) { return sqrt(x); });
 
-        betaGradient = outputGradient.SumBatches();
-        gammaGradient = va2.MulElem(outputGradient).SumBatches();
+        betaGradient = outputGradient.Sum(EAxis::Feature);
+        gammaGradient = va2.MulElem(outputGradient).Sum(EAxis::Feature);
 
         Tensor dva2 = outputGradient.MulElem(gamma);
         Tensor dxmu = dva2.MulElem(savedInvVariance);
-        Tensor dinvvar = xmu.MulElem(dva2).SumBatches();
+        Tensor dinvvar = xmu.MulElem(dva2).Sum(EAxis::Feature);
         Tensor dsqrtvar = dinvvar.Map([&](float x1, float x2) { return -1.f / (x2*x2) * x1; }, sqrtvar);
         Tensor dvar = dsqrtvar.Map([&](float x1, float x2) { return 0.5f * pow(x2 + _EPSILON, -0.5f) * x1; }, variance);
-        Tensor dcarre = Tensor(carre.GetShape()).FillWithValue(1).MulElem(dvar).Mul(1.f / N);
+        Tensor dcarre = Tensor(carre.GetShape()).FillWithValue(1).MulElem(dvar).Mul(1.f / n);
         dxmu.Add(xmu.MulElem(dcarre).Mul(2), dxmu);
-        Tensor dmu = dxmu.SumBatches().Negated();
-        dxmu.Add(Tensor(dxmu.GetShape()).FillWithValue(1).MulElem(dmu).Mul(1.f / N), inputGradient);
+        Tensor dmu = dxmu.Sum(EAxis::Feature).Negated();
+        dxmu.Add(Tensor(dxmu.GetShape()).FillWithValue(1).MulElem(dmu).Mul(1.f / n), inputGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////

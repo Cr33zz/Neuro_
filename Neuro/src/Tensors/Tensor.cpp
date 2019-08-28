@@ -439,76 +439,66 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::SumBatches() const
-	{
-		Tensor result(Shape(m_Shape.Width(), m_Shape.Height(), m_Shape.Depth(), 1));
-		Op()->SumBatches(*this, result);
-		return result;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	float Tensor::Sum(int batch) const
+    Tensor Tensor::Sum(EAxis axis, int batch) const
 	{
 		CopyToHost();
-		int batchLen = BatchLength();
 
-		if (batch < 0)
-		{
-			batchLen = Length();
-			batch = 0;
-		}
+		if (axis == EAxis::Sample)
+        {
+            Tensor sum(Shape(batch < 0 ? Batch() : 1));
+            sum.FillWithValue(0);
 
-		float sum = 0;
+            int batchMin = batch < 0 ? 0 : batch;
+            int batchMax = batch < 0 ? Batch() : (batch + 1);
+            int batchLen = BatchLength();
 
-		for (int i = 0, idx = batch * batchLen; i < batchLen; ++i, ++idx)
-			sum += m_Values[idx];
+            for (int n = batchMin, outN = 0; n < batchMax; ++n, ++outN)
+            for (int i = 0, idx = n * batchLen; i < batchLen; ++i, ++idx)
+                sum(outN) += m_Values[idx];
 
-		return sum;
+            return sum;
+        }
+        else if (axis == EAxis::Feature)
+        {
+            Tensor sum(Shape(Width(), Height(), Depth(), 1));
+            sum.FillWithValue(0);
+
+            for (int n = 0; n < Batch(); ++n)
+            for (int d = 0; d < Depth(); ++d)
+            for (int h = 0; h < Height(); ++h)
+            for (int w = 0; w < Width(); ++w)
+                sum(w, h, d) += Get(w, h, d, n);
+
+            return sum;
+        }
+        else //if (axis == EAxis::Global)
+        {
+            Tensor sum({ 0 }, Shape(1));
+
+            for (int i = 0; i < Length(); ++i)
+                sum(0) = m_Values[i];
+
+            return sum;
+        }
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::SumPerBatch() const
+    Tensor Tensor::Avg(EAxis axis, int batch) const
 	{
-		CopyToHost();
-		Tensor result(Shape(1, 1, 1, m_Shape.Batch()));
+		Tensor sum = Sum(axis, batch);
 
-		for (int n = 0; n < Batch(); ++n)
-			result.m_Values[n] = Sum(n);
-
-		return result;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::AvgBatches() const
-	{
-		CopyToHost();
-		Tensor result = SumBatches();
-
-		int batchLen = BatchLength();
-
-		for (int n = 0; n < batchLen; ++n)
-			result.m_Values[n] /= Batch();
-
-		return result;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	float Tensor::Avg(int batch) const
-	{
-		return Sum(batch) / (batch < 0 ? Length() : BatchLength());
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::AvgPerBatch() const
-	{
-		Tensor result = SumPerBatch();
-
-		int batchLen = BatchLength();
-
-		for (int n = 0; n < Batch(); ++n)
-			result.m_Values[n] /= batchLen;
-
-		return result;
+        if (axis == EAxis::Sample)
+        {
+            return sum.Mul(1.f / BatchLength());
+        }
+        else if (axis == EAxis::Feature)
+        {
+            return sum.Mul(1.f / Batch());
+        }
+        else //if (axis == EAxis::Global)
+        {
+            return sum.Mul(1.f / Length());
+        }
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -828,9 +818,9 @@ namespace Neuro
             }
 
             float n = (float)Batch();
-            Tensor xmean = SumBatches().Mul(1.f / n);
+            Tensor xmean = Avg(EAxis::Feature);
             Tensor xmu = Sub(xmean);
-            Tensor variance = xmu.Map([](float x) { return x * x; }).SumBatches().Mul(1.f / n);
+            Tensor variance = xmu.Map([](float x) { return x * x; }).Sum(EAxis::Feature).Mul(1.f / n);
             Tensor invVar = variance.Map([](float x) { return 1.f / x; });
             xmu.MulElem(invVar, result);
             return make_pair(xmean, invVar);

@@ -527,35 +527,116 @@ namespace NeuroTests
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
-        TEST_METHOD(Sum_Per_Batch)
+        TEST_METHOD(Sum_Sample)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
-            auto t = Tensor(Shape(2, 2, 1, 3)); t.FillWithRange(1);
-            vector<float> sums = { 10, 26, 42 };
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4 }, Shape(2, 2, 1, 2));
+            
+            auto result = t.Sum(EAxis::Sample);
+            Tensor correct({ -9, 12 }, Shape(2));
 
-            for (int i = 0; i < t.Batch(); ++i)
-                Assert::AreEqual((double)t.Sum(i), (double)sums[i], 1e-7);
+            for (int i = 0; i < t.GetShape().Length; ++i)
+                Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
-        TEST_METHOD(Sum)
+        TEST_METHOD(Sum_Sample_SingleBatch)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
-            auto t = Tensor(Shape(2, 2, 1, 3)); t.FillWithRange(1);
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4 }, Shape(2, 2, 1, 2));
 
-            Assert::AreEqual((double)t.Sum(), 78, 1e-7);
+            auto result = t.Sum(EAxis::Sample, 1);
+            Tensor correct({ 12 }, Shape(1));
+
+            for (int i = 0; i < t.GetShape().Length; ++i)
+                Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
-        TEST_METHOD(SumBatches)
+        TEST_METHOD(Sum_Feature)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
-            auto t = Tensor(Shape(2, 2, 1, 4)); t.FillWithRange(1);
-            auto result = t.SumBatches();
-            auto correct = Tensor({ 28, 32, 36, 40 }, Shape(2, 2, 1, 1));
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4 }, Shape(2, 2, 1, 2));
 
-            Assert::IsTrue(result.Equals(correct));
+            auto result = t.Sum(EAxis::Feature);
+            Tensor correct({ -14, 0, 8, 9 }, Shape(2,2));
+
+            for (int i = 0; i < t.GetShape().Length; ++i)
+                Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
+        }
+
+        TEST_METHOD(Sum_Global)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4 }, Shape(2, 2, 1, 2));
+
+            auto result = t.Sum(EAxis::Global);
+            Tensor correct({ 3 }, Shape(1));
+
+            for (int i = 0; i < t.GetShape().Length; ++i)
+                Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
+        }
+
+        TEST_METHOD(Avg_Sample)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ -20,  1,  5,  5,
+                6, -1,  3,  4 }, Shape(2, 2, 1, 2));
+
+            auto result = t.Avg(EAxis::Sample);
+            Tensor correct({ -2.25f, 3 }, Shape(2));
+
+            for (int i = 0; i < t.GetShape().Length; ++i)
+                Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
+        }
+
+        TEST_METHOD(Avg_Sample_SingleBatch)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4 }, Shape(2, 2, 1, 2));
+
+            auto result = t.Avg(EAxis::Sample, 1);
+            Tensor correct({ 3 }, Shape(1));
+
+            for (int i = 0; i < t.GetShape().Length; ++i)
+                Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
+        }
+
+        TEST_METHOD(Avg_Feature)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4 }, Shape(2, 2, 1, 2));
+
+            auto result = t.Avg(EAxis::Feature);
+            Tensor correct({ -7, 0, 4, 4.5f }, Shape(2, 2));
+
+            for (int i = 0; i < t.GetShape().Length; ++i)
+                Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
+        }
+
+        TEST_METHOD(Avg_Global)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4 }, Shape(2, 2, 1, 2));
+
+            auto result = t.Avg(EAxis::Global);
+            Tensor correct({ 0.375f }, Shape(1));
+
+            for (int i = 0; i < t.GetShape().Length; ++i)
+                Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
         TEST_METHOD(Transpose)
@@ -581,37 +662,6 @@ namespace NeuroTests
 
         //    Assert::IsTrue(r.Equals(r2, 1e-4f));
         //}
-
-        TEST_METHOD(Avg_Per_Batch)
-        {
-            Tensor::SetDefaultOpMode(EOpMode::CPU);
-
-            auto t = Tensor(Shape(2, 2, 1, 3)); t.FillWithRange(1);
-            vector<float> averages = { 2.5f, 6.5f, 10.5f };
-
-            for (int i = 0; i < t.Batch(); ++i)
-                Assert::AreEqual((double)t.Avg(i), (double)averages[i], 1e-7);
-        }
-
-        TEST_METHOD(Avg)
-        {
-            Tensor::SetDefaultOpMode(EOpMode::CPU);
-
-            auto t = Tensor(Shape(2, 2, 1, 3)); t.FillWithRange(1);
-
-            Assert::AreEqual((double)t.Avg(), 6.5, 1e-7);
-        }
-
-        TEST_METHOD(AvgBatches)
-        {
-            Tensor::SetDefaultOpMode(EOpMode::CPU);
-
-            auto t = Tensor(Shape(2, 2, 1, 4)); t.FillWithRange(1);
-            auto result = t.AvgBatches();
-            auto correct = Tensor({ 7, 8, 9, 10 }, Shape(2, 2, 1, 1));
-
-            Assert::IsTrue(result.Equals(correct));
-        }
 
         TEST_METHOD(Resized)
         {

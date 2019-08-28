@@ -108,7 +108,7 @@ namespace NeuroTests
             Softmax softmax;
 			softmax.Compute(input, result);
 
-            Assert::AreEqual((double)result.Sum(0), 1, 1e-4);
+            Assert::AreEqual((double)result.Sum(EAxis::Sample, 0)(0), 1, 1e-4);
 		}
 
         TEST_METHOD(Softmax_3Batches)
@@ -121,7 +121,7 @@ namespace NeuroTests
 			softmax.Compute(input, result);
 
 			for (int b = 0; b < 3; ++b)
-				Assert::AreEqual((double)result.Sum(b), 1, 1e-4);
+				Assert::AreEqual((double)result.Sum(EAxis::Sample, b)(0), 1, 1e-4);
 		}
 	};
 }
