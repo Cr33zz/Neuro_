@@ -26,7 +26,7 @@ namespace Neuro
         if (seed > 0)
         {
             m_Seed = seed;
-            g_Rng = Random(seed);
+            GlobalRngSeed(seed);
         }
     }
 
@@ -218,7 +218,7 @@ namespace Neuro
 
 			// no point shuffling stuff when we have single batch
 			if (samplesNum > 1 && shuffle)
-                random_shuffle(indices.begin(), indices.end(), [](size_t max) { return g_Rng.Next((int)max); });
+                random_shuffle(indices.begin(), indices.end(), [](size_t max) { return GlobalRng().Next((int)max); });
 
 			for (int b = 0; b < batchesNum; ++b)
 			{
@@ -265,17 +265,17 @@ namespace Neuro
 				LogLine(output);
 			}
 
-			float trainError = trainTotalError / samplesNum;
+            m_LastTrainError = trainTotalError / samplesNum;
 
             if (chartGen)
             {
-                chartGen->AddData((float)e, trainError, (int)Track::TrainError);
+                chartGen->AddData((float)e, m_LastTrainError, (int)Track::TrainError);
                 chartGen->AddData((float)e, (float)trainHits / samplesNum / m_Model->GetOutputLayersCount(), (int)Track::TrainAccuracy);
             }
 
 			if (verbose > 0)
 			{
-				string s = " - loss: " + to_string(trainError);
+				string s = " - loss: " + to_string(m_LastTrainError);
 				if (trackFlags & Track::TrainAccuracy)
 					s += " - acc: " + to_string((float)trainHits / samplesNum * 100) + "%";
 

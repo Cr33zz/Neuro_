@@ -30,8 +30,8 @@ namespace Neuro
 		float x1, x2, r2;
 		do
 		{
-			x1 = 2 * g_Rng.NextFloat() - 1;
-			x2 = 2 * g_Rng.NextFloat() - 1;
+			x1 = 2 * GlobalRng().NextFloat() - 1;
+			x2 = 2 * GlobalRng().NextFloat() - 1;
 			r2 = x1 * x1 + x2 * x2;
 		}
 

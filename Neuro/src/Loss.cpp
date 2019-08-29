@@ -36,13 +36,13 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void MeanSquareError::Compute(const Tensor& targetOutput, const Tensor& output, Tensor& result) const
 	{
-		targetOutput.Map([&](float yTrue, float y) { return (y - yTrue) * (y - yTrue); }, output, result);
+		targetOutput.Map([&](float yTrue, float y) { return (y - yTrue) * (y - yTrue) * 0.5f; }, output, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void MeanSquareError::Derivative(const Tensor& targetOutput, const Tensor& output, Tensor& result) const
 	{
-		targetOutput.Map([&](float yTrue, float y) { return 2 * (y - yTrue); }, output, result);
+		targetOutput.Map([&](float yTrue, float y) { return (y - yTrue); }, output, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////

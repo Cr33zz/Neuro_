@@ -28,7 +28,6 @@ namespace Neuro
         virtual void BatchNormalization(const Tensor& t, const Tensor& gamma, const Tensor& beta, const Tensor& runningMean, const Tensor& runningVar, Tensor& result) const override;
         virtual void BatchNormalizationTrain(const Tensor& t, const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const override;
         virtual void BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, Tensor& inputGradient) const override;
-        virtual void SumBatches(const Tensor& t, Tensor& result) const override;
         virtual void Elu(const Tensor& input, float alpha, Tensor& result) const override;
         virtual void EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& result) const override;
         virtual void Softmax(const Tensor& input, Tensor& result) const override;

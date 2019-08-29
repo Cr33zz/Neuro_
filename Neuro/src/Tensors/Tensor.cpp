@@ -144,7 +144,7 @@ namespace Neuro
             fillUp(tmpRng);
         }
         else
-            fillUp(g_Rng);
+            fillUp(GlobalRng());
 
 		return *this;
 	}
@@ -1188,8 +1188,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     Shape Tensor::GetConvTransposeOutputShape(const Shape& inputShape, int outputDepth, int kernelWidth, int kernelHeight, int stride, int paddingX, int paddingY)
     {
-        return Shape(stride * (inputShape.Width() - 1) + kernelWidth - 2 * paddingX, 
-                     stride * (inputShape.Height() - 1) + kernelHeight - 2 * paddingY, 
+        return Shape((inputShape.Width() - 1) * stride + kernelWidth - 2 * paddingX,
+                     (inputShape.Height() - 1) * stride + kernelHeight - 2 * paddingY,
                      outputDepth, 
                      inputShape.Batch());
     }

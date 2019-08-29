@@ -7,8 +7,10 @@ namespace Neuro
 {
 	class Tensor;
 
-    static const float _EPSILON = 10e-7f;
-    static Random g_Rng;
+    const float _EPSILON = 10e-7f;
+    
+    Random& GlobalRng();
+    void GlobalRngSeed(unsigned int seed);
 
     int AccNone(const Tensor& target, const Tensor& output);
     int AccBinaryClassificationEquality(const Tensor& target, const Tensor& output);
@@ -202,7 +204,7 @@ namespace Neuro
         int n = (int)list.size();
         while (n-- > 1)
         {
-            int k = g_Rng.Next(n + 1);
+            int k = GlobalRng().Next(n + 1);
             swap(list[k], list[n]);
         }
     }

@@ -24,6 +24,7 @@
     <ClCompile Include="src\ConvolutionLayerTests.cpp" />
     <ClCompile Include="src\DeconvolutionLayerTests.cpp" />
     <ClCompile Include="src\DenseLayerTests.cpp" />
+    <ClCompile Include="src\DropoutLayerTests.cpp" />
     <ClCompile Include="src\FlattenLayerTests.cpp" />
     <ClCompile Include="src\MergeLayerTests.cpp" />
     <ClCompile Include="src\NeuralNetworkTests.cpp" />

@@ -138,22 +138,6 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::SumBatches(const Tensor& t, Tensor& result) const
-	{
-		t.CopyToHost();
-        result.OverrideHost();
-
-        auto& tValues = t.GetValues();
-        auto& resultValues = result.GetValues();
-
-		int batchLen = t.BatchLength();
-
-		for (int n = 0; n < t.Batch(); ++n)
-		for (int i = 0, idx = n * batchLen; i < batchLen; ++i, ++idx)
-			resultValues[i] += tValues[idx];
-	}
-
-	//////////////////////////////////////////////////////////////////////////
 	void TensorOpCpu::Elu(const Tensor& input, float alpha, Tensor& output) const
 	{
         input.Map([&](float x) { return x >= 0 ? x : alpha * ((float)exp(x) - 1); }, output);
@@ -429,7 +413,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::Dropout(const Tensor& input, float prob, Tensor& saveMask, Tensor& output)
     {
-        saveMask.FillWithFunc([&]() { return (g_Rng.NextFloat() < prob ? 0.f : 1.f) / prob; });
+        saveMask.FillWithFunc([&]() { return (GlobalRng().NextFloat() < prob ? 0.f : 1.f) / prob; });
         input.MulElem(saveMask, output);
     }
 

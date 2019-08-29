@@ -47,31 +47,7 @@ namespace NeuroTests
             TestDenseLayer(3, 2, 100, -1, 300);
         }
 
-        /*TEST_METHOD(Single_Convolution_Layer_BS10_VS1)
-        {
-            TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 1, 30, 10, 50, ConvValidStride1);
-        }
-
-        TEST_METHOD(Single_Convolution_Layer_BS1_VS1)
-        {
-            TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 1, 30, 1, 50, ConvValidStride1);
-        }
-
-        TEST_METHOD(Single_Convolution_Layer_FullBatch_VS1)
-        {
-            TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 1, 30, -1, 50, ConvValidStride1);
-        }
-
-        TEST_METHOD(Single_Convolution_Layer_BS10_VS2)
-        {
-            TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 2, 30, 10, 50, ConvValidStride2);
-        }
-
-        TEST_METHOD(Single_Convolution_Layer_BS10_VS3)
-        {
-            TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 3, 30, 10, 50, ConvValidStride3);
-        }*/
-
+        
         TEST_METHOD(Batching_No_Reminder)
         {
             /*auto tData = GenerateTrainingData(100, Shape(1, 3), new Tensor(Shape(3, 2)), MatMult);
@@ -157,30 +133,6 @@ namespace NeuroTests
             net->Fit(inputs, outputs, batchSize, epochs, nullptr, nullptr, 0, Track::Nothing);
 
             Assert::IsTrue(outputs.Equals(*net->Predict(inputs)[0], 0.02f));
-        }
-
-        template<typename F>
-        void TestConvolutionLayer(Shape inputShape, int kernelSize, int kernelsNum, int stride, int samples, int batchSize, int epochs, F& convFunc)
-        {
-            auto model = new Sequential();
-            model->AddLayer((new Conv2D(inputShape, kernelSize, kernelsNum, stride, 0, new Linear()))->SetKernelInitializer(new Constant(1)));
-            auto net = new NeuralNetwork(model, "convolution_test", 7);
-
-            auto expectedKernels = Tensor(Shape(kernelSize, kernelSize, inputShape.Depth(), kernelsNum));
-            expectedKernels.FillWithRand(17);
-
-            Tensor inputs(Shape::From(model->LastLayer()->InputShape(), samples));
-            Tensor outputs(inputs.GetShape());
-            GenerateTrainingData(expectedKernels, convFunc, inputs, outputs);
-            
-            net->Optimize(new SGD(0.02f), new MeanSquareError());
-            net->Fit(inputs, outputs, batchSize, epochs, nullptr, nullptr, 0, Track::Nothing);
-
-            vector<ParametersAndGradients> paramsAndGrads;
-            model->LastLayer()->GetParametersAndGradients(paramsAndGrads);
-
-            for (int i = 0; i < expectedKernels.Length(); ++i)
-                Assert::AreEqual((double)paramsAndGrads[0].Parameters->GetFlat(i), (double)expectedKernels.GetFlat(i), 1e-2);
         }
 
         TEST_METHOD(Streams_1Input_2Outputs_SimpleSplit)

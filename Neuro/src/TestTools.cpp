@@ -25,7 +25,7 @@ namespace Neuro
 		Tensor::SetDefaultOpMode(EOpMode::CPU);
 		auto inputs = GenerateInputsForLayer(layer, batchSize);
 
-        g_Rng = Random(101);
+        GlobalRngSeed(101);
 		auto output = layer->FeedForward(inputs, true);
 		auto outputGradient = Tensor(output->GetShape());
 		outputGradient.FillWithValue(1);
@@ -44,10 +44,10 @@ namespace Neuro
 				auto oldValue = input.GetFlat(i);
 
 				input.SetFlat(oldValue - DERIVATIVE_EPSILON, i);
-                g_Rng = Random(101);
+                GlobalRngSeed(101);
 				auto output1 = *layer->FeedForward(inputs, true);
 				input.SetFlat(oldValue + DERIVATIVE_EPSILON, i);
-                g_Rng = Random(101);
+                GlobalRngSeed(101);
 				auto output2 = *layer->FeedForward(inputs, true);
 
 				input.SetFlat(oldValue, i);

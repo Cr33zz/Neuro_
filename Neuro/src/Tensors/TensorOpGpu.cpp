@@ -488,29 +488,6 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::SumBatches(const Tensor& t, Tensor& result) const
-    {
-        t.CopyToDevice();
-        result.CopyToDevice();
-
-        int batchLen = t.BatchLength();
-        float alpha = 1, beta = 1;
-
-        for (int n = 0; n < t.Batch(); ++n)
-        {
-            CUDA_CHECK(cublasSgeam(
-                s_CublasHandle,
-                CUBLAS_OP_N, CUBLAS_OP_N,
-                batchLen, 1,
-                &alpha,
-                CudaDeviceVariable<float>(t.GetDeviceVar(), n * batchLen).GetDevicePtr(), batchLen,
-                &beta,
-                result.GetDevicePtr(), batchLen,
-                result.GetDevicePtr(), batchLen));
-        }
-    }
-
-    //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Elu(const Tensor& input, float alpha, Tensor& result) const
     {
         dim3 blocks, threads;
