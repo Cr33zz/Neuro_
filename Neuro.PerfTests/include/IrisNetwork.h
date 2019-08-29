@@ -25,15 +25,13 @@ public:
 
         Tensor inputs;
         Tensor outputs;
-
         LoadCSVData("data/iris_data.csv", 3, inputs, outputs, true);
-
-        inputs.NormalizedAcrossBatches(inputs);
+        inputs = inputs.Normalized(EAxis::Feature);
 
         Stopwatch timer;
         timer.Start();
 
-        net->Fit(inputs, outputs, 20, 10, nullptr, nullptr, 1, Track::TrainError);
+        net->Fit(inputs, outputs, 20, 10, nullptr, nullptr, 2, Track::TrainError | Track::TrainAccuracy);
 
         timer.Stop();
         cout << "Training time " << timer.ElapsedMiliseconds() << "ms";
