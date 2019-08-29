@@ -699,7 +699,7 @@ namespace Neuro
 
                 for (int n = 0; n < Batch(); ++n)
                 for (int i = 0, idx = n * BatchLength(); i < BatchLength(); ++i, ++idx)
-                    norm(n) += normMode == ENormMode::L1 ? m_Values[idx] : (m_Values[idx] * m_Values[idx]);
+                    norm(n) += normMode == ENormMode::L1 ? abs(m_Values[idx]) : (m_Values[idx] * m_Values[idx]);
 
                 if (normMode == ENormMode::L2)
                 {
@@ -729,7 +729,7 @@ namespace Neuro
                 for (int d = 0; d < Depth(); ++d)
                 for (int h = 0; h < Height(); ++h)
                 for (int w = 0; w < Width(); ++w)
-                    norm(w, h, d) += normMode == ENormMode::L1 ? Get(w, h, d, n) : (Get(w, h, d, n) * Get(w, h, d, n));
+                    norm(w, h, d) += normMode == ENormMode::L1 ? abs(Get(w, h, d, n)) : (Get(w, h, d, n) * Get(w, h, d, n));
 
                 if (normMode == ENormMode::L2)
                 {
@@ -756,7 +756,7 @@ namespace Neuro
             {
                 norm = Tensor({ 0 }, Shape(1));
                 for (int i = 0; i < Length(); ++i)
-                    norm(0) += normMode == ENormMode::L1 ? m_Values[i] : (m_Values[i] * m_Values[i]);
+                    norm(0) += normMode == ENormMode::L1 ? abs(m_Values[i]) : (m_Values[i] * m_Values[i]);
 
                 if (normMode == ENormMode::L2)
                 {
