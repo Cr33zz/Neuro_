@@ -1,5 +1,6 @@
 ﻿#include <algorithm>
 #include <iostream>
+#include <fstream>
 #include <numeric>
 #include <cctype>
 
@@ -274,9 +275,9 @@ namespace Neuro
 
 			if (verbose > 0)
 			{
-				string s = " - loss: " + to_string(roundf(trainError * 1000.f) / 1000.f);
+				string s = " - loss: " + to_string(trainError);
 				if (trackFlags & Track::TrainAccuracy)
-					s += " - acc: " + to_string(roundf((float)trainHits / samplesNum * 100 * 1000.f) / 1000.f) + "%";
+					s += " - acc: " + to_string((float)trainHits / samplesNum * 100) + "%";
 
 				LogLine(s);
 			}
@@ -316,8 +317,17 @@ namespace Neuro
 				chartGen ? .Save();*/
 		}
 
-		/*if (verbose > 0)
-			File.WriteAllLines($"{outFilename}_log.txt", LogLines);*/
+        if (verbose > 0)
+        {
+            ofstream file(outFilename + ".log");
+
+            if (file.is_open())
+            {
+                for (string line : m_LogLines)
+                    file << line << endl;
+                file.close();
+            }
+        }
 	}
 
 	//////////////////////////////////////////////////////////////////////////

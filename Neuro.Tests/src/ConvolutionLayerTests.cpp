@@ -50,6 +50,28 @@ namespace NeuroTests
             Assert::IsTrue(TestTools::VerifyInputGradient(std::unique_ptr<LayerBase>(CreateLayer(0)).get(), 3));
         }
 
+        TEST_METHOD(Train)
+        {
+            Shape inputShape(4, 4, 3, 5);
+
+            auto model = new Sequential();
+            model->AddLayer(new Conv2D(inputShape, 3, 3, 1, 1, new Sigmoid()));
+            auto net = new NeuralNetwork(model, "convolution_test", 7);
+
+            Tensor input(inputShape);
+            input.FillWithRand(10, 0, 1);
+            Tensor output(inputShape);
+            output.FillWithValue(1);
+
+            net->Optimize(new SGD(0.02f), new MeanSquareError());
+            net->Fit(input, output, -1, 200, nullptr, nullptr, 1, Track::TrainError);
+
+            const Tensor* predictedOutput = net->Predict(input)[0];
+
+            for (int i = 0; i < predictedOutput->Length(); ++i)
+                Assert::AreEqual((double)output.GetFlat(i), (double)predictedOutput->GetFlat(i), 0.1);
+        }
+
         LayerBase* CreateLayer(int padding)
         {
             auto layer = new Conv2D(Shape(5,5,3), 3, 4, 1, padding);

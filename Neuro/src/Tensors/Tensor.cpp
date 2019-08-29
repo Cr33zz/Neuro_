@@ -1221,7 +1221,7 @@ namespace Neuro
 	//}
 
 	//////////////////////////////////////////////////////////////////////////
-	float Tensor::GetFlat(int i)
+	float Tensor::GetFlat(int i) const
 	{
 		CopyToHost();
 		return m_Values[i];

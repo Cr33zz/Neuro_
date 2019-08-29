@@ -42,7 +42,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void MeanSquareError::Derivative(const Tensor& targetOutput, const Tensor& output, Tensor& result) const
 	{
-		targetOutput.Map([&](float yTrue, float y) { return (y - yTrue); }, output, result);
+		targetOutput.Map([&](float yTrue, float y) { return 2 * (y - yTrue); }, output, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////

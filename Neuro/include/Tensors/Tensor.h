@@ -234,7 +234,7 @@ namespace Neuro
         float& operator()(int w, int h = 0, int d = 0, int n = 0);
         float operator()(int w, int h = 0, int d = 0, int n = 0) const;
 
-        float GetFlat(int i);
+        float GetFlat(int i) const;
         float& Get(int w, int h = 0, int d = 0, int n = 0);
         float Get(int w, int h = 0, int d = 0, int n = 0) const;
         float TryGet(float def, int w, int h = 0, int d = 0, int n = 0) const;

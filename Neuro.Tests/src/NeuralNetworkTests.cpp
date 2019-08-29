@@ -47,7 +47,7 @@ namespace NeuroTests
             TestDenseLayer(3, 2, 100, -1, 300);
         }
 
-        TEST_METHOD(Single_Convolution_Layer_BS10_VS1)
+        /*TEST_METHOD(Single_Convolution_Layer_BS10_VS1)
         {
             TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 1, 30, 10, 50, ConvValidStride1);
         }
@@ -70,7 +70,7 @@ namespace NeuroTests
         TEST_METHOD(Single_Convolution_Layer_BS10_VS3)
         {
             TestConvolutionLayer(Shape(9, 9, 2), 3, 3, 3, 30, 10, 50, ConvValidStride3);
-        }
+        }*/
 
         TEST_METHOD(Batching_No_Reminder)
         {
