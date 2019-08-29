@@ -58,10 +58,12 @@ namespace NeuroTests
             model->AddLayer(new Conv2D(inputShape, 3, 3, 1, 1, new Sigmoid()));
             auto net = new NeuralNetwork(model, "convolution_test", 7);
 
+            Tensor randomKernels(Shape(3, 3, 3, 3));
+            randomKernels.FillWithRand(7);
+
             Tensor input(inputShape);
-            input.FillWithRand(10, 0, 1);
-            Tensor output(inputShape);
-            output.FillWithValue(1);
+            input.FillWithRand(10);
+            Tensor output = input.Conv2D(randomKernels, 1, 1);
 
             net->Optimize(new SGD(0.02f), new MeanSquareError());
             net->Fit(input, output, -1, 200, nullptr, nullptr, 1, Track::TrainError);

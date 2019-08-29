@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
@@ -63,7 +63,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)deps\MKL-DNN\include;$(ProjectDir)deps\MKL\include;$(ProjectDir)deps\CUDA\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Lib>
-      <AdditionalLibraryDirectories>$(ProjectDir)deps\MKL-DNN\lib;$(ProjectDir)deps\MKL\lib;$(CudaToolkitLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)deps\MKL-DNN\lib;$(ProjectDir)deps\MKL\lib;$(ProjectDir)deps\CUDA\lib;$(CudaToolkitLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>cudart_static.lib;cudnn.lib;cublas.lib</AdditionalDependencies>
     </Lib>
     <CudaCompile>
