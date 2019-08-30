@@ -18,10 +18,10 @@ public:
         model->AddLayer(new Dense(4, 1000, new ReLU()));
         model->AddLayer(new Dense(model->LastLayer(), 500, new ReLU()));
         model->AddLayer(new Dense(model->LastLayer(), 300, new ReLU()));
-        model->AddLayer(new Dropout(model->LastLayer(), 0.2f));
+        //model->AddLayer(new Dropout(model->LastLayer(), 0.2f));
         model->AddLayer(new Dense(model->LastLayer(), 3, new Softmax()));
         auto net = new NeuralNetwork(model, "test");
-        net->Optimize(new Adam(), new BinaryCrossEntropy());
+        net->Optimize(new SGD(), new BinaryCrossEntropy());
 
         Tensor inputs;
         Tensor outputs;

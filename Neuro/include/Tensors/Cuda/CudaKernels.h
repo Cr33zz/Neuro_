@@ -1,5 +1,6 @@
 #pragma once
 
+#ifdef CUDA_ENABLED
 namespace Neuro
 {
     class Tensor;
@@ -10,3 +11,4 @@ namespace Neuro
         static void EluGradient(const dim3& blocks, const dim3& threads, int inputLen, const float* outputDev, const float* outputGradientDev, float alpha, float* resultDev);
 	};
 }
+#endif
