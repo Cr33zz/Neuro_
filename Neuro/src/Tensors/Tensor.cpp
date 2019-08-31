@@ -5,6 +5,7 @@
 #include "Tensors/TensorOpCpu.h"
 #include "Tensors/TensorOpMultiCpu.h"
 #include "Tensors/TensorOpGpu.h"
+#include "Tensors/TensorFormatter.h"
 #include "Random.h"
 #include "Tools.h"
 
@@ -1107,7 +1108,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
 	std::string Tensor::ToString() const
 	{
-		string s = "";
+		/*string s = "";
 		/*for (int n = 0; n < Batch(); ++n)
 		{
 			if (Batch() > 1)
@@ -1134,9 +1135,10 @@ namespace Neuro
 
 			if (Batch() > 1)
 				s += "}" + (n < Batch() - 1 ? "\n" : "");
-		}*/
+		}
+		return s;*/
 
-		return s;
+        return TensorFormatter::ToString(*this);
 	}
 
 	//////////////////////////////////////////////////////////////////////////

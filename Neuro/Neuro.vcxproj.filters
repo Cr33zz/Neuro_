@@ -180,6 +180,9 @@
     <ClInclude Include="include\Layers\Conv2DTranspose.h">
       <Filter>include\Layers</Filter>
     </ClInclude>
+    <ClInclude Include="include\Tensors\TensorFormatter.h">
+      <Filter>include\Tensors</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\NeuralNetwork.cpp">
@@ -295,6 +298,9 @@
     </ClCompile>
     <ClCompile Include="src\Layers\UpSampling2D.cpp">
       <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tensors\TensorFormatter.cpp">
+      <Filter>src\Tensors</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

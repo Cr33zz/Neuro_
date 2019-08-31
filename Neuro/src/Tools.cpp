@@ -81,6 +81,22 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
+    string TrimStart(const string& str, const string& chars /*= "\t\n\v\f\r "*/)
+    {
+        string ret = str;
+        ret.erase(0, str.find_first_not_of(chars));
+        return ret;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    string TrimEnd(const string& str, const string& chars /*= "\t\n\v\f\r "*/)
+    {
+        string ret = str;
+        ret.erase(str.find_last_not_of(chars) + 1);
+        return ret;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     vector<string> Split(const string& str, const string& delimiter)
     {
         vector<string> result;

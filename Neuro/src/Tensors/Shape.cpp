@@ -13,6 +13,15 @@ namespace Neuro
 		Dimensions[1] = height;
 		Dimensions[2] = depth;
 		Dimensions[3] = batchSize;
+
+        if (batchSize > 1)
+            NDim = 4;
+        else if (depth > 1)
+            NDim = 3;
+        else if (height > 1)
+            NDim = 2;
+        else
+            NDim = 1;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -71,10 +80,43 @@ namespace Neuro
 		assert(h < Height());
 		assert(d < Depth());
 		assert(n < Batch());
-		return Dim0Dim1Dim2 * n + Dim0Dim1 * d + Dim0 * h + w;
+		return Dim0Dim1Dim2 * (n >= 0 ? n : (n + Dimensions[3])) + 
+               Dim0Dim1 * (d >= 0 ? d : (d + Dimensions[2])) + 
+               Dim0 * (h >= 0 ? h : (h + Dimensions[1])) + 
+               (w >= 0 ? w : (w + Dimensions[0]));
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    int Shape::GetIndex(const vector<int>& indices) const
+    {
+        size_t indicesCount = indices.size();
+
+        assert(indicesCount > 0);
+        assert(indicesCount < 5);
+
+        return GetIndex(
+                indices[0], 
+                indicesCount > 1 ? indices[1] : 0, 
+                indicesCount > 2 ? indices[2] : 0, 
+                indicesCount > 3 ? indices[3] : 0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    int Shape::GetIndexNCHW(const vector<int>& indices) const
+    {
+        size_t indicesCount = indices.size();
+
+        assert(indicesCount > 0);
+        assert(indicesCount < 5);
+
+        return GetIndex(
+            indices.back(),
+            indicesCount > 1 ? indices[indicesCount - 2] : 0,
+            indicesCount > 2 ? indices[indicesCount - 3] : 0,
+            indicesCount > 3 ? indices[0] : 0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	std::string Shape::ToString() const
 	{
 		stringstream ss;

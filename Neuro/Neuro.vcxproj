@@ -136,6 +136,7 @@
     <ClInclude Include="include\Tensors\Cuda\CudaKernels.h" />
     <ClInclude Include="include\Tensors\Shape.h" />
     <ClInclude Include="include\Tensors\Tensor.h" />
+    <ClInclude Include="include\Tensors\TensorFormatter.h" />
     <ClInclude Include="include\Tensors\TensorOpCpu.h" />
     <ClInclude Include="include\Tensors\TensorOpGpu.h" />
     <ClInclude Include="include\Tensors\TensorOpMultiCpu.h" />
@@ -177,6 +178,7 @@
     <ClCompile Include="src\Stopwatch.cpp" />
     <ClCompile Include="src\Tensors\Shape.cpp" />
     <ClCompile Include="src\Tensors\Tensor.cpp" />
+    <ClCompile Include="src\Tensors\TensorFormatter.cpp" />
     <ClCompile Include="src\Tensors\TensorOpCpu.cpp" />
     <ClCompile Include="src\Tensors\TensorOpGpu.cpp" />
     <ClCompile Include="src\Tensors\TensorOpMultiCpu.cpp" />

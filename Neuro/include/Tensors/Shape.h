@@ -24,6 +24,8 @@ namespace Neuro
 
         Shape Reshaped(int w, int h, int d, int n) const;
         int GetIndex(int w, int h = 0, int d = 0, int n = 0) const;
+        int GetIndex(const vector<int>& indices) const;
+        int GetIndexNCHW(const vector<int>& indices) const;
 
 		string ToString() const;
 
@@ -52,5 +54,6 @@ namespace Neuro
         int Dim0Dim1;
         int Dim0Dim1Dim2;
 		int Length;
+        int NDim;
     };
 }

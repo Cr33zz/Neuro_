@@ -25,13 +25,7 @@ namespace Neuro
 
     private:
         Tensor m_Mean;
-        Tensor xmu;
-        Tensor carre;
         Tensor m_Variance;
-        Tensor sqrtvar;
-        Tensor invvar;
-        Tensor va2;
-        Tensor va3;
         
         Tensor m_Gamma;
         Tensor m_Beta;
