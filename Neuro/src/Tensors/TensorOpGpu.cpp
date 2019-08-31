@@ -9,7 +9,6 @@
 
 namespace Neuro
 {
-#ifdef CUDA_ENABLED
     bool TensorOpGpu::s_Initialized = false;
     cudaDeviceProp TensorOpGpu::s_CudaDevProp;
     cublasHandle_t TensorOpGpu::s_CublasHandle = nullptr;
@@ -635,6 +634,4 @@ namespace Neuro
         OutputDebugString(msg);
         OutputDebugString("\n");
     }
-
-#endif
 }

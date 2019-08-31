@@ -15,6 +15,10 @@
 
 namespace Neuro
 {
+#ifdef LOG_GRADIENTS
+    ofstream g_GradientsFile;
+#endif
+
     //////////////////////////////////////////////////////////////////////////
     NeuralNetwork::NeuralNetwork(ModelBase* model, const string& name, int seed)
     {
@@ -156,18 +160,22 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void NeuralNetwork::Fit(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, int batchSize, int epochs, const tensor_ptr_vec_t* validInputs, const tensor_ptr_vec_t* validOutputs, int verbose, int trackFlags, bool shuffle)
 	{
+#ifdef LOG_GRADIENTS
+        g_GradientsFile = ofstream("gradients.txt");
+#endif
+
         //assert(inputs.size() == m_Model->GetInputLayersCount());
         assert(outputs.size() == m_Model->GetOutputLayersCount());
 
-		int samplesNum = inputs[0]->Batch();
+		int samplesCount = inputs[0]->Batch();
         
         for (auto inputTensor : inputs)
-            assert(inputTensor->Batch() == samplesNum && "Number of batches across all inputs must match.");
+            assert(inputTensor->Batch() == samplesCount && "Number of batches across all inputs must match.");
         for (auto outputTensor : outputs)
-            assert(outputTensor->Batch() == samplesNum && "Number of batches across all outputs must match number or batches in inputs.");
+            assert(outputTensor->Batch() == samplesCount && "Number of batches across all outputs must match number or batches in inputs.");
 
 		if (batchSize < 0)
-			batchSize = samplesNum;
+			batchSize = samplesCount;
 
 		string outFilename = FilePrefix() + "_training_data_" + m_Optimizer->ClassName() + "_b" + to_string(batchSize) + (m_Seed > 0 ? "(_seed" + to_string(m_Seed) + ")" : "");
 		
@@ -202,28 +210,31 @@ namespace Neuro
 
 		Stopwatch trainTimer;
 
-		vector<int> indices(samplesNum);
+		vector<int> indices(samplesCount);
 		iota(indices.begin(), indices.end(), 0);
 
-		int batchesNum = (int)ceil(samplesNum / (float)batchSize);
+		int batchesNum = (int)ceil(samplesCount / (float)batchSize);
 
 		vector<vector<int>> batchesIndices(batchesNum);
 
 		for (int e = 1; e <= epochs; ++e)
 		{
+#ifdef LOG_GRADIENTS
+            g_GradientsFile << "Epoch " << e << endl;
+#endif
 			string output;
 
 			if (verbose > 0)
 				LogLine("Epoch " + to_string(e) + "/" + to_string(epochs));
 
 			// no point shuffling stuff when we have single batch
-			if (samplesNum > 1 && shuffle)
-                random_shuffle(indices.begin(), indices.end(), [](size_t max) { return GlobalRng().Next((int)max); });
+			if (shuffle && samplesCount > 1 && batchSize < samplesCount)
+                random_shuffle(indices.begin(), indices.end(), [&](size_t max) { return GlobalRng().Next((int)max); });
 
 			for (int b = 0; b < batchesNum; ++b)
 			{
 				int samplesStartIndex = b * batchSize;
-				int samplesEndIndex = min((b + 1) * batchSize, samplesNum);
+				int samplesEndIndex = min((b + 1) * batchSize, samplesCount);
 				batchesIndices[b].resize(samplesEndIndex - samplesStartIndex);
 				copy(indices.begin() + samplesStartIndex, indices.begin() + samplesEndIndex, batchesIndices[b].begin());
 			}
@@ -235,49 +246,54 @@ namespace Neuro
 
 			for (int b = 0; b < batchesNum; ++b)
 			{
-				auto inputsBatch = GenerateBatch(inputs, batchesIndices[b]);
-				auto outputsBatch = GenerateBatch(outputs, batchesIndices[b]);
+                //if (batchSize < samplesCount)
+                {
+                    auto inputsBatch = GenerateBatch(inputs, batchesIndices[b]);
+                    auto outputsBatch = GenerateBatch(outputs, batchesIndices[b]);
 
-				TrainStep(inputsBatch, outputsBatch, trainTotalError, trainHits);
+                    TrainStep(inputsBatch, outputsBatch, trainTotalError, trainHits);
+
+                    DeleteContainer(inputsBatch);
+                    DeleteContainer(outputsBatch);
+                }
+                //else
+                //    TrainStep(inputs, outputs, trainTotalError, trainHits);
 
 				if (verbose == 2)
 				{
-                    int processedSamplesNum = min((b + 1) * batchSize, samplesNum);
-					output = GetProgressString(processedSamplesNum, samplesNum);
+                    int processedSamplesNum = min((b + 1) * batchSize, samplesCount);
+					output = GetProgressString(processedSamplesNum, samplesCount);
 
                     float averageTimePerSample = trainTimer.ElapsedMiliseconds() / (float)processedSamplesNum;
-                        output += " - eta: " + to_string((int)(averageTimePerSample * (samplesNum - processedSamplesNum) / 1000)) + "s";
+                        output += " - eta: " + to_string((int)(averageTimePerSample * (samplesCount - processedSamplesNum) / 1000.f)) + "s";
 
 					cout << output;
 					for (int i = 0; i < output.length(); ++i)
 						cout << '\b';
 				}
-
-				DeleteContainer(inputsBatch);
-				DeleteContainer(outputsBatch);
 			}
 
 			trainTimer.Stop();
 
 			if (verbose == 2)
 			{
-				output = GetProgressString(samplesNum, samplesNum);
+				output = GetProgressString(samplesCount, samplesCount);
 				LogLine(output);
 			}
 
-            m_LastTrainError = trainTotalError / samplesNum;
+            m_LastTrainError = trainTotalError / samplesCount;
 
             if (chartGen)
             {
                 chartGen->AddData((float)e, m_LastTrainError, (int)Track::TrainError);
-                chartGen->AddData((float)e, (float)trainHits / samplesNum / m_Model->GetOutputLayersCount(), (int)Track::TrainAccuracy);
+                chartGen->AddData((float)e, (float)trainHits / samplesCount / m_Model->GetOutputLayersCount(), (int)Track::TrainAccuracy);
             }
 
 			if (verbose > 0)
 			{
 				string s = " - loss: " + to_string(m_LastTrainError);
 				if (trackFlags & Track::TrainAccuracy)
-					s += " - acc: " + to_string((float)trainHits / samplesNum * 100) + "%";
+					s += " - acc: " + to_string((float)trainHits / samplesCount * 100) + "%";
 
 				LogLine(s);
 			}
@@ -328,25 +344,51 @@ namespace Neuro
                 file.close();
             }
         }
+
+#ifdef LOG_GRADIENTS
+        g_GradientsFile.close();
+#endif
 	}
 
 	//////////////////////////////////////////////////////////////////////////
     void NeuralNetwork::TrainStep(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, float& trainError, int& trainHits)
     {
         FeedForward(inputs);
+        
         auto modelOutputs = m_Model->GetOutputs();
-        vector<Tensor> losses;
+        vector<Tensor> outputsGrad;
         for (int i = 0; i < (int)modelOutputs.size(); ++i)
         {
-            losses.push_back(Tensor(modelOutputs[i]->GetShape()));
-            m_LossFuncs[i]->Compute(*outputs[i], *modelOutputs[i], losses[i]);
-            trainError += losses[i].Sum(EAxis::Global)(0) / modelOutputs[i]->BatchLength();
+            outputsGrad.push_back(Tensor(modelOutputs[i]->GetShape()));
+            m_LossFuncs[i]->Compute(*outputs[i], *modelOutputs[i], outputsGrad[i]);
+
+#ifdef LOG_GRADIENTS
+            g_GradientsFile << "output " << i << endl;
+            g_GradientsFile << outputsGrad[i].ToString() << endl;
+#endif
+
+            trainError += outputsGrad[i].Sum(EAxis::Global)(0) / modelOutputs[i]->BatchLength();
             trainHits += m_AccuracyFuncs[i] ? m_AccuracyFuncs[i](*outputs[i], *modelOutputs[i]) : 0;
-            m_LossFuncs[i]->Derivative(*outputs[i], *modelOutputs[i], losses[i]);
+            m_LossFuncs[i]->Derivative(*outputs[i], *modelOutputs[i], outputsGrad[i]);
+
+#ifdef LOG_GRADIENTS
+            g_GradientsFile << "output " << i << " gradient" << endl;
+            g_GradientsFile << outputsGrad[i].ToString() << endl;
+#endif
         }
-        BackProp(losses);
-		auto paramsAndGrad = GetParametersAndGradients();
-        m_Optimizer->Step(paramsAndGrad, inputs[0]->Batch());
+
+        BackProp(outputsGrad);
+		auto paramsAndGrads = GetParametersAndGradients();
+
+#ifdef LOG_GRADIENTS        
+        for (auto paramAndGrad : paramsAndGrads)
+        {
+            g_GradientsFile << paramAndGrad.Gradients->Name() << endl;
+            g_GradientsFile << paramAndGrad.Gradients->ToString() << endl;
+        }
+#endif
+
+        m_Optimizer->Step(paramsAndGrads, inputs[0]->Batch());
     }
 
 	//////////////////////////////////////////////////////////////////////////

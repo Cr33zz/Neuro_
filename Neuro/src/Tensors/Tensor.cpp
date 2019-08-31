@@ -20,7 +20,8 @@ namespace Neuro
     TensorOpCpu* Tensor::g_ForcedOp = nullptr;
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor::Tensor()
+    Tensor::Tensor(const string& name)
+        : m_Name(name)
 	{
 		OverrideHost();
 
@@ -31,8 +32,8 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor::Tensor(const Shape& shape)
-		: Tensor()
+	Tensor::Tensor(const Shape& shape, const string& name)
+		: Tensor(name)
 	{
 		m_Shape = shape;
 		m_Values.resize(shape.Length);
@@ -40,7 +41,7 @@ namespace Neuro
 
 	//////////////////////////////////////////////////////////////////////////
 	Tensor::Tensor(const Tensor& t)
-		: Tensor()
+		: Tensor(t.m_Name)
 	{
 		t.CopyToHost();
 		m_Shape = t.GetShape();
@@ -48,16 +49,16 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor::Tensor(const vector<float>& values)
-		: Tensor()
+	Tensor::Tensor(const vector<float>& values, const string& name)
+		: Tensor(name)
 	{
 		m_Shape = Shape((int)values.size());
 		m_Values = values;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor::Tensor(const vector<float>& values, const Shape& shape)
-		: Tensor()
+	Tensor::Tensor(const vector<float>& values, const Shape& shape, const string& name)
+		: Tensor(name)
 	{
 		assert(values.size() == shape.Length);// && string("Invalid array size ") + to_string(values.size()) + ". Expected " + to_string(shape.Length) + ".");
 		m_Shape = shape;
@@ -65,7 +66,8 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor::Tensor(string bmpFile, bool grayScale)
+	Tensor::Tensor(string bmpFile, bool grayScale, const string& name)
+        : Tensor(name)
 	{
 		/*using (var bmp = new Bitmap(bmpFile))
 		{
@@ -515,7 +517,7 @@ namespace Neuro
             Tensor sum({ 0 }, Shape(1));
 
             for (int i = 0; i < Length(); ++i)
-                sum(0) = m_Values[i];
+                sum(0) += m_Values[i];
 
             return sum;
         }

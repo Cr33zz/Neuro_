@@ -1,11 +1,9 @@
 ﻿#pragma once
 #include "Types.h"
 
-#ifdef CUDA_ENABLED
 #include <cuda.h>
 #include <cudnn.h>
 #include <cublas.h>
-#endif
 
 #include "Tensors/TensorOpMultiCpu.h"
 
@@ -13,7 +11,6 @@ namespace Neuro
 {
     class TensorOpGpu : public TensorOpMultiCpu
     {
-#ifdef CUDA_ENABLED
     public:
         TensorOpGpu();
 
@@ -53,7 +50,6 @@ namespace Neuro
 #   define CUDA_CHECK(op) CudaAssert(op)
 #else
 #   define CUDA_CHECK(op) op
-#endif
 #endif
     };
 }

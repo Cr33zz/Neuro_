@@ -61,7 +61,7 @@ namespace NeuroTests
 
             const Tensor* predictedOutput = net->Predict(input)[0];
 
-            Assert::IsTrue(net->GetLastTrainError() < 0.00001f);
+            Assert::IsTrue(net->GetLastTrainError() < 0.001f);
         }
 
         LayerBase* CreateLayer()

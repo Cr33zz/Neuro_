@@ -633,7 +633,7 @@ namespace NeuroTests
                                 6, -1,  3,  4 }, Shape(2, 2, 1, 2));
 
             auto result = t.Avg(EAxis::Global);
-            Tensor correct({ 0.5f }, Shape(1));
+            Tensor correct({ 0.375f }, Shape(1));
 
             for (int i = 0; i < result.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);

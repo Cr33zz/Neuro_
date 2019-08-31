@@ -24,12 +24,12 @@ namespace Neuro
     class Tensor
     {
 	public:
-		Tensor();
-        explicit Tensor(const Shape& shape);
-        Tensor(const vector<float>&, const Shape& shape);
-        Tensor(const vector<float>&);
+        Tensor(const string& name = "");
+        explicit Tensor(const Shape& shape, const string& name = "");
+        Tensor(const vector<float>&, const Shape& shape, const string& name = "");
+        Tensor(const vector<float>&, const string& name = "");
         Tensor(const Tensor& t);
-        Tensor(string bmpFile, bool grayScale);
+        Tensor(string bmpFile, bool grayScale, const string& name = "");
 
 		static void SetDefaultOpMode(EOpMode mode);
         static void SetForcedOpMode(EOpMode mode);
@@ -43,6 +43,8 @@ namespace Neuro
 		int Batch() const { return m_Shape.Batch(); }
 		int BatchLength() const { return m_Shape.Dim0Dim1Dim2; }
 		int Length() const { return (int)m_Values.size(); }
+
+        const string& Name() const { return m_Name; }
 
         vector<float>& GetValues();
         const vector<float>& GetValues() const;
@@ -283,6 +285,7 @@ namespace Neuro
         mutable ELocation m_CurrentLocation;
         mutable vector<float_t> m_Values;
 		Shape m_Shape;
+        string m_Name;
 
         TensorOpCpu* Op() const { return g_ForcedOp ? g_ForcedOp : m_Op; }
 

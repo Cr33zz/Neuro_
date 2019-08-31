@@ -96,12 +96,12 @@ namespace NeuroTests
             input.FillWithRand();
             Tensor output = input.Conv2D(randomKernels, stride, padding);
 
-            net->Optimize(new SGD(0.02f), new MeanSquareError());
-            net->Fit(input, output, -1, 400, nullptr, nullptr, 1, Track::TrainError);
+            net->Optimize(new SGD(0.04f), new MeanSquareError());
+            net->Fit(input, output, -1, 200, nullptr, nullptr, 1, Track::TrainError);
 
             const Tensor* predictedOutput = net->Predict(input)[0];
 
-            Assert::IsTrue(net->GetLastTrainError() < 0.00001f);
+            Assert::IsTrue(net->GetLastTrainError() < 0.001f);
         }
 
         LayerBase* CreateLayer(int padding)

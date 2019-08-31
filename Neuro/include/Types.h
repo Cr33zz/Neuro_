@@ -3,7 +3,7 @@
 #include <vector>
 
 //#define DOUBLE_ENABLED
-//#define CUDA_ENABLED
+//#define LOG_GRADIENTS
 
 namespace Neuro
 {

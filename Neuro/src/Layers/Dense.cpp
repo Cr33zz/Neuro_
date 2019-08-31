@@ -51,14 +51,12 @@ namespace Neuro
 	{
 		__super::OnInit();
 
-		m_Weights = Tensor(Shape(InputShape().Length, m_OutputShape.Length));
-		m_Bias = Tensor(m_OutputShape);
-
-		m_WeightsGrad = Tensor(m_Weights.GetShape());
-		m_BiasGrad = Tensor(m_Bias.GetShape());
+		m_Weights = Tensor(Shape(InputShape().Length, m_OutputShape.Length), Name() + "/weights");
+		m_Bias = Tensor(m_OutputShape, Name() + "/bias");
+		m_WeightsGrad = Tensor(m_Weights.GetShape(), Name() + "/weights_grad");
+		m_BiasGrad = Tensor(m_Bias.GetShape(), Name() + "/bias_grad");
 
 		m_WeightsInitializer->Init(m_Weights, InputShape().Length, m_OutputShape.Length);
-
 		if (m_UseBias)
 			m_BiasInitializer->Init(m_Bias, InputShape().Length, m_OutputShape.Length);
 	}
