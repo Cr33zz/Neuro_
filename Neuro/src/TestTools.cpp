@@ -37,7 +37,7 @@ namespace Neuro
 		for (int n = 0; n < (int)inputs.size(); ++n)
 		{
 			auto& input = const_cast<Tensor&>(*inputs[n]);
-			for (int i = 0; i < input.GetShape().Length; ++i)
+			for (int i = 0; i < input.Length(); ++i)
 			{
 				result.Zero();
 
