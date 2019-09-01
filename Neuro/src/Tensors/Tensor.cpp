@@ -1,4 +1,5 @@
 ﻿#include <algorithm>
+#include <FreeImage.h>
 
 #include "Tensors/Tensor.h"
 #include "Tensors/Cuda/CudaDeviceVariable.h"
@@ -16,8 +17,28 @@ namespace Neuro
 	TensorOpCpu* Tensor::g_OpCpu = new TensorOpCpu();
     TensorOpCpu* Tensor::g_OpMultiCpu = nullptr;
     TensorOpCpu* Tensor::g_OpGpu = nullptr;
-	TensorOpCpu* Tensor::g_DefaultOpCpu = nullptr;
+
+    TensorOpCpu* Tensor::g_DefaultOpCpu = nullptr;
     TensorOpCpu* Tensor::g_ForcedOp = nullptr;
+
+    bool Tensor::g_ImageLibInitialized = false;
+
+    FREE_IMAGE_FORMAT GetFormat(const string& fileName)
+    {
+        if (fileName.back() == 'p')
+        {
+            return FIF_BMP;
+        }
+        
+        if (fileName.back() == 'g')
+        {
+            if (fileName[fileName.length() - 2] == 'e')
+                return FIF_JPEG;
+            return FIF_PNG;
+        }
+
+        return FIF_UNKNOWN; //unsupported
+    }
 
 	//////////////////////////////////////////////////////////////////////////
     Tensor::Tensor(const string& name)
@@ -66,27 +87,67 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor::Tensor(string bmpFile, bool grayScale, const string& name)
+	Tensor::Tensor(const string& imageFile, bool normalize, bool grayScale, const string& name)
         : Tensor(name)
 	{
-		/*using (var bmp = new Bitmap(bmpFile))
-		{
-			Shape = Shape(bmp.Width, bmp.Height, grayScale ? 1 : 3);
-			Values = new float[Shape.Length];
+        if (!g_ImageLibInitialized)
+        {
+            FreeImage_Initialise();
+            g_ImageLibInitialized = true;
+        }
 
-			for (int h = 0; h < bmp.Height; ++h)
+        auto format = GetFormat(imageFile);
+
+        assert(format != FIF_UNKNOWN);
+
+        FIBITMAP* image = FreeImage_Load(format, imageFile.c_str());
+
+        int width = FreeImage_GetWidth(image);
+        int height = FreeImage_GetHeight(image);
+
+        m_Shape = Shape(width, height, grayScale ? 1 : 3);
+        m_Values.resize(m_Shape.Length);
+
+        RGBQUAD color;
+
+        for (int h = 0; h < height; ++h)
+        {
+            for (int w = 0; w < width; ++w)
+            {
+                FreeImage_GetPixelColor(image, w, h, &color);
+                int r = color.rgbRed, g = color.rgbGreen, b = color.rgbBlue;
+
+                if (grayScale)
+                    Set((r * 0.3f + g * 0.59f + b * 0.11f) / (normalize ? 255.0f : 1.f), w, h);
+                else
+                {
+                    Set(r / (normalize ? 255.0f : 1.f), w, h, 0);
+                    Set(g / (normalize ? 255.0f : 1.f), w, h, 1);
+                    Set(b / (normalize ? 255.0f : 1.f), w, h, 2);
+                }
+            }
+        }
+
+        //image.convertTo(image, CV_32FC3);
+        //cv::normalize(image, image, 0, 1, cv::NORM_MINMAX);
+
+        /*const CImg<unsigned char> image(imageFile.c_str());
+		m_Shape = Shape(image.width(), image.height(), grayScale ? 1 : 3);
+		m_Values.resize(m_Shape.Length);
+
+		for (int h = 0; h < image.height(); ++h)
+		{
+			for (int w = 0; w < image.width(); ++w)
 			{
-				for (int w = 0; w < bmp.Width; ++w)
+                int r = image(w, h), g = image(w, h, 1), b = image(w, h, 2);
+
+				if (grayScale)
+					Set((r * 0.3f + g * 0.59f + b * 0.11f) / (normalize ? 255.0f : 1.f), w, h);
+				else
 				{
-					Color c = bmp.GetPixel(w, h);
-					if (grayScale)
-						Set((c.R * 0.3f + c.G * 0.59f + c.B * 0.11f) / 255.0f, w, h);
-					else
-					{
-						Set(c.R / 255.0f, w, h, 0);
-						Set(c.G / 255.0f, w, h, 1);
-						Set(c.B / 255.0f, w, h, 2);
-					}
+					Set(r / (normalize ? 255.0f : 1.f), w, h, 0);
+					Set(g / (normalize ? 255.0f : 1.f), w, h, 1);
+					Set(b / (normalize ? 255.0f : 1.f), w, h, 2);
 				}
 			}
 		}*/
@@ -503,12 +564,10 @@ namespace Neuro
         {
             Tensor sum(Shape(Width(), Height(), Depth(), 1));
             sum.FillWithValue(0);
+            int batchLen = BatchLength();
 
-            for (int n = 0; n < Batch(); ++n)
-            for (int d = 0; d < Depth(); ++d)
-            for (int h = 0; h < Height(); ++h)
-            for (int w = 0; w < Width(); ++w)
-                sum(w, h, d) += Get(w, h, d, n);
+            for (int i = 0; i < Length(); ++i)
+                sum.m_Values[i % batchLen] += m_Values[i];
 
             return sum;
         }
@@ -1623,4 +1682,3 @@ namespace Neuro
             workspace = new CudaDeviceVariable<char>(size);
     }
 }
-

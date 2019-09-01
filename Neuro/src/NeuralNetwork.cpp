@@ -161,7 +161,7 @@ namespace Neuro
 	void NeuralNetwork::Fit(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, int batchSize, int epochs, const tensor_ptr_vec_t* validInputs, const tensor_ptr_vec_t* validOutputs, int verbose, int trackFlags, bool shuffle)
 	{
 #ifdef LOG_GRADIENTS
-        g_GradientsFile = ofstream("gradients.txt");
+        g_GradientsFile = ofstream("gradients.log");
 #endif
 
         //assert(inputs.size() == m_Model->GetInputLayersCount());
