@@ -18,7 +18,7 @@ namespace Neuro
 
 	using namespace std;
 
-    // This is HCHW tenssor (meaning height is changing the most frequently and batch is changing the least frequently). This is just an interpretation of data.
+    // This is HCHW tensor (meaning height is changing the most frequently and batch is changing the least frequently). This is just an interpretation of data.
     // Nothing prevents user from loading an image which is usually in NHWC (channels are changing the most frequently because images are usually stored as sequence
     // of RGB values for each pixel); however, before using it as an input to convolutional neural network such tensor should be converted to HCHW.
     class Tensor
@@ -29,7 +29,7 @@ namespace Neuro
         Tensor(const vector<float>&, const Shape& shape, const string& name = "");
         Tensor(const vector<float>&, const string& name = "");
         Tensor(const Tensor& t);
-        Tensor(string bmpFile, bool grayScale, const string& name = "");
+        Tensor(const string& imageFile, bool normalize, bool grayScale, const string& name = "");
 
 		static void SetDefaultOpMode(EOpMode mode);
         static void SetForcedOpMode(EOpMode mode);
@@ -296,6 +296,8 @@ namespace Neuro
 		static TensorOpCpu* g_OpCpu;
         static TensorOpCpu* g_OpMultiCpu;
         static TensorOpCpu* g_OpGpu;
+
+        static bool g_ImageLibInitialized;
 
         friend class TensorOpGpu;
 	};

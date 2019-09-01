@@ -246,7 +246,7 @@ namespace Neuro
 
 			for (int b = 0; b < batchesNum; ++b)
 			{
-                //if (batchSize < samplesCount)
+                if (batchSize < samplesCount)
                 {
                     auto inputsBatch = GenerateBatch(inputs, batchesIndices[b]);
                     auto outputsBatch = GenerateBatch(outputs, batchesIndices[b]);
@@ -256,8 +256,8 @@ namespace Neuro
                     DeleteContainer(inputsBatch);
                     DeleteContainer(outputsBatch);
                 }
-                //else
-                //    TrainStep(inputs, outputs, trainTotalError, trainHits);
+                else
+                    TrainStep(inputs, outputs, trainTotalError, trainHits);
 
 				if (verbose == 2)
 				{
