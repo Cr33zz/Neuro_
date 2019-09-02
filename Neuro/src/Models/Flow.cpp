@@ -207,7 +207,7 @@ namespace Neuro
 			ss << "_________________________________________________________________\n";
 		}
 
-		ss << "Total params: " << totalParams;
+		ss << "Total params: " << totalParams << "\n";
 		return ss.str();
 	}
 

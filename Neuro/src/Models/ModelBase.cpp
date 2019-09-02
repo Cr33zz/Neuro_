@@ -1,9 +1,35 @@
-﻿#include "Models/ModelBase.h"
+﻿#include <iomanip>
+#include <sstream>
+
+#include "Models/ModelBase.h"
 #include "Layers/LayerBase.h"
 
 namespace Neuro
 {
-	//////////////////////////////////////////////////////////////////////////
+
+    //////////////////////////////////////////////////////////////////////////
+    string ModelBase::TrainSummary() const
+    {
+        stringstream ss;
+        int totalParams = 0;
+        ss << "_________________________________________________________________________________\n";
+        ss << "Layer                        FeedFwd      BackProp     ActFeedFwd   ActBackProp  \n";
+        ss << "=================================================================================\n";
+
+        for (auto layer : GetLayers())
+        {
+            ss << left << setw(29) << (layer->Name() + "(" + layer->ClassName() + ")");
+            ss << setw(13) << (to_string(layer->FeedForwardTime()) + "ms");
+            ss << setw(13) << (to_string(layer->BackPropTime()) + "ms");
+            ss << setw(13) << (to_string(layer->ActivationTime()) + "ms");
+            ss << layer->ActivationBackPropTime() << "ms\n";
+            ss << "_________________________________________________________________________________\n";
+        }
+
+        return ss.str();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	const LayerBase* ModelBase::GetLayer(const string& name) const
 	{
 		for (auto layer : GetLayers())

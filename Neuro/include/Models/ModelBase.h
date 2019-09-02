@@ -26,6 +26,7 @@ namespace Neuro
         virtual const vector<LayerBase*>& GetOutputLayers() const = 0;
         virtual int GetOutputLayersCount() const = 0;
         virtual string Summary() const { return ""; }
+        string TrainSummary() const;
         virtual void SaveStateXml(string filename) const { }
         virtual void LoadStateXml(string filename) { }
 

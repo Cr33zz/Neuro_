@@ -87,11 +87,11 @@ namespace Neuro
 			ss << "_________________________________________________________________\n";
 		}
 
-		ss << "Total params: " << totalParams;
+		ss << "Total params: " << totalParams << "\n";
 		return ss.str();
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
 	void Sequential::SaveStateXml(string filename) const
 	{
 		/*XmlDocument doc = new XmlDocument();

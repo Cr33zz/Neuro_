@@ -1081,9 +1081,9 @@ namespace NeuroTests
         {
             Tensor t(Shape(50, 50, 3));
             t.FillWithRand(-1, 0, 1);
-            t.SaveAsImage("test.png", true);
+            t.SaveAsImage("test.bmp", true);
 
-            Tensor t2("test.png", false);
+            Tensor t2("test.bmp", true);
 
             Assert::IsTrue(t.Equals(t2, 0.01f));
         }
@@ -1092,9 +1092,9 @@ namespace NeuroTests
         {
             Tensor t(Shape(50, 50, 1));
             t.FillWithRand(-1, 0, 1);
-            t.SaveAsImage("test_g.png", true);
+            t.SaveAsImage("test_g.bmp", true);
 
-            Tensor t2("test_g.png", true, true);
+            Tensor t2("test_g.bmp", true, true);
 
             Assert::IsTrue(t.Equals(t2, 0.01f));
         }

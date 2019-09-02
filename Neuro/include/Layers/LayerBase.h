@@ -47,6 +47,11 @@ namespace Neuro
 		
         const string& ClassName() const { return m_ClassName; }
 
+        int FeedForwardTime() const { return (int)m_FeedForwardTimer.ElapsedMiliseconds(); }
+        int BackPropTime() const { return (int)m_BackPropTimer.ElapsedMiliseconds(); }
+        int ActivationTime() const { return (int)m_ActivationTimer.ElapsedMiliseconds(); }
+        int ActivationBackPropTime() const { return (int)m_ActivationBackPropTimer.ElapsedMiliseconds(); }
+
 	protected:
         // The concept of layer is that it is a 'block box' that supports feed forward and backward propagation.
         // Feed forward: input Tensor -> |logic| -> output Tensor

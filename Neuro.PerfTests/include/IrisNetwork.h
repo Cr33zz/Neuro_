@@ -12,7 +12,7 @@ class IrisNetwork
 public:
     static void Run()
     {
-        Tensor::SetDefaultOpMode(EOpMode::GPU);
+        Tensor::SetDefaultOpMode(EOpMode::CPU);
 
         auto model = new Sequential();
         model->AddLayer(new Dense(4, 1000, new ReLU()));
@@ -20,21 +20,20 @@ public:
         model->AddLayer(new Dense(model->LastLayer(), 300, new ReLU()));
         //model->AddLayer(new Dropout(model->LastLayer(), 0.2f));
         model->AddLayer(new Dense(model->LastLayer(), 3, new Softmax()));
-        auto net = new NeuralNetwork(model, "iris");
+
+        cout << model->Summary();
+
+        auto net = new NeuralNetwork(model, "iris", 100);
         net->Optimize(new Adam(), new BinaryCrossEntropy());
 
         Tensor inputs;
         Tensor outputs;
-        LoadCSVData("data/iris_data.csv", 3, inputs, outputs, true, 30);
+        LoadCSVData("data/iris_data.csv", 3, inputs, outputs, true);
         inputs = inputs.Normalized(EAxis::Feature);
 
-        Stopwatch timer;
-        timer.Start();
+        net->Fit(inputs, outputs, 20, 2, nullptr, nullptr, 2, Track::TrainError | Track::TrainAccuracy);
 
-        net->Fit(inputs, outputs, 20, 20, nullptr, nullptr, 2, Track::TrainError | Track::TrainAccuracy);
-
-        timer.Stop();
-        cout << "Training time " << timer.ElapsedMiliseconds() << "ms";
+        cout << model->TrainSummary();
 
         return;
     }

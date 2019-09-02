@@ -265,11 +265,11 @@ namespace Neuro
 					output = GetProgressString(processedSamplesNum, samplesCount);
 
                     float averageTimePerSample = trainTimer.ElapsedMiliseconds() / (float)processedSamplesNum;
-                        output += " - eta: " + to_string((int)(averageTimePerSample * (samplesCount - processedSamplesNum) / 1000.f)) + "s";
+                    output += " - eta: " + to_string((int)round(averageTimePerSample * (samplesCount - processedSamplesNum) / 1000.f)) + "s";
 
 					cout << output;
-					for (int i = 0; i < output.length(); ++i)
-						cout << '\b';
+                    for (int i = 0; i < output.length(); ++i)
+                        cout << '\b';
 				}
 			}
 
