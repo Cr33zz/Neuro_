@@ -49,21 +49,7 @@ namespace Neuro
         vector<float>& GetValues();
         const vector<float>& GetValues() const;
 
-        /*Bitmap ToBitmap()
-        {
-            assert(BatchSize == 1);
-
-            Bitmap output = new Bitmap(Width, Height);
-            bool grayScale = (Depth == 1);
-
-            for (int d = 0; d < Depth; ++d)
-            for (int h = 0; h < Height; ++h)
-            for (int w = 0; w < Width; ++w)
-                output.SetPixel(w, h, grayScale ? Color.FromArgb((int)(Get(w, h) * 255), (int)(Get(w, h) * 255), (int)(Get(w, h) * 255))
-                                                : Color.FromArgb((int)(Get(w, h) * 255), (int)(Get(w, h, 1) * 255), (int)(Get(w, h, 2) * 255)));
-
-            return output;
-        }*/
+        void SaveAsImage(const string& imageFile, bool denormalize) const;
 
         Tensor& FillWithRand(int seed = -1, float min = -1, float max = 1);
         Tensor& FillWithRange(float start = 0, float increment = 1);
@@ -297,6 +283,7 @@ namespace Neuro
         static TensorOpCpu* g_OpMultiCpu;
         static TensorOpCpu* g_OpGpu;
 
+        static void ImageLibInit();
         static bool g_ImageLibInitialized;
 
         friend class TensorOpGpu;

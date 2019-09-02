@@ -25,19 +25,22 @@ namespace Neuro
 
     FREE_IMAGE_FORMAT GetFormat(const string& fileName)
     {
-        if (fileName.back() == 'p')
-        {
-            return FIF_BMP;
-        }
+        auto fif = FreeImage_GetFileType(fileName.c_str());
         
-        if (fileName.back() == 'g')
-        {
-            if (fileName[fileName.length() - 2] == 'e')
-                return FIF_JPEG;
-            return FIF_PNG;
-        }
+        if (fif == FIF_UNKNOWN)
+            fif = FreeImage_GetFIFFromFilename(fileName.c_str());
 
-        return FIF_UNKNOWN; //unsupported
+        return fif;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::ImageLibInit()
+    {
+        if (!g_ImageLibInitialized)
+        {
+            FreeImage_Initialise();
+            g_ImageLibInitialized = true;
+        }
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -90,17 +93,14 @@ namespace Neuro
 	Tensor::Tensor(const string& imageFile, bool normalize, bool grayScale, const string& name)
         : Tensor(name)
 	{
-        if (!g_ImageLibInitialized)
-        {
-            FreeImage_Initialise();
-            g_ImageLibInitialized = true;
-        }
+        ImageLibInit();
 
         auto format = GetFormat(imageFile);
-
         assert(format != FIF_UNKNOWN);
 
         FIBITMAP* image = FreeImage_Load(format, imageFile.c_str());
+
+        assert(image);
 
         int width = FreeImage_GetWidth(image);
         int height = FreeImage_GetHeight(image);
@@ -111,47 +111,56 @@ namespace Neuro
         RGBQUAD color;
 
         for (int h = 0; h < height; ++h)
+        for (int w = 0; w < width; ++w)
         {
-            for (int w = 0; w < width; ++w)
-            {
-                FreeImage_GetPixelColor(image, w, h, &color);
-                int r = color.rgbRed, g = color.rgbGreen, b = color.rgbBlue;
+            FreeImage_GetPixelColor(image, w, h, &color);
+            int r = color.rgbRed, g = color.rgbGreen, b = color.rgbBlue;
 
-                if (grayScale)
-                    Set((r * 0.3f + g * 0.59f + b * 0.11f) / (normalize ? 255.0f : 1.f), w, h);
-                else
-                {
-                    Set(r / (normalize ? 255.0f : 1.f), w, h, 0);
-                    Set(g / (normalize ? 255.0f : 1.f), w, h, 1);
-                    Set(b / (normalize ? 255.0f : 1.f), w, h, 2);
-                }
+            if (grayScale)
+                Set((r * 0.3f + g * 0.59f + b * 0.11f) / (normalize ? 255.0f : 1.f), w, h);
+            else
+            {
+                Set(r / (normalize ? 255.0f : 1.f), w, h, 0);
+                Set(g / (normalize ? 255.0f : 1.f), w, h, 1);
+                Set(b / (normalize ? 255.0f : 1.f), w, h, 2);
             }
         }
 
-        //image.convertTo(image, CV_32FC3);
-        //cv::normalize(image, image, 0, 1, cv::NORM_MINMAX);
-
-        /*const CImg<unsigned char> image(imageFile.c_str());
-		m_Shape = Shape(image.width(), image.height(), grayScale ? 1 : 3);
-		m_Values.resize(m_Shape.Length);
-
-		for (int h = 0; h < image.height(); ++h)
-		{
-			for (int w = 0; w < image.width(); ++w)
-			{
-                int r = image(w, h), g = image(w, h, 1), b = image(w, h, 2);
-
-				if (grayScale)
-					Set((r * 0.3f + g * 0.59f + b * 0.11f) / (normalize ? 255.0f : 1.f), w, h);
-				else
-				{
-					Set(r / (normalize ? 255.0f : 1.f), w, h, 0);
-					Set(g / (normalize ? 255.0f : 1.f), w, h, 1);
-					Set(b / (normalize ? 255.0f : 1.f), w, h, 2);
-				}
-			}
-		}*/
+        FreeImage_Unload(image);
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::SaveAsImage(const string& imageFile, bool denormalize) const
+    {
+        ImageLibInit();
+
+        auto format = GetFormat(imageFile);
+        assert(format != FIF_UNKNOWN);
+
+        int dotPos = imageFile.find_last_of('.');
+        string name = imageFile.substr(0, dotPos);
+        string ext = imageFile.substr(dotPos, imageFile.length() - dotPos);
+        
+        RGBQUAD color;
+        for (int n = 0; n < Batch(); ++n)
+        {
+            FIBITMAP* image = FreeImage_Allocate(Width(), Height(), 32);
+            bool grayScale = (Depth() == 1);
+
+            for (int h = 0; h < Height(); ++h)
+            for (int w = 0; w < Width(); ++w)
+            {
+                color.rgbRed = (int)(Get(w, h, 0, n) * (denormalize ? 255 : 1));
+                color.rgbGreen = grayScale ? (int)(Get(w, h, 0, n) * (denormalize ? 255 : 1)) : (int)(Get(w, h, 1, n) * (denormalize ? 255 : 1));
+                color.rgbBlue = grayScale ? (int)(Get(w, h, 0, n) * (denormalize ? 255 : 1)) : (int)(Get(w, h, 2, n) * (denormalize ? 255 : 1));
+
+                FreeImage_SetPixelColor(image, w, h, &color);
+            }
+
+            FreeImage_Save(format, image, Batch() == 1 ? imageFile.c_str() : (name + "_" + to_string(n) + ext).c_str());
+            FreeImage_Unload(image);
+        }
+    }
 
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::SetDefaultOpMode(EOpMode mode)
@@ -191,7 +200,7 @@ namespace Neuro
         return m_Values;
     }
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
 	Tensor& Tensor::FillWithRand(int seed, float min, float max)
 	{
 		OverrideHost();
