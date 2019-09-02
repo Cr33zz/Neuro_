@@ -30,8 +30,10 @@ namespace Neuro
                 cudnnCreate(&s_CudnnHandle);
                 cudaGetDeviceProperties(&s_CudaDevProp, 0);
 
-                cudnnSetCallback(CUDNN_SEV_INFO_EN, nullptr, CudnnLog);
-                //cout << "GPU: " << s_CudaDevProp.name << "(tpb: " << s_CudaDevProp.maxThreadsPerBlock << ")\n";
+                //cudnnSetCallback(CUDNN_SEV_INFO_EN, nullptr, CudnnLog);
+                stringstream ss;
+                ss << "GPU: " << s_CudaDevProp.name << "(tpb: " << s_CudaDevProp.maxThreadsPerBlock << ")\n";
+                OutputDebugString(ss.str().c_str());
             }
         }
     }

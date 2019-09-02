@@ -137,7 +137,7 @@ namespace Neuro
         auto format = GetFormat(imageFile);
         assert(format != FIF_UNKNOWN);
 
-        int dotPos = imageFile.find_last_of('.');
+        size_t dotPos = imageFile.find_last_of('.');
         string name = imageFile.substr(0, dotPos);
         string ext = imageFile.substr(dotPos, imageFile.length() - dotPos);
         
@@ -552,41 +552,22 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
     Tensor Tensor::Sum(EAxis axis, int batch) const
 	{
-		CopyToHost();
-
-		if (axis == EAxis::Sample)
+        if (axis == EAxis::Sample)
         {
             Tensor sum(Shape(batch < 0 ? Batch() : 1));
-            sum.FillWithValue(0);
-
-            int batchMin = batch < 0 ? 0 : batch;
-            int batchMax = batch < 0 ? Batch() : (batch + 1);
-            int batchLen = BatchLength();
-
-            for (int n = batchMin, outN = 0; n < batchMax; ++n, ++outN)
-            for (int i = 0, idx = n * batchLen; i < batchLen; ++i, ++idx)
-                sum(outN) += m_Values[idx];
-
+            Op()->Sum(*this, axis, batch, sum);
             return sum;
         }
         else if (axis == EAxis::Feature)
         {
             Tensor sum(Shape(Width(), Height(), Depth(), 1));
-            sum.FillWithValue(0);
-            int batchLen = BatchLength();
-
-            for (int i = 0; i < Length(); ++i)
-                sum.m_Values[i % batchLen] += m_Values[i];
-
+            Op()->Sum(*this, axis, batch, sum);
             return sum;
         }
         else //if (axis == EAxis::Global)
         {
             Tensor sum({ 0 }, Shape(1));
-
-            for (int i = 0; i < Length(); ++i)
-                sum(0) += m_Values[i];
-
+            Op()->Sum(*this, axis, batch, sum);
             return sum;
         }
 	}

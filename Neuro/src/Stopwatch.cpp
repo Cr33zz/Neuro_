@@ -42,25 +42,25 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    __int64 Stopwatch::ElapsedMiliseconds()
+    __int64 Stopwatch::ElapsedMiliseconds() const
     {
         return ElapsedMicroseconds() / 1000;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    __int64 Stopwatch::ElapsedMicroseconds()
+    __int64 Stopwatch::ElapsedMicroseconds() const
     {
         return m_AccumulatedTime + ElapsedMicrosecondsSinceStart();
     }
 
     //////////////////////////////////////////////////////////////////////////
-    int Stopwatch::ElapsedSeconds()
+    int Stopwatch::ElapsedSeconds() const
     {
         return (int)(ElapsedMiliseconds() / 1000);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    __int64 Stopwatch::ElapsedMicrosecondsSinceStart()
+    __int64 Stopwatch::ElapsedMicrosecondsSinceStart() const
     {
         if (!m_IsRunning)
             return 0;

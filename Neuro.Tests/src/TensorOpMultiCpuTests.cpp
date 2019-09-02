@@ -10,70 +10,109 @@ namespace NeuroTests
     {
         TEST_METHOD(Mult_CompareWithCpuResult)
         {
-            Tensor t1(Shape(82, 40, 3, 3)); t1.FillWithRand();
+            Tensor t1(Shape(82, 40, 3, 5)); t1.FillWithRand();
             Tensor t2(Shape(40, 82, 3)); t2.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            Tensor r = t1.Mul(t2);
+            NEURO_PROFILE("CPU", Tensor r = t1.Mul(t2);)
 
             Tensor::SetForcedOpMode(EOpMode::MultiCPU);
-            Tensor r2 = t1.Mul(t2);
+            NEURO_PROFILE("MultiCPU", Tensor r2 = t1.Mul(t2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
 
         TEST_METHOD(Add_1Batch_CompareWithCpuResult)
         {
-            Tensor t1(Shape(8, 9, 3, 3)); t1.FillWithRand();
-            Tensor t2(Shape(8, 9, 3, 1)); t2.FillWithRand();
+            Tensor t1(Shape(20, 30, 40, 50)); t1.FillWithRand();
+            Tensor t2(Shape(20, 30, 40, 1)); t2.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            Tensor r = t1.Add(t2);
+            NEURO_PROFILE("CPU", Tensor r = t1.Add(t2);)
 
             Tensor::SetForcedOpMode(EOpMode::MultiCPU);
-            Tensor r2 = t1.Add(t2);
+            NEURO_PROFILE("MultiCPU", Tensor r2 = t1.Add(t2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
 
         TEST_METHOD(Add_SameBatches_CompareWithCpuResult)
         {
-            Tensor t1(Shape(8, 9, 3, 3)); t1.FillWithRand();
-            Tensor t2(Shape(8, 9, 3, 3)); t2.FillWithRand();
+            Tensor t1(Shape(20, 30, 40, 50)); t1.FillWithRand();
+            Tensor t2(Shape(20, 30, 40, 50)); t2.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            Tensor r = t1.Add(t2);
+            NEURO_PROFILE("CPU", Tensor r = t1.Add(t2);)
 
             Tensor::SetForcedOpMode(EOpMode::MultiCPU);
-            Tensor r2 = t1.Add(t2);
+            NEURO_PROFILE("MultiCPU", Tensor r2 = t1.Add(t2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
 
         TEST_METHOD(Sub_1Batch_CompareWithCpuResult)
         {
-            Tensor t1(Shape(8, 9, 3, 3)); t1.FillWithRand();
-            Tensor t2(Shape(8, 9, 3, 1)); t2.FillWithRand();
+            Tensor t1(Shape(20, 30, 40, 50)); t1.FillWithRand();
+            Tensor t2(Shape(20, 30, 40, 1)); t2.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            Tensor r = t1.Sub(t2);
+            NEURO_PROFILE("CPU", Tensor r = t1.Sub(t2);)
 
             Tensor::SetForcedOpMode(EOpMode::MultiCPU);
-            Tensor r2 = t1.Sub(t2);
+            NEURO_PROFILE("MultiCPU", Tensor r2 = t1.Sub(t2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
 
         TEST_METHOD(Sub_SameBatches_CompareWithCpuResult)
         {
-            Tensor t1(Shape(8, 9, 3, 3)); t1.FillWithRand();
-            Tensor t2(Shape(8, 9, 3, 3)); t2.FillWithRand();
+            Tensor t1(Shape(20, 30, 40, 50)); t1.FillWithRand();
+            Tensor t2(Shape(20, 30, 40, 50)); t2.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            Tensor r = t1.Sub(t2);
+            NEURO_PROFILE("CPU", Tensor r = t1.Sub(t2);)
 
             Tensor::SetForcedOpMode(EOpMode::MultiCPU);
-            Tensor r2 = t1.Sub(t2);
+            NEURO_PROFILE("MultiCPU", Tensor r2 = t1.Sub(t2);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(Sum_Sample_CompareWithCpuResult)
+        {
+            Tensor t(Shape(20, 30, 40, 50)); t.FillWithRand();
+
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            NEURO_PROFILE("CPU", Tensor r = t.Sum(EAxis::Sample);)
+
+            Tensor::SetForcedOpMode(EOpMode::MultiCPU);
+            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Sum(EAxis::Sample);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(Sum_Feature_CompareWithCpuResult)
+        {
+            Tensor t(Shape(20, 30, 40, 50)); t.FillWithRand();
+
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            NEURO_PROFILE("CPU", Tensor r = t.Sum(EAxis::Feature);)
+
+            Tensor::SetForcedOpMode(EOpMode::MultiCPU);
+            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Sum(EAxis::Feature);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(Sum_Global_CompareWithCpuResult)
+        {
+            Tensor t(Shape(20, 30, 40, 50)); t.FillWithRand();
+
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            NEURO_PROFILE("CPU", Tensor r = t.Sum(EAxis::Global);)
+
+            Tensor::SetForcedOpMode(EOpMode::MultiCPU);
+            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Sum(EAxis::Global);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -84,10 +123,10 @@ namespace NeuroTests
             Tensor kernals(Shape(3, 3, 3, 2)); kernals.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            Tensor r = t.Conv2D(kernals, 1, 0);
+            NEURO_PROFILE("CPU", Tensor r = t.Conv2D(kernals, 1, 0);)
 
             Tensor::SetForcedOpMode(EOpMode::MultiCPU);
-            Tensor r2 = t.Conv2D(kernals, 1, 0);
+            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Conv2D(kernals, 1, 0);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -101,11 +140,11 @@ namespace NeuroTests
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor inputGradient(input);
-            gradient.Conv2DInputsGradient(gradient, kernels, 1, 0, inputGradient);
+            NEURO_PROFILE("CPU", gradient.Conv2DInputsGradient(gradient, kernels, 1, 0, inputGradient);)
 
             Tensor::SetForcedOpMode(EOpMode::MultiCPU);
             Tensor inputGradient2(input);
-            gradient.Conv2DInputsGradient(gradient, kernels, 1, 0, inputGradient2);
+            NEURO_PROFILE("MultiCPU", gradient.Conv2DInputsGradient(gradient, kernels, 1, 0, inputGradient2);)
 
             Assert::IsTrue(inputGradient.Equals(inputGradient2));
         }
@@ -119,11 +158,11 @@ namespace NeuroTests
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor kernelsGradient(kernels);
-            input.Conv2DKernelsGradient(input, gradient, 1, 0, kernelsGradient);
+            NEURO_PROFILE("CPU", input.Conv2DKernelsGradient(input, gradient, 1, 0, kernelsGradient);)
 
             Tensor::SetForcedOpMode(EOpMode::MultiCPU);
             Tensor kernelsGradient2(kernels);
-            input.Conv2DKernelsGradient(input, gradient, 1, 0, kernelsGradient2);
+            NEURO_PROFILE("MultiCPU", input.Conv2DKernelsGradient(input, gradient, 1, 0, kernelsGradient2);)
 
             Assert::IsTrue(kernelsGradient.Equals(kernelsGradient2));
         }
@@ -133,10 +172,10 @@ namespace NeuroTests
             Tensor t(Shape(27, 27, 2, 3)); t.FillWithRand();
             
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            Tensor r = t.Pool2D(3, 2, EPoolingMode::Max, 0);
+            NEURO_PROFILE("CPU", Tensor r = t.Pool2D(3, 2, EPoolingMode::Max, 0);)
 
             Tensor::SetForcedOpMode(EOpMode::MultiCPU);
-            Tensor r2 = t.Pool2D(3, 2, EPoolingMode::Max, 0);
+            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Pool2D(3, 2, EPoolingMode::Max, 0);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -146,10 +185,10 @@ namespace NeuroTests
             Tensor t(Shape(27, 27, 2, 3)); t.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            Tensor r = t.Pool2D(3, 2, EPoolingMode::Avg, 0);
+            NEURO_PROFILE("CPU", Tensor r = t.Pool2D(3, 2, EPoolingMode::Avg, 0);)
 
             Tensor::SetForcedOpMode(EOpMode::MultiCPU);
-            Tensor r2 = t.Pool2D(3, 2, EPoolingMode::Avg, 0);
+            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Pool2D(3, 2, EPoolingMode::Avg, 0);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -162,11 +201,11 @@ namespace NeuroTests
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor r(input.GetShape());
-            output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Max, 0, r);
+            NEURO_PROFILE("CPU", output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Max, 0, r);)
 
             Tensor::SetForcedOpMode(EOpMode::MultiCPU);
             Tensor r2(input.GetShape());
-            output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Max, 0, r2);
+            NEURO_PROFILE("MultiCPU", output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Max, 0, r2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -179,11 +218,11 @@ namespace NeuroTests
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor r(input.GetShape());
-            output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Avg, 0, r);
+            NEURO_PROFILE("CPU", output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Avg, 0, r);)
 
             Tensor::SetForcedOpMode(EOpMode::MultiCPU);
             Tensor r2(input.GetShape());
-            output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Avg, 0, r2);
+            NEURO_PROFILE("MultiCPU", output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Avg, 0, r2);)
 
             Assert::IsTrue(r.Equals(r2));
         }

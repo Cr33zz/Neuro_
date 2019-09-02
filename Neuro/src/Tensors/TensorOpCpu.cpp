@@ -88,7 +88,43 @@ namespace Neuro
             resultValues[idx] = t1Values[idx] * t2Values[i];
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Sum(const Tensor& input, EAxis axis, int batch, Tensor& result) const
+    {
+        input.CopyToHost();
+        result.OverrideHost();
+
+        auto& inputValues = input.GetValues();
+        auto& resultValues = result.GetValues();
+
+        if (axis == EAxis::Sample)
+        {
+            result.FillWithValue(0);
+
+            int batchMin = batch < 0 ? 0 : batch;
+            int batchMax = batch < 0 ? input.Batch() : (batch + 1);
+            int batchLen = input.BatchLength();
+
+            for (int n = batchMin, outN = 0; n < batchMax; ++n, ++outN)
+            for (int i = 0, idx = n * batchLen; i < batchLen; ++i, ++idx)
+                resultValues[outN] += inputValues[idx];
+        }
+        else if (axis == EAxis::Feature)
+        {
+            result.FillWithValue(0);
+            int batchLen = input.BatchLength();
+
+            for (int i = 0; i < input.Length(); ++i)
+                resultValues[i % batchLen] += inputValues[i];
+        }
+        else //if (axis == EAxis::Global)
+        {
+            for (int i = 0; i < input.Length(); ++i)
+                resultValues[0] += inputValues[i];
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void TensorOpCpu::Transpose(const Tensor& input, Tensor& result) const
 	{
 		input.CopyToHost();

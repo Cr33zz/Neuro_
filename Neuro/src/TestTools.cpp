@@ -221,4 +221,19 @@ namespace Neuro
 
 		return true;
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    TestTools::ProfileObj::ProfileObj()
+    {
+        m_Timer.Start();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    std::string TestTools::ProfileObj::ToString() const
+    {
+        stringstream stream;
+        stream << m_Timer.ElapsedMiliseconds() << "ms";
+        return stream.str();
+    }
+
 }

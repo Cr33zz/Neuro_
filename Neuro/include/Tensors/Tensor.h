@@ -29,7 +29,7 @@ namespace Neuro
         Tensor(const vector<float>&, const Shape& shape, const string& name = "");
         Tensor(const vector<float>&, const string& name = "");
         Tensor(const Tensor& t);
-        Tensor(const string& imageFile, bool normalize, bool grayScale, const string& name = "");
+        Tensor(const string& imageFile, bool normalize, bool grayScale = false, const string& name = "");
 
 		static void SetDefaultOpMode(EOpMode mode);
         static void SetForcedOpMode(EOpMode mode);

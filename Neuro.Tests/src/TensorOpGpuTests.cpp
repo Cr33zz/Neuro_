@@ -10,14 +10,14 @@ namespace NeuroTests
     {
         TEST_METHOD(Mult_CompareWithCpuResult)
         {
-            Tensor t1(Shape(82, 40, 3, 3)); t1.FillWithRand();
+            Tensor t1(Shape(82, 40, 3, 5)); t1.FillWithRand();
             Tensor t2(Shape(40, 82, 3)); t2.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            Tensor r = t1.Mul(t2);
+            NEURO_PROFILE("CPU", Tensor r = t1.Mul(t2);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
-            Tensor r2 = t1.Mul(t2);
+            NEURO_PROFILE("GPU", Tensor r2 = t1.Mul(t2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -28,10 +28,10 @@ namespace NeuroTests
             Tensor t2(Shape(8, 9, 3, 1)); t2.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            Tensor r = t1.Add(t2);
+            NEURO_PROFILE("CPU", Tensor r = t1.Add(t2);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
-            Tensor r2 = t1.Add(t2);
+            NEURO_PROFILE("GPU", Tensor r2 = t1.Add(t2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -42,10 +42,10 @@ namespace NeuroTests
             Tensor t2(Shape(8, 9, 3, 3)); t2.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            Tensor r = t1.Add(t2);
+            NEURO_PROFILE("CPU", Tensor r = t1.Add(t2);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
-            Tensor r2 = t1.Add(t2);
+            NEURO_PROFILE("GPU", Tensor r2 = t1.Add(t2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -56,10 +56,10 @@ namespace NeuroTests
             Tensor t2(Shape(8, 9, 3, 1)); t2.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            Tensor r = t1.Sub(t2);
+            NEURO_PROFILE("CPU", Tensor r = t1.Sub(t2);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
-            Tensor r2 = t1.Sub(t2);
+            NEURO_PROFILE("GPU", Tensor r2 = t1.Sub(t2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -70,10 +70,10 @@ namespace NeuroTests
             Tensor t2(Shape(8, 9, 3, 3)); t2.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            Tensor r = t1.Sub(t2);
+            NEURO_PROFILE("CPU", Tensor r = t1.Sub(t2);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
-            Tensor r2 = t1.Sub(t2);
+            NEURO_PROFILE("GPU", Tensor r2 = t1.Sub(t2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -84,10 +84,10 @@ namespace NeuroTests
             Tensor kernals(Shape(3, 3, 3, 2)); kernals.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            Tensor r = t.Conv2D(kernals, 1, 0);
+            NEURO_PROFILE("CPU", Tensor r = t.Conv2D(kernals, 1, 0);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
-            Tensor r2 = t.Conv2D(kernals, 1, 0);
+            NEURO_PROFILE("GPU", Tensor r2 = t.Conv2D(kernals, 1, 0);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -98,10 +98,10 @@ namespace NeuroTests
             Tensor kernals(Shape(3, 3, 3, 2)); kernals.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            Tensor r = t.Conv2D(kernals, 1, 1);
+            NEURO_PROFILE("CPU", Tensor r = t.Conv2D(kernals, 1, 1);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
-            Tensor r2 = t.Conv2D(kernals, 1, 1);
+            NEURO_PROFILE("GPU", Tensor r2 = t.Conv2D(kernals, 1, 1);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -115,11 +115,11 @@ namespace NeuroTests
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor inputGradient(input);
-            gradient.Conv2DInputsGradient(gradient, kernels, 1, 0, inputGradient);
+            NEURO_PROFILE("CPU", gradient.Conv2DInputsGradient(gradient, kernels, 1, 0, inputGradient);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor inputGradient2(input);
-            gradient.Conv2DInputsGradient(gradient, kernels, 1, 0, inputGradient2);
+            NEURO_PROFILE("GPU", gradient.Conv2DInputsGradient(gradient, kernels, 1, 0, inputGradient2);)
 
             Assert::IsTrue(inputGradient.Equals(inputGradient2));
         }
@@ -133,11 +133,11 @@ namespace NeuroTests
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor kernelsGradient(kernels);
-            input.Conv2DKernelsGradient(input, gradient, 1, 0, kernelsGradient);
+            NEURO_PROFILE("CPU", input.Conv2DKernelsGradient(input, gradient, 1, 0, kernelsGradient);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor kernelsGradient2(kernels);
-            input.Conv2DKernelsGradient(input, gradient, 1, 0, kernelsGradient2);
+            NEURO_PROFILE("GPU", input.Conv2DKernelsGradient(input, gradient, 1, 0, kernelsGradient2);)
 
             //CuDNN is generating marginally different results than CPU
             Assert::IsTrue(kernelsGradient.Equals(kernelsGradient2, 0.0001f));
@@ -148,10 +148,10 @@ namespace NeuroTests
             Tensor t(Shape(27, 27, 2, 3)); t.FillWithRand(10);
             
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            Tensor r = t.Pool2D(3, 2, EPoolingMode::Max, 0);
+            NEURO_PROFILE("CPU", Tensor r = t.Pool2D(3, 2, EPoolingMode::Max, 0);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
-            Tensor r2 = t.Pool2D(3, 2, EPoolingMode::Max, 0);
+            NEURO_PROFILE("GPU", Tensor r2 = t.Pool2D(3, 2, EPoolingMode::Max, 0);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -161,10 +161,10 @@ namespace NeuroTests
             Tensor t(Shape(27, 27, 2, 3)); t.FillWithRand(10);
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            Tensor r = t.Pool2D(3, 2, EPoolingMode::Avg, 0);
+            NEURO_PROFILE("CPU", Tensor r = t.Pool2D(3, 2, EPoolingMode::Avg, 0);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
-            Tensor r2 = t.Pool2D(3, 2, EPoolingMode::Avg, 0);
+            NEURO_PROFILE("GPU", Tensor r2 = t.Pool2D(3, 2, EPoolingMode::Avg, 0);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -177,11 +177,11 @@ namespace NeuroTests
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor r(input.GetShape());
-            output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Max, 0, r);
+            NEURO_PROFILE("CPU", output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Max, 0, r);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor r2(input.GetShape());
-            output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Max, 0, r2);
+            NEURO_PROFILE("GPU", output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Max, 0, r2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -194,11 +194,11 @@ namespace NeuroTests
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor r(input.GetShape());
-            output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Avg, 0, r);
+            NEURO_PROFILE("CPU", output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Avg, 0, r);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor r2(input.GetShape());
-            output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Avg, 0, r2);
+            NEURO_PROFILE("GPU", output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Avg, 0, r2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -213,11 +213,11 @@ namespace NeuroTests
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor result(input.GetShape());
-            input.BatchNormalization(gamma, beta, runningMean, runningVariance, result);
+            NEURO_PROFILE("CPU", input.BatchNormalization(gamma, beta, runningMean, runningVariance, result);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor result2(input.GetShape());
-            input.BatchNormalization(gamma, beta, runningMean, runningVariance, result2);
+            NEURO_PROFILE("GPU", input.BatchNormalization(gamma, beta, runningMean, runningVariance, result2);)
 
             Assert::IsTrue(result.Equals(result2));
         }
@@ -235,13 +235,13 @@ namespace NeuroTests
             Tensor result(input.GetShape());
             Tensor saveMean(Shape(2, 2, 3, 1));
             Tensor saveInvVariance(Shape(2, 2, 3, 1));
-            input.BatchNormalizationTrain(gamma, beta, momentum, runningMean, runningVariance, saveMean, saveInvVariance, result);
+            NEURO_PROFILE("CPU", input.BatchNormalizationTrain(gamma, beta, momentum, runningMean, runningVariance, saveMean, saveInvVariance, result);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor result2(input.GetShape());
             Tensor saveMean2(Shape(2, 2, 3, 1));
             Tensor saveInvVariance2(Shape(2, 2, 3, 1));
-            input.BatchNormalizationTrain(gamma, beta, momentum, runningMean, runningVariance, saveMean2, saveInvVariance2, result2);
+            NEURO_PROFILE("GPU", input.BatchNormalizationTrain(gamma, beta, momentum, runningMean, runningVariance, saveMean2, saveInvVariance2, result2);)
 
             Assert::IsTrue(saveMean.Equals(saveMean2));
             Assert::IsTrue(saveInvVariance.Equals(saveInvVariance2, 0.0001f)); // precision difference between CUDA and CPU
@@ -266,7 +266,7 @@ namespace NeuroTests
             Tensor gammaGradient(Shape(2, 2, 3, 1));
             Tensor betaGradient(Shape(2, 2, 3, 1));
             Tensor inputGradient(Shape(2, 2, 3, 3));
-            input.BatchNormalizationGradient(input, gamma, outputGradient, saveMean, saveInvVariance, gammaGradient, betaGradient, inputGradient);
+            NEURO_PROFILE("CPU", input.BatchNormalizationGradient(input, gamma, outputGradient, saveMean, saveInvVariance, gammaGradient, betaGradient, inputGradient);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor result2(input.GetShape());
@@ -276,7 +276,7 @@ namespace NeuroTests
             Tensor gammaGradient2(Shape(2, 2, 3, 1));
             Tensor betaGradient2(Shape(2, 2, 3, 1));
             Tensor inputGradient2(Shape(2, 2, 3, 3));
-            input.BatchNormalizationGradient(input, gamma, outputGradient, saveMean2, saveInvVariance2, gammaGradient2, betaGradient2, inputGradient2);
+            NEURO_PROFILE("GPU", input.BatchNormalizationGradient(input, gamma, outputGradient, saveMean2, saveInvVariance2, gammaGradient2, betaGradient2, inputGradient2);)
 
             Assert::IsTrue(inputGradient.Equals(inputGradient2, 0.0001f));
             Assert::IsTrue(gammaGradient.Equals(gammaGradient2, 0.0001f)); // precision difference between CUDA and CPU

@@ -1077,6 +1077,28 @@ namespace NeuroTests
             Assert::IsTrue(result.Equals(correct));
         }
 
+        TEST_METHOD(Image_Save_Load)
+        {
+            Tensor t(Shape(50, 50, 3));
+            t.FillWithRand(-1, 0, 1);
+            t.SaveAsImage("test.png", true);
+
+            Tensor t2("test.png", false);
+
+            Assert::IsTrue(t.Equals(t2, 0.01f));
+        }
+
+        TEST_METHOD(Image_Save_Load_Grayscale)
+        {
+            Tensor t(Shape(50, 50, 1));
+            t.FillWithRand(-1, 0, 1);
+            t.SaveAsImage("test_g.png", true);
+
+            Tensor t2("test_g.png", true, true);
+
+            Assert::IsTrue(t.Equals(t2, 0.01f));
+        }
+
         TEST_METHOD(Serialize_Deserialize)
         {
             /*string tempFilename = "tensor_tmp.txt";
