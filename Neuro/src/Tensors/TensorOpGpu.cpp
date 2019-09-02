@@ -5,6 +5,7 @@
 #include "Tools.h"
 #include "Tensors/TensorOpGpu.h"
 #include "Tensors/Cuda/CudaDeviceVariable.h"
+#include "Tensors/Cuda/CudaErrorCheck.h"
 #include "Tensors/Cuda/CudaKernels.h"
 
 namespace Neuro
@@ -598,36 +599,6 @@ namespace Neuro
     int TensorOpGpu::GetBlocksNum(int count)
     {
         return (int)ceil(count / (float)s_CudaDevProp.maxThreadsPerBlock);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::CudaAssert(cudaError_t code)
-    {
-        if (code != cudaSuccess)
-            CudaAssert(cudaGetErrorString(code));
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::CudaAssert(cublasStatus_t status)
-    {
-        if (status != CUBLAS_STATUS_SUCCESS)
-            CudaAssert(to_string(status).c_str());
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::CudaAssert(cudnnStatus_t status)
-    {
-        if (status != CUDNN_STATUS_SUCCESS)
-            CudaAssert(cudnnGetErrorString(status));
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::CudaAssert(const char* error)
-    {
-        stringstream ss;
-        ss << "CUDA error: " << error << endl;
-        OutputDebugString(ss.str().c_str());
-        assert(false);
     }
 
     //////////////////////////////////////////////////////////////////////////

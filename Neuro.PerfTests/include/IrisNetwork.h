@@ -25,7 +25,7 @@ public:
 
         Tensor inputs;
         Tensor outputs;
-        LoadCSVData("data/iris_data.csv", 3, inputs, outputs, true);
+        LoadCSVData("data/iris_data.csv", 3, inputs, outputs, true, 30);
         inputs = inputs.Normalized(EAxis::Feature);
 
         Stopwatch timer;

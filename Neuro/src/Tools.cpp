@@ -69,7 +69,24 @@ namespace Neuro
 		return value < 0 ? -1 : (value > 0 ? 1 : 0);
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    vector<float> LinSpace(float start, float stop, int num, bool endPoint)
+    {
+        vector<float> result;
+        float interval = (stop - start) / num;
+        for (int i = 0; i < num; ++i)
+        {
+            result.push_back(start);
+            start += interval;
+        }
+
+        if (endPoint)
+            result.push_back(stop);
+
+        return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	std::string ToLower(const string& str)
 	{
 		string result = str;
@@ -133,7 +150,7 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void LoadCSVData(const string& filename, int outputsNum, Tensor& inputs, Tensor& outputs, bool outputsOneHotEncoded)
+    void LoadCSVData(const string& filename, int outputsNum, Tensor& inputs, Tensor& outputs, bool outputsOneHotEncoded, int maxLines)
     {
         ifstream infile(filename.c_str());
         string line;
@@ -145,6 +162,9 @@ namespace Neuro
 
         while (getline(infile, line))
         {
+            if (maxLines >= 0 && batches >= maxLines)
+                break;
+
             if (line.empty())
                 continue;
 

@@ -183,6 +183,9 @@
     <ClInclude Include="include\Tensors\TensorFormatter.h">
       <Filter>include\Tensors</Filter>
     </ClInclude>
+    <ClInclude Include="include\Tensors\Cuda\CudaErrorCheck.h">
+      <Filter>include\Tensors\Cuda</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\NeuralNetwork.cpp">
@@ -301,6 +304,9 @@
     </ClCompile>
     <ClCompile Include="src\Tensors\TensorFormatter.cpp">
       <Filter>src\Tensors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tensors\Cuda\CudaErrorCheck.cpp">
+      <Filter>src\Tensors\Cuda</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

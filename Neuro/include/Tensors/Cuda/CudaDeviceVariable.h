@@ -1,9 +1,11 @@
 #pragma once
-#include "Types.h"
 
 #include <vector>
 #include <cuda.h>
 #include <cuda_runtime.h>
+
+#include "Types.h"
+#include "Tensors/Cuda/CudaErrorCheck.h"
 
 namespace Neuro
 {
@@ -18,7 +20,7 @@ namespace Neuro
             m_Length = length;
             m_TypeSize = sizeof(T);
             m_IsOwner = true;
-            cudaMalloc(&m_DevPtr, GetSizeInBytes());
+            CUDA_CHECK(cudaMalloc(&m_DevPtr, GetSizeInBytes()));
         }
 
         CudaDeviceVariable(const CudaDeviceVariable<T>& var, size_t lengthOffset)
@@ -37,12 +39,12 @@ namespace Neuro
         ~CudaDeviceVariable()
         {
             if (m_IsOwner)
-                cudaFree(m_DevPtr);
+                CUDA_CHECK(cudaFree(m_DevPtr));
         }
 
         void CopyToDevice(const T* source) const
         {
-            cudaMemcpy(m_DevPtr, source, GetSizeInBytes(), cudaMemcpyHostToDevice);
+            CUDA_CHECK(cudaMemcpy(m_DevPtr, source, GetSizeInBytes(), cudaMemcpyHostToDevice));
         }
 
         void CopyToDevice(const vector<T>& source) const
@@ -52,7 +54,7 @@ namespace Neuro
 
         void CopyToHost(T* dest) const
         {
-            cudaMemcpy(dest, m_DevPtr, GetSizeInBytes(), cudaMemcpyDeviceToHost);
+            CUDA_CHECK(cudaMemcpy(dest, m_DevPtr, GetSizeInBytes(), cudaMemcpyDeviceToHost));
         }
 
         void CopyToHost(vector<T>& dest) const
@@ -64,7 +66,7 @@ namespace Neuro
         size_t GetSizeInBytes() const { return m_Length * m_TypeSize; }
 
     private:
-        void* m_DevPtr;
+        void* m_DevPtr = nullptr;
         size_t m_Length = 0;
         size_t m_TypeSize = 0;
         bool m_IsOwner = false;

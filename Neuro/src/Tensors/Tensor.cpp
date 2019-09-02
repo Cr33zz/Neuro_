@@ -65,12 +65,20 @@ namespace Neuro
 
 	//////////////////////////////////////////////////////////////////////////
 	Tensor::Tensor(const Tensor& t)
-		: Tensor(t.m_Name)
 	{
-		t.CopyToHost();
-		m_Shape = t.GetShape();
-		m_Values = t.m_Values;
+        *this = t;
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor& Tensor::operator=(const Tensor& t)
+    {
+        t.CopyToHost();
+        m_Name = t.m_Name;
+        m_Shape = t.m_Shape;
+        m_Values = t.m_Values;
+        m_Op = t.m_Op;
+        return *this;
+    }
 
 	//////////////////////////////////////////////////////////////////////////
 	Tensor::Tensor(const vector<float>& values, const string& name)

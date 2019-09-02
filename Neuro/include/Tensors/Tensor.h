@@ -28,8 +28,9 @@ namespace Neuro
         explicit Tensor(const Shape& shape, const string& name = "");
         Tensor(const vector<float>&, const Shape& shape, const string& name = "");
         Tensor(const vector<float>&, const string& name = "");
-        Tensor(const Tensor& t);
         Tensor(const string& imageFile, bool normalize, bool grayScale = false, const string& name = "");
+        Tensor(const Tensor& t);
+        Tensor& operator=(const Tensor& t);
 
 		static void SetDefaultOpMode(EOpMode mode);
         static void SetForcedOpMode(EOpMode mode);
@@ -243,20 +244,6 @@ namespace Neuro
         void SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& result) const;
 		const Shape& GetShape() const { return m_Shape; }
 
-        struct GPUData
-        {
-            ~GPUData();
-
-            void UpdateWorkspace(CudaDeviceVariable<char>*& workspace, size_t size);
-
-            CudaDeviceVariable<float>* m_DeviceVar = nullptr;
-            CudaDeviceVariable<char>* m_ConvWorkspace = nullptr;
-            CudaDeviceVariable<char>* m_ConvBackWorkspace = nullptr;
-            CudaDeviceVariable<char>* m_ConvBackKernelWorkspace = nullptr;
-        };
-
-        GPUData& GetGpuData() { return m_GpuData; }
-
         void CopyToDevice() const;
         void CopyToHost() const;
         void OverrideHost() const;
@@ -266,6 +253,23 @@ namespace Neuro
         float* GetDevicePtr();
 
 	private:
+        struct GPUData
+        {
+            GPUData() {}
+            ~GPUData();
+
+            void UpdateWorkspace(CudaDeviceVariable<char>*& workspace, size_t size);
+
+            CudaDeviceVariable<float>* m_DeviceVar = nullptr;
+            CudaDeviceVariable<char>* m_ConvWorkspace = nullptr;
+            CudaDeviceVariable<char>* m_ConvBackWorkspace = nullptr;
+            CudaDeviceVariable<char>* m_ConvBackKernelWorkspace = nullptr;
+
+        private:
+            GPUData(const GPUData&);
+            GPUData& operator=(const GPUData&);
+        };
+
         mutable GPUData m_GpuData;
 		TensorOpCpu* m_Op;
         mutable ELocation m_CurrentLocation;

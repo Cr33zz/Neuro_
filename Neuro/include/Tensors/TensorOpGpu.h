@@ -1,10 +1,9 @@
 ﻿#pragma once
-#include "Types.h"
-
 #include <cuda.h>
 #include <cudnn.h>
 #include <cublas.h>
 
+#include "Types.h"
 #include "Tensors/TensorOpMultiCpu.h"
 
 namespace Neuro
@@ -34,22 +33,11 @@ namespace Neuro
         static cudnnPoolingMode_t GetCudnnPoolType(EPoolingMode type);
         static void GetKernelRunParams(int count, dim3& blocks, dim3& threads);
         static int GetBlocksNum(int count);
-
-        static void CudaAssert(cudaError_t code);
-        static void CudaAssert(cudnnStatus_t status);
-        static void CudaAssert(cublasStatus_t status);
-        static void CudaAssert(const char* error);
         static void CudnnLog(cudnnSeverity_t sev, void *udata, const cudnnDebug_t *dbg, const char *msg);
 
         static bool s_Initialized;
         static cudaDeviceProp s_CudaDevProp;
         static cublasHandle_t s_CublasHandle;
         static cudnnHandle_t s_CudnnHandle;
-
-#ifdef _DEBUG
-#   define CUDA_CHECK(op) CudaAssert(op)
-#else
-#   define CUDA_CHECK(op) op
-#endif
     };
 }

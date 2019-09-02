@@ -1,10 +1,15 @@
 ﻿#pragma once
 
+#include <string>
+#include <vector>
+
 #include "Random.h"
 #include "Data.h"
 
 namespace Neuro
 {
+    using namespace std;
+
 	class Tensor;
 
     const float _EPSILON = 10e-7f;
@@ -22,21 +27,7 @@ namespace Neuro
     float Clip(float value, float min, float max);
 	int Sign(float value);
 
-    //static List<float> LinSpace(float start, float stop, int num = 50, bool endPoint = true)
-    //{
-    //    List<float> result = new List<float>();
-    //    float interval = (stop - start) / num;
-    //    for (int i = 0; i < num; ++i)
-    //    {
-    //        result.Add(start);
-    //        start += interval;
-    //    }
-
-    //    if (endPoint)
-    //        result.Add(stop);
-
-    //    return result;
-    //}
+    vector<float> LinSpace(float start, float stop, int num = 50, bool endPoint = true);
 
 	string ToLower(const string& str);
     string TrimStart(const string& str, const string& chars = "\t\n\v\f\r ");
@@ -158,7 +149,7 @@ namespace Neuro
     //    }
     //}
 
-    void LoadCSVData(const string& filename, int outputsNum, Tensor& inputs, Tensor& outputs, bool outputsOneHotEncoded = false);
+    void LoadCSVData(const string& filename, int outputsNum, Tensor& inputs, Tensor& outputs, bool outputsOneHotEncoded = false, int maxLines = -1);
 
     //static vector<Data> MergeData(const vector<Data>& dataList, int batchSize = -1)
     //{

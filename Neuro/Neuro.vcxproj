@@ -147,6 +147,7 @@
     <ClInclude Include="include\Random.h" />
     <ClInclude Include="include\Stopwatch.h" />
     <ClInclude Include="include\Tensors\Cuda\CudaDeviceVariable.h" />
+    <ClInclude Include="include\Tensors\Cuda\CudaErrorCheck.h" />
     <ClInclude Include="include\Tensors\Cuda\CudaKernels.h" />
     <ClInclude Include="include\Tensors\Shape.h" />
     <ClInclude Include="include\Tensors\Tensor.h" />
@@ -190,6 +191,7 @@
     <ClCompile Include="src\Optimizers\SGD.cpp" />
     <ClCompile Include="src\Random.cpp" />
     <ClCompile Include="src\Stopwatch.cpp" />
+    <ClCompile Include="src\Tensors\Cuda\CudaErrorCheck.cpp" />
     <ClCompile Include="src\Tensors\Shape.cpp" />
     <ClCompile Include="src\Tensors\Tensor.cpp" />
     <ClCompile Include="src\Tensors\TensorFormatter.cpp" />
