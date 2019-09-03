@@ -38,12 +38,12 @@ namespace Neuro
 
         void SetOpMode(EOpMode mode);
 
-        int Width() const { return m_Shape.Width(); };
-		int Height() const { return m_Shape.Height(); }
-		int Depth() const { return m_Shape.Depth(); }
-		int Batch() const { return m_Shape.Batch(); }
-		int BatchLength() const { return m_Shape.Dim0Dim1Dim2; }
-		int Length() const { return (int)m_Values.size(); }
+        uint Width() const { return m_Shape.Width(); };
+        uint Height() const { return m_Shape.Height(); }
+        uint Depth() const { return m_Shape.Depth(); }
+        uint Batch() const { return m_Shape.Batch(); }
+        uint BatchLength() const { return m_Shape.Dim0Dim1Dim2; }
+        uint Length() const { return (uint)m_Values.size(); }
 
         const string& Name() const { return m_Name; }
 
@@ -110,7 +110,7 @@ namespace Neuro
         
         static Tensor MergeIntoBatch(const vector<Tensor>& tensors);
         // In case number of tensors is smaller than forcedDepth, first tensor will be repeated to account for missing tensors
-        static Tensor MergeIntoDepth(const vector<Tensor>& tensors, int forcedDepth = 0);
+        static Tensor MergeIntoDepth(const vector<Tensor>& tensors, uint forcedDepth = 0);
 
 		// This operation will concatenate elements of all input tensors separately for each batch
 		static void Concat(const tensor_ptr_vec_t& inputs, Tensor& result);
@@ -135,7 +135,7 @@ namespace Neuro
 
         // Create new tensor with different batch length and use current tensors values to fill the new tensor.
         // Number of batches will be the same as in source tensor.
-        Tensor Resized(int width, int height = 1, int depth = 1) const;
+        Tensor Resized(uint width, uint height = 1, uint depth = 1) const;
         Tensor FlattenHoriz() const;
         Tensor FlattenVert() const;
         void Rotated180(Tensor& result) const;
@@ -150,23 +150,23 @@ namespace Neuro
         pair<Tensor, Tensor> Standardized(EAxis axis, Tensor& result, Tensor* mean = nullptr, Tensor* invVariance = nullptr) const;
         Tensor Standardized(EAxis axis, Tensor* mean = nullptr, Tensor* invVariance = nullptr) const;
 
-        void Conv2D(const Tensor& kernels, int stride, int padding, Tensor& result) const;
-        Tensor Conv2D(const Tensor& kernels, int stride, int padding) const;
-        void Conv2DInputsGradient(const Tensor& gradient, const Tensor& kernels, int stride, int padding, Tensor& inputsGradient) const;
-        void Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, int padding, Tensor& kernelsGradient) const;
+        void Conv2D(const Tensor& kernels, uint stride, uint padding, Tensor& result) const;
+        Tensor Conv2D(const Tensor& kernels, uint stride, uint padding) const;
+        void Conv2DInputsGradient(const Tensor& gradient, const Tensor& kernels, uint stride, uint padding, Tensor& inputsGradient) const;
+        void Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, uint stride, uint padding, Tensor& kernelsGradient) const;
 
-        void Conv2DTransposed(const Tensor& kernels, int stride, int padding, Tensor& result) const;
-        Tensor Conv2DTransposed(const Tensor& kernels, int outputDepth, int stride, int padding) const;
-        void Conv2DTransposedInputsGradient(const Tensor& gradient, const Tensor& kernels, int stride, int padding, Tensor& inputsGradient) const;
-        void Conv2DTransposedKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, int padding, Tensor& kernelsGradient) const;
+        void Conv2DTransposed(const Tensor& kernels, uint stride, uint padding, Tensor& result) const;
+        Tensor Conv2DTransposed(const Tensor& kernels, uint outputDepth, uint stride, uint padding) const;
+        void Conv2DTransposedInputsGradient(const Tensor& gradient, const Tensor& kernels, uint stride, uint padding, Tensor& inputsGradient) const;
+        void Conv2DTransposedKernelsGradient(const Tensor& input, const Tensor& gradient, uint stride, uint padding, Tensor& kernelsGradient) const;
 
-        void Pool2D(int filterSize, int stride, EPoolingMode type, int padding, Tensor& output) const;
-        Tensor Pool2D(int filterSize, int stride, EPoolingMode type, int padding) const;
-        void Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, EPoolingMode type, int padding, Tensor& result) const;
+        void Pool2D(uint filterSize, uint stride, EPoolingMode type, uint padding, Tensor& output) const;
+        Tensor Pool2D(uint filterSize, uint stride, EPoolingMode type, uint padding) const;
+        void Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, uint filterSize, uint stride, EPoolingMode type, uint padding, Tensor& result) const;
 
-        void UpSample2D(int scaleFactor, Tensor& output) const;
-        Tensor UpSample2D(int scaleFactor) const;
-        void UpSample2DGradient(const Tensor& outputGradient, int scaleFactor, Tensor& inputGradient) const;
+        void UpSample2D(uint scaleFactor, Tensor& output) const;
+        Tensor UpSample2D(uint scaleFactor) const;
+        void UpSample2DGradient(const Tensor& outputGradient, uint scaleFactor, Tensor& inputGradient) const;
 
         void BatchNormalization(const Tensor& gamma, const Tensor& beta, const Tensor& runningMean, const Tensor& runningVar, Tensor& result) const;
         void BatchNormalizationTrain(const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const;
@@ -178,12 +178,11 @@ namespace Neuro
         string ToString() const;
         bool SameDimensionsExceptBatches(const Tensor& t) const;
 
-        static pair<int,int> GetPadding(EPaddingMode paddingMode, int kernelWidth, int kernelHeight);
-        static int GetPadding(EPaddingMode paddingMode, int kernelSize);
-        //static void GetPaddingParams(EPaddingMode type, int width, int height, int kernelWidth, int kernelHeight, int stride, int& outHeight, int& outWidth, int& paddingX, int& paddingY);
-        static Shape GetPooling2DOutputShape(const Shape& inputShape, int kernelWidth, int kernelHeight, int stride, int paddingX, int paddingY);
-        static Shape GetConvOutputShape(const Shape& inputShape, int kernelsNum, int kernelWidth, int kernelHeight, int stride, int paddingX, int paddingY);
-        static Shape GetConvTransposeOutputShape(const Shape& inputShape, int outputDepth, int kernelWidth, int kernelHeight, int stride, int paddingX, int paddingY);
+        static pair<uint, uint> GetPadding(EPaddingMode paddingMode, uint kernelWidth, uint kernelHeight);
+        static uint GetPadding(EPaddingMode paddingMode, uint kernelSize);
+        static Shape GetPooling2DOutputShape(const Shape& inputShape, uint kernelWidth, uint kernelHeight, uint stride, uint paddingX, uint paddingY);
+        static Shape GetConvOutputShape(const Shape& inputShape, uint kernelsNum, uint kernelWidth, uint kernelHeight, uint stride, uint paddingX, uint paddingY);
+        static Shape GetConvTransposeOutputShape(const Shape& inputShape, uint outputDepth, uint kernelWidth, uint kernelHeight, uint stride, uint paddingX, uint paddingY);
 
         //internal void Serialize(XmlElement parentElem, string name)
         //{
@@ -215,21 +214,21 @@ namespace Neuro
         //    var t = new Tensor(Shape.Deserialize(reader));
         //    int valuesCount = reader.ReadInt32();
         //    t.Values = new float[valuesCount];
-        //    for (int i = 0; i < valuesCount; ++i)
+        //    for (uint i = 0; i < valuesCount; ++i)
         //        t.Values[i] = reader.ReadSingle();
         //    return t;
         //}
 
-        float& operator()(int w, int h = 0, int d = 0, int n = 0);
-        float operator()(int w, int h = 0, int d = 0, int n = 0) const;
+        float& operator()(uint w, uint h = 0, uint d = 0, uint n = 0);
+        float operator()(uint w, uint h = 0, uint d = 0, uint n = 0) const;
 
-        float GetFlat(int i) const;
-        float& Get(int w, int h = 0, int d = 0, int n = 0);
-        float Get(int w, int h = 0, int d = 0, int n = 0) const;
+        float GetFlat(uint i) const;
+        float& Get(uint w, uint h = 0, uint d = 0, uint n = 0);
+        float Get(uint w, uint h = 0, uint d = 0, uint n = 0) const;
         float TryGet(float def, int w, int h = 0, int d = 0, int n = 0) const;
 
-        void SetFlat(float value, int i);
-        void Set(float value, int w, int h = 0, int d = 0, int n = 0);
+        void SetFlat(float value, uint i);
+        void Set(float value, uint w, uint h = 0, uint d = 0, uint n = 0);
         void TrySet(float value, int w, int h = 0, int d = 0, int n = 0);
 
         void CopyTo(Tensor& result, float tau = 0) const;

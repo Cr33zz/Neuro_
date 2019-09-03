@@ -30,7 +30,7 @@ namespace NeuroTests
 
         LayerBase* CreateLayer(EPoolingMode poolType)
         {
-            return new Pooling2D(Shape(6, 6, 3), 2, 0, poolType);
+            return new Pooling2D(Shape(6, 6, 3), 2, 1, poolType);
         }
     };
 }

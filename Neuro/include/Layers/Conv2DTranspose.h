@@ -10,9 +10,9 @@ namespace Neuro
     class Conv2DTranspose : public LayerBase
     {
     public:
-        Conv2DTranspose(LayerBase* inputLayer, int filterSize, int outputDepth, int stride = 1, int padding = 0, ActivationBase* activation = nullptr, const string& name = "");
+        Conv2DTranspose(LayerBase* inputLayer, uint filterSize, uint outputDepth, uint stride = 1, uint padding = 0, ActivationBase* activation = nullptr, const string& name = "");
         // This constructor should only be used for input layer
-        Conv2DTranspose(const Shape& inputShape, int filterSize, int outputDepth, int stride = 1, int padding = 0, ActivationBase* activation = nullptr, const string& name = "");
+        Conv2DTranspose(const Shape& inputShape, uint filterSize, uint outputDepth, uint stride = 1, uint padding = 0, ActivationBase* activation = nullptr, const string& name = "");
         ~Conv2DTranspose();
 
         virtual void CopyParametersTo(LayerBase& target, float tau) const override;

@@ -84,7 +84,7 @@ public:
 
         List<Data> trainingData = new List<Data>();
 
-        for (int i = 0; i < 32; ++i)
+        for (uint i = 0; i < 32; ++i)
         {
             var input = new Tensor(inShape);
             input.FillWithRand(3 * i);

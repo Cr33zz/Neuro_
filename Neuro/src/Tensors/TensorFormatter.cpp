@@ -13,7 +13,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    string TensorFormatter::ToStringRecursive(const Tensor& t, const vector<int>& index, const string& hanging_indent, int curr_width, const Dragon4FloatFormatter& formatter)
+    string TensorFormatter::ToStringRecursive(const Tensor& t, const vector<uint>& index, const string& hanging_indent, int curr_width, const Dragon4FloatFormatter& formatter)
     {
         string separator = " ";
 
@@ -46,7 +46,7 @@ namespace Neuro
 
             for (int i = 0; i < leading_items; ++i)
             {
-                vector<int> tempIndex = index;
+                vector<uint> tempIndex = index;
                 tempIndex.push_back(i);
                 word = ToStringRecursive(t, tempIndex, next_hanging_indent, next_width, formatter);
                 auto exLine = ExtendLine(s, line, word, elem_width, hanging_indent);
@@ -57,7 +57,7 @@ namespace Neuro
 
             for (int i = trailing_items; i > 1; --i)
             {
-                vector<int> tempIndex = index;
+                vector<uint> tempIndex = index;
                 tempIndex.push_back(-i);
                 word = ToStringRecursive(t, tempIndex, next_hanging_indent, next_width, formatter);
                 auto exLine = ExtendLine(s, line, word, elem_width, hanging_indent);
@@ -66,7 +66,7 @@ namespace Neuro
                 line += separator;
             }
 
-            vector<int> tempIndex = index;
+            vector<uint> tempIndex = index;
             tempIndex.push_back(-1);
             word = ToStringRecursive(t, tempIndex, next_hanging_indent, next_width, formatter);
             auto exLine = ExtendLine(s, line, word, elem_width, hanging_indent);
@@ -85,7 +85,7 @@ namespace Neuro
 
             for (int i = 0; i < leading_items; ++i)
             {
-                vector<int> tempIndex = index;
+                vector<uint> tempIndex = index;
                 tempIndex.push_back(i);
                 nested = ToStringRecursive(t, tempIndex, next_hanging_indent, next_width, formatter);
                 s += hanging_indent + nested + line_sep;
@@ -93,13 +93,13 @@ namespace Neuro
 
             for (int i = trailing_items; i > 1; --i)
             {
-                vector<int> tempIndex = index;
+                vector<uint> tempIndex = index;
                 tempIndex.push_back(-i);
                 nested = ToStringRecursive(t, tempIndex, next_hanging_indent, next_width, formatter);
                 s += hanging_indent + nested + line_sep;
             }
 
-            vector<int> tempIndex = index;
+            vector<uint> tempIndex = index;
             tempIndex.push_back(-1);
             nested = ToStringRecursive(t, tempIndex, next_hanging_indent, next_width, formatter);
 
@@ -132,7 +132,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     TensorFormatter::Dragon4FloatFormatter::Dragon4FloatFormatter(const vector<float>& a)
     {
-        for (size_t i = 0; i < a.size(); ++i)
+        for (uint i = 0; i < a.size(); ++i)
         {
             auto s = Split(Float2Str(a[i]), ".");
             m_PadLeft = max(m_PadLeft, s[0].length());

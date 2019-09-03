@@ -15,7 +15,7 @@ namespace NeuroTests
             auto result = Tensor(t1.GetShape());
 
             t1.Add(t2, result);
-            for (int i = 0; i < t1.GetShape().Length; ++i)
+            for (uint i = 0; i < t1.GetShape().Length; ++i)
                 Assert::AreEqual(result.GetFlat(i), t1.GetFlat(i) + t2.GetFlat(i % t2.GetShape().Length));
         }
 
@@ -26,7 +26,7 @@ namespace NeuroTests
             auto result = Tensor(t1.GetShape());
 
             t1.Add(t2, result);
-            for (int i = 0; i < t1.GetShape().Length; ++i)
+            for (uint i = 0; i < t1.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)t1.GetFlat(i) + t2.GetFlat(i % t2.GetShape().Length), 1e-5);
         }
 
@@ -36,7 +36,7 @@ namespace NeuroTests
             auto result = Tensor(t.GetShape());
 
             t.Add(2, result);
-            for (int i = 0; i < t.GetShape().Length; ++i)
+            for (uint i = 0; i < t.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)t.GetFlat(i) + 2, 1e-4);
         }
 
@@ -47,7 +47,7 @@ namespace NeuroTests
             auto result = Tensor(t1.GetShape());
 
             t1.Sub(t2, result);
-            for (int i = 0; i < t1.GetShape().Length; ++i)
+            for (uint i = 0; i < t1.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)t1.GetFlat(i) - t2.GetFlat(i % t2.GetShape().Length), 1e-5);
         }
 
@@ -58,7 +58,7 @@ namespace NeuroTests
             auto result = Tensor(t1.GetShape());
 
             t1.Sub(t2, result);
-            for (int i = 0; i < t1.GetShape().Length; ++i)
+            for (uint i = 0; i < t1.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)t1.GetFlat(i) - t2.GetFlat(i % t2.GetShape().Length), 1e-5);
         }
 
@@ -68,7 +68,7 @@ namespace NeuroTests
             auto result = Tensor(t.GetShape());
 
             t.Sub(2, result);
-            for (int i = 0; i < t.GetShape().Length; ++i)
+            for (uint i = 0; i < t.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)t.GetFlat(i) - 2, 1e-4);
         }
 
@@ -79,7 +79,7 @@ namespace NeuroTests
             auto result = Tensor(t1.GetShape());
 
             t1.Div(t2, result);
-            for (int i = 0; i < t1.GetShape().Length; ++i)
+            for (uint i = 0; i < t1.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), 2, 1e-4);
         }
 
@@ -89,7 +89,7 @@ namespace NeuroTests
             auto result = Tensor(t.GetShape());
 
             t.Div(2, result);
-            for (int i = 0; i < t.GetShape().Length; ++i)
+            for (uint i = 0; i < t.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)t.GetFlat(i) / 2, 1e-4);
         }
 
@@ -99,7 +99,7 @@ namespace NeuroTests
             auto result = Tensor(t.GetShape());
 
             t.Mul(2, result);
-            for (int i = 0; i < t.GetShape().Length; ++i)
+            for (uint i = 0; i < t.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)t.GetFlat(i) * 2, 1e-4);
         }
 
@@ -110,7 +110,7 @@ namespace NeuroTests
             auto result = Tensor(t1.GetShape());
 
             t1.MulElem(t2, result);
-            for (int i = 0; i < t1.GetShape().Length; ++i)
+            for (uint i = 0; i < t1.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)t1.GetFlat(i) * t2.GetFlat(i), 1e-5);
         }
 
@@ -335,7 +335,7 @@ namespace NeuroTests
             auto t = Tensor(Shape(2, 3, 4, 5)); t.FillWithRange((float)t.GetShape().Length, 0.5f);
             auto result = t.Clipped(-0.1f, 0.1f);
 
-            for (int i = 0; i < t.GetShape().Length; ++i)
+            for (uint i = 0; i < t.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), 0.1, 1e-7);
         }
 
@@ -343,10 +343,10 @@ namespace NeuroTests
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
-            auto t = Tensor(Shape(2, 3, 4, 5)); t.FillWithRange((float)-t.GetShape().Length, 0.5f);
+            auto t = Tensor(Shape(2, 3, 4, 5)); t.FillWithRange(-(float)t.GetShape().Length, 0.5f);
             auto result = t.Clipped(-0.1f, 0.1f);
 
-            for (int i = 0; i < t.GetShape().Length; ++i)
+            for (uint i = 0; i < t.GetShape().Length; ++i)
                 Assert::AreEqual(result.GetFlat(i), -0.1f, 1e-7f);
         }
 
@@ -357,7 +357,7 @@ namespace NeuroTests
             auto t = Tensor(Shape(2, 3, 4, 5)); t.FillWithRand();
             auto result = t.Negated();
 
-            for (int i = 0; i < t.GetShape().Length; ++i)
+            for (uint i = 0; i < t.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)-t.GetFlat(i), 1e-7);
         }
 
@@ -374,7 +374,7 @@ namespace NeuroTests
                               0.42857143f, -0.07142857f,  0.21428571f,  0.28571429f,
                               0.08333333f,  0.04166667f,  0.66666667f,  0.20833333f }, t.GetShape());
 
-            for (int i = 0; i < result.GetShape().Length; ++i)
+            for (uint i = 0; i < result.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
@@ -391,7 +391,7 @@ namespace NeuroTests
                               0.7620f, -0.1270f,  0.3810f, 0.5080f,
                               0.1182f, 0.0591f,  0.9460f,  0.2956f }, t.GetShape());
 
-            for (int i = 0; i < result.GetShape().Length; ++i)
+            for (uint i = 0; i < result.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
@@ -408,7 +408,7 @@ namespace NeuroTests
                               0.21428571f, -0.33333333f, 0.125f,      0.2857f,
                               0.07142857f,  0.33333333f, 0.66666667f, 0.3571f }, t.GetShape());
 
-            for (int i = 0; i < result.GetShape().Length; ++i)
+            for (uint i = 0; i < result.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
@@ -425,7 +425,7 @@ namespace NeuroTests
                               0.2860f, -0.5773f, 0.1761f, 0.4923f,
                               0.0953f, 0.5773f, 0.9395f, 0.6154f }, t.GetShape());
 
-            for (int i = 0; i < result.GetShape().Length; ++i)
+            for (uint i = 0; i < result.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
@@ -442,7 +442,7 @@ namespace NeuroTests
                               0.08695652f, -0.01449275f,  0.04347826f,  0.05797101f,
                               0.02898551f,  0.01449275f,  0.23188406f,  0.07246377f }, t.GetShape());
 
-            for (int i = 0; i < result.GetShape().Length; ++i)
+            for (uint i = 0; i < result.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
@@ -459,7 +459,7 @@ namespace NeuroTests
                               0.21226474f, -0.03537746f,  0.10613237f,  0.14150983f,
                               0.07075491f,  0.03537746f,  0.56603931f,  0.17688728f }, t.GetShape());
 
-            for (int i = 0; i < result.GetShape().Length; ++i)
+            for (uint i = 0; i < result.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
@@ -476,7 +476,7 @@ namespace NeuroTests
                              1, 0, 0.5714f, 0.7142f,
                              0.0666f, 0, 1, 0.2666f }, t.GetShape());
 
-            for (int i = 0; i < result.GetShape().Length; ++i)
+            for (uint i = 0; i < result.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
@@ -493,7 +493,7 @@ namespace NeuroTests
                              1, 0, 0, 0,
                              0.8461f, 1, 1, 1 }, t.GetShape());
 
-            for (int i = 0; i < result.GetShape().Length; ++i)
+            for (uint i = 0; i < result.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
@@ -508,7 +508,7 @@ namespace NeuroTests
             Tensor correct({ 0, 0.8076f, 0.9615f, 0.9615f,
                              1, 0.7307f, 0.8846f, 0.9230f }, t.GetShape());
 
-            for (int i = 0; i < result.GetShape().Length; ++i)
+            for (uint i = 0; i < result.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
@@ -523,7 +523,7 @@ namespace NeuroTests
             Tensor correct({ 0, 76.5f, 127.5f, 25.5f,
                              153, 25.5f, 255, 204 }, t.GetShape());
 
-            for (int i = 0; i < result.GetShape().Length; ++i)
+            for (uint i = 0; i < result.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
@@ -537,7 +537,7 @@ namespace NeuroTests
             auto result = t.Sum(EAxis::Sample);
             Tensor correct({ -9, 12 }, Shape(2));
 
-            for (int i = 0; i < result.GetShape().Length; ++i)
+            for (uint i = 0; i < result.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
@@ -551,7 +551,7 @@ namespace NeuroTests
             auto result = t.Sum(EAxis::Sample, 1);
             Tensor correct({ 12 }, Shape(1));
 
-            for (int i = 0; i < result.GetShape().Length; ++i)
+            for (uint i = 0; i < result.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
@@ -565,7 +565,7 @@ namespace NeuroTests
             auto result = t.Sum(EAxis::Feature);
             Tensor correct({ -14, 0, 8, 9 }, Shape(2,2));
 
-            for (int i = 0; i < result.GetShape().Length; ++i)
+            for (uint i = 0; i < result.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
@@ -579,7 +579,7 @@ namespace NeuroTests
             auto result = t.Sum(EAxis::Global);
             Tensor correct({ 2 }, Shape(1));
 
-            for (int i = 0; i < result.GetShape().Length; ++i)
+            for (uint i = 0; i < result.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
@@ -593,7 +593,7 @@ namespace NeuroTests
             auto result = t.Avg(EAxis::Sample);
             Tensor correct({ -2.25f, 3 }, Shape(2));
 
-            for (int i = 0; i < result.GetShape().Length; ++i)
+            for (uint i = 0; i < result.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
@@ -607,7 +607,7 @@ namespace NeuroTests
             auto result = t.Avg(EAxis::Sample, 1);
             Tensor correct({ 3 }, Shape(1));
 
-            for (int i = 0; i < result.GetShape().Length; ++i)
+            for (uint i = 0; i < result.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
@@ -621,7 +621,7 @@ namespace NeuroTests
             auto result = t.Avg(EAxis::Feature);
             Tensor correct({ -7, 0, 4, 4.5f }, Shape(2, 2));
 
-            for (int i = 0; i < result.GetShape().Length; ++i)
+            for (uint i = 0; i < result.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
@@ -635,7 +635,7 @@ namespace NeuroTests
             auto result = t.Avg(EAxis::Global);
             Tensor correct({ 0.375f }, Shape(1));
 
-            for (int i = 0; i < result.GetShape().Length; ++i)
+            for (uint i = 0; i < result.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)correct.GetFlat(i), 0.0001);
         }
 
@@ -931,7 +931,7 @@ namespace NeuroTests
 
             vector<Tensor> tensors;
 
-            for (int i = 0; i < 5; ++i)
+            for (uint i = 0; i < 5; ++i)
             {
                 auto t = Tensor(Shape(2,3,4));
                 t.FillWithRand();
@@ -940,7 +940,7 @@ namespace NeuroTests
 
             auto result = Tensor::MergeIntoBatch(tensors);
 
-            for (int i = 0; i < tensors.size(); ++i)
+            for (uint i = 0; i < tensors.size(); ++i)
                 Assert::IsTrue(result.GetBatch(i).Equals(tensors[i]));
         }
 
@@ -950,7 +950,7 @@ namespace NeuroTests
 
             vector<Tensor> tensors;
 
-            for (int i = 0; i < 5; ++i)
+            for (uint i = 0; i < 5; ++i)
             {
                 auto t = Tensor(Shape(2, 3));
                 t.FillWithRand();
@@ -959,7 +959,7 @@ namespace NeuroTests
 
             auto result = Tensor::MergeIntoDepth(tensors);
 
-            for (int i = 0; i < tensors.size(); ++i)
+            for (uint i = 0; i < tensors.size(); ++i)
                 Assert::IsTrue(result.GetDepth(i).Equals(tensors[i]));
         }
 
@@ -969,7 +969,7 @@ namespace NeuroTests
 
             vector<Tensor> tensors;
 
-            for (int i = 0; i < 5; ++i)
+            for (uint i = 0; i < 5; ++i)
             {
                 auto t = Tensor(Shape(2, 3));
                 t.FillWithRand();
@@ -978,7 +978,7 @@ namespace NeuroTests
 
             auto result = Tensor::MergeIntoDepth(tensors, 10);
 
-            for (int i = 0; i < 5; ++i)
+            for (uint i = 0; i < 5; ++i)
                 Assert::IsTrue(result.GetDepth(i).Equals(tensors[0]));
 
             for (int i = 5; i < tensors.size(); ++i)
@@ -992,7 +992,7 @@ namespace NeuroTests
             auto t = Tensor(Shape(2, 3, 4, 5)); t.FillWithRand();
             auto result = t.Map([&](float x) { return x * 2; });
 
-            for (int i = 0; i < t.GetShape().Length; ++i)
+            for (uint i = 0; i < t.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), 2 * (double)t.GetFlat(i), 1e-7);
         }
 
@@ -1004,7 +1004,7 @@ namespace NeuroTests
             auto other = Tensor(Shape(2, 3, 4, 5)); other.FillWithRand();
             auto result = t.Map([&](float x, float x2) { return x * x2; }, other);
 
-            for (int i = 0; i < t.GetShape().Length; ++i)
+            for (uint i = 0; i < t.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), (double)t.GetFlat(i) * other.GetFlat(i), 1e-7);
         }
 
@@ -1051,7 +1051,7 @@ namespace NeuroTests
             auto correct2 = Tensor(Shape(2, 2, 1, 2)); correct2.FillWithRange(8);
             vector<Tensor> correctInputs = { correct1, correct2 };
 
-            for (int i = 0; i < inputs.size(); ++i)
+            for (uint i = 0; i < inputs.size(); ++i)
                 Assert::IsTrue(inputs[i].Equals(correctInputs[i]));
         }
 

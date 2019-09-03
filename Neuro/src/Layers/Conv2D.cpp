@@ -4,7 +4,7 @@
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	Conv2D::Conv2D(LayerBase* inputLayer, int filterSize, int filtersNum, int stride, int padding, ActivationBase* activation, const string& name)
+	Conv2D::Conv2D(LayerBase* inputLayer, uint filterSize, uint filtersNum, uint stride, uint padding, ActivationBase* activation, const string& name)
 		: LayerBase(__FUNCTION__, inputLayer, Tensor::GetConvOutputShape(inputLayer->OutputShape(), filtersNum, filterSize, filterSize, stride, padding, padding), activation, name)
 	{
 		m_FilterSize = filterSize;
@@ -14,7 +14,7 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	Conv2D::Conv2D(const Shape& inputShape, int filterSize, int filtersNum, int stride, int padding, ActivationBase* activation, const string& name)
+	Conv2D::Conv2D(const Shape& inputShape, uint filterSize, uint filtersNum, uint stride, uint padding, ActivationBase* activation, const string& name)
 		: LayerBase(__FUNCTION__, inputShape, Tensor::GetConvOutputShape(inputShape, filtersNum, filterSize, filterSize, stride, padding, padding), activation, name)
 	{
 		m_FilterSize = filterSize;
@@ -88,7 +88,7 @@ namespace Neuro
 			m_BiasGradient.Add(outputGradient.Sum(EAxis::Feature));
 	}
 
-    /*Neuro::EPaddingMode Convolution::GetGradientPaddingMode(int padding)
+    /*Neuro::EPaddingMode Convolution::GetGradientPaddingMode(uint padding)
     {
         if (paddingMode == EPaddingMode::Valid)
             return EPaddingMode::Full;

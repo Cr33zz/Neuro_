@@ -32,7 +32,7 @@ namespace Neuro
 	int AccBinaryClassificationEquality(const Tensor& target, const Tensor& output)
 	{
 		int hits = 0;
-		for (int n = 0; n < output.Batch(); ++n)
+		for (uint n = 0; n < output.Batch(); ++n)
 			hits += target(0, 0, 0, n) == roundf(output(0, 0, 0, n)) ? 1 : 0;
 		return hits;
 	}
@@ -44,7 +44,7 @@ namespace Neuro
         Tensor outputArgMax = output.ArgMax(EAxis::Sample);
 
 		int hits = 0;
-		for (int i = 0; i < targetArgMax.Length(); ++i)
+		for (uint i = 0; i < targetArgMax.Length(); ++i)
 			hits += targetArgMax(i) == outputArgMax(i) ? 1 : 0;
 		return hits;
 	}
@@ -70,11 +70,11 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    vector<float> LinSpace(float start, float stop, int num, bool endPoint)
+    vector<float> LinSpace(float start, float stop, uint num, bool endPoint)
     {
         vector<float> result;
         float interval = (stop - start) / num;
-        for (int i = 0; i < num; ++i)
+        for (uint i = 0; i < num; ++i)
         {
             result.push_back(start);
             start += interval;
@@ -91,7 +91,7 @@ namespace Neuro
 	{
 		string result = str;
 
-		for (size_t i = 0; i < str.length(); ++i)
+		for (uint i = 0; i < str.length(); ++i)
 			result[i] = tolower(str[i]);
 
 		return result;
@@ -157,12 +157,12 @@ namespace Neuro
 
         vector<float> inputValues;
         vector<float> outputValues;
-        int batches = 0;
-        int inputBatchSize = 0;
+        uint batches = 0;
+        uint inputBatchSize = 0;
 
         while (getline(infile, line))
         {
-            if (maxLines >= 0 && batches >= maxLines)
+            if (maxLines >= 0 && batches >= (uint)maxLines)
                 break;
 
             if (line.empty())
@@ -173,7 +173,7 @@ namespace Neuro
             ++batches;
             inputBatchSize = (int)tmp.size() - (outputsOneHotEncoded ? 1 : outputsNum);
 
-            for (int i = 0; i < inputBatchSize; ++i)
+            for (int i = 0; i < (int)inputBatchSize; ++i)
                 inputValues.push_back((float)atof(tmp[i].c_str()));
 
             for (int i = 0; i < (outputsOneHotEncoded ? 1 : outputsNum); ++i)

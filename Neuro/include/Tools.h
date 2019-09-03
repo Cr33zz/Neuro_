@@ -27,7 +27,7 @@ namespace Neuro
     float Clip(float value, float min, float max);
 	int Sign(float value);
 
-    vector<float> LinSpace(float start, float stop, int num = 50, bool endPoint = true);
+    vector<float> LinSpace(float start, float stop, uint num = 50, bool endPoint = true);
 
 	string ToLower(const string& str);
     string TrimStart(const string& str, const string& chars = "\t\n\v\f\r ");
@@ -84,7 +84,7 @@ namespace Neuro
     //        if (generateBmp)
     //            bmp = new Bitmap(bmpCols * imgHeight, bmpRows * imgWidth);
 
-    //        for (int i = 0; i < maxImages; ++i)
+    //        for (uint i = 0; i < maxImages; ++i)
     //        {
     //            Tensor input = new Tensor(new Shape(imgWidth, imgHeight));
     //            Tensor output = new Tensor(new Shape(1, outputsNum));
@@ -132,9 +132,9 @@ namespace Neuro
     //        bwLabels.WriteBigInt32(2039 + outputsNum);
     //        bwLabels.WriteBigInt32(data.Count);
 
-    //        for (int i = 0; i < data.Count; ++i)
+    //        for (uint i = 0; i < data.Count; ++i)
     //        {
-    //            for (int h = 0; h < imgHeight; ++h)
+    //            for (uint h = 0; h < imgHeight; ++h)
     //            for (int x = 0; x < imgWidth; ++x)
     //                bwImages.Write((byte)(data[i].Inputs[0][h, x] * 255));
 
@@ -165,11 +165,11 @@ namespace Neuro
     //    for (int b = 0; b < batchesNum; ++b)
     //    {
     //        var inputs = new Tensor[numberOfInputs];
-    //        for (int i = 0; i < numberOfInputs; ++i)
+    //        for (uint i = 0; i < numberOfInputs; ++i)
     //            inputs[i] = Tensor.MergeIntoBatch(dataList.GetRange(b * batchSize, batchSize).Select(x => x.Inputs[i]).ToList());
 
     //        var outputs = new Tensor[numberOfOutputs];
-    //        for (int i = 0; i < numberOfOutputs; ++i)
+    //        for (uint i = 0; i < numberOfOutputs; ++i)
     //            outputs[i] = Tensor.MergeIntoBatch(dataList.GetRange(b * batchSize, batchSize).Select(x => x.Outputs[i]).ToList());
 
     //        mergedData.Add(new Data(inputs, outputs));
@@ -194,7 +194,7 @@ namespace Neuro
     template<typename T>
     void Shuffle(vector<T>& list)
     {
-        int n = (int)list.size();
+        uint n = (int)list.size();
         while (n-- > 1)
         {
             int k = GlobalRng().Next(n + 1);

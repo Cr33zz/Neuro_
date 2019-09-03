@@ -66,7 +66,7 @@ namespace Neuro
 		auto& layers = m_Model->GetLayers();
 		auto& targetLayers = target.m_Model->GetLayers();
 
-		for (int i = 0; i < layers.size(); ++i)
+		for (uint i = 0; i < layers.size(); ++i)
 			layers[i]->CopyParametersTo(*targetLayers[i]);
     }
 
@@ -77,7 +77,7 @@ namespace Neuro
 		auto& layers = m_Model->GetLayers();
 		auto& targetLayers = target.m_Model->GetLayers();
 
-		for (int i = 0; i < layers.size(); ++i)
+		for (uint i = 0; i < layers.size(); ++i)
 			layers[i]->CopyParametersTo(*targetLayers[i], tau);
     }
 
@@ -144,7 +144,7 @@ namespace Neuro
 #endif
 
         m_LossFuncs.resize(m_Model->GetOutputLayersCount());
-        int i = 0;
+        uint i = 0;
         for (auto outLayer : m_Model->GetOutputLayers())
         {
             m_LossFuncs[i++] = lossDict[outLayer->Name()];
@@ -194,7 +194,7 @@ namespace Neuro
 
 		if (m_AccuracyFuncs.size() == 0)
 		{
-			for (int i = 0; i < (int)outputs.size(); ++i)
+			for (uint i = 0; i < (int)outputs.size(); ++i)
 			{
 				m_AccuracyFuncs.push_back(nullptr);
 
@@ -268,7 +268,7 @@ namespace Neuro
                     output += " - eta: " + to_string((int)round(averageTimePerSample * (samplesCount - processedSamplesNum) / 1000.f)) + "s";
 
 					cout << output;
-                    for (int i = 0; i < output.length(); ++i)
+                    for (uint i = 0; i < output.length(); ++i)
                         cout << '\b';
 				}
 			}
@@ -305,12 +305,12 @@ namespace Neuro
 			//    int validationSamples = validationData->size();
 			//    float testHits = 0;
 
-			//    for (int n = 0; n < validationData->size(); ++n)
+			//    for (uint n = 0; n < validationData->size(); ++n)
 			//    {
 			//        FeedForward(validationData[n].Inputs);
 			//        var outputs = Model.GetOutputs();
 			//        Tensorflow.Tensor[] losses = new Tensorflow.Tensor[outputs.Length];
-			//        for (int i = 0; i < outputLayersCount; ++i)
+			//        for (uint i = 0; i < outputLayersCount; ++i)
 			//        {
 			//            LossFuncs[i].Compute(validationData[n].Outputs[i], outputs[i], losses[i]);
 			//            testTotalError += losses[i].Sum() / outputs[i].BatchLength;
@@ -357,7 +357,7 @@ namespace Neuro
         
         auto modelOutputs = m_Model->GetOutputs();
         vector<Tensor> outputsGrad;
-        for (int i = 0; i < (int)modelOutputs.size(); ++i)
+        for (uint i = 0; i < (int)modelOutputs.size(); ++i)
         {
             outputsGrad.push_back(Tensor(modelOutputs[i]->GetShape()));
             m_LossFuncs[i]->Compute(*outputs[i], *modelOutputs[i], outputsGrad[i]);
@@ -396,7 +396,7 @@ namespace Neuro
 	{
 		tensor_ptr_vec_t result; // result is a vector of tensors (1 per each input) with multiple (batchIndices.size()) batches in each one of them
 		
-		for (int i = 0; i < (int)inputs.size(); ++i)
+		for (uint i = 0; i < (int)inputs.size(); ++i)
 		{
             int batchSize = (int)batchIndices.size();
 

@@ -27,7 +27,7 @@ public:
 
         auto input = Tensor(Shape(64, 64, 4, 32)); input.FillWithRand();
         auto output = Tensor(Shape(1, 3, 1, 32));
-        for (int n = 0; n < output.Batch(); ++n)
+        for (uint n = 0; n < output.Batch(); ++n)
             output(0, GlobalRng().Next(output.Height()), 0, n) = 1.0f;
 
         Stopwatch timer;
