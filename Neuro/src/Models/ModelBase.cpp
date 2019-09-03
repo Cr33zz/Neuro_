@@ -6,6 +6,32 @@
 
 namespace Neuro
 {
+    //////////////////////////////////////////////////////////////////////////
+    string ModelBase::Summary() const
+    {
+        stringstream ss;
+        int totalParams = 0;
+        ss << "_________________________________________________________________\n";
+        ss << "Layer                        Output Shape              Param #   \n";
+        ss << "=================================================================\n";
+
+        for (auto layer : GetLayers())
+        {
+            totalParams += layer->GetParamsNum();
+            ss << left << setw(29) << (layer->Name() + "(" + layer->ClassName() + ")");
+            ss << setw(26) << layer->OutputShape().ToString();
+            ss << setw(13) << layer->GetParamsNum() << "\n";
+            if (layer->InputLayers().size() > 1)
+            {
+                for (int i = 0; i < (int)layer->InputLayers().size(); ++i)
+                    ss << layer->InputLayers()[i]->Name() << "\n";
+            }
+            ss << "_________________________________________________________________\n";
+        }
+
+        ss << "Total params: " << totalParams << "\n";
+        return ss.str();
+    }
 
     //////////////////////////////////////////////////////////////////////////
     string ModelBase::TrainSummary() const

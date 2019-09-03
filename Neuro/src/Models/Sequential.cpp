@@ -71,26 +71,6 @@ namespace Neuro
 		return m_Layers;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
-	std::string Sequential::Summary() const
-	{
-		stringstream ss;
-		int totalParams = 0;
-		ss << "_________________________________________________________________\n";
-		ss << "Layer                        Output Shape              Param #\n";
-		ss << "=================================================================\n";
-
-		for (auto layer : m_Layers)
-		{
-			totalParams += layer->GetParamsNum();
-			ss << left << setw(29) << (layer->Name() + "(" + layer->ClassName() + ")") << setw(26) << layer->OutputShape().ToString() << setw(13) << layer->GetParamsNum() << "\n";
-			ss << "_________________________________________________________________\n";
-		}
-
-		ss << "Total params: " << totalParams << "\n";
-		return ss.str();
-	}
-
     //////////////////////////////////////////////////////////////////////////
 	void Sequential::SaveStateXml(string filename) const
 	{

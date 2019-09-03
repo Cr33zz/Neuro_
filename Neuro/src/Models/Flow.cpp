@@ -12,6 +12,13 @@ namespace Neuro
 	{
 		m_InputLayers = inputLayers;
 		m_OutputLayers = outputLayers;
+
+        vector<LayerBase*> visited;
+        for (auto inputLayer : m_InputLayers)
+            ProcessLayer(inputLayer, visited);
+
+        m_ReversedOrder.resize(m_Order.size());
+        reverse_copy(m_Order.begin(), m_Order.end(), m_ReversedOrder.begin());
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -124,18 +131,6 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Flow::Optimize()
-	{
-		vector<LayerBase*> visited;
-
-		for (auto inputLayer : m_InputLayers)
-			ProcessLayer(inputLayer, visited);
-
-		m_ReversedOrder.resize(m_Order.size());
-		reverse_copy(m_Order.begin(), m_Order.end(), m_ReversedOrder.begin());
-	}
-
-	//////////////////////////////////////////////////////////////////////////
 	ModelBase* Flow::Clone() const
 	{
 		// clone is not a frequently used functionality so I'm not too concerned about its performance
@@ -188,27 +183,4 @@ namespace Neuro
 	{
 		return m_Order;
 	}
-
-	//////////////////////////////////////////////////////////////////////////
-	string Flow::Summary() const
-	{
-		stringstream ss;
-		int totalParams = 0;
-		ss << "_________________________________________________________________\n";
-		ss << "Layer                        Output Shape              Param #\n";
-		ss << "=================================================================\n";
-
-		for (auto layer : m_Order)
-		{
-			totalParams += layer->GetParamsNum();
-			ss << left << setw(29) << (layer->m_Name + "(" + layer->ClassName() + ")") << setw(26) << layer->OutputShape().ToString() << setw(13) << layer->GetParamsNum() << "\n";
-			for (int i = 1; i < (int)layer->m_InputLayers.size(); ++i)
-				ss << setw(68 + layer->m_InputLayers[i]->m_Name.length()) << layer->m_InputLayers[i]->m_Name << "\n";
-			ss << "_________________________________________________________________\n";
-		}
-
-		ss << "Total params: " << totalParams << "\n";
-		return ss.str();
-	}
-
 }

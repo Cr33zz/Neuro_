@@ -16,6 +16,7 @@ int main()
 
     IrisNetwork::Run();
     //ConvNetwork::Run();
+    //FlowNetwork::Run();
 
     return 0;
 }
