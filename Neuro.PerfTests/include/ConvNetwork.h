@@ -7,7 +7,7 @@
 using namespace std;
 using namespace Neuro;
 
-class ConvNetPeftTests
+class ConvNetwork
 {
 public:
 	static void Run()
@@ -22,7 +22,10 @@ public:
         model->AddLayer(new Flatten(model->LastLayer()));
         model->AddLayer(new Dense(model->LastLayer(), 512, new ELU(1)));
         model->AddLayer(new Dense(model->LastLayer(), 3, new Softmax()));
-        auto net = new NeuralNetwork(model, "test");
+
+        cout << model->Summary();
+
+        auto net = new NeuralNetwork(model, "conv");
         net->Optimize(new Adam(), new Huber(1));
 
         auto input = Tensor(Shape(64, 64, 4, 32)); input.FillWithRand();
@@ -30,14 +33,11 @@ public:
         for (uint n = 0; n < output.Batch(); ++n)
             output(0, GlobalRng().Next(output.Height()), 0, n) = 1.0f;
 
-        Stopwatch timer;
-        timer.Start();
+        net->Fit(input, output, -1, 10, nullptr, nullptr, 2, Track::TrainError);
 
-        net->Fit(input, output, 10, 1, nullptr, nullptr, 1, Track::Nothing);
+        cout << model->TrainSummary();
 
-        timer.Stop();
-        cout << "Training time " << timer.ElapsedMiliseconds() << "ms";
-
+        cin.get();
 		return;
     }
 };

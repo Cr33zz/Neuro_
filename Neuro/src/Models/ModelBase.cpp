@@ -12,18 +12,18 @@ namespace Neuro
     {
         stringstream ss;
         int totalParams = 0;
-        ss << "_________________________________________________________________________________\n";
-        ss << "Layer                        FeedFwd      BackProp     ActFeedFwd   ActBackProp  \n";
-        ss << "=================================================================================\n";
+        ss << "_____________________________________________________________________________\n";
+        ss << "Layer                        FeedFwd     BackProp    ActFeedFwd  ActBackProp \n";
+        ss << "=============================================================================\n";
 
         for (auto layer : GetLayers())
         {
             ss << left << setw(29) << (layer->Name() + "(" + layer->ClassName() + ")");
-            ss << setw(13) << (to_string(layer->FeedForwardTime()) + "ms");
-            ss << setw(13) << (to_string(layer->BackPropTime()) + "ms");
-            ss << setw(13) << (to_string(layer->ActivationTime()) + "ms");
-            ss << layer->ActivationBackPropTime() << "ms\n";
-            ss << "_________________________________________________________________________________\n";
+            ss << setw(12) << (to_string(layer->FeedForwardTime()/1000.f) + "s");
+            ss << setw(12) << (to_string(layer->BackPropTime()/1000.f) + "s");
+            ss << setw(12) << (to_string(layer->ActivationTime()/1000.f) + "s");
+            ss << setw(12) << (to_string(layer->ActivationBackPropTime()/1000.f) + "s") << "\n";
+            ss << "_____________________________________________________________________________\n";
         }
 
         return ss.str();

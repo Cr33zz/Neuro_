@@ -1,6 +1,5 @@
-#include "SimpleNetPerfTests.h"
-#include "ConvNetPeftTests.h"
-//networks
+#include "FlowNetwork.h"
+#include "ConvNetwork.h"
 #include "IrisNetwork.h"
 
 int main()
@@ -16,6 +15,7 @@ int main()
     t.Pool2D(2, 2, EPoolingMode::Max, 0).SaveAsImage("test_maxpool.bmp", true);*/
 
     IrisNetwork::Run();
+    //ConvNetwork::Run();
 
     return 0;
 }

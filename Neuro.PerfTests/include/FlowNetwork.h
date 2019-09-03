@@ -7,7 +7,7 @@
 using namespace std;
 using namespace Neuro;
 
-class SimpleNetPerfTests
+class FlowNetwork
 {
 public:
     static void Run()
@@ -19,7 +19,7 @@ public:
         auto lowerStream1 = new Dense(input1, 2, new Linear(), "lowerStream_1");
 
         auto model = new Flow({ input1 }, { upperStream1, lowerStream1 });
-        auto net = new NeuralNetwork(model, "simple_flow");
+        auto net = new NeuralNetwork(model, "flow");
         net->Optimize(new SGD(0.05f), new MeanSquareError());
 
         tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)) };
