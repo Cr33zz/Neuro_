@@ -146,7 +146,7 @@ namespace Neuro
         auto& tValues = t.GetValues();
         auto& resultValues = result.GetValues();
 
-		for (uint i = 0; i < (int)tValues.size(); ++i)
+		for (uint i = 0; i < (uint)tValues.size(); ++i)
 			resultValues[i] = func(tValues[i]);
 	}
 
@@ -163,7 +163,7 @@ namespace Neuro
 
         if (t2.Batch() == t1.Batch())
         {
-            for (uint i = 0; i < (int)t1Values.size(); ++i)
+            for (uint i = 0; i < (uint)t1Values.size(); ++i)
                 resultValues[i] = func(t1Values[i], t2Values[i]);
             return;
         }
@@ -194,14 +194,15 @@ namespace Neuro
 		Tensor shifted = input.Sub(input.Max(EAxis::Global)(0));
         Tensor exps = shifted.Map([&](float x) { return (float)exp(x); });
 
+        auto& expsValues = exps.GetValues();
+        auto& resultValues = result.GetValues();
+
 		for (uint n = 0; n < input.Batch(); ++n)
 		{
 			float sum = exps.Sum(EAxis::Sample, n)(0);
 
-			for (uint d = 0; d < input.Depth(); ++d)
-			for (uint h = 0; h < input.Height(); ++h)
-			for (uint w = 0; w < input.Width(); ++w)
-				result(w, h, d, n) = exps(w, h, d, n) / sum;
+            for (uint i = 0, idx = n * input.BatchLength(); i < input.BatchLength(); ++i, ++idx)
+                resultValues[idx] = expsValues[idx] / sum;
 		}
 	}
 
