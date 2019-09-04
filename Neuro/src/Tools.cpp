@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <sstream>
 #include <fstream>
+#include <FreeImage.h>
 
 #include "Tools.h"
 #include "Tensors/Tensor.h"
@@ -9,6 +10,7 @@
 namespace Neuro
 {
     Random g_Rng;
+    bool g_ImageLibInitialized = false;
 
     //////////////////////////////////////////////////////////////////////////
     Random& GlobalRng()
@@ -150,7 +152,120 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void LoadCSVData(const string& filename, int outputsNum, Tensor& inputs, Tensor& outputs, bool outputsOneHotEncoded, int maxLines)
+    uint EndianSwap(uint x)
+    {
+        return (x >> 24) |
+               ((x << 8) & 0x00FF0000) |
+               ((x >> 8) & 0x0000FF00) |
+               (x << 24);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void LoadMnistData(const string& imagesFile, const string& labelsFile, Tensor& input, Tensor& output, bool generateBmp, int maxImages)
+    {
+        auto ReadBigInt32 = [](istream& stream)
+        {
+            uint i;
+            stream >> i;
+            return EndianSwap(i);
+        };
+
+        ifstream fsLabels(labelsFile, ios::binary);
+        ifstream fsImages(imagesFile, ios::binary);
+        
+        uint magic1 = ReadBigInt32(fsImages); // discard
+        uint numImages = ReadBigInt32(fsImages);
+        uint imgWidth = ReadBigInt32(fsImages);
+        uint imgHeight = ReadBigInt32(fsImages);
+
+        int magic2 = ReadBigInt32(fsLabels); // 2039 + number of outputs
+        int numLabels = ReadBigInt32(fsLabels);
+
+        maxImages = maxImages < 0 ? numImages : min<int>(maxImages, numImages);
+
+        int outputsNum = magic2 - 2039;
+
+        FIBITMAP* image = nullptr;
+        RGBQUAD imageColor;
+        int bmpRows = (int)ceil(sqrt((float)maxImages));
+        int bmpCols = (int)ceil(sqrt((float)maxImages));
+
+        if (generateBmp)
+            image = FreeImage_Allocate(bmpCols * imgHeight, bmpRows * imgWidth, 32);
+
+        input = Tensor(Shape(imgWidth, imgHeight, 1, maxImages));
+        output = Tensor(Shape(1, outputsNum, 1, maxImages));
+
+        for (uint i = 0; i < (uint)maxImages; ++i)
+        {
+            for (uint y = 0; y < imgWidth; ++y)
+            for (uint x = 0; x < imgHeight; ++x)
+            {
+                unsigned char color;
+                fsImages >> color;
+                input(x, y, 0, i) = color / 255.f;
+
+                if (image)
+                {
+                    imageColor.rgbRed = imageColor.rgbGreen = imageColor.rgbBlue = color;
+                    FreeImage_SetPixelColor(image, (unsigned int)((i % bmpCols) * imgWidth + x), (unsigned int)((i / bmpCols) * imgHeight + y), &imageColor);
+                }
+                    
+            }
+
+            unsigned char lbl;
+            fsLabels >> lbl;
+            output(0, lbl, 0, i) = 1;
+        }
+
+        if (image)
+        {
+            FreeImage_Save(FIF_PNG, image, (imagesFile + ".png").c_str());
+            FreeImage_Unload(image);
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void SaveMnistData(const Tensor& input, const Tensor& output, const string& imagesFile, const string& labelsFile)
+    {
+        auto WriteBigInt32 = [](ostream& stream, int v)
+        {
+            stream << EndianSwap(v);
+        };
+
+        ofstream fsLabels(labelsFile, ios::binary);
+        ofstream fsImages(imagesFile, ios::binary);
+        
+        uint imgHeight = input.Height();
+        uint imgWidth = input.Width();
+        uint outputsNum = output.BatchLength();
+
+        WriteBigInt32(fsImages, 1337); // discard
+        WriteBigInt32(fsImages, input.Batch());
+        WriteBigInt32(fsImages, imgHeight);
+        WriteBigInt32(fsImages, imgWidth);
+
+        WriteBigInt32(fsLabels, 2039 + outputsNum);
+        WriteBigInt32(fsLabels, output.Batch());
+
+        for (uint i = 0; i < input.Batch(); ++i)
+        {
+            for (uint y = 0; y < imgHeight; ++y)
+            for (uint x = 0; x < imgWidth; ++x)
+                fsImages << (unsigned char)(input(x, y, 0, i) * 255);
+
+            for (uint j = 0; j < outputsNum; ++j)
+            {
+                if (output(0, j, 0, i) == 1)
+                {
+                    fsLabels << (unsigned char)j;
+                }
+            }
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void LoadCSVData(const string& filename, int outputsNum, Tensor& input, Tensor& output, bool outputsOneHotEncoded, int maxLines)
     {
         ifstream infile(filename.c_str());
         string line;
@@ -190,7 +305,17 @@ namespace Neuro
             }
         }
 
-        inputs = Tensor(inputValues, Shape(1, inputBatchSize, 1, batches));
-        outputs = Tensor(outputValues, Shape(1, outputsNum, 1, batches));
+        input = Tensor(inputValues, Shape(1, inputBatchSize, 1, batches));
+        output = Tensor(outputValues, Shape(1, outputsNum, 1, batches));
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void ImageLibInit()
+    {
+        if (!g_ImageLibInitialized)
+        {
+            FreeImage_Initialise();
+            g_ImageLibInitialized = true;
+        }
     }
 }

@@ -21,8 +21,6 @@ namespace Neuro
     TensorOpCpu* Tensor::g_DefaultOpCpu = nullptr;
     TensorOpCpu* Tensor::g_ForcedOp = nullptr;
 
-    bool Tensor::g_ImageLibInitialized = false;
-
     FREE_IMAGE_FORMAT GetFormat(const string& fileName)
     {
         auto fif = FreeImage_GetFileType(fileName.c_str());
@@ -31,16 +29,6 @@ namespace Neuro
             fif = FreeImage_GetFIFFromFilename(fileName.c_str());
 
         return fif;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void Tensor::ImageLibInit()
-    {
-        if (!g_ImageLibInitialized)
-        {
-            FreeImage_Initialise();
-            g_ImageLibInitialized = true;
-        }
     }
 
 	//////////////////////////////////////////////////////////////////////////

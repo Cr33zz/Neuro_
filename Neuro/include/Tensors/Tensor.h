@@ -286,9 +286,6 @@ namespace Neuro
         static TensorOpCpu* g_OpMultiCpu;
         static TensorOpCpu* g_OpGpu;
 
-        static void ImageLibInit();
-        static bool g_ImageLibInitialized;
-
         friend class TensorOpGpu;
 	};
 }
