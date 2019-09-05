@@ -27,6 +27,7 @@ namespace Neuro
         {
             m_DevPtr = (T*)var.m_DevPtr + lengthOffset;
             m_TypeSize = var.m_TypeSize;
+            assert(var.m_Length > lengthOffset);
             m_Length = var.m_Length - lengthOffset;
             m_IsOwner = false;
         }

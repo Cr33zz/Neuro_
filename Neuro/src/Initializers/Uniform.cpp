@@ -20,6 +20,6 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Uniform::Init(Tensor& t, int fanIn, int fanOut)
 	{
-		t.Map([&](float x) { return NextSingle(Min, Max); }, t);
+        t.FillWithFunc([&]() { return NextSingle(Min, Max); });
 	}
 }

@@ -12,6 +12,6 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Constant::Init(Tensor& t, int fanIn, int fanOut)
 	{
-		t.Map([&](float x) {return Value; }, t);
+        t.FillWithValue(Value);
 	}
 }

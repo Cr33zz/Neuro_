@@ -33,6 +33,7 @@ namespace Neuro
     string TrimStart(const string& str, const string& chars = "\t\n\v\f\r ");
     string TrimEnd(const string& str, const string& chars = "\t\n\v\f\r ");
     vector<string> Split(const string& str, const string& delimiter);
+    string Replace(const string& str, const string& pattern, const string& replacement);
 
     string GetProgressString(int iteration, int maxIterations, const string& extraStr = "", int barLength = 30);
 

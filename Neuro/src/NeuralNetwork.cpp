@@ -13,11 +13,16 @@
 #include "ChartGenerator.h"
 #include "Stopwatch.h"
 
+//#define LOG_GRADIENTS
+#define LOG_OUTPUTS
+
 namespace Neuro
 {
 #ifdef LOG_GRADIENTS
     ofstream g_GradientsFile;
 #endif
+
+    int NeuralNetwork::g_DebugStep = 0;
 
     //////////////////////////////////////////////////////////////////////////
     NeuralNetwork::NeuralNetwork(ModelBase* model, const string& name, int seed)
@@ -353,6 +358,8 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
     void NeuralNetwork::TrainStep(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, float& trainError, int& trainHits)
     {
+        ++g_DebugStep;
+
         FeedForward(inputs);
         
         auto modelOutputs = m_Model->GetOutputs();
@@ -363,8 +370,11 @@ namespace Neuro
             m_LossFuncs[i]->Compute(*outputs[i], *modelOutputs[i], outputsGrad[i]);
 
 #ifdef LOG_GRADIENTS
-            g_GradientsFile << "output " << i << endl;
+            g_GradientsFile << "output" << i << endl;
             g_GradientsFile << outputsGrad[i].ToString() << endl;
+#endif
+#ifdef LOG_OUTPUTS
+            outputsGrad[i].DebugDumpValues(Replace(string("output") + to_string(i) + "_step" + to_string(NeuralNetwork::g_DebugStep) + ".log", "/", "__"));
 #endif
 
             trainError += outputsGrad[i].Sum(EAxis::Global)(0) / modelOutputs[i]->BatchLength();
@@ -372,20 +382,27 @@ namespace Neuro
             m_LossFuncs[i]->Derivative(*outputs[i], *modelOutputs[i], outputsGrad[i]);
 
 #ifdef LOG_GRADIENTS
-            g_GradientsFile << "output " << i << " gradient" << endl;
+            g_GradientsFile << "output" << i << "_grad" << endl;
             g_GradientsFile << outputsGrad[i].ToString() << endl;
+#endif
+#ifdef LOG_OUTPUTS
+            outputsGrad[i].DebugDumpValues(Replace(string("output") + to_string(i) + "grad_step" + to_string(NeuralNetwork::g_DebugStep) + ".log", "/", "__"));
 #endif
         }
 
         BackProp(outputsGrad);
 		auto paramsAndGrads = GetParametersAndGradients();
 
-#ifdef LOG_GRADIENTS        
+#ifdef LOG_GRADIENTS
         for (auto paramAndGrad : paramsAndGrads)
         {
             g_GradientsFile << paramAndGrad.Gradients->Name() << endl;
             g_GradientsFile << paramAndGrad.Gradients->ToString() << endl;
         }
+#endif
+#ifdef LOG_OUTPUTS
+        for (auto paramAndGrad : paramsAndGrads)
+            paramAndGrad.Gradients->DebugDumpValues(Replace(paramAndGrad.Gradients->Name() + "_step" + to_string(NeuralNetwork::g_DebugStep) + ".log", "/", "__"));
 #endif
 
         m_Optimizer->Step(paramsAndGrads, inputs[0]->Batch());

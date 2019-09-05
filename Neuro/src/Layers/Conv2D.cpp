@@ -43,7 +43,9 @@ namespace Neuro
 		m_Kernels = Tensor(Shape(m_FilterSize, m_FilterSize, InputShape().Depth(), m_FiltersNum), Name() + "/kernels");
 		m_Bias = Tensor(Shape(m_OutputShape.Width(), m_OutputShape.Height(), m_FiltersNum), Name() + "/bias");
 		m_KernelsGradient = Tensor(m_Kernels.GetShape(), Name() + "/kernels_grad");
+        m_KernelsGradient.Zero();
 		m_BiasGradient = Tensor(m_Bias.GetShape(), Name() + "/bias_grad");
+        m_BiasGradient.Zero();
 
 		m_KernelInitializer->Init(m_Kernels, m_InputShapes[0].Length, m_OutputShape.Length);
 		if (m_UseBias)

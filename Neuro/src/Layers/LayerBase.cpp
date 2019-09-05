@@ -4,6 +4,9 @@
 #include "Layers/LayerBase.h"
 #include "Tensors/Shape.h"
 #include "Tools.h"
+#include "NeuralNetwork.h"
+
+#define LOG_OUTPUTS
 
 namespace Neuro
 {
@@ -89,17 +92,30 @@ namespace Neuro
 		Shape outShape(m_OutputShape.Width(), m_OutputShape.Height(), m_OutputShape.Depth(), m_Inputs[0]->Batch());
 		// shape comparison is required for cases when last batch has different size
 		if (m_Output.GetShape() != outShape)
-			m_Output = Tensor(outShape);
+			m_Output = Tensor(outShape, Name() + "/output");
+
+#ifdef LOG_OUTPUTS
+        for (int i = 0; i < (int)m_Inputs.size(); ++i)
+            m_Inputs[i]->DebugDumpValues(Replace(Name() + "input_" + to_string(i) + "_step" + to_string(NeuralNetwork::g_DebugStep) + ".log", "/", "__"));
+#endif
 
 		m_FeedForwardTimer.Start();
 		FeedForwardInternal(training);
 		m_FeedForwardTimer.Stop();
+
+#ifdef LOG_OUTPUTS
+        m_Output.DebugDumpValues(Replace(m_Output.Name() + "_step" + to_string(NeuralNetwork::g_DebugStep) + ".log", "/", "__"));
+#endif
 
 		if (m_Activation)
 		{
 			m_ActivationTimer.Start();
 			m_Activation->Compute(m_Output, m_Output);
 			m_ActivationTimer.Stop();
+
+#ifdef LOG_OUTPUTS
+            m_Output.DebugDumpValues(Replace(Name() + "_activation_step" + to_string(NeuralNetwork::g_DebugStep) + ".log", "/", "__"));
+#endif
 		}
 	}
 
@@ -136,7 +152,7 @@ namespace Neuro
 			auto& inputShape = m_InputShapes[i];
 			Shape deltaShape(inputShape.Width(), inputShape.Height(), inputShape.Depth(), outputGradient.Batch());
 			if (m_InputsGradient[i].GetShape() != deltaShape)
-				m_InputsGradient[i] = Tensor(deltaShape);
+				m_InputsGradient[i] = Tensor(deltaShape, Name() + "/input_" + to_string(i) + "_grad");
 		}
 
 		// apply derivative of our activation function to the errors computed by previous layer
@@ -145,11 +161,22 @@ namespace Neuro
 			m_ActivationBackPropTimer.Start();
 			m_Activation->Derivative(m_Output, outputGradient, outputGradient);
 			m_ActivationBackPropTimer.Stop();
+
+#ifdef LOG_OUTPUTS
+            outputGradient.DebugDumpValues(Replace(Name() + "_activation_grad_step" + to_string(NeuralNetwork::g_DebugStep) + ".log", "/", "__"));
+#endif
 		}
 
 		m_BackPropTimer.Start();
 		BackPropInternal(outputGradient);
 		m_BackPropTimer.Stop();
+
+#ifdef LOG_OUTPUTS
+        for (int i = 0; i < (int)m_InputShapes.size(); ++i)
+        {
+            m_InputsGradient[i].DebugDumpValues(Replace(m_InputsGradient[i].Name() + "_step" + to_string(NeuralNetwork::g_DebugStep) + ".log", "/", "__"));
+        }
+#endif
 
 		return m_InputsGradient;
 	}

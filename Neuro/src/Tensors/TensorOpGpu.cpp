@@ -87,6 +87,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Mul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& result) const
     {
+        result.Zero();
         t1.CopyToDevice();
         t2.CopyToDevice();
         result.CopyToDevice();
@@ -97,14 +98,14 @@ namespace Neuro
 
         float alpha = 1, beta = 0;
 
-        for (int b = 0; b < max(t1.Batch(), t2.Batch()); ++b)
+        for (int b = 0; b < result.Batch(); ++b)
         {
             int t1B = min(b, t1.Batch() - 1);
             int t2B = min(b, t2.Batch() - 1);
 
             for (int d = 0; d < t1.Depth(); ++d)
             {
-                CUDA_CHECK(cublasGemmEx(
+                CUDA_CHECK(cublasSgemm_v2(
                     s_CublasHandle,
                     transposeT2 ? CUBLAS_OP_T : CUBLAS_OP_N,
                     transposeT1 ? CUBLAS_OP_T : CUBLAS_OP_N,
@@ -112,49 +113,15 @@ namespace Neuro
                     m, 
                     k,  // trick to convert row major to column major
                     &alpha,
-                    CudaDeviceVariable<float>(t2.GetDeviceVar(), d * t2.GetShape().Dim0Dim1 + t2B * t2.BatchLength()).GetDevicePtr(), CUDA_R_32F, 
+                    CudaDeviceVariable<float>(t2.GetDeviceVar(), d * t2.GetShape().Dim0Dim1 + t2B * t2.BatchLength()).GetDevicePtr(),
                     n,
-                    CudaDeviceVariable<float>(t1.GetDeviceVar(), d * t1.GetShape().Dim0Dim1 + t1B * t1.BatchLength()).GetDevicePtr(), CUDA_R_32F, 
+                    CudaDeviceVariable<float>(t1.GetDeviceVar(), d * t1.GetShape().Dim0Dim1 + t1B * t1.BatchLength()).GetDevicePtr(),
                     k,
                     &beta,
-                    CudaDeviceVariable<float>(result.GetDeviceVar(), d * result.GetShape().Dim0Dim1 + b * result.BatchLength()).GetDevicePtr(), CUDA_R_32F, 
-                    n,
-                    CUDA_R_32F, 
-                    CUBLAS_GEMM_DEFAULT));
+                    CudaDeviceVariable<float>(result.GetDeviceVar(), d * result.GetShape().Dim0Dim1 + b * result.BatchLength()).GetDevicePtr(),
+                    n));
             }
         }
-
-        //CUdeviceptr[] aArray = new CUdeviceptr[batches];
-        //CUdeviceptr[] bArray = new CUdeviceptr[batches];
-        //CUdeviceptr[] cArray = new CUdeviceptr[batches];
-
-        //for (int b = 0; b < batches; ++b)
-        //{
-        //    aArray[b] = t1.m_GpuData.DeviceVar.DevicePointer + b * t1.GetShape().Dim0Dim1 * sizeof(float);
-        //    bArray[b] = t2.m_GpuData.DeviceVar.DevicePointer + b * t2.GetShape().Dim0Dim1 * sizeof(float);
-        //    cArray[b] = result.m_GpuData.DeviceVar.DevicePointer + b * result.GetShape().Dim0Dim1 * sizeof(float);
-        //}
-
-        //var dev_aArray = new CudaDeviceVariable<CUdeviceptr>(batches * 4);
-        //dev_aArray.CopyToDevice(aArray);
-        //var dev_bArray = new CudaDeviceVariable<CUdeviceptr>(batches * 4);
-        //dev_bArray.CopyToDevice(bArray);
-        //var dev_cArray = new CudaDeviceVariable<CUdeviceptr>(batches * 4);
-        //dev_cArray.CopyToDevice(cArray);
-
-        //_CudaBlasHandle.GemmBatched(transposeT2 ? CUBLAS_OP_T : CUBLAS_OP_N, 
-        //                            transposeT1 ? CUBLAS_OP_T : CUBLAS_OP_N, 
-        //                            n, m, k, 
-        //                            1.0f, 
-        //                            dev_bArray, n, 
-        //                            dev_aArray, k, 
-        //                            0.0f, 
-        //                            dev_cArray, n, 
-        //                            batches);
-
-        //dev_aArray.Dispose();
-        //dev_bArray.Dispose();
-        //dev_cArray.Dispose();
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -1,4 +1,5 @@
 ﻿#include <algorithm>
+#include <fstream>
 #include <FreeImage.h>
 
 #include "Tensors/Tensor.h"
@@ -75,11 +76,12 @@ namespace Neuro
         if (this != &t)
         {
             t.CopyToHost();
+            m_GpuData.Release();
             OverrideHost();
             m_Name = t.m_Name;
             m_Shape = t.m_Shape;
             m_Values = t.m_Values;
-            m_Op = t.m_Op;
+            m_Op = t.m_Op;            
         }
         return *this;
     }
@@ -1647,6 +1649,33 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void Tensor::DebugDumpValues(const string& outFile) const
+    {
+        CopyToHost();
+        ofstream stream(outFile);
+        for (int i = 0; i < 4; ++i)
+            stream << m_Shape.Dimensions[i] << "\n";
+        for (int i = 0; i < m_Values.size(); ++i)
+            stream << m_Values[i] << "\n";
+        stream.close();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::DebugRecoverValues(const string& inFile)
+    {
+        OverrideHost();
+        ifstream stream(inFile);
+        vector<int> dimensions(4);
+        for (int i = 0; i < 4; ++i)
+            stream >> dimensions[i];
+        m_Shape = Shape::From(dimensions);
+        m_Values.resize(m_Shape.Length);
+        for (int i = 0; i < m_Values.size(); ++i)
+            stream >> m_Values[i];
+        stream.close();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	Neuro::TensorOpCpu* Tensor::GetOpFromMode(EOpMode mode)
 	{
 		switch (mode)
@@ -1665,10 +1694,20 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     Tensor::GPUData::~GPUData()
     {
+        Release();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::GPUData::Release()
+    {
         delete(m_DeviceVar);
+        m_DeviceVar = nullptr;
         delete(m_ConvWorkspace);
+        m_ConvWorkspace = nullptr;
         delete(m_ConvBackWorkspace);
+        m_ConvBackWorkspace = nullptr;
         delete(m_ConvBackKernelWorkspace);
+        m_ConvBackKernelWorkspace = nullptr;
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -88,6 +88,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpMultiCpu::Sum(const Tensor& input, EAxis axis, int batch, Tensor& result) const
     {
+        result.Zero();
         input.CopyToHost();
         result.OverrideHost();
 
@@ -96,8 +97,6 @@ namespace Neuro
 
         if (axis == EAxis::Sample)
         {
-            result.FillWithValue(0);
-
             int batchMin = batch < 0 ? 0 : batch;
             int batchMax = batch < 0 ? input.Batch() : (batch + 1);
             int batchLen = input.BatchLength();
@@ -109,7 +108,6 @@ namespace Neuro
         }
         else if (axis == EAxis::Feature)
         {
-            result.FillWithValue(0);
             int batchLen = input.BatchLength();
 
             parallel_for(0, input.BatchLength(), [&](int f) {
@@ -333,17 +331,17 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Map(const function<float(float)>& func, const Tensor& t, Tensor& result) const
+    void TensorOpMultiCpu::Map(const function<float(float)>& func, const Tensor& input, Tensor& result) const
     {
-        t.CopyToHost();
+        input.CopyToHost();
         result.OverrideHost();
 
-        auto& tValues = t.GetValues();
+        auto& inputValues = input.GetValues();
         auto& resultValues = result.GetValues();
 
-        parallel_for(0, (int)tValues.size(), [&](int i)
+        parallel_for(0, (int)inputValues.size(), [&](int i)
         {
-            resultValues[i] = func(tValues[i]);
+            resultValues[i] = func(inputValues[i]);
         });
     }
 

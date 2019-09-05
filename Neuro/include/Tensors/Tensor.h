@@ -252,11 +252,15 @@ namespace Neuro
         const float* GetDevicePtr() const;
         float* GetDevicePtr();
 
+        void DebugDumpValues(const string& outFile) const;
+        void DebugRecoverValues(const string& inFile);
+
 	private:
         struct GPUData
         {
             GPUData() {}
             ~GPUData();
+            void Release();
 
             void UpdateWorkspace(CudaDeviceVariable<char>*& workspace, size_t size);
 

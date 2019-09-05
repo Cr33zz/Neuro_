@@ -23,6 +23,6 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void GlorotNormal::Init(Tensor& t, int fanIn, int fanOut)
 	{
-		t.Map([&](float x) { return NextSingle(fanIn, fanOut, Gain); }, t);
+        t.FillWithFunc([&]() { return NextSingle(fanIn, fanOut, Gain); });
 	}
 }

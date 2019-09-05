@@ -3,7 +3,6 @@
 #include <vector>
 
 //#define DOUBLE_ENABLED
-//#define LOG_GRADIENTS
 
 namespace Neuro
 {

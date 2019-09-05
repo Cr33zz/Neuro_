@@ -91,6 +91,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::Sum(const Tensor& input, EAxis axis, int batch, Tensor& result) const
     {
+        result.Zero();
         input.CopyToHost();
         result.OverrideHost();
 
@@ -99,8 +100,6 @@ namespace Neuro
 
         if (axis == EAxis::Sample)
         {
-            result.FillWithValue(0);
-
             int batchMin = batch < 0 ? 0 : batch;
             int batchMax = batch < 0 ? input.Batch() : (batch + 1);
             int batchLen = input.BatchLength();
@@ -111,7 +110,6 @@ namespace Neuro
         }
         else if (axis == EAxis::Feature)
         {
-            result.FillWithValue(0);
             int batchLen = input.BatchLength();
 
             for (int i = 0; i < input.Length(); ++i)

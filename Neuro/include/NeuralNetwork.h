@@ -64,6 +64,8 @@ namespace Neuro
 
         float GetLastTrainError() const { return m_LastTrainError; }
 
+        static int g_DebugStep;
+
     private:
         // There is single entry in deltas for every output layer of this network
         void BackProp(vector<Tensor>& deltas);

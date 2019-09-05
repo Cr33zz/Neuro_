@@ -19,7 +19,24 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(EOpMode::GPU);
             NEURO_PROFILE("GPU", Tensor r2 = t1.Mul(t2);)
 
-            Assert::IsTrue(r.Equals(r2));
+            Assert::IsTrue(r.Equals(r2, 0.0001f));
+        }
+
+        TEST_METHOD(Mult2_CompareWithCpuResult)
+        {
+            Tensor t1(Shape(500, 300, 1)); t1.FillWithRand(10);
+            Tensor t2(Shape(1, 500, 1, 20)); t2.FillWithRand(11);
+
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            NEURO_PROFILE("CPU", Tensor r = t1.Mul(t2);)
+
+            Tensor::SetForcedOpMode(EOpMode::GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = t1.Mul(t2);)
+
+            r.DebugDumpValues("r.log");
+            r2.DebugDumpValues("r2.log");
+
+            Assert::IsTrue(r.Equals(r2, 0.0001f));
         }
 
         TEST_METHOD(Add_1Batch_CompareWithCpuResult)

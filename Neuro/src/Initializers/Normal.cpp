@@ -49,6 +49,6 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Normal::Init(Tensor& t, int fanIn, int fanOut)
 	{
-		t.Map([&](float x) { return NextSingle(Mean, Variance, Scale); }, t);
+        t.FillWithFunc([&]() { return NextSingle(Mean, Variance, Scale); });
 	}
 }

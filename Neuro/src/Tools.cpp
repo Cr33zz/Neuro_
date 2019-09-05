@@ -132,6 +132,20 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    string Replace(const string& str, const string& pattern, const string& replacement)
+    {
+        string result = str;
+        string::size_type n = 0;
+        while ((n = result.find(pattern, n)) != string::npos)
+        {
+            result.replace(n, pattern.size(), replacement);
+            n += replacement.size();
+        }
+
+        return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	string GetProgressString(int iteration, int maxIterations, const string& extraStr, int barLength)
 	{
 		int maxIterLen = (int)to_string(maxIterations).length();

@@ -42,9 +42,9 @@ namespace Neuro
 	{
 		//if (deltas.Length > 1) throw new Exception("Only single delta is allowed for sequential model.");
 
-		Tensor& delta = deltas[0];
+		Tensor* delta = &deltas[0];
 		for (int l = (int)m_Layers.size() - 1; l >= 0; --l)
-			delta = m_Layers[l]->BackProp(delta)[0];
+			delta = &m_Layers[l]->BackProp(*delta)[0];
 	}
 
 	//////////////////////////////////////////////////////////////////////////
