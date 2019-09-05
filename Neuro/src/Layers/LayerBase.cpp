@@ -6,7 +6,7 @@
 #include "Tools.h"
 #include "NeuralNetwork.h"
 
-#define LOG_OUTPUTS
+//#define LOG_OUTPUTS
 
 namespace Neuro
 {

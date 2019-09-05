@@ -14,7 +14,7 @@
 #include "Stopwatch.h"
 
 //#define LOG_GRADIENTS
-#define LOG_OUTPUTS
+//#define LOG_OUTPUTS
 
 namespace Neuro
 {
