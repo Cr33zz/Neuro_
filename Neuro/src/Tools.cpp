@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <sstream>
 #include <fstream>
+#include <memory>
 #include <FreeImage.h>
 
 #include "Tools.h"
@@ -152,7 +153,7 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    uint EndianSwap(uint x)
+    uint32_t EndianSwap(uint32_t x)
     {
         return (x >> 24) |
                ((x << 8) & 0x00FF0000) |
@@ -160,26 +161,38 @@ namespace Neuro
                (x << 24);
     }
 
+    unique_ptr<char[]> LoadBinFileContents(const string& file)
+    {
+        ifstream stream(file, ios::in | ios::binary | ios::ate);
+        assert(stream);
+        auto size = stream.tellg();
+        unique_ptr<char[]> buffer(new char[size]);
+        stream.seekg(0, std::ios::beg);
+        stream.read(buffer.get(), size);
+        stream.close();
+        return buffer;
+    }
+
     //////////////////////////////////////////////////////////////////////////
     void LoadMnistData(const string& imagesFile, const string& labelsFile, Tensor& input, Tensor& output, bool generateBmp, int maxImages)
     {
-        auto ReadBigInt32 = [](istream& stream)
+        auto ReadBigInt32 = [](const unique_ptr<char[]>& buffer, size_t offset)
         {
-            uint i;
-            stream >> i;
-            return EndianSwap(i);
+            auto ptr = reinterpret_cast<uint32_t*>(buffer.get());
+            auto value = *(ptr + offset);
+            return EndianSwap(value);
         };
 
-        ifstream fsLabels(labelsFile, ios::binary);
-        ifstream fsImages(imagesFile, ios::binary);
-        
-        uint magic1 = ReadBigInt32(fsImages); // discard
-        uint numImages = ReadBigInt32(fsImages);
-        uint imgWidth = ReadBigInt32(fsImages);
-        uint imgHeight = ReadBigInt32(fsImages);
+        auto imagesBuffer = LoadBinFileContents(imagesFile);
+        auto labelsBuffer = LoadBinFileContents(labelsFile);
 
-        int magic2 = ReadBigInt32(fsLabels); // 2039 + number of outputs
-        int numLabels = ReadBigInt32(fsLabels);
+        uint magic1 = ReadBigInt32(imagesBuffer, 0); // discard
+        uint numImages = ReadBigInt32(imagesBuffer, 1);
+        uint imgWidth = ReadBigInt32(imagesBuffer, 2);
+        uint imgHeight = ReadBigInt32(imagesBuffer, 3);
+
+        int magic2 = ReadBigInt32(labelsBuffer, 0); // 2039 + number of outputs
+        int numLabels = ReadBigInt32(labelsBuffer, 1);
 
         maxImages = maxImages < 0 ? numImages : min<int>(maxImages, numImages);
 
@@ -187,35 +200,39 @@ namespace Neuro
 
         FIBITMAP* image = nullptr;
         RGBQUAD imageColor;
+        imageColor.rgbRed = imageColor.rgbGreen = imageColor.rgbBlue = 255;
         int bmpRows = (int)ceil(sqrt((float)maxImages));
         int bmpCols = (int)ceil(sqrt((float)maxImages));
 
         if (generateBmp)
+        {
             image = FreeImage_Allocate(bmpCols * imgHeight, bmpRows * imgWidth, 32);
+            FreeImage_FillBackground(image, &imageColor);
+        }
 
         input = Tensor(Shape(imgWidth, imgHeight, 1, maxImages));
         output = Tensor(Shape(1, outputsNum, 1, maxImages));
+
+        uint8_t* pixelOffset = reinterpret_cast<uint8_t*>(imagesBuffer.get() + 16);
+        uint8_t* labelOffset = reinterpret_cast<uint8_t*>(labelsBuffer.get() + 8);
 
         for (uint i = 0; i < (uint)maxImages; ++i)
         {
             for (uint y = 0; y < imgWidth; ++y)
             for (uint x = 0; x < imgHeight; ++x)
             {
-                unsigned char color;
-                fsImages >> color;
+                uint8_t color = *(pixelOffset++);
                 input(x, y, 0, i) = color / 255.f;
 
                 if (image)
                 {
                     imageColor.rgbRed = imageColor.rgbGreen = imageColor.rgbBlue = color;
-                    FreeImage_SetPixelColor(image, (unsigned int)((i % bmpCols) * imgWidth + x), (unsigned int)((i / bmpCols) * imgHeight + y), &imageColor);
+                    FreeImage_SetPixelColor(image, (uint32_t)((i % bmpCols) * imgWidth + x), (uint32_t)((i / bmpCols) * imgHeight + y), &imageColor);
                 }
-                    
             }
 
-            unsigned char lbl;
-            fsLabels >> lbl;
-            output(0, lbl, 0, i) = 1;
+            uint8_t label = *(labelOffset++);
+            output(0, label, 0, i) = 1;
         }
 
         if (image)
@@ -226,43 +243,43 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void SaveMnistData(const Tensor& input, const Tensor& output, const string& imagesFile, const string& labelsFile)
-    {
-        auto WriteBigInt32 = [](ostream& stream, int v)
-        {
-            stream << EndianSwap(v);
-        };
+    //void SaveMnistData(const Tensor& input, const Tensor& output, const string& imagesFile, const string& labelsFile)
+    //{
+    //    auto WriteBigInt32 = [](ostream& stream, int v)
+    //    {
+    //        stream << EndianSwap(v);
+    //    };
 
-        ofstream fsLabels(labelsFile, ios::binary);
-        ofstream fsImages(imagesFile, ios::binary);
-        
-        uint imgHeight = input.Height();
-        uint imgWidth = input.Width();
-        uint outputsNum = output.BatchLength();
+    //    ofstream fsLabels(labelsFile, ios::binary);
+    //    ofstream fsImages(imagesFile, ios::binary);
+    //    
+    //    uint imgHeight = input.Height();
+    //    uint imgWidth = input.Width();
+    //    uint outputsNum = output.BatchLength();
 
-        WriteBigInt32(fsImages, 1337); // discard
-        WriteBigInt32(fsImages, input.Batch());
-        WriteBigInt32(fsImages, imgHeight);
-        WriteBigInt32(fsImages, imgWidth);
+    //    WriteBigInt32(fsImages, 1337); // discard
+    //    WriteBigInt32(fsImages, input.Batch());
+    //    WriteBigInt32(fsImages, imgHeight);
+    //    WriteBigInt32(fsImages, imgWidth);
 
-        WriteBigInt32(fsLabels, 2039 + outputsNum);
-        WriteBigInt32(fsLabels, output.Batch());
+    //    WriteBigInt32(fsLabels, 2039 + outputsNum);
+    //    WriteBigInt32(fsLabels, output.Batch());
 
-        for (uint i = 0; i < input.Batch(); ++i)
-        {
-            for (uint y = 0; y < imgHeight; ++y)
-            for (uint x = 0; x < imgWidth; ++x)
-                fsImages << (unsigned char)(input(x, y, 0, i) * 255);
+    //    for (uint i = 0; i < input.Batch(); ++i)
+    //    {
+    //        for (uint y = 0; y < imgHeight; ++y)
+    //        for (uint x = 0; x < imgWidth; ++x)
+    //            fsImages << (unsigned char)(input(x, y, 0, i) * 255);
 
-            for (uint j = 0; j < outputsNum; ++j)
-            {
-                if (output(0, j, 0, i) == 1)
-                {
-                    fsLabels << (unsigned char)j;
-                }
-            }
-        }
-    }
+    //        for (uint j = 0; j < outputsNum; ++j)
+    //        {
+    //            if (output(0, j, 0, i) == 1)
+    //            {
+    //                fsLabels << (unsigned char)j;
+    //            }
+    //        }
+    //    }
+    //}
 
     //////////////////////////////////////////////////////////////////////////
     void LoadCSVData(const string& filename, int outputsNum, Tensor& input, Tensor& output, bool outputsOneHotEncoded, int maxLines)

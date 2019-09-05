@@ -14,7 +14,11 @@ int main()
     t.Conv2DTransposed(Tensor({ 1,1,1,1,-8,1,1,1,1, }, Shape(3, 3, 1)), 1, 1, 0).NormalizedMinMax(EAxis::Global).SaveAsImage("test_deconv.bmp", true);
     t.Pool2D(2, 2, EPoolingMode::Max, 0).SaveAsImage("test_maxpool.bmp", true);*/
 
-    IrisNetwork::Run();
+    Tensor input, output;
+    LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, true, 2);
+    input.SaveAsImage("xx.png", true);
+
+    //IrisNetwork::Run();
     //ConvNetwork::Run();
     //FlowNetwork::Run();
 
