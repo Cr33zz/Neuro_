@@ -51,7 +51,7 @@ namespace NeuroTests
         LayerBase* CreateLayer(Merge::Mode mode)
         {
             auto inputShape = Shape(1, 3);
-            auto layer = new Merge({inputShape, inputShape}, mode);
+            auto layer = new Merge(inputShape, mode);
             layer->Init();
             return layer;
         }

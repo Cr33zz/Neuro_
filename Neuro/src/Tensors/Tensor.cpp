@@ -22,8 +22,6 @@ namespace Neuro
     TensorOpCpu* Tensor::g_DefaultOpCpu = nullptr;
     TensorOpCpu* Tensor::g_ForcedOp = nullptr;
 
-    bool Tensor::g_ImageLibInitialized = false;
-
     FREE_IMAGE_FORMAT GetFormat(const string& fileName)
     {
         auto fif = FreeImage_GetFileType(fileName.c_str());
@@ -32,16 +30,6 @@ namespace Neuro
             fif = FreeImage_GetFIFFromFilename(fileName.c_str());
 
         return fif;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void Tensor::ImageLibInit()
-    {
-        if (!g_ImageLibInitialized)
-        {
-            FreeImage_Initialise();
-            g_ImageLibInitialized = true;
-        }
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -116,18 +104,18 @@ namespace Neuro
 
         assert(image);
 
-        int width = FreeImage_GetWidth(image);
-        int height = FreeImage_GetHeight(image);
+        uint width = FreeImage_GetWidth(image);
+        uint height = FreeImage_GetHeight(image);
 
         m_Shape = Shape(width, height, grayScale ? 1 : 3);
         m_Values.resize(m_Shape.Length);
 
         RGBQUAD color;
 
-        for (int h = 0; h < height; ++h)
-        for (int w = 0; w < width; ++w)
+        for (uint h = 0; h < height; ++h)
+        for (uint w = 0; w < width; ++w)
         {
-            FreeImage_GetPixelColor(image, w, h, &color);
+            FreeImage_GetPixelColor(image, (unsigned int)w, (unsigned int)h, &color);
             int r = color.rgbRed, g = color.rgbGreen, b = color.rgbBlue;
 
             if (grayScale)
@@ -156,19 +144,19 @@ namespace Neuro
         string ext = imageFile.substr(dotPos, imageFile.length() - dotPos);
         
         RGBQUAD color;
-        for (int n = 0; n < Batch(); ++n)
+        for (uint n = 0; n < Batch(); ++n)
         {
-            FIBITMAP* image = FreeImage_Allocate(Width(), Height(), 32);
+            FIBITMAP* image = FreeImage_Allocate((int)Width(), (int)Height(), 32);
             bool grayScale = (Depth() == 1);
 
-            for (int h = 0; h < Height(); ++h)
-            for (int w = 0; w < Width(); ++w)
+            for (uint h = 0; h < Height(); ++h)
+            for (uint w = 0; w < Width(); ++w)
             {
                 color.rgbRed = (int)(Get(w, h, 0, n) * (denormalize ? 255 : 1));
                 color.rgbGreen = grayScale ? (int)(Get(w, h, 0, n) * (denormalize ? 255 : 1)) : (int)(Get(w, h, 1, n) * (denormalize ? 255 : 1));
                 color.rgbBlue = grayScale ? (int)(Get(w, h, 0, n) * (denormalize ? 255 : 1)) : (int)(Get(w, h, 2, n) * (denormalize ? 255 : 1));
 
-                FreeImage_SetPixelColor(image, w, h, &color);
+                FreeImage_SetPixelColor(image, (unsigned int)w, (unsigned int)h, &color);
             }
 
             FreeImage_Save(format, image, Batch() == 1 ? imageFile.c_str() : (name + "_" + to_string(n) + ext).c_str());
@@ -221,7 +209,7 @@ namespace Neuro
 
 		auto fillUp = [&](Random& rng)
 		{
-			for (int i = 0; i < m_Values.size(); ++i)
+			for (uint i = 0; i < m_Values.size(); ++i)
 				m_Values[i] = min + (max - min) * rng.NextFloat();
 		};
 
@@ -240,7 +228,7 @@ namespace Neuro
 	Tensor& Tensor::FillWithRange(float start, float increment)
 	{
 		OverrideHost();
-		for (int i = 0; i < m_Values.size(); ++i)
+		for (uint i = 0; i < m_Values.size(); ++i)
 			m_Values[i] = start + i * increment;
 		return *this;
 	}
@@ -249,7 +237,7 @@ namespace Neuro
 	Tensor& Tensor::FillWithValue(float value)
 	{
 		OverrideHost();
-		for (int i = 0; i < m_Values.size(); ++i)
+		for (uint i = 0; i < m_Values.size(); ++i)
 			m_Values[i] = value;
 		return *this;
 	}
@@ -258,7 +246,7 @@ namespace Neuro
     Tensor& Tensor::FillWithFunc(const function<float()>& func)
     {
         OverrideHost();
-        for (int i = 0; i < m_Values.size(); ++i)
+        for (uint i = 0; i < m_Values.size(); ++i)
             m_Values[i] = func();
         return *this;
     }
@@ -275,12 +263,12 @@ namespace Neuro
     {
         Tensor result(GetShape());
 
-        int i = 0;
-        for (int n = 0; n < Batch(); ++n)
-        for (int h = 0; h < Height(); ++h)
-        for (int w = 0; w < Width(); ++w)
+        uint i = 0;
+        for (uint n = 0; n < Batch(); ++n)
+        for (uint h = 0; h < Height(); ++h)
+        for (uint w = 0; w < Width(); ++w)
         {
-            for (int j = 0; j < Depth(); ++j, ++i)
+            for (uint j = 0; j < Depth(); ++j, ++i)
             {
                 result(w, h, j, n) = m_Values[i];
             }
@@ -294,12 +282,12 @@ namespace Neuro
     {
         Tensor result(GetShape());
 
-        int i = 0;
-        for (int n = 0; n < Batch(); ++n)
-        for (int h = 0; h < Height(); ++h)
-        for (int w = 0; w < Width(); ++w)
+        uint i = 0;
+        for (uint n = 0; n < Batch(); ++n)
+        for (uint h = 0; h < Height(); ++h)
+        for (uint w = 0; w < Width(); ++w)
         {
-            for (int j = 0; j < Depth(); ++j, ++i)
+            for (uint j = 0; j < Depth(); ++j, ++i)
             {
                 result.m_Values[i] = Get(w, h, j, n);
             }
@@ -360,7 +348,7 @@ namespace Neuro
 		CopyToHost();
 		result.OverrideHost();
 
-		for (int i = 0; i < m_Values.size(); ++i)
+		for (uint i = 0; i < m_Values.size(); ++i)
 			result.m_Values[i] = m_Values[i] * v;
 	}
 
@@ -381,7 +369,7 @@ namespace Neuro
 		assert(SameDimensionsExceptBatches(t));
 		assert(t.Batch() == result.Batch());
 
-		for (int i = 0; i < m_Values.size(); ++i)
+		for (uint i = 0; i < m_Values.size(); ++i)
 			result.m_Values[i] = m_Values[i] / t.m_Values[i];
 	}
 
@@ -400,7 +388,7 @@ namespace Neuro
 		CopyToHost();
 		result.OverrideHost();
 
-		for (int i = 0; i < m_Values.size(); ++i)
+		for (uint i = 0; i < m_Values.size(); ++i)
 			result.m_Values[i] = m_Values[i] / v;
 	}
 
@@ -447,7 +435,7 @@ namespace Neuro
 	void Tensor::Add(float v, Tensor& result) const
 	{
 		CopyToHost();
-		for (int i = 0; i < m_Values.size(); ++i)
+		for (uint i = 0; i < m_Values.size(); ++i)
 			result.m_Values[i] = m_Values[i] + v;
 	}
 
@@ -480,7 +468,7 @@ namespace Neuro
 	void Tensor::Sub(float v, Tensor& result) const
 	{
 		CopyToHost();
-		for (int i = 0; i < m_Values.size(); ++i)
+		for (uint i = 0; i < m_Values.size(); ++i)
 			result.m_Values[i] = m_Values[i] - v;
 	}
 
@@ -495,7 +483,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Negated(Tensor& result) const
 	{
-		for (int i = 0; i < m_Values.size(); ++i)
+		for (uint i = 0; i < m_Values.size(); ++i)
 			result.m_Values[i] = -m_Values[i];
 	}
 
@@ -526,11 +514,11 @@ namespace Neuro
 	{
 		Tensor result(Shape(BatchLength(), BatchLength(), 1, Batch()));
 
-		int batchLen = BatchLength();
+        uint batchLen = BatchLength();
 
-		for (int b = 0; b < Batch(); ++b)
-			for (int i = 0; i < batchLen; ++i)
-				result(i, i, 0, b) = m_Values[b * batchLen + i];
+		for (uint b = 0; b < Batch(); ++b)
+		for (uint i = 0; i < batchLen; ++i)
+			result(i, i, 0, b) = m_Values[b * batchLen + i];
 
 		return result;
 	}
@@ -613,7 +601,7 @@ namespace Neuro
 
 		Tensor output(Shape(tensors[0].Width(), tensors[0].Height(), tensors[0].Depth(), (int)tensors.size()));
 
-		for (int n = 0; n < tensors.size(); ++n)
+		for (uint n = 0; n < tensors.size(); ++n)
 		{
 			const Tensor& t = tensors[n];
 			t.CopyToHost();
@@ -624,24 +612,24 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::MergeIntoDepth(const vector<Tensor>& tensors, int forcedDepth)
+	Tensor Tensor::MergeIntoDepth(const vector<Tensor>& tensors, uint forcedDepth)
 	{
 		/*if (tensors.Count == 0)
 			throw new Exception("List cannot be empty.");*/
 
-		Tensor output(Shape(tensors[0].Width(), tensors[0].Height(), max((int)tensors.size(), forcedDepth)));
+		Tensor output(Shape(tensors[0].Width(), tensors[0].Height(), max((uint)tensors.size(), forcedDepth)));
 
 		const Tensor& t = tensors[0];
 		t.CopyToHost();
 
-		int t0_copies = forcedDepth > 0 ? forcedDepth - (int)tensors.size() : 0;
+		uint t0_copies = forcedDepth > 0 ? forcedDepth - (uint)tensors.size() : 0;
 
-		for (int n = 0; n < t0_copies; ++n)
+		for (uint n = 0; n < t0_copies; ++n)
 		{
 			copy(t.m_Values.begin(), t.m_Values.end(), output.m_Values.begin() + t.Length() * n);
 		}
 
-		for (int n = t0_copies; n < output.Depth(); ++n)
+		for (uint n = t0_copies; n < output.Depth(); ++n)
 		{
 			const Tensor& t = tensors[n - t0_copies];
 			t.CopyToHost();
@@ -654,10 +642,10 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Concat(const tensor_ptr_vec_t& inputs, Tensor& result)
 	{
-		for (int b = 0; b < result.Batch(); ++b)
+		for (uint b = 0; b < result.Batch(); ++b)
 		{
-			int elementsCopied = 0;
-			for (int i = 0; i < inputs.size(); ++i)
+			uint elementsCopied = 0;
+			for (uint i = 0; i < inputs.size(); ++i)
 			{
 				inputs[i]->CopyToHost();
 				copy(inputs[i]->m_Values.begin() + b * inputs[i]->BatchLength(), inputs[i]->m_Values.begin() + (b + 1) * inputs[i]->BatchLength(), result.m_Values.begin() + b * result.BatchLength() + elementsCopied);
@@ -670,10 +658,10 @@ namespace Neuro
 	void Tensor::Split(vector<Tensor>& outputs) const
 	{
 		CopyToHost();
-		for (int b = 0; b < Batch(); ++b)
+		for (uint b = 0; b < Batch(); ++b)
 		{
-			int elementsCopied = 0;
-			for (int i = 0; i < outputs.size(); ++i)
+            uint elementsCopied = 0;
+			for (uint i = 0; i < outputs.size(); ++i)
 			{
 				outputs[i].CopyToHost();
 				copy(m_Values.begin() + b * BatchLength() + elementsCopied, 
@@ -688,27 +676,27 @@ namespace Neuro
 	void Tensor::MergeMin(const tensor_ptr_vec_t& inputs, Tensor& result)
 	{
 		inputs[0]->CopyTo(result);
-		for (int i = 1; i < inputs.size(); ++i)
-			for (int j = 0; j < result.Length(); ++j)
-				result.m_Values[j] = result.m_Values[j] > inputs[i]->m_Values[j] ? inputs[i]->m_Values[j] : result.m_Values[j];
+		for (uint i = 1; i < inputs.size(); ++i)
+		for (uint j = 0; j < result.Length(); ++j)
+			result.m_Values[j] = result.m_Values[j] > inputs[i]->m_Values[j] ? inputs[i]->m_Values[j] : result.m_Values[j];
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::MergeMax(const tensor_ptr_vec_t& inputs, Tensor& result)
 	{
 		inputs[0]->CopyTo(result);
-		for (int i = 1; i < inputs.size(); ++i)
-			for (int j = 0; j < result.Length(); ++j)
-				result.m_Values[j] = result.m_Values[j] < inputs[i]->m_Values[j] ? inputs[i]->m_Values[j] : result.m_Values[j];
+		for (uint i = 1; i < inputs.size(); ++i)
+		for (uint j = 0; j < result.Length(); ++j)
+			result.m_Values[j] = result.m_Values[j] < inputs[i]->m_Values[j] ? inputs[i]->m_Values[j] : result.m_Values[j];
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::MergeSum(const tensor_ptr_vec_t& inputs, Tensor& result)
 	{
 		result.Zero();
-		for (int i = 0; i < inputs.size(); ++i)
-			for (int j = 0; j < result.Length(); ++j)
-				result.m_Values[j] += inputs[i]->m_Values[j];
+		for (uint i = 0; i < inputs.size(); ++i)
+		for (uint j = 0; j < result.Length(); ++j)
+			result.m_Values[j] += inputs[i]->m_Values[j];
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -721,10 +709,10 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::MergeMinMaxGradient(const Tensor& output, const tensor_ptr_vec_t& inputs, const Tensor& outputGradient, vector<Tensor>& results)
 	{
-		for (int i = 0; i < inputs.size(); ++i)
+		for (uint i = 0; i < inputs.size(); ++i)
 		{
 			results[i].Zero();
-			for (int j = 0; j < output.Length(); ++j)
+			for (uint j = 0; j < output.Length(); ++j)
 				results[i].m_Values[j] = inputs[i]->m_Values[j] == output.m_Values[j] ? outputGradient.m_Values[j] : 0;
 		}
 	}
@@ -732,7 +720,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::MergeSumGradient(const Tensor& output, const tensor_ptr_vec_t& inputs, const Tensor& outputGradient, vector<Tensor>& results)
 	{
-		for (int i = 0; i < inputs.size(); ++i)
+		for (uint i = 0; i < inputs.size(); ++i)
 			outputGradient.CopyTo(results[i]);
 	}
 
@@ -740,7 +728,7 @@ namespace Neuro
 	void Tensor::MergeAvgGradient(const Tensor& output, const tensor_ptr_vec_t& inputs, const Tensor& outputGradient, vector<Tensor>& results)
 	{
 		MergeSumGradient(output, inputs, outputGradient, results);
-		for (int i = 0; i < results.size(); ++i)
+		for (uint i = 0; i < results.size(); ++i)
 			results[i].Div((float)results.size(), results[i]);
 	}
 
@@ -763,19 +751,19 @@ namespace Neuro
                 norm = Tensor(Shape(Batch()));
                 norm.FillWithValue(0);
 
-                for (int n = 0; n < Batch(); ++n)
-                for (int i = 0, idx = n * BatchLength(); i < BatchLength(); ++i, ++idx)
+                for (uint n = 0; n < Batch(); ++n)
+                for (uint i = 0, idx = n * BatchLength(); i < BatchLength(); ++i, ++idx)
                     norm(n) += normMode == ENormMode::L1 ? abs(m_Values[idx]) : (m_Values[idx] * m_Values[idx]);
 
                 if (normMode == ENormMode::L2)
                 {
-                    for (int i = 0; i < norm.Length(); ++i)
+                    for (uint i = 0; i < norm.Length(); ++i)
                         norm.m_Values[i] = sqrt(norm.m_Values[i]);
                 }
             }
         
-            for (int n = 0; n < Batch(); ++n)
-            for (int i = 0, idx = n * BatchLength(); i < BatchLength(); ++i, ++idx)
+            for (uint n = 0; n < Batch(); ++n)
+            for (uint i = 0, idx = n * BatchLength(); i < BatchLength(); ++i, ++idx)
                 result.m_Values[idx] = m_Values[idx] / norm(n);
 
             return norm;
@@ -791,23 +779,23 @@ namespace Neuro
                 norm = Tensor(Shape(Width(), Height(), Depth(), 1));
                 norm.FillWithValue(0);
 
-                for (int n = 0; n < Batch(); ++n)
-                for (int d = 0; d < Depth(); ++d)
-                for (int h = 0; h < Height(); ++h)
-                for (int w = 0; w < Width(); ++w)
+                for (uint n = 0; n < Batch(); ++n)
+                for (uint d = 0; d < Depth(); ++d)
+                for (uint h = 0; h < Height(); ++h)
+                for (uint w = 0; w < Width(); ++w)
                     norm(w, h, d) += normMode == ENormMode::L1 ? abs(Get(w, h, d, n)) : (Get(w, h, d, n) * Get(w, h, d, n));
 
                 if (normMode == ENormMode::L2)
                 {
-                    for (int i = 0; i < norm.Length(); ++i)
+                    for (uint i = 0; i < norm.Length(); ++i)
                         norm.m_Values[i] = sqrt(norm.m_Values[i]);
                 }
             }
 
-            for (int n = 0; n < Batch(); ++n)
-            for (int d = 0; d < Depth(); ++d)
-            for (int h = 0; h < Height(); ++h)
-            for (int w = 0; w < Width(); ++w)
+            for (uint n = 0; n < Batch(); ++n)
+            for (uint d = 0; d < Depth(); ++d)
+            for (uint h = 0; h < Height(); ++h)
+            for (uint w = 0; w < Width(); ++w)
                 result(w, h, d, n) = Get(w, h, d, n) / norm(w, h, d);
 
             return norm;
@@ -821,17 +809,17 @@ namespace Neuro
             else
             {
                 norm = Tensor({ 0 }, Shape(1));
-                for (int i = 0; i < Length(); ++i)
+                for (uint i = 0; i < Length(); ++i)
                     norm(0) += normMode == ENormMode::L1 ? abs(m_Values[i]) : (m_Values[i] * m_Values[i]);
 
                 if (normMode == ENormMode::L2)
                 {
-                    for (int i = 0; i < norm.Length(); ++i)
+                    for (uint i = 0; i < norm.Length(); ++i)
                         norm.m_Values[i] = sqrt(norm.m_Values[i]);
                 }
             }
 
-            for (int i = 0; i < Length(); ++i)
+            for (uint i = 0; i < Length(); ++i)
                 result.m_Values[i] = m_Values[i] / norm(0);
 
             return norm;
@@ -864,12 +852,12 @@ namespace Neuro
             assert(min.Width() == Batch());
             assert(max.Width() == Batch());
 
-            for (int n = 0; n < Batch(); ++n)
+            for (uint n = 0; n < Batch(); ++n)
             {
                 const float minVal = min(n);
                 const float spread = max(n) - minVal;
                 
-                for (int i = 0, idx = n * BatchLength(); i < BatchLength(); ++i, ++idx)
+                for (uint i = 0, idx = n * BatchLength(); i < BatchLength(); ++i, ++idx)
                     result.m_Values[idx] = rangeSpread * (m_Values[idx] - minVal) / spread + scaleMin;
             }
         }
@@ -878,14 +866,14 @@ namespace Neuro
             assert(SameDimensionsExceptBatches(min) && min.Batch() == 1);
             assert(SameDimensionsExceptBatches(max) && max.Batch() == 1);
 
-            for (int d = 0; d < Depth(); ++d)
-            for (int h = 0; h < Height(); ++h)
-            for (int w = 0; w < Width(); ++w)
+            for (uint d = 0; d < Depth(); ++d)
+            for (uint h = 0; h < Height(); ++h)
+            for (uint w = 0; w < Width(); ++w)
             {
                 const float minVal = min(w, h, d);
                 const float spread = max(w, h, d) - minVal;
 
-                for (int n = 0; n < Batch(); ++n)
+                for (uint n = 0; n < Batch(); ++n)
                     result(w, h, d, n) = rangeSpread * (Get(w, h, d, n) - minVal) / spread + scaleMin;
             }
         }
@@ -894,7 +882,7 @@ namespace Neuro
             const float minVal = min(0);
             const float spread = max(0) - minVal;
 
-            for (int i = 0; i < Length(); ++i)
+            for (uint i = 0; i < Length(); ++i)
                 result.m_Values[i] = rangeSpread * (m_Values[i] - minVal) / spread + scaleMin;
         }
 
@@ -987,36 +975,36 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::Reshaped(Shape shape) const
 	{
-		return Tensor(m_Values, m_Shape.Reshaped(shape.Width(), shape.Height(), shape.Depth(), shape.Batch()));
+		return Tensor(m_Values, m_Shape.Reshaped((int)shape.Width(), (int)shape.Height(), (int)shape.Depth(), (int)shape.Batch()));
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Reshape(Shape shape)
 	{
-		m_Shape = m_Shape.Reshaped(shape.Width(), shape.Height(), shape.Depth(), shape.Batch());
+		m_Shape = m_Shape.Reshaped((int)shape.Width(), (int)shape.Height(), (int)shape.Depth(), (int)shape.Batch());
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::Resized(int width, int height, int depth) const
+	Tensor Tensor::Resized(uint width, uint height, uint depth) const
 	{
-		int newBatchLength = width * height * depth;
+		uint newBatchLength = width * height * depth;
 		Tensor result(Shape(width, height, depth, m_Shape.Batch()));
-		for (int n = 0; n < Batch(); ++n)
-			for (int i = 0, idx = n * newBatchLength; i < newBatchLength; ++i, ++idx)
-				result.m_Values[idx] = m_Values[n * BatchLength() + i % BatchLength()];
+		for (uint n = 0; n < Batch(); ++n)
+		for (uint i = 0, idx = n * newBatchLength; i < newBatchLength; ++i, ++idx)
+			result.m_Values[idx] = m_Values[n * BatchLength() + i % BatchLength()];
 		return result;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::FlattenHoriz() const
 	{
-		return Reshaped(m_Shape.Reshaped(Shape::Auto, 1, 1, m_Shape.Batch()));
+        return Reshaped(m_Shape.Reshaped(Shape::Auto, 1, 1, (int)m_Shape.Batch()));
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::FlattenVert() const
 	{
-		return Reshaped(m_Shape.Reshaped(1, Shape::Auto, 1, m_Shape.Batch()));
+		return Reshaped(m_Shape.Reshaped(1, Shape::Auto, 1, (int)m_Shape.Batch()));
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -1024,10 +1012,10 @@ namespace Neuro
 	{
 		assert(SameDimensionsExceptBatches(result));
 
-		for (int n = 0; n < Batch(); ++n)
-		for (int d = 0; d < Depth(); ++d)
-		for (int h = Height() - 1; h >= 0; --h)
-		for (int w = Width() - 1; w >= 0; --w)
+		for (uint n = 0; n < Batch(); ++n)
+		for (uint d = 0; d < Depth(); ++d)
+		for (uint h = Height() - 1; h >= 0; --h)
+		for (uint w = Width() - 1; w >= 0; --w)
 			result.Set(Get(Width() - w - 1, Height() - h - 1, d, n), w, h, d, n);
 	}
 
@@ -1040,14 +1028,14 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::Conv2D(const Tensor& kernels, int stride, int padding, Tensor& result) const
+    void Tensor::Conv2D(const Tensor& kernels, uint stride, uint padding, Tensor& result) const
 	{
 		assert(Depth() == kernels.Depth());
 		Op()->Conv2D(*this, kernels, stride, padding, padding, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::Conv2D(const Tensor& kernels, int stride, int padding) const
+	Tensor Tensor::Conv2D(const Tensor& kernels, uint stride, uint padding) const
 	{
 		Tensor result(GetConvOutputShape(GetShape(), kernels.Batch(), kernels.Width(), kernels.Height(), stride, padding, padding));
 		Conv2D(kernels, stride, padding, result);
@@ -1055,28 +1043,28 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Conv2DInputsGradient(const Tensor& gradient, const Tensor& kernels, int stride, int padding, Tensor& inputsGradient) const
+	void Tensor::Conv2DInputsGradient(const Tensor& gradient, const Tensor& kernels, uint stride, uint padding, Tensor& inputsGradient) const
 	{
 		inputsGradient.Zero();
 		Op()->Conv2DInputGradient(gradient, kernels, stride, padding, padding, inputsGradient);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, int padding, Tensor& kernelsGradient) const
+	void Tensor::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, uint stride, uint padding, Tensor& kernelsGradient) const
 	{
 		kernelsGradient.Zero();
 		Op()->Conv2DKernelsGradient(input, gradient, stride, padding, padding, kernelsGradient);
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::Conv2DTransposed(const Tensor& kernels, int stride, int padding, Tensor& result) const
+    void Tensor::Conv2DTransposed(const Tensor& kernels, uint stride, uint padding, Tensor& result) const
     {
         assert(Depth() == kernels.Batch());
         Conv2DInputsGradient(*this, kernels, stride, padding, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor Tensor::Conv2DTransposed(const Tensor& kernels, int outputDepth, int stride, int padding) const
+    Tensor Tensor::Conv2DTransposed(const Tensor& kernels, uint outputDepth, uint stride, uint padding) const
     {
         Tensor result(GetConvTransposeOutputShape(GetShape(), outputDepth, kernels.Width(), kernels.Height(), stride, padding, padding));
         Conv2DTransposed(kernels, stride, padding, result);
@@ -1084,28 +1072,28 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::Conv2DTransposedInputsGradient(const Tensor& gradient, const Tensor& kernels, int stride, int padding, Tensor& inputsGradient) const
+    void Tensor::Conv2DTransposedInputsGradient(const Tensor& gradient, const Tensor& kernels, uint stride, uint padding, Tensor& inputsGradient) const
     {
         inputsGradient.Zero();
         gradient.Conv2D(kernels, stride, padding, inputsGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::Conv2DTransposedKernelsGradient(const Tensor& input, const Tensor& gradient, int stride, int padding, Tensor& kernelsGradient) const
+    void Tensor::Conv2DTransposedKernelsGradient(const Tensor& input, const Tensor& gradient, uint stride, uint padding, Tensor& kernelsGradient) const
     {
         kernelsGradient.Zero();
         Op()->Conv2DKernelsGradient(input, gradient, stride, padding, padding, kernelsGradient);
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Pool2D(int filterSize, int stride, EPoolingMode type, int padding, Tensor& output) const
+	void Tensor::Pool2D(uint filterSize, uint stride, EPoolingMode type, uint padding, Tensor& output) const
 	{
 		assert(output.Batch() == Batch());
 		Op()->Pool2D(*this, filterSize, stride, type, padding, padding, output);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::Pool2D(int filterSize, int stride, EPoolingMode type, int padding) const
+	Tensor Tensor::Pool2D(uint filterSize, uint stride, EPoolingMode type, uint padding) const
 	{
 		Tensor result(GetConvOutputShape(GetShape(), GetShape().Depth(), filterSize, filterSize, stride, padding, padding));
 		Pool2D(filterSize, stride, type, padding, result);
@@ -1114,20 +1102,20 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, int filterSize, int stride, EPoolingMode type, int padding, Tensor& result) const
+	void Tensor::Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, uint filterSize, uint stride, EPoolingMode type, uint padding, Tensor& result) const
 	{
 		assert(output.SameDimensionsExceptBatches(outputGradient));
 		Op()->Pool2DGradient(output, input, outputGradient, filterSize, stride, type, padding, padding, result);
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::UpSample2D(int scaleFactor, Tensor& output) const
+    void Tensor::UpSample2D(uint scaleFactor, Tensor& output) const
     {
         Op()->UpSample2D(*this, scaleFactor, output);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor Tensor::UpSample2D(int scaleFactor) const
+    Tensor Tensor::UpSample2D(uint scaleFactor) const
     {
         Tensor result(Shape(Width() * scaleFactor, Height() * scaleFactor, Depth(), Batch()));
         UpSample2D(scaleFactor, result);
@@ -1135,7 +1123,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::UpSample2DGradient(const Tensor& outputGradient, int scaleFactor, Tensor& inputGradient) const
+    void Tensor::UpSample2DGradient(const Tensor& outputGradient, uint scaleFactor, Tensor& inputGradient) const
     {
         Op()->UpSample2DGradient(outputGradient, scaleFactor, inputGradient);
     }
@@ -1174,20 +1162,20 @@ namespace Neuro
 	std::string Tensor::ToString() const
 	{
 		/*string s = "";
-		/*for (int n = 0; n < Batch(); ++n)
+		/*for (uint n = 0; n < Batch(); ++n)
 		{
 			if (Batch() > 1)
 				s += "{\n  ";
 
-			for (int d = 0; d < Depth(); ++d)
+			for (uint d = 0; d < Depth(); ++d)
 			{
 				if (Depth() > 1)
 					s += "{\n    ";
 
-				for (int h = 0; h < Height(); ++h)
+				for (uint h = 0; h < Height(); ++h)
 				{
 					s += "{ ";
-					for (int w = 0; w < Width(); ++w)
+					for (uint w = 0; w < Width(); ++w)
 					{
 						s += Get(w, h, d, n) + (w == Width() - 1 ? "" : ", ");
 					}
@@ -1213,7 +1201,7 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    pair<int, int> Tensor::GetPadding(EPaddingMode paddingMode, int kernelWidth, int kernelHeight)
+    pair<uint, uint> Tensor::GetPadding(EPaddingMode paddingMode, uint kernelWidth, uint kernelHeight)
     {
         if (paddingMode == EPaddingMode::Valid)
             return make_pair(0, 0);
@@ -1229,14 +1217,15 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    int Tensor::GetPadding(EPaddingMode paddingMode, int kernelSize)
+    uint Tensor::GetPadding(EPaddingMode paddingMode, uint kernelSize)
     {
         return GetPadding(paddingMode, kernelSize, kernelSize).first;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Neuro::Shape Tensor::GetPooling2DOutputShape(const Shape& inputShape, int kernelWidth, int kernelHeight, int stride, int paddingX, int paddingY)
+    Neuro::Shape Tensor::GetPooling2DOutputShape(const Shape& inputShape, uint kernelWidth, uint kernelHeight, uint stride, uint paddingX, uint paddingY)
     {
+        assert(stride > 0);
         return Shape((int)floor((inputShape.Width() + 2 * paddingX - kernelWidth) / (float)stride) + 1, 
                      (int)floor((inputShape.Height() + 2 * paddingY - kernelHeight) / (float)stride) + 1,
                      inputShape.Depth(),
@@ -1244,8 +1233,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Neuro::Shape Tensor::GetConvOutputShape(const Shape& inputShape, int kernelsNum, int kernelWidth, int kernelHeight, int stride, int paddingX, int paddingY)
+    Neuro::Shape Tensor::GetConvOutputShape(const Shape& inputShape, uint kernelsNum, uint kernelWidth, uint kernelHeight, uint stride, uint paddingX, uint paddingY)
     {
+        assert(stride > 0);
         return Shape((int)floor((inputShape.Width() + 2 * paddingX - kernelWidth) / (float)stride) + 1, 
                      (int)floor((inputShape.Height() + 2 * paddingY - kernelHeight) / (float)stride) + 1,
                      kernelsNum,
@@ -1253,8 +1243,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Shape Tensor::GetConvTransposeOutputShape(const Shape& inputShape, int outputDepth, int kernelWidth, int kernelHeight, int stride, int paddingX, int paddingY)
+    Shape Tensor::GetConvTransposeOutputShape(const Shape& inputShape, uint outputDepth, uint kernelWidth, uint kernelHeight, uint stride, uint paddingX, uint paddingY)
     {
+        assert(stride > 0);
         return Shape((inputShape.Width() - 1) * stride + kernelWidth - 2 * paddingX,
                      (inputShape.Height() - 1) * stride + kernelHeight - 2 * paddingY,
                      outputDepth, 
@@ -1262,60 +1253,34 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-	//void Tensor::GetPaddingParams(EPaddingMode type, int width, int height, int kernelWidth, int kernelHeight, int stride, int& outHeight, int& outWidth, int& paddingX, int& paddingY)
-	//{
-	//	if (type == EPaddingMode::Valid)
-	//	{
-	//		outWidth = (int)floor((width - kernelWidth) / (float)stride + 1);
-	//		outHeight = (int)floor((height - kernelHeight) / (float)stride + 1);
-	//		paddingX = 0;
-	//		paddingY = 0;
-	//	}
-	//	else if (type == EPaddingMode::Same)
-	//	{
-	//		outWidth = width / stride;
-	//		outHeight = height / stride;
-	//		paddingX = (int)floor((float)kernelWidth / 2);
-	//		paddingY = (int)floor((float)kernelHeight / 2);
-	//	}
-	//	else //if (type == EPaddingMode.Full)
-	//	{
-	//		outWidth = (width + (kernelWidth - 1)) / stride;
-	//		outHeight = (height + (kernelHeight - 1)) / stride;
-	//		paddingX = kernelWidth - 1;
-	//		paddingY = kernelHeight - 1;
-	//	}
-	//}
-
-	//////////////////////////////////////////////////////////////////////////
-	float Tensor::GetFlat(int i) const
+	float Tensor::GetFlat(uint i) const
 	{
 		CopyToHost();
 		return m_Values[i];
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	float& Tensor::Get(int w, int h, int d, int n)
+	float& Tensor::Get(uint w, uint h, uint d, uint n)
 	{
 		CopyToHost();
 		return m_Values[m_Shape.GetIndex(w, h, d, n)];
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    float Tensor::Get(int w, int h, int d, int n) const
+    float Tensor::Get(uint w, uint h, uint d, uint n) const
     {
         CopyToHost();
         return m_Values[m_Shape.GetIndex(w, h, d, n)];
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	float& Tensor::operator()(int w, int h, int d, int n)
+	float& Tensor::operator()(uint w, uint h, uint d, uint n)
 	{
 		return Get(w, h, d, n);
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    float Tensor::operator()(int w, int h, int d, int n) const
+    float Tensor::operator()(uint w, uint h, uint d, uint n) const
     {
         return Get(w, h, d, n);
     }
@@ -1323,21 +1288,21 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	float Tensor::TryGet(float def, int w, int h, int d, int n) const
 	{
-		if (h < 0 || h >= Height() || w < 0 || w >= Width() || d < 0 || d >= Depth())
+        if (h < 0 || h >= (int)Height() || w < 0 || w >= (int)Width() || d < 0 || d >= (int)Depth() || n < 0 || n >(int)Batch())
 			return def;
 
 		return Get(w, h, d, n);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::SetFlat(float value, int i)
+	void Tensor::SetFlat(float value, uint i)
 	{
 		CopyToHost();
 		m_Values[i] = value;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Set(float value, int w, int h, int d, int n)
+	void Tensor::Set(float value, uint w, uint h, uint d, uint n)
 	{
 		CopyToHost();
 		m_Values[m_Shape.GetIndex(w, h, d, n)] = value;
@@ -1346,7 +1311,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::TrySet(float value, int w, int h, int d, int n)
 	{
-		if (h < 0 || h >= Height() || w < 0 || w >= Width() || d < 0 || d >= Depth() || n < 0 || n > Batch())
+		if (h < 0 || h >= (int)Height() || w < 0 || w >= (int)Width() || d < 0 || d >= (int)Depth() || n < 0 || n >(int)Batch())
 			return;
 
 		Set(value, w, h, d, n);
@@ -1417,7 +1382,7 @@ namespace Neuro
 		if (epsilon == 0)
 			return m_Values == other.m_Values;
 
-		for (int i = 0; i < m_Values.size(); ++i)
+		for (uint i = 0; i < m_Values.size(); ++i)
 			if (abs(m_Values[i] - other.m_Values[i]) > epsilon)
 				return false;
 
@@ -1439,13 +1404,13 @@ namespace Neuro
 
             assert(!maxIndex || maxIndex->GetShape() == maxValue.GetShape());
 
-            int batchMin = batch < 0 ? 0 : batch;
-            int batchMax = batch < 0 ? Batch() : (batch + 1);
-            int batchLen = BatchLength();
+            uint batchMin = batch < 0 ? 0 : batch;
+            uint batchMax = batch < 0 ? Batch() : (batch + 1);
+            uint batchLen = BatchLength();
 
-            for (int n = batchMin, outN = 0; n < batchMax; ++n, ++outN)
+            for (uint n = batchMin, outN = 0; n < batchMax; ++n, ++outN)
             {
-                for (int i = 0, idx = n * batchLen; i < batchLen; ++i, ++idx)
+                for (uint i = 0, idx = n * batchLen; i < batchLen; ++i, ++idx)
                 {
                     if (m_Values[idx] > maxValue(outN))
                     {
@@ -1465,10 +1430,10 @@ namespace Neuro
 
             assert(!maxIndex || SameDimensionsExceptBatches(*maxIndex));
 
-            for (int n = 0; n < Batch(); ++n)
-		    for (int d = 0; d < Depth(); ++d)
-		    for (int h = 0; h < Height(); ++h)
-		    for (int w = 0; w < Width(); ++w)
+            for (uint n = 0; n < Batch(); ++n)
+		    for (uint d = 0; d < Depth(); ++d)
+		    for (uint h = 0; h < Height(); ++h)
+		    for (uint w = 0; w < Width(); ++w)
             {
                 float val = Get(w, h, d, n);
                 if (val > maxValue(w, h, d))
@@ -1487,7 +1452,7 @@ namespace Neuro
 
             assert(!maxIndex || maxIndex->GetShape() == maxValue.GetShape());
 
-            for (int i = 0; i < Length(); ++i)
+            for (uint i = 0; i < Length(); ++i)
             {
                 if (m_Values[i] > maxValue(0))
                 {
@@ -1516,13 +1481,13 @@ namespace Neuro
 
             assert(!minIndex || minIndex->GetShape() == minValue.GetShape());
 
-            int batchMin = batch < 0 ? 0 : batch;
-            int batchMax = batch < 0 ? Batch() : (batch + 1);
-            int batchLen = BatchLength();
+            uint batchMin = batch < 0 ? 0 : batch;
+            uint batchMax = batch < 0 ? Batch() : (batch + 1);
+            uint batchLen = BatchLength();
 
-            for (int n = batchMin, outN = 0; n < batchMax; ++n, ++outN)
+            for (uint n = batchMin, outN = 0; n < batchMax; ++n, ++outN)
             {
-                for (int i = 0, idx = n * batchLen; i < batchLen; ++i, ++idx)
+                for (uint i = 0, idx = n * batchLen; i < batchLen; ++i, ++idx)
                 {
                     if (m_Values[idx] < minValue(outN))
                     {
@@ -1542,10 +1507,10 @@ namespace Neuro
 
             assert(!minIndex || minIndex->GetShape() == minValue.GetShape());
 
-            for (int n = 0; n < Batch(); ++n)
-            for (int d = 0; d < Depth(); ++d)
-            for (int h = 0; h < Height(); ++h)
-            for (int w = 0; w < Width(); ++w)
+            for (uint n = 0; n < Batch(); ++n)
+            for (uint d = 0; d < Depth(); ++d)
+            for (uint h = 0; h < Height(); ++h)
+            for (uint w = 0; w < Width(); ++w)
             {
                 float val = Get(w, h, d, n);
                 if (val < minValue(w, h, d))
@@ -1564,7 +1529,7 @@ namespace Neuro
 
             assert(!minIndex || minIndex->GetShape() == minValue.GetShape());
 
-            for (int i = 0; i < Length(); ++i)
+            for (uint i = 0; i < Length(); ++i)
             {
                 if (m_Values[i] < minValue(0))
                 {

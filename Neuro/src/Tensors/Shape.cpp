@@ -6,7 +6,7 @@
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	Shape::Shape(int width, int height, int depth, int batchSize)
+    Shape::Shape(uint width, uint height, uint depth, uint batchSize)
 		: Dim0(width), Dim0Dim1(Dim0 * height), Dim0Dim1Dim2(Dim0Dim1 * depth), Length(Dim0Dim1Dim2 * batchSize)
 	{
 		Dimensions[0] = width;
@@ -53,7 +53,7 @@ namespace Neuro
 	{
 		int dimensions[4] = { w, h, d, n };
 		int dToUpdate = -1;
-		int product = 1;
+        uint product = 1;
 		for (int d = 0; d < 4; ++d)
 		{
 			if (dimensions[d] == -1)
@@ -67,19 +67,20 @@ namespace Neuro
 
 		if (dToUpdate >= 0)
 		{
-			dimensions[dToUpdate] = Length / product;
+			dimensions[dToUpdate] = (int)(Length / product);
 		}
 
 		return From(dimensions, 4);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	int Shape::GetIndex(int w, int h, int d, int n) const
+    uint Shape::GetIndex(int w, int h, int d, int n) const
 	{
-		assert(w < Width());
-		assert(h < Height());
-		assert(d < Depth());
-		assert(n < Batch());
+        assert(w >= -(int)Width() && w < (int)Width());
+		assert(h >= -(int)Height() && h < (int)Height());
+		assert(d >= -(int)Depth() && d < (int)Depth());
+		assert(n >= -(int)Batch() && n < (int)Batch());
+
 		return Dim0Dim1Dim2 * (n >= 0 ? n : (n + Dimensions[3])) + 
                Dim0Dim1 * (d >= 0 ? d : (d + Dimensions[2])) + 
                Dim0 * (h >= 0 ? h : (h + Dimensions[1])) + 
@@ -87,7 +88,18 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    int Shape::GetIndex(const vector<int>& indices) const
+    uint Shape::GetIndex(uint w, uint h, uint d, uint n) const
+	{
+		assert(w < Width());
+		assert(h < Height());
+		assert(d < Depth());
+		assert(n < Batch());
+
+		return Dim0Dim1Dim2 * n + Dim0Dim1 * d + Dim0 * h + w;
+	}
+
+    //////////////////////////////////////////////////////////////////////////
+    uint Shape::GetIndex(const vector<uint>& indices) const
     {
         size_t indicesCount = indices.size();
 
@@ -102,7 +114,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    int Shape::GetIndexNCHW(const vector<int>& indices) const
+    uint Shape::GetIndexNCHW(const vector<uint>& indices) const
     {
         size_t indicesCount = indices.size();
 

@@ -9,9 +9,9 @@ namespace Neuro
     class Conv2D : public LayerBase
     {
 	public:
-        Conv2D(LayerBase* inputLayer, int filterSize, int filtersNum, int stride = 1, int padding = EPaddingMode::Valid, ActivationBase* activation = nullptr, const string& name = "");
+        Conv2D(LayerBase* inputLayer, uint filterSize, uint filtersNum, uint stride = 1, uint padding = 0, ActivationBase* activation = nullptr, const string& name = "");
         // This constructor should only be used for input layer
-        Conv2D(const Shape& inputShape, int filterSize, int filtersNum, int stride = 1, int padding = EPaddingMode::Valid, ActivationBase* activation = nullptr, const string& name = "");
+        Conv2D(const Shape& inputShape, uint filterSize, uint filtersNum, uint stride = 1, uint padding = 0, ActivationBase* activation = nullptr, const string& name = "");
 		~Conv2D();
 
 		virtual void CopyParametersTo(LayerBase& target, float tau) const override;
@@ -24,8 +24,6 @@ namespace Neuro
         Conv2D* SetKernelInitializer(InitializerBase* initializer);
         Conv2D* SetBiasInitializer(InitializerBase* initializer);
         Conv2D* SetUseBias(bool useBias);
-
-        //static EPaddingMode GetGradientPaddingMode(int padding);
 
 	protected:
         Conv2D();
@@ -61,10 +59,10 @@ namespace Neuro
         InitializerBase* m_KernelInitializer = new GlorotUniform();
         InitializerBase* m_BiasInitializer = new Zeros();
 
-        int m_FiltersNum;
-        int m_FilterSize;
-        int m_Stride;
-        int m_Padding;
+        uint m_FiltersNum;
+        uint m_FilterSize;
+        uint m_Stride;
+        uint m_Padding;
 	};
 }
 

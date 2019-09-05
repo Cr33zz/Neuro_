@@ -34,7 +34,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void SGD::OnStep(vector<ParametersAndGradients>& paramsAndGrads, int batchSize)
 	{
-		for (int i = 0; i < paramsAndGrads.size(); ++i)
+		for (uint i = 0; i < paramsAndGrads.size(); ++i)
 		{
 			auto& parametersAndGradient = paramsAndGrads[i];
 			auto parameters = parametersAndGradient.Parameters;

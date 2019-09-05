@@ -12,13 +12,13 @@ class IrisNetwork
 public:
     static void Run()
     {
-        Tensor::SetDefaultOpMode(EOpMode::CPU);
+        Tensor::SetDefaultOpMode(EOpMode::MultiCPU);
 
         auto model = new Sequential();
         model->AddLayer(new Dense(4, 1000, new ReLU()));
         model->AddLayer(new Dense(model->LastLayer(), 500, new ReLU()));
         model->AddLayer(new Dense(model->LastLayer(), 300, new ReLU()));
-        //model->AddLayer(new Dropout(model->LastLayer(), 0.2f));
+        model->AddLayer(new Dropout(model->LastLayer(), 0.2f));
         model->AddLayer(new Dense(model->LastLayer(), 3, new Softmax()));
 
         cout << model->Summary();
@@ -31,10 +31,11 @@ public:
         LoadCSVData("data/iris_data.csv", 3, inputs, outputs, true);
         inputs = inputs.Normalized(EAxis::Feature);
 
-        net->Fit(inputs, outputs, 20, 2, nullptr, nullptr, 2, Track::TrainError | Track::TrainAccuracy);
+        net->Fit(inputs, outputs, 40, 20, nullptr, nullptr, 2, Track::TrainError | Track::TrainAccuracy);
 
         cout << model->TrainSummary();
 
+        cin.get();
         return;
     }
 };

@@ -76,7 +76,7 @@ namespace NeuroTests
 			auto result = Tensor(input.GetShape());
 			softmax.Derivative(output, outputGradient, result);
 
-			for (int i = 0; i < input.GetShape().Length; ++i)
+			for (uint i = 0; i < input.GetShape().Length; ++i)
 				Assert::AreEqual((double)result.GetFlat(i), 0, 1e-3);
 		}
 
@@ -95,7 +95,7 @@ namespace NeuroTests
 			auto result = Tensor(input.GetShape());
 			softmax.Derivative(output, outputGradient, result);
 
-			for (int i = 0; i < input.GetShape().Length; ++i)
+			for (uint i = 0; i < input.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), 0, 1e-3);
 		}
 

@@ -23,6 +23,7 @@
     <ProjectGuid>{4D032030-F36D-45AC-B992-6B89C628D746}</ProjectGuid>
     <RootNamespace>NeuroPerfTests</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <ProjectName>Neuro.Examples</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -140,9 +141,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AutoencoderNetwork.h" />
-    <ClInclude Include="include\ConvNetPeftTests.h" />
+    <ClInclude Include="include\ConvNetwork.h" />
     <ClInclude Include="include\IrisNetwork.h" />
-    <ClInclude Include="include\SimpleNetPerfTests.h" />
+    <ClInclude Include="include\FlowNetwork.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Neuro\Neuro.vcxproj">

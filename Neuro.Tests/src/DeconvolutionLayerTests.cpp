@@ -80,7 +80,7 @@ namespace NeuroTests
             TestTrain(1, 0, 2);
         }
 
-        void TestTrain(int stride, int padding, int batch = 1)
+        void TestTrain(uint stride, uint padding, int batch = 1)
         {
             GlobalRngSeed(101);
             Shape inputShape(4, 4, 3, batch);
@@ -104,7 +104,7 @@ namespace NeuroTests
             Assert::IsTrue(net->GetLastTrainError() < 0.001f);
         }
 
-        LayerBase* CreateLayer(int padding)
+        LayerBase* CreateLayer(uint padding)
         {
             auto layer = new Conv2DTranspose(Shape(5, 5, 2), 3, 3, 1, padding);
             layer->Init();

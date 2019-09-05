@@ -10,8 +10,8 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Merge::Merge(const vector<Shape>& inputShapes, Mode mergeMode, const string& name)
-        : LayerBase(__FUNCTION__, inputShapes, inputShapes[0], nullptr, name)
+    Merge::Merge(const Shape& inputsShape, Mode mergeMode, const string& name)
+        : LayerBase(__FUNCTION__, inputsShape, inputsShape, nullptr, name)
     {
         m_MergeMode = mergeMode;
     }

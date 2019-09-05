@@ -17,7 +17,7 @@ namespace Neuro
 
         Merge(const vector<LayerBase*>& inputLayers, Mode mergeMode, const string& name = "");
         // This constructor should only be used for input layer
-        Merge(const vector<Shape>& inputShapes, Mode mergeMode, const string& name = "");
+        Merge(const Shape& inputsShape, Mode mergeMode, const string& name = "");
 
     protected:
         Merge();

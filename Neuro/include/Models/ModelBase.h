@@ -25,8 +25,10 @@ namespace Neuro
 		virtual tensor_ptr_vec_t GetOutputs() const = 0;
         virtual const vector<LayerBase*>& GetOutputLayers() const = 0;
         virtual int GetOutputLayersCount() const = 0;
-        virtual string Summary() const { return ""; }
+
+        string Summary() const;
         string TrainSummary() const;
+
         virtual void SaveStateXml(string filename) const { }
         virtual void LoadStateXml(string filename) { }
 

@@ -8,9 +8,9 @@ namespace Neuro
     class Pooling2D : public LayerBase
     {
     public:
-        Pooling2D(LayerBase* inputLayer, int filterSize, int stride = 1, int padding = 0, EPoolingMode mode = EPoolingMode::Max, const string& name = "");
+        Pooling2D(LayerBase* inputLayer, uint filterSize, uint stride = 1, uint padding = 0, EPoolingMode mode = EPoolingMode::Max, const string& name = "");
         // Use this constructor for input layer only!
-        Pooling2D(Shape inputShape, int filterSize, int stride = 1, int padding = 0, EPoolingMode mode = EPoolingMode::Max, const string& name = "");
+        Pooling2D(Shape inputShape, uint filterSize, uint stride = 1, uint padding = 0, EPoolingMode mode = EPoolingMode::Max, const string& name = "");
 
     protected:
         Pooling2D();
@@ -30,16 +30,16 @@ namespace Neuro
     class MaxPooling2D : public Pooling2D
     {
     public:
-        MaxPooling2D(LayerBase* inputLayer, int filterSize, int stride = 1, int padding = 0, const string& name = "");
+        MaxPooling2D(LayerBase* inputLayer, uint filterSize, uint stride = 1, uint padding = 0, const string& name = "");
         // Use this constructor for input layer only!
-        MaxPooling2D(Shape inputShape, int filterSize, int stride = 1, int padding = 0, const string& name = "");
+        MaxPooling2D(Shape inputShape, uint filterSize, uint stride = 1, uint padding = 0, const string& name = "");
     };
 
     class AvgPooling2D : public Pooling2D
     {
     public:
-        AvgPooling2D(LayerBase* inputLayer, int filterSize, int stride = 1, int padding = 0, const string& name = "");
+        AvgPooling2D(LayerBase* inputLayer, uint filterSize, uint stride = 1, uint padding = 0, const string& name = "");
         // Use this constructor for input layer only!
-        AvgPooling2D(Shape inputShape, int filterSize, int stride = 1, int padding = 0, const string& name = "");
+        AvgPooling2D(Shape inputShape, uint filterSize, uint stride = 1, uint padding = 0, const string& name = "");
     };
 }

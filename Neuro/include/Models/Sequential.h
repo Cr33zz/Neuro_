@@ -20,7 +20,6 @@ namespace Neuro
         virtual const vector<LayerBase*>& GetOutputLayers() const override;
         virtual int GetOutputLayersCount() const override;
         virtual const vector<LayerBase*>& GetLayers() const override;
-        virtual string Summary() const override;
         virtual void SaveStateXml(string filename) const override;
         virtual void LoadStateXml(string filename) override;
 

@@ -5,7 +5,7 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Conv2DTranspose::Conv2DTranspose(LayerBase* inputLayer, int filterSize, int outputDepth, int stride, int padding, ActivationBase* activation, const string& name)
+    Conv2DTranspose::Conv2DTranspose(LayerBase* inputLayer, uint filterSize, uint outputDepth, uint stride, uint padding, ActivationBase* activation, const string& name)
         : LayerBase(__FUNCTION__, inputLayer, Tensor::GetConvTransposeOutputShape(inputLayer->OutputShape(), outputDepth, filterSize, filterSize, stride, padding, padding), activation, name)
     {
         m_FilterSize = filterSize;
@@ -15,7 +15,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Conv2DTranspose::Conv2DTranspose(const Shape& inputShape, int filterSize, int outputDepth, int stride, int padding, ActivationBase* activation, const string& name)
+    Conv2DTranspose::Conv2DTranspose(const Shape& inputShape, uint filterSize, uint outputDepth, uint stride, uint padding, ActivationBase* activation, const string& name)
         : LayerBase(__FUNCTION__, inputShape, Tensor::GetConvTransposeOutputShape(inputShape, outputDepth, filterSize, filterSize, stride, padding, padding), activation, name)
     {
         m_FilterSize = filterSize;

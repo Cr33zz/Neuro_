@@ -12,6 +12,13 @@ namespace Neuro
 	{
 		m_InputLayers = inputLayers;
 		m_OutputLayers = outputLayers;
+
+        vector<LayerBase*> visited;
+        for (auto inputLayer : m_InputLayers)
+            ProcessLayer(inputLayer, visited);
+
+        m_ReversedOrder.resize(m_Order.size());
+        reverse_copy(m_Order.begin(), m_Order.end(), m_ReversedOrder.begin());
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -53,7 +60,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Flow::FeedForward(const tensor_ptr_vec_t& inputs, bool training)
 	{
-		for (int i = 0; i < (int)m_InputLayers.size(); ++i)
+		for (uint i = 0; i < (int)m_InputLayers.size(); ++i)
 			m_InputLayers[i]->FeedForward(inputs[i], training);
 
 		for (auto layer : m_Order)
@@ -63,7 +70,7 @@ namespace Neuro
 				continue;
 
 			tensor_ptr_vec_t ins(layer->m_InputLayers.size());
-			for (int i = 0; i < (int)layer->m_InputLayers.size(); ++i)
+			for (uint i = 0; i < (int)layer->m_InputLayers.size(); ++i)
 				ins[i] = &(layer->m_InputLayers[i]->m_Output);
 
 			layer->FeedForward(ins, training);
@@ -73,7 +80,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Flow::BackProp(vector<Tensor>& deltas)
 	{
-		for (int i = 0; i < (int)m_OutputLayers.size(); ++i)
+		for (uint i = 0; i < (int)m_OutputLayers.size(); ++i)
 			m_OutputLayers[i]->BackProp(deltas[i]);
 
 		for (auto layer : m_ReversedOrder)
@@ -83,7 +90,7 @@ namespace Neuro
 				continue;
 
 			Tensor avgDelta(layer->m_OutputShape);
-			for (int i = 0; i < (int)layer->m_OutputLayers.size(); ++i)
+			for (uint i = 0; i < (int)layer->m_OutputLayers.size(); ++i)
 			{
 				// we need to find this layer index in output layer's inputs to grab proper delta (it could be cached)
 				for (int j = 0; j < (int)layer->m_OutputLayers[i]->m_InputLayers.size(); ++j)
@@ -106,7 +113,7 @@ namespace Neuro
 	tensor_ptr_vec_t Flow::GetOutputs() const
 	{
 		tensor_ptr_vec_t outputs(m_OutputLayers.size());
-		for (int i = 0; i < (int)m_OutputLayers.size(); ++i)
+		for (uint i = 0; i < (int)m_OutputLayers.size(); ++i)
 			outputs[i] = &(m_OutputLayers[i]->m_Output);
 		return outputs;
 	}
@@ -121,18 +128,6 @@ namespace Neuro
 	int Flow::GetOutputLayersCount() const
 	{
 		return (int)m_OutputLayers.size();
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	void Flow::Optimize()
-	{
-		vector<LayerBase*> visited;
-
-		for (auto inputLayer : m_InputLayers)
-			ProcessLayer(inputLayer, visited);
-
-		m_ReversedOrder.resize(m_Order.size());
-		reverse_copy(m_Order.begin(), m_Order.end(), m_ReversedOrder.begin());
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -188,27 +183,4 @@ namespace Neuro
 	{
 		return m_Order;
 	}
-
-	//////////////////////////////////////////////////////////////////////////
-	string Flow::Summary() const
-	{
-		stringstream ss;
-		int totalParams = 0;
-		ss << "_________________________________________________________________\n";
-		ss << "Layer                        Output Shape              Param #\n";
-		ss << "=================================================================\n";
-
-		for (auto layer : m_Order)
-		{
-			totalParams += layer->GetParamsNum();
-			ss << left << setw(29) << (layer->m_Name + "(" + layer->ClassName() + ")") << setw(26) << layer->OutputShape().ToString() << setw(13) << layer->GetParamsNum() << "\n";
-			for (int i = 1; i < (int)layer->m_InputLayers.size(); ++i)
-				ss << setw(68 + layer->m_InputLayers[i]->m_Name.length()) << layer->m_InputLayers[i]->m_Name << "\n";
-			ss << "_________________________________________________________________\n";
-		}
-
-		ss << "Total params: " << totalParams << "\n";
-		return ss.str();
-	}
-
 }

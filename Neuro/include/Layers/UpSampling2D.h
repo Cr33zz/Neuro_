@@ -7,9 +7,9 @@ namespace Neuro
     class UpSampling2D : public LayerBase
     {
     public:
-        UpSampling2D(LayerBase* inputLayer, int scaleFactor, const string& name = "");
+        UpSampling2D(LayerBase* inputLayer, uint scaleFactor, const string& name = "");
         // Use this constructor for input layer only!
-        UpSampling2D(Shape inputShape, int scaleFactor, const string& name = "");
+        UpSampling2D(Shape inputShape, uint scaleFactor, const string& name = "");
 
     protected:
         UpSampling2D();

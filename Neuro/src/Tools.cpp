@@ -2,6 +2,8 @@
 #include <iomanip>
 #include <sstream>
 #include <fstream>
+#include <memory>
+#include <FreeImage.h>
 
 #include "Tools.h"
 #include "Tensors/Tensor.h"
@@ -9,6 +11,7 @@
 namespace Neuro
 {
     Random g_Rng;
+    bool g_ImageLibInitialized = false;
 
     //////////////////////////////////////////////////////////////////////////
     Random& GlobalRng()
@@ -32,7 +35,7 @@ namespace Neuro
 	int AccBinaryClassificationEquality(const Tensor& target, const Tensor& output)
 	{
 		int hits = 0;
-		for (int n = 0; n < output.Batch(); ++n)
+		for (uint n = 0; n < output.Batch(); ++n)
 			hits += target(0, 0, 0, n) == roundf(output(0, 0, 0, n)) ? 1 : 0;
 		return hits;
 	}
@@ -44,7 +47,7 @@ namespace Neuro
         Tensor outputArgMax = output.ArgMax(EAxis::Sample);
 
 		int hits = 0;
-		for (int i = 0; i < targetArgMax.Length(); ++i)
+		for (uint i = 0; i < targetArgMax.Length(); ++i)
 			hits += targetArgMax(i) == outputArgMax(i) ? 1 : 0;
 		return hits;
 	}
@@ -70,11 +73,11 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    vector<float> LinSpace(float start, float stop, int num, bool endPoint)
+    vector<float> LinSpace(float start, float stop, uint num, bool endPoint)
     {
         vector<float> result;
         float interval = (stop - start) / num;
-        for (int i = 0; i < num; ++i)
+        for (uint i = 0; i < num; ++i)
         {
             result.push_back(start);
             start += interval;
@@ -91,7 +94,7 @@ namespace Neuro
 	{
 		string result = str;
 
-		for (size_t i = 0; i < str.length(); ++i)
+		for (uint i = 0; i < str.length(); ++i)
 			result[i] = tolower(str[i]);
 
 		return result;
@@ -164,19 +167,148 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void LoadCSVData(const string& filename, int outputsNum, Tensor& inputs, Tensor& outputs, bool outputsOneHotEncoded, int maxLines)
+    uint32_t EndianSwap(uint32_t x)
+    {
+        return (x >> 24) |
+               ((x << 8) & 0x00FF0000) |
+               ((x >> 8) & 0x0000FF00) |
+               (x << 24);
+    }
+
+    unique_ptr<char[]> LoadBinFileContents(const string& file)
+    {
+        ifstream stream(file, ios::in | ios::binary | ios::ate);
+        assert(stream);
+        auto size = stream.tellg();
+        unique_ptr<char[]> buffer(new char[size]);
+        stream.seekg(0, std::ios::beg);
+        stream.read(buffer.get(), size);
+        stream.close();
+        return buffer;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void LoadMnistData(const string& imagesFile, const string& labelsFile, Tensor& input, Tensor& output, bool generateBmp, int maxImages)
+    {
+        auto ReadBigInt32 = [](const unique_ptr<char[]>& buffer, size_t offset)
+        {
+            auto ptr = reinterpret_cast<uint32_t*>(buffer.get());
+            auto value = *(ptr + offset);
+            return EndianSwap(value);
+        };
+
+        auto imagesBuffer = LoadBinFileContents(imagesFile);
+        auto labelsBuffer = LoadBinFileContents(labelsFile);
+
+        uint magic1 = ReadBigInt32(imagesBuffer, 0); // discard
+        uint numImages = ReadBigInt32(imagesBuffer, 1);
+        uint imgWidth = ReadBigInt32(imagesBuffer, 2);
+        uint imgHeight = ReadBigInt32(imagesBuffer, 3);
+
+        int magic2 = ReadBigInt32(labelsBuffer, 0); // 2039 + number of outputs
+        int numLabels = ReadBigInt32(labelsBuffer, 1);
+
+        maxImages = maxImages < 0 ? numImages : min<int>(maxImages, numImages);
+
+        int outputsNum = magic2 - 2039;
+
+        FIBITMAP* image = nullptr;
+        RGBQUAD imageColor;
+        imageColor.rgbRed = imageColor.rgbGreen = imageColor.rgbBlue = 255;
+        int bmpRows = (int)ceil(sqrt((float)maxImages));
+        int bmpCols = (int)ceil(sqrt((float)maxImages));
+
+        if (generateBmp)
+        {
+            image = FreeImage_Allocate(bmpCols * imgHeight, bmpRows * imgWidth, 32);
+            FreeImage_FillBackground(image, &imageColor);
+        }
+
+        input = Tensor(Shape(imgWidth, imgHeight, 1, maxImages));
+        output = Tensor(Shape(1, outputsNum, 1, maxImages));
+
+        uint8_t* pixelOffset = reinterpret_cast<uint8_t*>(imagesBuffer.get() + 16);
+        uint8_t* labelOffset = reinterpret_cast<uint8_t*>(labelsBuffer.get() + 8);
+
+        for (uint i = 0; i < (uint)maxImages; ++i)
+        {
+            for (uint y = 0; y < imgWidth; ++y)
+            for (uint x = 0; x < imgHeight; ++x)
+            {
+                uint8_t color = *(pixelOffset++);
+                input(x, y, 0, i) = color / 255.f;
+
+                if (image)
+                {
+                    imageColor.rgbRed = imageColor.rgbGreen = imageColor.rgbBlue = color;
+                    FreeImage_SetPixelColor(image, (uint32_t)((i % bmpCols) * imgWidth + x), (uint32_t)((i / bmpCols) * imgHeight + y), &imageColor);
+                }
+            }
+
+            uint8_t label = *(labelOffset++);
+            output(0, label, 0, i) = 1;
+        }
+
+        if (image)
+        {
+            FreeImage_Save(FIF_PNG, image, (imagesFile + ".png").c_str());
+            FreeImage_Unload(image);
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    //void SaveMnistData(const Tensor& input, const Tensor& output, const string& imagesFile, const string& labelsFile)
+    //{
+    //    auto WriteBigInt32 = [](ostream& stream, int v)
+    //    {
+    //        stream << EndianSwap(v);
+    //    };
+
+    //    ofstream fsLabels(labelsFile, ios::binary);
+    //    ofstream fsImages(imagesFile, ios::binary);
+    //    
+    //    uint imgHeight = input.Height();
+    //    uint imgWidth = input.Width();
+    //    uint outputsNum = output.BatchLength();
+
+    //    WriteBigInt32(fsImages, 1337); // discard
+    //    WriteBigInt32(fsImages, input.Batch());
+    //    WriteBigInt32(fsImages, imgHeight);
+    //    WriteBigInt32(fsImages, imgWidth);
+
+    //    WriteBigInt32(fsLabels, 2039 + outputsNum);
+    //    WriteBigInt32(fsLabels, output.Batch());
+
+    //    for (uint i = 0; i < input.Batch(); ++i)
+    //    {
+    //        for (uint y = 0; y < imgHeight; ++y)
+    //        for (uint x = 0; x < imgWidth; ++x)
+    //            fsImages << (unsigned char)(input(x, y, 0, i) * 255);
+
+    //        for (uint j = 0; j < outputsNum; ++j)
+    //        {
+    //            if (output(0, j, 0, i) == 1)
+    //            {
+    //                fsLabels << (unsigned char)j;
+    //            }
+    //        }
+    //    }
+    //}
+
+    //////////////////////////////////////////////////////////////////////////
+    void LoadCSVData(const string& filename, int outputsNum, Tensor& input, Tensor& output, bool outputsOneHotEncoded, int maxLines)
     {
         ifstream infile(filename.c_str());
         string line;
 
         vector<float> inputValues;
         vector<float> outputValues;
-        int batches = 0;
-        int inputBatchSize = 0;
+        uint batches = 0;
+        uint inputBatchSize = 0;
 
         while (getline(infile, line))
         {
-            if (maxLines >= 0 && batches >= maxLines)
+            if (maxLines >= 0 && batches >= (uint)maxLines)
                 break;
 
             if (line.empty())
@@ -187,7 +319,7 @@ namespace Neuro
             ++batches;
             inputBatchSize = (int)tmp.size() - (outputsOneHotEncoded ? 1 : outputsNum);
 
-            for (int i = 0; i < inputBatchSize; ++i)
+            for (int i = 0; i < (int)inputBatchSize; ++i)
                 inputValues.push_back((float)atof(tmp[i].c_str()));
 
             for (int i = 0; i < (outputsOneHotEncoded ? 1 : outputsNum); ++i)
@@ -204,7 +336,17 @@ namespace Neuro
             }
         }
 
-        inputs = Tensor(inputValues, Shape(1, inputBatchSize, 1, batches));
-        outputs = Tensor(outputValues, Shape(1, outputsNum, 1, batches));
+        input = Tensor(inputValues, Shape(1, inputBatchSize, 1, batches));
+        output = Tensor(outputValues, Shape(1, outputsNum, 1, batches));
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void ImageLibInit()
+    {
+        if (!g_ImageLibInitialized)
+        {
+            FreeImage_Initialise();
+            g_ImageLibInitialized = true;
+        }
     }
 }

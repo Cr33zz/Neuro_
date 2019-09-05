@@ -14,16 +14,16 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\SimpleNetPerfTests.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ConvNetPeftTests.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\IrisNetwork.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\AutoencoderNetwork.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ConvNetwork.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\FlowNetwork.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

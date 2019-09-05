@@ -6,24 +6,50 @@
 
 namespace Neuro
 {
+    //////////////////////////////////////////////////////////////////////////
+    string ModelBase::Summary() const
+    {
+        stringstream ss;
+        int totalParams = 0;
+        ss << "_________________________________________________________________\n";
+        ss << "Layer                        Output Shape              Param #   \n";
+        ss << "=================================================================\n";
+
+        for (auto layer : GetLayers())
+        {
+            totalParams += layer->GetParamsNum();
+            ss << left << setw(29) << (layer->Name() + "(" + layer->ClassName() + ")");
+            ss << setw(26) << layer->OutputShape().ToString();
+            ss << setw(13) << layer->GetParamsNum() << "\n";
+            if (layer->InputLayers().size() > 1)
+            {
+                for (int i = 0; i < (int)layer->InputLayers().size(); ++i)
+                    ss << layer->InputLayers()[i]->Name() << "\n";
+            }
+            ss << "_________________________________________________________________\n";
+        }
+
+        ss << "Total params: " << totalParams << "\n";
+        return ss.str();
+    }
 
     //////////////////////////////////////////////////////////////////////////
     string ModelBase::TrainSummary() const
     {
         stringstream ss;
         int totalParams = 0;
-        ss << "_________________________________________________________________________________\n";
-        ss << "Layer                        FeedFwd      BackProp     ActFeedFwd   ActBackProp  \n";
-        ss << "=================================================================================\n";
+        ss << "_____________________________________________________________________________\n";
+        ss << "Layer                        FeedFwd     BackProp    ActFeedFwd  ActBackProp \n";
+        ss << "=============================================================================\n";
 
         for (auto layer : GetLayers())
         {
             ss << left << setw(29) << (layer->Name() + "(" + layer->ClassName() + ")");
-            ss << setw(13) << (to_string(layer->FeedForwardTime()) + "ms");
-            ss << setw(13) << (to_string(layer->BackPropTime()) + "ms");
-            ss << setw(13) << (to_string(layer->ActivationTime()) + "ms");
-            ss << layer->ActivationBackPropTime() << "ms\n";
-            ss << "_________________________________________________________________________________\n";
+            ss << setw(12) << (to_string(layer->FeedForwardTime()/1000.f) + "s");
+            ss << setw(12) << (to_string(layer->BackPropTime()/1000.f) + "s");
+            ss << setw(12) << (to_string(layer->ActivationTime()/1000.f) + "s");
+            ss << setw(12) << (to_string(layer->ActivationBackPropTime()/1000.f) + "s") << "\n";
+            ss << "_____________________________________________________________________________\n";
         }
 
         return ss.str();

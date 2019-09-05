@@ -19,29 +19,28 @@ public:
         Shape inputShape(28, 28, 1);
         auto model = new Sequential();
         model->AddLayer(new Conv2D(inputShape, 5, 10, 1, new ReLU()));
-        model->AddLayer(new Pooling(model->LastLayer(), 2));
+        model->AddLayer(new MaxPooling2D(model->LastLayer(), 2));
         model->AddLayer(new Conv2D(model->LastLayer(), 2, 20, 1, new ReLU()));
-        model->AddLayer(new Pooling(model->LastLayer(), 2));
-        model->AddLayer(new UpSampling(model->LastLayer(), 2));
-        model->AddLayer(new Deconvolution(model->LastLayer(), 2, 20, 1, new ReLU()));
-        model->AddLayer(new UpSampling(model->LastLayer(), 2));
-        model->AddLayer(new Deconvolution(model->LastLayer(), 5, 10, 1, new ReLU()));
-        model->AddLayer(new Deconvolution(model->LastLayer(), 1, 3, 1, new Sigmoid()));
+        model->AddLayer(new MaxPooling2D(model->LastLayer(), 2));
+        model->AddLayer(new UpSampling2D(model->LastLayer(), 2));
+        model->AddLayer(new Conv2DTranspose(model->LastLayer(), 2, 20, 1, new ReLU()));
+        model->AddLayer(new UpSampling2D(model->LastLayer(), 2));
+        model->AddLayer(new Conv2DTranspose(model->LastLayer(), 5, 10, 1, new ReLU()));
+        model->AddLayer(new Conv2DTranspose(model->LastLayer(), 1, 3, 1, new Sigmoid()));
+
+        cout << model->Summary();
+
         auto net = new NeuralNetwork(model, "autoencoder");
         net->Optimize(new Adam(), new BinaryCrossEntropy());
 
         vector<tensor_ptr_vec_t> inputs;
         vector<tensor_ptr_vec_t> outputs;
 
-
-        Stopwatch timer;
-        timer.Start();
-
         net->Fit(inputs, outputs, 20, 10, nullptr, nullptr, 1, Track::TrainError);
 
-        timer.Stop();
-        cout << "Training time " << timer.ElapsedMiliseconds() << "ms";
+        cout << model->TrainSummary();
 
+        cin.get();
         return;
     }
 };
