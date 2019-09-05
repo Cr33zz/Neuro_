@@ -13,7 +13,7 @@ namespace Neuro
     class Shape
     {
 	public:
-        explicit Shape(uint width = 1, uint height = 1, uint depth = 1, uint batchSize = 1);
+        explicit Shape(uint32_t width = 1, uint32_t height = 1, uint32_t depth = 1, uint32_t batchSize = 1);
 
 		bool operator==(const Shape& other) const;
 		bool operator!=(const Shape& other) const;
@@ -27,10 +27,10 @@ namespace Neuro
         // One of the provided dimensions can be -1. In that case it will be guessed based on the length and other dimensions.
         Shape Reshaped(int w, int h, int d, int n) const;
 
-        uint GetIndex(uint w, uint h = 0, uint d = 0, uint n = 0) const;
-        uint GetIndex(int w, int h = 0, int d = 0, int n = 0) const;
-        uint GetIndex(const vector<uint>& indices) const;
-        uint GetIndexNCHW(const vector<uint>& indices) const;
+        uint32_t GetIndex(uint32_t w, uint32_t h = 0, uint32_t d = 0, uint32_t n = 0) const;
+        uint32_t GetIndex(int w, int h = 0, int d = 0, int n = 0) const;
+        uint32_t GetIndex(const vector<uint32_t>& indices) const;
+        uint32_t GetIndexNCHW(const vector<uint32_t>& indices) const;
 
 		string ToString() const;
 
@@ -48,17 +48,17 @@ namespace Neuro
             return Shape.From(dims);
         }*/
 
-        uint Width() const { return Dimensions[0]; }
-        uint Height() const { return Dimensions[1]; }
-        uint Depth() const { return Dimensions[2]; }
-        uint Batch() const { return Dimensions[3]; }
+        uint32_t Width() const { return Dimensions[0]; }
+        uint32_t Height() const { return Dimensions[1]; }
+        uint32_t Depth() const { return Dimensions[2]; }
+        uint32_t Batch() const { return Dimensions[3]; }
 
-        uint Dimensions[4];
+        uint32_t Dimensions[4];
 
-        uint Dim0;
-        uint Dim0Dim1;
-        uint Dim0Dim1Dim2;
-        uint Length;
-        uint NDim;
+        uint32_t Dim0;
+        uint32_t Dim0Dim1;
+        uint32_t Dim0Dim1Dim2;
+        uint32_t Length;
+        uint32_t NDim;
     };
 }

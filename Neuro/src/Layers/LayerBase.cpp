@@ -147,7 +147,7 @@ namespace Neuro
 	{
 		m_InputsGradient.resize(m_InputShapes.size());
 
-		for (uint i = 0; i < (int)m_InputShapes.size(); ++i)
+		for (uint32_t i = 0; i < (int)m_InputShapes.size(); ++i)
 		{
 			auto& inputShape = m_InputShapes[i];
 			Shape deltaShape(inputShape.Width(), inputShape.Height(), inputShape.Depth(), outputGradient.Batch());

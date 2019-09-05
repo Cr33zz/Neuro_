@@ -35,7 +35,7 @@ namespace Neuro
 	int AccBinaryClassificationEquality(const Tensor& target, const Tensor& output)
 	{
 		int hits = 0;
-		for (uint n = 0; n < output.Batch(); ++n)
+		for (uint32_t n = 0; n < output.Batch(); ++n)
 			hits += target(0, 0, 0, n) == roundf(output(0, 0, 0, n)) ? 1 : 0;
 		return hits;
 	}
@@ -47,7 +47,7 @@ namespace Neuro
         Tensor outputArgMax = output.ArgMax(EAxis::Sample);
 
 		int hits = 0;
-		for (uint i = 0; i < targetArgMax.Length(); ++i)
+		for (uint32_t i = 0; i < targetArgMax.Length(); ++i)
 			hits += targetArgMax(i) == outputArgMax(i) ? 1 : 0;
 		return hits;
 	}
@@ -73,11 +73,11 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    vector<float> LinSpace(float start, float stop, uint num, bool endPoint)
+    vector<float> LinSpace(float start, float stop, uint32_t num, bool endPoint)
     {
         vector<float> result;
         float interval = (stop - start) / num;
-        for (uint i = 0; i < num; ++i)
+        for (uint32_t i = 0; i < num; ++i)
         {
             result.push_back(start);
             start += interval;
@@ -94,7 +94,7 @@ namespace Neuro
 	{
 		string result = str;
 
-		for (uint i = 0; i < str.length(); ++i)
+		for (uint32_t i = 0; i < str.length(); ++i)
 			result[i] = tolower(str[i]);
 
 		return result;
@@ -200,10 +200,10 @@ namespace Neuro
         auto imagesBuffer = LoadBinFileContents(imagesFile);
         auto labelsBuffer = LoadBinFileContents(labelsFile);
 
-        uint magic1 = ReadBigInt32(imagesBuffer, 0); // discard
-        uint numImages = ReadBigInt32(imagesBuffer, 1);
-        uint imgWidth = ReadBigInt32(imagesBuffer, 2);
-        uint imgHeight = ReadBigInt32(imagesBuffer, 3);
+        uint32_t magic1 = ReadBigInt32(imagesBuffer, 0); // discard
+        uint32_t numImages = ReadBigInt32(imagesBuffer, 1);
+        uint32_t imgWidth = ReadBigInt32(imagesBuffer, 2);
+        uint32_t imgHeight = ReadBigInt32(imagesBuffer, 3);
 
         int magic2 = ReadBigInt32(labelsBuffer, 0); // 2039 + number of outputs
         int numLabels = ReadBigInt32(labelsBuffer, 1);
@@ -230,10 +230,10 @@ namespace Neuro
         uint8_t* pixelOffset = reinterpret_cast<uint8_t*>(imagesBuffer.get() + 16);
         uint8_t* labelOffset = reinterpret_cast<uint8_t*>(labelsBuffer.get() + 8);
 
-        for (uint i = 0; i < (uint)maxImages; ++i)
+        for (uint32_t i = 0; i < (uint32_t)maxImages; ++i)
         {
-            for (uint y = 0; y < imgWidth; ++y)
-            for (uint x = 0; x < imgHeight; ++x)
+            for (uint32_t y = 0; y < imgWidth; ++y)
+            for (uint32_t x = 0; x < imgHeight; ++x)
             {
                 uint8_t color = *(pixelOffset++);
                 input(x, y, 0, i) = color / 255.f;
@@ -267,9 +267,9 @@ namespace Neuro
     //    ofstream fsLabels(labelsFile, ios::binary);
     //    ofstream fsImages(imagesFile, ios::binary);
     //    
-    //    uint imgHeight = input.Height();
-    //    uint imgWidth = input.Width();
-    //    uint outputsNum = output.BatchLength();
+    //    uint32_t imgHeight = input.Height();
+    //    uint32_t imgWidth = input.Width();
+    //    uint32_t outputsNum = output.BatchLength();
 
     //    WriteBigInt32(fsImages, 1337); // discard
     //    WriteBigInt32(fsImages, input.Batch());
@@ -279,13 +279,13 @@ namespace Neuro
     //    WriteBigInt32(fsLabels, 2039 + outputsNum);
     //    WriteBigInt32(fsLabels, output.Batch());
 
-    //    for (uint i = 0; i < input.Batch(); ++i)
+    //    for (uint32_t i = 0; i < input.Batch(); ++i)
     //    {
-    //        for (uint y = 0; y < imgHeight; ++y)
-    //        for (uint x = 0; x < imgWidth; ++x)
+    //        for (uint32_t y = 0; y < imgHeight; ++y)
+    //        for (uint32_t x = 0; x < imgWidth; ++x)
     //            fsImages << (unsigned char)(input(x, y, 0, i) * 255);
 
-    //        for (uint j = 0; j < outputsNum; ++j)
+    //        for (uint32_t j = 0; j < outputsNum; ++j)
     //        {
     //            if (output(0, j, 0, i) == 1)
     //            {
@@ -303,12 +303,12 @@ namespace Neuro
 
         vector<float> inputValues;
         vector<float> outputValues;
-        uint batches = 0;
-        uint inputBatchSize = 0;
+        uint32_t batches = 0;
+        uint32_t inputBatchSize = 0;
 
         while (getline(infile, line))
         {
-            if (maxLines >= 0 && batches >= (uint)maxLines)
+            if (maxLines >= 0 && batches >= (uint32_t)maxLines)
                 break;
 
             if (line.empty())

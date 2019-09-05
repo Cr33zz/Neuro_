@@ -16,9 +16,7 @@ namespace Neuro
 	typedef float float_t;
 #endif
 
-    typedef unsigned int uint;
-
-	typedef vector<const Tensor*> tensor_ptr_vec_t;	
+    typedef vector<const Tensor*> tensor_ptr_vec_t;	
 	typedef int(*accuracy_func_t)(const Tensor& targetOutput, const Tensor& output);
 
     enum EOpMode

@@ -30,7 +30,7 @@ public:
 
         auto input = Tensor(Shape(64, 64, 4, 32)); input.FillWithRand();
         auto output = Tensor(Shape(1, 3, 1, 32));
-        for (uint n = 0; n < output.Batch(); ++n)
+        for (uint32_t n = 0; n < output.Batch(); ++n)
             output(0, GlobalRng().Next(output.Height()), 0, n) = 1.0f;
 
         net->Fit(input, output, -1, 10, nullptr, nullptr, 2, Track::TrainError);

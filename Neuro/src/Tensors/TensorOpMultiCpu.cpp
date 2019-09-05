@@ -19,16 +19,16 @@ namespace Neuro
 
         if (t2.Batch() == t1.Batch())
         {
-            parallel_for((uint)0, (uint)t1Values.size(), [&](uint i)
+            parallel_for((uint32_t)0, (uint32_t)t1Values.size(), [&](uint32_t i)
             {
                 resultValues[i] = alpha * t1Values[i] + beta * t2Values[i];
             });
             return;
         }
 
-        parallel_for((uint)0, t1.Batch(), [&](uint n)
+        parallel_for((uint32_t)0, t1.Batch(), [&](uint32_t n)
         {
-            for (uint i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
+            for (uint32_t i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
                 resultValues[idx] = alpha * t1Values[idx] + beta * t2Values[i];
         });
     }
@@ -43,16 +43,16 @@ namespace Neuro
         t2Temp.CopyToHost();
         result.Zero();
 
-        parallel_for((uint)0, result.Batch(), [&](uint n)
+        parallel_for((uint32_t)0, result.Batch(), [&](uint32_t n)
         {
-            uint t1N = min(n, t1Temp.Batch() - 1);
-            uint t2N = min(n, t2Temp.Batch() - 1);
+            uint32_t t1N = min(n, t1Temp.Batch() - 1);
+            uint32_t t2N = min(n, t2Temp.Batch() - 1);
 
-            parallel_for((uint)0, t1Temp.Depth(), [&](uint d)
+            parallel_for((uint32_t)0, t1Temp.Depth(), [&](uint32_t d)
             {
-                for (uint h = 0; h < t1Temp.Height(); ++h)
-                for (uint w = 0; w < t2Temp.Width(); ++w)
-                for (uint i = 0; i < t1Temp.Width(); ++i)
+                for (uint32_t h = 0; h < t1Temp.Height(); ++h)
+                for (uint32_t w = 0; w < t2Temp.Width(); ++w)
+                for (uint32_t i = 0; i < t1Temp.Width(); ++i)
                     result(w, h, d, n) += t1Temp.Get(i, h, d, t1N) * t2Temp.Get(w, i, d, t2N);
             });
         });
@@ -71,16 +71,16 @@ namespace Neuro
 
         if (t2.Batch() == t1.Batch())
         {
-            parallel_for((uint)0, (uint)t1Values.size(), [&](uint i)
+            parallel_for((uint32_t)0, (uint32_t)t1Values.size(), [&](uint32_t i)
             {
                 resultValues[i] = t1Values[i] * t2Values[i];
             });
             return;
         }
 
-        parallel_for((uint)0, t1.Batch(), [&](uint n)
+        parallel_for((uint32_t)0, t1.Batch(), [&](uint32_t n)
         {
-            for (uint i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
+            for (uint32_t i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
                 resultValues[idx] = t1Values[idx] * t2Values[i];
         });
     }
@@ -97,27 +97,27 @@ namespace Neuro
 
         if (axis == EAxis::Sample)
         {
-            uint batchMin = batch < 0 ? 0 : batch;
-            uint batchMax = batch < 0 ? input.Batch() : (batch + 1);
-            uint batchLen = input.BatchLength();
+            uint32_t batchMin = batch < 0 ? 0 : batch;
+            uint32_t batchMax = batch < 0 ? input.Batch() : (batch + 1);
+            uint32_t batchLen = input.BatchLength();
 
-            parallel_for(batchMin, batchMax, [&](uint n) {
-            for (uint i = 0, idx = n * batchLen; i < batchLen; ++i, ++idx)
+            parallel_for(batchMin, batchMax, [&](uint32_t n) {
+            for (uint32_t i = 0, idx = n * batchLen; i < batchLen; ++i, ++idx)
                 resultValues[n - batchMin] += inputValues[idx];
             });
         }
         else if (axis == EAxis::Feature)
         {
-            uint batchLen = input.BatchLength();
+            uint32_t batchLen = input.BatchLength();
 
-            parallel_for((uint)0, input.BatchLength(), [&](uint f) {
-            for (uint n = 0; n < input.Batch(); ++n)
+            parallel_for((uint32_t)0, input.BatchLength(), [&](uint32_t f) {
+            for (uint32_t n = 0; n < input.Batch(); ++n)
                 resultValues[f] += inputValues[f + n * input.BatchLength()];
             });
         }
         else //if (axis == EAxis::Global)
         {
-            for (uint i = 0; i < input.Length(); ++i)
+            for (uint32_t i = 0; i < input.Length(); ++i)
                 resultValues[0] += inputValues[i];
         }
     }
@@ -128,17 +128,17 @@ namespace Neuro
         input.CopyToHost();
         result.OverrideHost();
 
-        parallel_for((uint)0, input.Batch(), [&](uint n) {
-        parallel_for((uint)0, input.Depth(), [&](uint d) {
-        for (uint h = 0; h < input.Height(); ++h)
-        for (uint w = 0; w < input.Width(); ++w)
+        parallel_for((uint32_t)0, input.Batch(), [&](uint32_t n) {
+        parallel_for((uint32_t)0, input.Depth(), [&](uint32_t d) {
+        for (uint32_t h = 0; h < input.Height(); ++h)
+        for (uint32_t w = 0; w < input.Width(); ++w)
             result(h, w, d, n) = input(w, h, d, n);
         });
         });
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Conv2D(const Tensor& input, const Tensor& kernels, uint stride, uint paddingX, uint paddingY, Tensor& result) const
+    void TensorOpMultiCpu::Conv2D(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, Tensor& result) const
     {
         input.CopyToHost();
         kernels.CopyToHost();
@@ -163,7 +163,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, uint stride, uint paddingX, uint paddingY, Tensor& inputGradients) const
+    void TensorOpMultiCpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, Tensor& inputGradients) const
     {
         gradient.CopyToHost();
         kernels.CopyToHost();
@@ -193,7 +193,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, uint stride, uint paddingX, uint paddingY, Tensor& kernelsGradient) const
+    void TensorOpMultiCpu::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, uint32_t stride, uint32_t paddingX, uint32_t paddingY, Tensor& kernelsGradient) const
     {
         input.CopyToHost();
         gradient.CopyToHost();
@@ -223,7 +223,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Pool2D(const Tensor& input, uint filterSize, uint stride, EPoolingMode type, uint paddingX, uint paddingY, Tensor& output) const
+    void TensorOpMultiCpu::Pool2D(const Tensor& input, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t paddingX, uint32_t paddingY, Tensor& output) const
     {
         input.CopyToHost();
         output.OverrideHost();
@@ -258,7 +258,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, uint filterSize, uint stride, EPoolingMode type, uint paddingX, uint paddingY, Tensor& result) const
+    void TensorOpMultiCpu::Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t paddingX, uint32_t paddingY, Tensor& result) const
     {
         output.CopyToHost();
         input.CopyToHost();
@@ -299,15 +299,15 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::UpSample2D(const Tensor& t, uint scaleFactor, Tensor& result) const
+    void TensorOpMultiCpu::UpSample2D(const Tensor& t, uint32_t scaleFactor, Tensor& result) const
     {
-        parallel_for((uint)0, t.Batch(), [&](uint n) {
-        parallel_for((uint)0, t.Depth(), [&](uint d) {
-        for (uint h = 0; h < t.Height(); ++h)
-        for (uint w = 0; w < t.Width(); ++w)
+        parallel_for((uint32_t)0, t.Batch(), [&](uint32_t n) {
+        parallel_for((uint32_t)0, t.Depth(), [&](uint32_t d) {
+        for (uint32_t h = 0; h < t.Height(); ++h)
+        for (uint32_t w = 0; w < t.Width(); ++w)
         {
-            for (uint outH = h * scaleFactor; outH < (h + 1) * scaleFactor; ++outH)
-            for (uint outW = w * scaleFactor; outW < (w + 1) * scaleFactor; ++outW)
+            for (uint32_t outH = h * scaleFactor; outH < (h + 1) * scaleFactor; ++outH)
+            for (uint32_t outW = w * scaleFactor; outW < (w + 1) * scaleFactor; ++outW)
                 result(outW, outH, d, n) = t(w, h, d, n);
         }
         });
@@ -315,12 +315,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::UpSample2DGradient(const Tensor& outputGradient, uint scaleFactor, Tensor& result) const
+    void TensorOpMultiCpu::UpSample2DGradient(const Tensor& outputGradient, uint32_t scaleFactor, Tensor& result) const
     {
-        parallel_for((uint)0, outputGradient.Batch(), [&](uint n) {
-        parallel_for((uint)0, outputGradient.Depth(), [&](uint d) {
-        for (uint h = 0; h < outputGradient.Height(); ++h)
-        for (uint w = 0; w < outputGradient.Width(); ++w)
+        parallel_for((uint32_t)0, outputGradient.Batch(), [&](uint32_t n) {
+        parallel_for((uint32_t)0, outputGradient.Depth(), [&](uint32_t d) {
+        for (uint32_t h = 0; h < outputGradient.Height(); ++h)
+        for (uint32_t w = 0; w < outputGradient.Width(); ++w)
             result(w / scaleFactor, h / scaleFactor, d, n) += outputGradient(w, h, d, n);
         });
         });
@@ -354,16 +354,16 @@ namespace Neuro
 
         if (t2.Batch() == t1.Batch())
         {
-            parallel_for((uint)0, (uint)t1Values.size(), [&](uint i)
+            parallel_for((uint32_t)0, (uint32_t)t1Values.size(), [&](uint32_t i)
             {
                 resultValues[i] = func(t1Values[i], t2Values[i]);
             });
             return;
         }
 
-        parallel_for((uint)0, t1.Batch(), [&](uint n)
+        parallel_for((uint32_t)0, t1.Batch(), [&](uint32_t n)
         {
-            for (uint i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
+            for (uint32_t i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
                 resultValues[idx] = func(t1Values[idx], t2Values[i]);
         });
     }

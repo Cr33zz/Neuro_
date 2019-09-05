@@ -16,7 +16,7 @@ namespace Neuro
 	{
 		if (m_MGradients.size() != paramsAndGrads.size())
 		{
-			for (uint i = 0; i < paramsAndGrads.size(); ++i)
+			for (uint32_t i = 0; i < paramsAndGrads.size(); ++i)
 			{
 				auto gradients = paramsAndGrads[i].Gradients;
 
@@ -25,7 +25,7 @@ namespace Neuro
 			}
 		}
 
-		for (uint i = 0; i < paramsAndGrads.size(); ++i)
+		for (uint32_t i = 0; i < paramsAndGrads.size(); ++i)
 		{
 			auto& parametersAndGradient = paramsAndGrads[i];
 			auto parameters = parametersAndGradient.Parameters;

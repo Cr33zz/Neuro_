@@ -27,7 +27,7 @@ namespace Neuro
     float Clip(float value, float min, float max);
 	int Sign(float value);
 
-    vector<float> LinSpace(float start, float stop, uint num = 50, bool endPoint = true);
+    vector<float> LinSpace(float start, float stop, uint32_t num = 50, bool endPoint = true);
 
 	string ToLower(const string& str);
     string TrimStart(const string& str, const string& chars = "\t\n\v\f\r ");
@@ -58,7 +58,7 @@ namespace Neuro
     template<typename T>
     void Shuffle(vector<T>& list)
     {
-        uint n = (int)list.size();
+        uint32_t n = (int)list.size();
         while (n-- > 1)
         {
             int k = GlobalRng().Next(n + 1);

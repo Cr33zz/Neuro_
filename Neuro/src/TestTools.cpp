@@ -34,10 +34,10 @@ namespace Neuro
 
 		auto result = Tensor(output->GetShape());
 
-		for (uint n = 0; n < (int)inputs.size(); ++n)
+		for (uint32_t n = 0; n < (int)inputs.size(); ++n)
 		{
 			auto& input = const_cast<Tensor&>(*inputs[n]);
-			for (uint i = 0; i < input.Length(); ++i)
+			for (uint32_t i = 0; i < input.Length(); ++i)
 			{
 				result.Zero();
 
@@ -56,7 +56,7 @@ namespace Neuro
 
 				vector<float> approxGrad(output->GetShape().Length);
 				float approxGradient = 0;
-				for (uint j = 0; j < output->GetShape().Length; j++)
+				for (uint32_t j = 0; j < output->GetShape().Length; j++)
 				{
 					approxGrad[j] = result.GetFlat(j) / (2.0f * DERIVATIVE_EPSILON);
 					approxGradient += approxGrad[j];
@@ -96,7 +96,7 @@ namespace Neuro
 		auto parameters = paramsAndGrads[0].Parameters;
 		auto gradients = paramsAndGrads[0].Gradients;
 
-		for (uint i = 0; i < parameters->GetShape().Length; i++)
+		for (uint32_t i = 0; i < parameters->GetShape().Length; i++)
 		{
 			result.Zero();
 
@@ -112,7 +112,7 @@ namespace Neuro
 
             vector<float> approxGrad(output->GetShape().Length);
             float approxGradient = 0;
-            for (uint j = 0; j < output->GetShape().Length; j++)
+            for (uint32_t j = 0; j < output->GetShape().Length; j++)
             {
                 approxGrad[j] = result.GetFlat(j) / (2.0f * DERIVATIVE_EPSILON);
                 approxGradient += approxGrad[j];
@@ -133,7 +133,7 @@ namespace Neuro
 	{
 		tensor_ptr_vec_t inputs(layer->InputShapes().size());
 
-		for (uint i = 0; i < (int)inputs.size(); ++i)
+		for (uint32_t i = 0; i < (int)inputs.size(); ++i)
 		{
 			auto input = new Tensor(Shape(layer->InputShape().Width(), layer->InputShape().Height(), layer->InputShape().Depth(), batchSize));
 			input->FillWithRand(7 + i);
@@ -213,7 +213,7 @@ namespace Neuro
 		auto error = new Tensor(output.Shape);
 		func.Compute(targetOutput, output, error);
 
-		for (uint i = 0; i < output.Shape.Length; ++i)
+		for (uint32_t i = 0; i < output.Shape.Length; ++i)
 		{
 			if (abs(error.GetFlat(i) - testFunc(targetOutput.GetFlat(i), output.GetFlat(i))) > 1e-4)
 				return false;

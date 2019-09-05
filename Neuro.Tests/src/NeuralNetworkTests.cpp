@@ -91,7 +91,7 @@ namespace NeuroTests
             auto netParams = net2->GetParametersAndGradients();
             auto net2Params = net2->GetParametersAndGradients();
 
-            for (uint i = 0; i < netParams.size(); ++i)
+            for (uint32_t i = 0; i < netParams.size(); ++i)
                 Assert::IsTrue(netParams[i].Parameters->Equals(*net2Params[i].Parameters));
         }
 
@@ -113,7 +113,7 @@ namespace NeuroTests
             vector<ParametersAndGradients> paramsAndGrads;
             model->LastLayer()->GetParametersAndGradients(paramsAndGrads);
 
-            for (uint i = 0; i < expectedWeights.Length(); ++i)
+            for (uint32_t i = 0; i < expectedWeights.Length(); ++i)
                 Assert::AreEqual((double)paramsAndGrads[0].Parameters->GetFlat(i), (double)expectedWeights.GetFlat(i), 1e-2);
         }
 

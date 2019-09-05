@@ -9,9 +9,9 @@ namespace Neuro
     class Conv2D : public LayerBase
     {
 	public:
-        Conv2D(LayerBase* inputLayer, uint filterSize, uint filtersNum, uint stride = 1, uint padding = 0, ActivationBase* activation = nullptr, const string& name = "");
+        Conv2D(LayerBase* inputLayer, uint32_t filterSize, uint32_t filtersNum, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, const string& name = "");
         // This constructor should only be used for input layer
-        Conv2D(const Shape& inputShape, uint filterSize, uint filtersNum, uint stride = 1, uint padding = 0, ActivationBase* activation = nullptr, const string& name = "");
+        Conv2D(const Shape& inputShape, uint32_t filterSize, uint32_t filtersNum, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, const string& name = "");
 		~Conv2D();
 
 		virtual void CopyParametersTo(LayerBase& target, float tau) const override;
@@ -59,10 +59,10 @@ namespace Neuro
         InitializerBase* m_KernelInitializer = new GlorotUniform();
         InitializerBase* m_BiasInitializer = new Zeros();
 
-        uint m_FiltersNum;
-        uint m_FilterSize;
-        uint m_Stride;
-        uint m_Padding;
+        uint32_t m_FiltersNum;
+        uint32_t m_FilterSize;
+        uint32_t m_Stride;
+        uint32_t m_Padding;
 	};
 }
 

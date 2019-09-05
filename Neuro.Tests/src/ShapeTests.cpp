@@ -11,42 +11,42 @@ namespace NeuroTests
         TEST_METHOD(Reshape_GuessDimension)
         {
             auto shape = Shape(2*5*3*4).Reshaped(2, -1, 3, 4);
-            Assert::AreEqual((uint)5, shape.Height());
+            Assert::AreEqual((uint32_t)5, shape.Height());
         }
 
         TEST_METHOD(NamedDimensions)
         {
             auto shape = Shape(1, 2, 3, 4);
-            Assert::AreEqual((uint)1, shape.Width());
-            Assert::AreEqual((uint)2, shape.Height());
-            Assert::AreEqual((uint)3, shape.Depth());
-            Assert::AreEqual((uint)4, shape.Batch());
+            Assert::AreEqual((uint32_t)1, shape.Width());
+            Assert::AreEqual((uint32_t)2, shape.Height());
+            Assert::AreEqual((uint32_t)3, shape.Depth());
+            Assert::AreEqual((uint32_t)4, shape.Batch());
         }
 
         TEST_METHOD(Length)
         {
             auto shape = Shape(2, 3, 4, 5);
-            Assert::AreEqual((uint)2*3*4*5, shape.Length);
+            Assert::AreEqual((uint32_t)2*3*4*5, shape.Length);
         }
 
         TEST_METHOD(GetIndex)
         {
             auto shape = Shape(2, 3, 4, 5);
-            Assert::AreEqual(shape.GetIndex(1), (uint)1);
-            Assert::AreEqual(shape.GetIndex(0, 1), (uint)2);
-            Assert::AreEqual(shape.GetIndex(0, 0, 1), (uint)6);
-            Assert::AreEqual(shape.GetIndex(0, 0, 0, 1), (uint)24);
-            Assert::AreEqual(shape.GetIndex(0, 1, 2, 3), (uint)86);
+            Assert::AreEqual(shape.GetIndex(1), (uint32_t)1);
+            Assert::AreEqual(shape.GetIndex(0, 1), (uint32_t)2);
+            Assert::AreEqual(shape.GetIndex(0, 0, 1), (uint32_t)6);
+            Assert::AreEqual(shape.GetIndex(0, 0, 0, 1), (uint32_t)24);
+            Assert::AreEqual(shape.GetIndex(0, 1, 2, 3), (uint32_t)86);
         }
 
         TEST_METHOD(Dimensions)
         {
             auto shape = Shape(1, 2, 3, 4);
             auto dims = shape.Dimensions;
-            Assert::AreEqual((uint)1, dims[0]);
-            Assert::AreEqual((uint)2, dims[1]);
-            Assert::AreEqual((uint)3, dims[2]);
-            Assert::AreEqual((uint)4, dims[3]);
+            Assert::AreEqual((uint32_t)1, dims[0]);
+            Assert::AreEqual((uint32_t)2, dims[1]);
+            Assert::AreEqual((uint32_t)3, dims[2]);
+            Assert::AreEqual((uint32_t)4, dims[3]);
         }
 
         TEST_METHOD(Equality)

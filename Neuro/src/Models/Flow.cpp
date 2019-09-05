@@ -60,7 +60,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Flow::FeedForward(const tensor_ptr_vec_t& inputs, bool training)
 	{
-		for (uint i = 0; i < (int)m_InputLayers.size(); ++i)
+		for (uint32_t i = 0; i < (int)m_InputLayers.size(); ++i)
 			m_InputLayers[i]->FeedForward(inputs[i], training);
 
 		for (auto layer : m_Order)
@@ -70,7 +70,7 @@ namespace Neuro
 				continue;
 
 			tensor_ptr_vec_t ins(layer->m_InputLayers.size());
-			for (uint i = 0; i < (int)layer->m_InputLayers.size(); ++i)
+			for (uint32_t i = 0; i < (int)layer->m_InputLayers.size(); ++i)
 				ins[i] = &(layer->m_InputLayers[i]->m_Output);
 
 			layer->FeedForward(ins, training);
@@ -80,7 +80,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Flow::BackProp(vector<Tensor>& deltas)
 	{
-		for (uint i = 0; i < (int)m_OutputLayers.size(); ++i)
+		for (uint32_t i = 0; i < (int)m_OutputLayers.size(); ++i)
 			m_OutputLayers[i]->BackProp(deltas[i]);
 
 		for (auto layer : m_ReversedOrder)
@@ -90,7 +90,7 @@ namespace Neuro
 				continue;
 
 			Tensor avgDelta(layer->m_OutputShape);
-			for (uint i = 0; i < (int)layer->m_OutputLayers.size(); ++i)
+			for (uint32_t i = 0; i < (int)layer->m_OutputLayers.size(); ++i)
 			{
 				// we need to find this layer index in output layer's inputs to grab proper delta (it could be cached)
 				for (int j = 0; j < (int)layer->m_OutputLayers[i]->m_InputLayers.size(); ++j)
@@ -113,7 +113,7 @@ namespace Neuro
 	tensor_ptr_vec_t Flow::GetOutputs() const
 	{
 		tensor_ptr_vec_t outputs(m_OutputLayers.size());
-		for (uint i = 0; i < (int)m_OutputLayers.size(); ++i)
+		for (uint32_t i = 0; i < (int)m_OutputLayers.size(); ++i)
 			outputs[i] = &(m_OutputLayers[i]->m_Output);
 		return outputs;
 	}

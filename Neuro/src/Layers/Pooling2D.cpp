@@ -3,7 +3,7 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Pooling2D::Pooling2D(LayerBase* inputLayer, uint filterSize, uint stride, uint padding, EPoolingMode mode, const string& name)
+    Pooling2D::Pooling2D(LayerBase* inputLayer, uint32_t filterSize, uint32_t stride, uint32_t padding, EPoolingMode mode, const string& name)
         : LayerBase(__FUNCTION__, inputLayer, Tensor::GetPooling2DOutputShape(inputLayer->OutputShape(), filterSize, filterSize, stride, padding, padding), nullptr, name)
     {
         m_Mode = mode;
@@ -13,7 +13,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Pooling2D::Pooling2D(Shape inputShape, uint filterSize, uint stride, uint padding, EPoolingMode mode, const string& name)
+    Pooling2D::Pooling2D(Shape inputShape, uint32_t filterSize, uint32_t stride, uint32_t padding, EPoolingMode mode, const string& name)
         : LayerBase(__FUNCTION__, inputShape, Tensor::GetPooling2DOutputShape(inputShape, filterSize, filterSize, stride, padding, padding), nullptr, name)
     {
         m_Mode = mode;
@@ -58,25 +58,25 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    MaxPooling2D::MaxPooling2D(LayerBase* inputLayer, uint filterSize, uint stride, uint padding, const string& name)
+    MaxPooling2D::MaxPooling2D(LayerBase* inputLayer, uint32_t filterSize, uint32_t stride, uint32_t padding, const string& name)
         : Pooling2D(inputLayer, filterSize, stride, padding, EPoolingMode::Max, name)
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    MaxPooling2D::MaxPooling2D(Shape inputShape, uint filterSize, uint stride, uint padding, const string& name)
+    MaxPooling2D::MaxPooling2D(Shape inputShape, uint32_t filterSize, uint32_t stride, uint32_t padding, const string& name)
         : Pooling2D(inputShape, filterSize, stride, padding, EPoolingMode::Max, name)
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    AvgPooling2D::AvgPooling2D(LayerBase* inputLayer, uint filterSize, uint stride, uint padding, const string& name)
+    AvgPooling2D::AvgPooling2D(LayerBase* inputLayer, uint32_t filterSize, uint32_t stride, uint32_t padding, const string& name)
         : Pooling2D(inputLayer, filterSize, stride, padding, EPoolingMode::Avg, name)
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    AvgPooling2D::AvgPooling2D(Shape inputShape, uint filterSize, uint stride, uint padding, const string& name)
+    AvgPooling2D::AvgPooling2D(Shape inputShape, uint32_t filterSize, uint32_t stride, uint32_t padding, const string& name)
         : Pooling2D(inputShape, filterSize, stride, padding, EPoolingMode::Avg, name)
     {
     }
