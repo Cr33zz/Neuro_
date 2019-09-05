@@ -254,8 +254,10 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
 	void Tensor::Zero()
 	{
-		OverrideHost();
-		fill(m_Values.begin(), m_Values.end(), 0.f);
+        if (m_CurrentLocation == ELocation::Host)
+            fill(m_Values.begin(), m_Values.end(), 0.f);
+        else
+            GetDeviceVar().ZeroOnDevice();
 	}
 
     //////////////////////////////////////////////////////////////////////////
@@ -693,6 +695,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::MergeSum(const tensor_ptr_vec_t& inputs, Tensor& result)
 	{
+        result.OverrideHost();
 		result.Zero();
 		for (uint i = 0; i < inputs.size(); ++i)
 		for (uint j = 0; j < result.Length(); ++j)
@@ -711,6 +714,7 @@ namespace Neuro
 	{
 		for (uint i = 0; i < inputs.size(); ++i)
 		{
+            results[i].OverrideHost();
 			results[i].Zero();
 			for (uint j = 0; j < output.Length(); ++j)
 				results[i].m_Values[j] = inputs[i]->m_Values[j] == output.m_Values[j] ? outputGradient.m_Values[j] : 0;
@@ -1577,7 +1581,7 @@ namespace Neuro
 		m_CurrentLocation = ELocation::Device;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
 	void Tensor::CopyToHost() const
 	{
 		if (m_CurrentLocation == ELocation::Host)

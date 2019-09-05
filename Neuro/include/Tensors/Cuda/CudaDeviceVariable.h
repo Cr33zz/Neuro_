@@ -63,6 +63,11 @@ namespace Neuro
             CopyToHost(&dest[0]);
         }
 
+        void ZeroOnDevice() const
+        {
+            CUDA_CHECK(cudaMemset(m_DevPtr, 0, GetSizeInBytes()));
+        }
+
         T* GetDevicePtr() const { return static_cast<T*>(m_DevPtr); }
         size_t GetSizeInBytes() const { return m_Length * m_TypeSize; }
 
