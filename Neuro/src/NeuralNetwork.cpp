@@ -3,6 +3,7 @@
 #include <fstream>
 #include <numeric>
 #include <cctype>
+#include <iomanip>
 
 #include "NeuralNetwork.h"
 #include "Models/ModelBase.h"
@@ -157,14 +158,17 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	void NeuralNetwork::Fit(const Tensor& input, const Tensor& output, int batchSize, int epochs, const Tensor* validInputs, const Tensor* validOutputs, int verbose, int trackFlags, bool shuffle)
+	void NeuralNetwork::Fit(const Tensor& input, const Tensor& output, int batchSize, uint32_t epochs, const Tensor* validInput, const Tensor* validOutput, uint32_t verbose, int trackFlags, bool shuffle)
 	{
-		Fit({ &input }, { &output }, batchSize, epochs, nullptr, nullptr, verbose, trackFlags, shuffle);
+        tensor_ptr_vec_t validInputs = { validInput }, validOutputs = { validOutput };
+		Fit({ &input }, { &output }, batchSize, epochs, validInput ? &validInputs : nullptr, validOutput ? &validOutputs : nullptr, verbose, trackFlags, shuffle);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void NeuralNetwork::Fit(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, int batchSize, int epochs, const tensor_ptr_vec_t* validInputs, const tensor_ptr_vec_t* validOutputs, int verbose, int trackFlags, bool shuffle)
+	void NeuralNetwork::Fit(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, int batchSize, uint32_t epochs, const tensor_ptr_vec_t* validInputs, const tensor_ptr_vec_t* validOutputs, uint32_t verbose, int trackFlags, bool shuffle)
 	{
+        //cout << unitbuf; // disable buffering so progress 'animations' can work
+
 #ifdef LOG_GRADIENTS
         g_GradientsFile = ofstream("gradients.log");
 #endif
@@ -173,21 +177,22 @@ namespace Neuro
         //assert(inputs.size() == m_Model->GetInputLayersCount());
         assert(outputs.size() == m_Model->GetOutputLayersCount());
 
-		int samplesCount = inputs[0]->Batch();
+        uint32_t trainSamplesCount = inputs[0]->Batch();
+        uint32_t validationSamplesCount = validInputs ? (*validInputs)[0]->Batch() : 0;
         
         for (auto inputTensor : inputs)
-            assert(inputTensor->Batch() == samplesCount && "Number of batches across all inputs must match.");
+            assert(inputTensor->Batch() == trainSamplesCount && "Number of batches across all inputs must match.");
         for (auto outputTensor : outputs)
-            assert(outputTensor->Batch() == samplesCount && "Number of batches across all outputs must match number or batches in inputs.");
+            assert(outputTensor->Batch() == trainSamplesCount && "Number of batches across all outputs must match number or batches in inputs.");
 
-		if (batchSize < 0)
-			batchSize = samplesCount;
-
-		string outFilename = FilePrefix() + "_training_data_" + m_Optimizer->ClassName() + "_b" + to_string(batchSize) + (m_Seed > 0 ? "(_seed" + to_string(m_Seed) + ")" : "");
+        uint32_t trainBatchSize = batchSize < 0 ? trainSamplesCount : batchSize;
+        uint32_t validationBatchSize = batchSize < 0 ? validationSamplesCount : min(validationSamplesCount, (uint32_t)batchSize);
+        
+		string outFilename = FilePrefix() + "_training_data_" + m_Optimizer->ClassName() + "_b" + to_string(trainBatchSize) + (m_Seed > 0 ? "(_seed" + to_string(m_Seed) + ")" : "");
 		
 		ChartGenerator* chartGen = nullptr;
 		if (trackFlags != Track::Nothing)
-			chartGen = new ChartGenerator(outFilename, m_Name/* + "\nloss=" + [{string.Join(", ", Losses.Select(x => x.GetType().Name))}] optimizer={Optimizer} batch_size={batchSize}\nseed={(Seed > 0 ? Seed.ToString() : "None")}"*/, "Epoch");
+			chartGen = new ChartGenerator(outFilename, m_Name/* + "\nloss=" + [{string.Join(", ", Losses.Select(x => x.GetType().Name))}] optimizer={Optimizer} batch_size={trainBatchSize}\nseed={(Seed > 0 ? Seed.ToString() : "None")}"*/, "Epoch");
 
 		if (trackFlags & Track::TrainError)
 			chartGen->AddSeries((int)Track::TrainError, "Error on train data\n(left Y axis)", 2/*Color.DarkRed*/);
@@ -216,59 +221,65 @@ namespace Neuro
 
 		Stopwatch trainTimer;
 
-		vector<int> indices(samplesCount);
+		vector<uint32_t> indices(trainSamplesCount);
 		iota(indices.begin(), indices.end(), 0);
 
-		int batchesNum = (int)ceil(samplesCount / (float)batchSize);
+        uint32_t trainBatchesNum = (uint32_t)ceil(trainSamplesCount / (float)trainBatchSize);
+        uint32_t validationBatchesNum = validationBatchSize > 0 ? (uint32_t)ceil(validationSamplesCount / (float)validationBatchSize) : 0;
+        vector<vector<uint32_t>> trainBatchesIndices(trainBatchesNum);
 
-		vector<vector<int>> batchesIndices(batchesNum);
-
-        tensor_ptr_vec_t validInputsBatches, validOutputsBatches;
+        vector<tensor_ptr_vec_t> validInputsBatches, validOutputsBatches;
         if (validInputs)
-        {
-            for (int b = 0; b < batchesNum; ++b)
+        {            
+            uint32_t i = 0;
+            vector<uint32_t> validationBatchIndices;
+            for (uint32_t b = 0; b < validationBatchesNum; ++b)
             {
-                auto validInputsBatch = GenerateBatch(inputs, batchesIndices[b]);
-                auto validOutputsBatch = GenerateBatch(outputs, batchesIndices[b]);
-
-                validInputsBatches.push_back(validInputsBatch);
-                validOutputsBatches.push_back(validOutputsBatch);
+                uint32_t samplesStartIndex = b * validationBatchSize;
+                uint32_t samplesEndIndex = min((b + 1) * validationBatchSize, validationSamplesCount);
+                validationBatchIndices.resize(samplesEndIndex - samplesStartIndex);
+                iota(validationBatchIndices.begin(), validationBatchIndices.end(), i);
+                i += (uint32_t)validationBatchIndices.size();
+                validInputsBatches.push_back(GenerateBatch(*validInputs, validationBatchIndices));
+                validOutputsBatches.push_back(GenerateBatch(*validOutputs, validationBatchIndices));
             }
         }
 
-		for (int e = 1; e <= epochs; ++e)
+		for (uint32_t e = 1; e <= epochs; ++e)
 		{
 #ifdef LOG_GRADIENTS
             g_GradientsFile << "Epoch " << e << endl;
 #endif
-			string output;
-
 			if (verbose > 0)
 				LogLine("Epoch " + to_string(e) + "/" + to_string(epochs));
 
-			// no point shuffling stuff when we have single batch
-			if (shuffle && samplesCount > 1 && batchSize < samplesCount)
-                random_shuffle(indices.begin(), indices.end(), [&](size_t max) { return GlobalRng().Next((int)max); });
+            // no point generating batches when we have single batch
+            if (trainSamplesCount > 1 && trainBatchSize < trainSamplesCount)
+            {
+                if (shuffle)
+                    random_shuffle(indices.begin(), indices.end(), [&](size_t max) { return GlobalRng().Next((int)max); });
 
-			for (int b = 0; b < batchesNum; ++b)
-			{
-				int samplesStartIndex = b * batchSize;
-				int samplesEndIndex = min((b + 1) * batchSize, samplesCount);
-				batchesIndices[b].resize(samplesEndIndex - samplesStartIndex);
-				copy(indices.begin() + samplesStartIndex, indices.begin() + samplesEndIndex, batchesIndices[b].begin());
-			}
+                for (uint32_t b = 0; b < trainBatchesNum; ++b)
+                {
+                    uint32_t samplesStartIndex = b * trainBatchSize;
+                    uint32_t samplesEndIndex = min((b + 1) * trainBatchSize, trainSamplesCount);
+                    trainBatchesIndices[b].resize(samplesEndIndex - samplesStartIndex);
+                    copy(indices.begin() + samplesStartIndex, indices.begin() + samplesEndIndex, trainBatchesIndices[b].begin());
+                }
+            }
 
+            stringstream outputLog;
 			float trainTotalError = 0;
 			int trainHits = 0;
 
 			trainTimer.Restart();
 
-			for (int b = 0; b < batchesNum; ++b)
+			for (uint32_t b = 0; b < trainBatchesNum; ++b)
 			{
-                if (batchSize < samplesCount)
+                if (trainSamplesCount > 1 && trainBatchSize < trainSamplesCount)
                 {
-                    auto inputsBatch = GenerateBatch(inputs, batchesIndices[b]);
-                    auto outputsBatch = GenerateBatch(outputs, batchesIndices[b]);
+                    auto inputsBatch = GenerateBatch(inputs, trainBatchesIndices[b]);
+                    auto outputsBatch = GenerateBatch(outputs, trainBatchesIndices[b]);
 
                     TrainStep(inputsBatch, outputsBatch, trainTotalError, trainHits);
 
@@ -280,15 +291,19 @@ namespace Neuro
 
 				if (verbose == 2)
 				{
-                    int processedSamplesNum = min((b + 1) * batchSize, samplesCount);
-					output = GetProgressString(processedSamplesNum, samplesCount);
+                    outputLog.precision(2);
 
-                    float averageTimePerSample = trainTimer.ElapsedMiliseconds() / (float)processedSamplesNum;
-                    output += " - eta: " + to_string((int)round(averageTimePerSample * (samplesCount - processedSamplesNum) / 1000.f)) + "s";
+                    int processedTrainSamplesNum = min((b + 1) * trainBatchSize, trainSamplesCount);
+					outputLog << GetProgressString(processedTrainSamplesNum, trainSamplesCount);
 
-					cout << output;
-                    for (uint32_t i = 0; i < output.length(); ++i)
+                    float averageTimePerSample = trainTimer.ElapsedMiliseconds() / (float)processedTrainSamplesNum;
+                    outputLog << " - eta: " << fixed << averageTimePerSample * (trainSamplesCount - processedTrainSamplesNum) * 0.0001f << left << setw(10) << "s";
+
+					cout << outputLog.str();
+                    for (uint32_t i = 0; i < outputLog.str().length(); ++i)
                         cout << '\b';
+
+                    outputLog.str("");
 				}
 			}
 
@@ -296,53 +311,73 @@ namespace Neuro
 
 			if (verbose == 2)
 			{
-				output = GetProgressString(samplesCount, samplesCount);
-				LogLine(output);
+                outputLog << left << setw(60) << GetProgressString(trainSamplesCount, trainSamplesCount);
+				LogLine(outputLog.str());
 			}
 
-            m_LastTrainError = trainTotalError / samplesCount;
+            m_LastTrainError = trainTotalError / trainSamplesCount;
 
             if (chartGen)
             {
                 chartGen->AddData((float)e, m_LastTrainError, (int)Track::TrainError);
-                chartGen->AddData((float)e, (float)trainHits / samplesCount / m_Model->GetOutputLayersCount(), (int)Track::TrainAccuracy);
+                chartGen->AddData((float)e, (float)trainHits / trainSamplesCount / m_Model->GetOutputLayersCount(), (int)Track::TrainAccuracy);
             }
 
+            stringstream summary;
+            
 			if (verbose > 0)
 			{
-				string s = " - loss: " + to_string(m_LastTrainError);
-				if (trackFlags & Track::TrainAccuracy)
-					s += " - acc: " + to_string((float)trainHits / samplesCount * 100) + "%";
+                summary.precision(2);
+                summary << " - " << fixed << trainTimer.ElapsedMiliseconds() * 0.0001f << "s";
+                summary.precision(4);
 
-				LogLine(s);
+                if (trackFlags & Track::TrainError)
+				    summary << " - loss: " << fixed << m_LastTrainError;
+				if (trackFlags & Track::TrainAccuracy)
+					summary << " - acc: " << fixed << (float)trainHits / trainSamplesCount;
 			}
 
-			float testTotalError = 0;
-
-			if (validationData)
+			if (validInputs && validOutputs)
 			{
-			    int validationSamples = validationData->size();
-			    float testHits = 0;
+                float validationTotalError = 0;
+                float validationHits = 0;
 
-			    for (uint32_t n = 0; n < validationData->size(); ++n)
-			    {
-			        FeedForward(validationData[n].Inputs);
-			        var outputs = Model.GetOutputs();
-			        Tensorflow.Tensor[] losses = new Tensorflow.Tensor[outputs.Length];
-			        for (uint32_t i = 0; i < outputLayersCount; ++i)
-			        {
-			            LossFuncs[i].Compute(validationData[n].Outputs[i], outputs[i], losses[i]);
-			            testTotalError += losses[i].Sum() / outputs[i].BatchLength;
-			            testHits += AccuracyFuncs[i](validationData[n].Outputs[i], outputs[i]);
-			        }
+                for (uint32_t b = 0; b < validationBatchesNum; ++b)
+                {
+                    FeedForward(validInputsBatches[b]);
 
-			        if (verbose == 2)
-			        {
-			            string progress = " - validating: " + Math.Round(n / (float)validationData.Count * 100) + "%";
-			            Console.Write(progress);
-			            Console.Write(new string('\b', progress.Length));
-			        }
-			    }
+                    auto modelOutputs = m_Model->GetOutputs();
+                    vector<Tensor> out;
+                    for (uint32_t i = 0; i < (int)modelOutputs.size(); ++i)
+                    {
+                        out.push_back(Tensor(modelOutputs[i]->GetShape()));
+                        m_LossFuncs[i]->Compute(*validOutputsBatches[b][i], *modelOutputs[i], out[i]);
+
+                        validationTotalError += out[i].Sum(EAxis::Global)(0) / modelOutputs[i]->BatchLength();
+                        validationHits += m_AccuracyFuncs[i] ? m_AccuracyFuncs[i](*validOutputsBatches[b][i], *modelOutputs[i]) : 0;
+                    }
+
+                    if (verbose == 2)
+                    {
+                        int processedValidationSamplesNum = min((b + 1) * validationBatchSize, validationSamplesCount);
+                        string progress = " - validating: " + to_string((int)round(processedValidationSamplesNum / (float)validationSamplesCount * 100.f)) + "%";
+                        cout << progress;
+                        for (uint32_t i = 0; i < progress.length(); ++i)
+                            cout << '\b';
+                    }
+                }
+
+                float validationError = validationTotalError / validationSamplesCount;
+
+                if (verbose > 0)
+                {
+                    if (trackFlags & Track::TestError)
+                        summary << " - val_loss: " << fixed << validationError;
+                    if (trackFlags & Track::TestAccuracy)
+                        summary << " - val_acc: " << fixed << (float)validationHits / validationSamplesCount;
+                }
+
+                LogLine(summary.str());
 
 			    /*chartGen?.AddData(e, testTotalError / validationSamples, (int)Track::TestError);
 			    chartGen?.AddData(e, (float)testHits / validationSamples / outputLayersCount, (int)Track::TestAccuracy);*/
@@ -352,8 +387,11 @@ namespace Neuro
 				chartGen ? .Save();*/
 		}
 
-        DeleteContainer(validInputsBatches);
-        DeleteContainer(validOutputsBatches);
+        for (size_t b = 0; b < validInputsBatches.size(); ++b)
+        {
+            DeleteContainer(validInputsBatches[b]);
+            DeleteContainer(validOutputsBatches[b]);
+        }
 
         if (verbose > 0)
         {
@@ -426,17 +464,17 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	tensor_ptr_vec_t NeuralNetwork::GenerateBatch(const tensor_ptr_vec_t& inputs, const vector<int>& batchIndices)
+	tensor_ptr_vec_t NeuralNetwork::GenerateBatch(const tensor_ptr_vec_t& inputs, const vector<uint32_t>& batchIndices)
 	{
 		tensor_ptr_vec_t result; // result is a vector of tensors (1 per each input) with multiple (batchIndices.size()) batches in each one of them
 		
-		for (uint32_t i = 0; i < (int)inputs.size(); ++i)
+		for (uint32_t i = 0; i < inputs.size(); ++i)
 		{
-            int batchSize = (int)batchIndices.size();
+            uint32_t batchSize = (uint32_t)batchIndices.size();
 
 			auto t = new Tensor(Shape(inputs[i]->Width(), inputs[i]->Height(), inputs[i]->Depth(), batchSize));
 
-            for (int b = 0; b < batchSize; ++b)
+            for (uint32_t b = 0; b < batchSize; ++b)
 				inputs[i]->CopyBatchTo(batchIndices[b], b, *t);
 
 			result.push_back(t);

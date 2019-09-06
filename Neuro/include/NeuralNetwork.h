@@ -58,9 +58,9 @@ namespace Neuro
 	    void Optimize(OptimizerBase* optimizer, LossBase* loss);
         void Optimize(OptimizerBase* optimizer, map<string, LossBase*> lossDict);
 
-		void Fit(const Tensor& input, const Tensor& output, int batchSize = -1, int epochs = 1, const Tensor* validInputs = nullptr, const Tensor* validOutputs = nullptr, int verbose = 1, int trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
+		void Fit(const Tensor& input, const Tensor& output, int batchSize = -1, uint32_t epochs = 1, const Tensor* validInputs = nullptr, const Tensor* validOutputs = nullptr, uint32_t verbose = 1, int trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
 		// Training method, when batch size is -1 the whole training set is used for single gradient descent step (in other words, batch size equals to training set size)
-		void Fit(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, int batchSize = -1, int epochs = 1, const tensor_ptr_vec_t* validInputs = nullptr, const tensor_ptr_vec_t* validOutputs = nullptr, int verbose = 1, int trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
+		void Fit(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, int batchSize = -1, uint32_t epochs = 1, const tensor_ptr_vec_t* validInputs = nullptr, const tensor_ptr_vec_t* validOutputs = nullptr, uint32_t verbose = 1, int trackFlags = Track::TrainError | Track::TestAccuracy, bool shuffle = true);
 
         float GetLastTrainError() const { return m_LastTrainError; }
 
@@ -74,7 +74,7 @@ namespace Neuro
         void TrainStep(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, float& trainError, int& trainHits);
 
 		// Build a single tensor with multiple batches for each input
-		tensor_ptr_vec_t GenerateBatch(const tensor_ptr_vec_t& inputs, const vector<int>& batchIndices);
+		tensor_ptr_vec_t GenerateBatch(const tensor_ptr_vec_t& inputs, const vector<uint32_t>& batchIndices);
 
 		void LogLine(const string& text);
 
