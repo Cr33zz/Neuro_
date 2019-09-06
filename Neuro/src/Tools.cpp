@@ -188,7 +188,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void LoadMnistData(const string& imagesFile, const string& labelsFile, Tensor& input, Tensor& output, bool generateBmp, int maxImages)
+    void LoadMnistData(const string& imagesFile, const string& labelsFile, Tensor& input, Tensor& output, bool generateImage, int maxImages)
     {
         auto ReadBigInt32 = [](const unique_ptr<char[]>& buffer, size_t offset)
         {
@@ -215,12 +215,15 @@ namespace Neuro
         FIBITMAP* image = nullptr;
         RGBQUAD imageColor;
         imageColor.rgbRed = imageColor.rgbGreen = imageColor.rgbBlue = 255;
-        int bmpRows = (int)ceil(sqrt((float)maxImages));
-        int bmpCols = (int)ceil(sqrt((float)maxImages));
+        uint32_t imageRows = (uint32_t)ceil(sqrt((float)maxImages));
+        uint32_t imageCols = (uint32_t)ceil(sqrt((float)maxImages));
 
-        if (generateBmp)
+        const uint32_t IMG_WIDTH = imageRows * imgWidth;
+        const uint32_t IMG_HEIGHT = imageCols * imgHeight;
+        if (generateImage)
         {
-            image = FreeImage_Allocate(bmpCols * imgHeight, bmpRows * imgWidth, 32);
+            ImageLibInit();
+            image = FreeImage_Allocate(IMG_WIDTH, IMG_HEIGHT, 24);
             FreeImage_FillBackground(image, &imageColor);
         }
 
@@ -241,7 +244,7 @@ namespace Neuro
                 if (image)
                 {
                     imageColor.rgbRed = imageColor.rgbGreen = imageColor.rgbBlue = color;
-                    FreeImage_SetPixelColor(image, (uint32_t)((i % bmpCols) * imgWidth + x), (uint32_t)((i / bmpCols) * imgHeight + y), &imageColor);
+                    FreeImage_SetPixelColor(image, (i % imageCols) * imgWidth + x, IMG_HEIGHT - ((i / imageCols) * imgHeight + y), &imageColor);
                 }
             }
 

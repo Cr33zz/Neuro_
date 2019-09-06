@@ -143,10 +143,12 @@ namespace Neuro
         string name = imageFile.substr(0, dotPos);
         string ext = imageFile.substr(dotPos, imageFile.length() - dotPos);
         
+        const uint32_t WIDTH = Width();
+        const uint32_t HEIGHT = Height();
         RGBQUAD color;
         for (uint32_t n = 0; n < Batch(); ++n)
         {
-            FIBITMAP* image = FreeImage_Allocate((int)Width(), (int)Height(), 32);
+            FIBITMAP* image = FreeImage_Allocate(WIDTH, HEIGHT, 32);
             bool grayScale = (Depth() == 1);
 
             for (uint32_t h = 0; h < Height(); ++h)
@@ -156,7 +158,7 @@ namespace Neuro
                 color.rgbGreen = grayScale ? (int)(Get(w, h, 0, n) * (denormalize ? 255 : 1)) : (int)(Get(w, h, 1, n) * (denormalize ? 255 : 1));
                 color.rgbBlue = grayScale ? (int)(Get(w, h, 0, n) * (denormalize ? 255 : 1)) : (int)(Get(w, h, 2, n) * (denormalize ? 255 : 1));
 
-                FreeImage_SetPixelColor(image, (unsigned int)w, (unsigned int)h, &color);
+                FreeImage_SetPixelColor(image, w, HEIGHT - h, &color);
             }
 
             FreeImage_Save(format, image, Batch() == 1 ? imageFile.c_str() : (name + "_" + to_string(n) + ext).c_str());

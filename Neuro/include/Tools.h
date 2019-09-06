@@ -37,7 +37,7 @@ namespace Neuro
 
     string GetProgressString(int iteration, int maxIterations, const string& extraStr = "", int barLength = 30);
 
-    void LoadMnistData(const string& imagesFile, const string& labelsFile, Tensor& input, Tensor& output, bool generateBmp = false, int maxImages = -1);
+    void LoadMnistData(const string& imagesFile, const string& labelsFile, Tensor& input, Tensor& output, bool generateImage = false, int maxImages = -1);
     //void SaveMnistData(const Tensor& input, const Tensor& output, const string& imagesFile, const string& labelsFile);
 
     void LoadCSVData(const string& filename, int outputsNum, Tensor& inputs, Tensor& outputs, bool outputsOneHotEncoded = false, int maxLines = -1);
