@@ -24,8 +24,8 @@ int main()
     //IrisNetwork::Run();
     //ConvNetwork::Run();
     //FlowNetwork::Run();
-    //MnistConvNetwork::Run();
-    MnistNetwork::Run();
+    MnistConvNetwork::Run();
+    //MnistNetwork::Run();
 
     return 0;
 }
