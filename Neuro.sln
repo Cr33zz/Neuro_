@@ -5,15 +5,12 @@ VisualStudioVersion = 15.0.28307.329
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Neuro", "Neuro\Neuro.vcxproj", "{913DCDCD-2B3B-4F8B-9C6D-10D7388B0B45}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Neuro.PerfTests", "Neuro.PerfTests\Neuro.PerfTests.vcxproj", "{4D032030-F36D-45AC-B992-6B89C628D746}"
-	ProjectSection(ProjectDependencies) = postProject
-		{913DCDCD-2B3B-4F8B-9C6D-10D7388B0B45} = {913DCDCD-2B3B-4F8B-9C6D-10D7388B0B45}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Neuro.Tests", "Neuro.Tests\Neuro.Tests.vcxproj", "{4AFD5B50-5B18-4220-A9A2-5B7E49F1E33E}"
 	ProjectSection(ProjectDependencies) = postProject
 		{913DCDCD-2B3B-4F8B-9C6D-10D7388B0B45} = {913DCDCD-2B3B-4F8B-9C6D-10D7388B0B45}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Neuro.Examples", "Neuro.Examples\Neuro.Examples.vcxproj", "{4D032030-F36D-45AC-B992-6B89C628D746}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,14 +26,6 @@ Global
 		{913DCDCD-2B3B-4F8B-9C6D-10D7388B0B45}.Release|x64.ActiveCfg = Release|x64
 		{913DCDCD-2B3B-4F8B-9C6D-10D7388B0B45}.Release|x64.Build.0 = Release|x64
 		{913DCDCD-2B3B-4F8B-9C6D-10D7388B0B45}.Release|x86.ActiveCfg = Release|x64
-		{4D032030-F36D-45AC-B992-6B89C628D746}.Debug|x64.ActiveCfg = Debug|x64
-		{4D032030-F36D-45AC-B992-6B89C628D746}.Debug|x64.Build.0 = Debug|x64
-		{4D032030-F36D-45AC-B992-6B89C628D746}.Debug|x86.ActiveCfg = Debug|Win32
-		{4D032030-F36D-45AC-B992-6B89C628D746}.Debug|x86.Build.0 = Debug|Win32
-		{4D032030-F36D-45AC-B992-6B89C628D746}.Release|x64.ActiveCfg = Release|x64
-		{4D032030-F36D-45AC-B992-6B89C628D746}.Release|x64.Build.0 = Release|x64
-		{4D032030-F36D-45AC-B992-6B89C628D746}.Release|x86.ActiveCfg = Release|Win32
-		{4D032030-F36D-45AC-B992-6B89C628D746}.Release|x86.Build.0 = Release|Win32
 		{4AFD5B50-5B18-4220-A9A2-5B7E49F1E33E}.Debug|x64.ActiveCfg = Debug|x64
 		{4AFD5B50-5B18-4220-A9A2-5B7E49F1E33E}.Debug|x64.Build.0 = Debug|x64
 		{4AFD5B50-5B18-4220-A9A2-5B7E49F1E33E}.Debug|x86.ActiveCfg = Debug|Win32
@@ -45,6 +34,14 @@ Global
 		{4AFD5B50-5B18-4220-A9A2-5B7E49F1E33E}.Release|x64.Build.0 = Release|x64
 		{4AFD5B50-5B18-4220-A9A2-5B7E49F1E33E}.Release|x86.ActiveCfg = Release|Win32
 		{4AFD5B50-5B18-4220-A9A2-5B7E49F1E33E}.Release|x86.Build.0 = Release|Win32
+		{4D032030-F36D-45AC-B992-6B89C628D746}.Debug|x64.ActiveCfg = Debug|x64
+		{4D032030-F36D-45AC-B992-6B89C628D746}.Debug|x64.Build.0 = Debug|x64
+		{4D032030-F36D-45AC-B992-6B89C628D746}.Debug|x86.ActiveCfg = Debug|Win32
+		{4D032030-F36D-45AC-B992-6B89C628D746}.Debug|x86.Build.0 = Debug|Win32
+		{4D032030-F36D-45AC-B992-6B89C628D746}.Release|x64.ActiveCfg = Release|x64
+		{4D032030-F36D-45AC-B992-6B89C628D746}.Release|x64.Build.0 = Release|x64
+		{4D032030-F36D-45AC-B992-6B89C628D746}.Release|x86.ActiveCfg = Release|Win32
+		{4D032030-F36D-45AC-B992-6B89C628D746}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

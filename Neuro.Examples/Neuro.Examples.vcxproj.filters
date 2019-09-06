@@ -26,5 +26,8 @@
     <ClInclude Include="include\FlowNetwork.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="MnistConvNetwork.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

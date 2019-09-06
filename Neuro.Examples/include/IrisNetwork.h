@@ -12,7 +12,7 @@ class IrisNetwork
 public:
     static void Run()
     {
-        Tensor::SetDefaultOpMode(EOpMode::MultiCPU);
+        Tensor::SetDefaultOpMode(EOpMode::GPU);
 
         auto model = new Sequential();
         model->AddLayer(new Dense(4, 1000, new ReLU()));
