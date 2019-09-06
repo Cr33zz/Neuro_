@@ -3,6 +3,7 @@
 #include "FlowNetwork.h"
 #include "IrisNetwork.h"
 #include "MnistConvNetwork.h"
+#include "MnistNetwork.h"
 
 int main()
 {
@@ -23,7 +24,8 @@ int main()
     //IrisNetwork::Run();
     //ConvNetwork::Run();
     //FlowNetwork::Run();
-    MnistConvNetwork::Run();
+    //MnistConvNetwork::Run();
+    MnistNetwork::Run();
 
     return 0;
 }

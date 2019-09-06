@@ -130,8 +130,8 @@ namespace Neuro
 
         // Generates a new tensor with given dimensions and populate it with this tensor's values in index order.
         // One of dimensions can be -1, in that case it will be calculated based on remaining dimensions.
-        Tensor Reshaped(Shape shape) const;
-        void Reshape(Shape shape);
+        Tensor Reshaped(const Shape& shape) const;
+        void Reshape(const Shape& shape);
 
         // Create new tensor with different batch length and use current tensors values to fill the new tensor.
         // Number of batches will be the same as in source tensor.

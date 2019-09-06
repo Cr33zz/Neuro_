@@ -168,7 +168,8 @@ namespace Neuro
 #ifdef LOG_GRADIENTS
         g_GradientsFile = ofstream("gradients.log");
 #endif
-
+        
+        assert((validInputs && validOutputs) || (!validInputs && !validOutputs));
         //assert(inputs.size() == m_Model->GetInputLayersCount());
         assert(outputs.size() == m_Model->GetOutputLayersCount());
 
@@ -221,6 +222,19 @@ namespace Neuro
 		int batchesNum = (int)ceil(samplesCount / (float)batchSize);
 
 		vector<vector<int>> batchesIndices(batchesNum);
+
+        tensor_ptr_vec_t validInputsBatches, validOutputsBatches;
+        if (validInputs)
+        {
+            for (int b = 0; b < batchesNum; ++b)
+            {
+                auto validInputsBatch = GenerateBatch(inputs, batchesIndices[b]);
+                auto validOutputsBatch = GenerateBatch(outputs, batchesIndices[b]);
+
+                validInputsBatches.push_back(validInputsBatch);
+                validOutputsBatches.push_back(validOutputsBatch);
+            }
+        }
 
 		for (int e = 1; e <= epochs; ++e)
 		{
@@ -303,40 +317,43 @@ namespace Neuro
 				LogLine(s);
 			}
 
-			//float testTotalError = 0;
+			float testTotalError = 0;
 
-			//if (validationData)
-			//{
-			//    int validationSamples = validationData->size();
-			//    float testHits = 0;
+			if (validationData)
+			{
+			    int validationSamples = validationData->size();
+			    float testHits = 0;
 
-			//    for (uint32_t n = 0; n < validationData->size(); ++n)
-			//    {
-			//        FeedForward(validationData[n].Inputs);
-			//        var outputs = Model.GetOutputs();
-			//        Tensorflow.Tensor[] losses = new Tensorflow.Tensor[outputs.Length];
-			//        for (uint32_t i = 0; i < outputLayersCount; ++i)
-			//        {
-			//            LossFuncs[i].Compute(validationData[n].Outputs[i], outputs[i], losses[i]);
-			//            testTotalError += losses[i].Sum() / outputs[i].BatchLength;
-			//            testHits += AccuracyFuncs[i](validationData[n].Outputs[i], outputs[i]);
-			//        }
+			    for (uint32_t n = 0; n < validationData->size(); ++n)
+			    {
+			        FeedForward(validationData[n].Inputs);
+			        var outputs = Model.GetOutputs();
+			        Tensorflow.Tensor[] losses = new Tensorflow.Tensor[outputs.Length];
+			        for (uint32_t i = 0; i < outputLayersCount; ++i)
+			        {
+			            LossFuncs[i].Compute(validationData[n].Outputs[i], outputs[i], losses[i]);
+			            testTotalError += losses[i].Sum() / outputs[i].BatchLength;
+			            testHits += AccuracyFuncs[i](validationData[n].Outputs[i], outputs[i]);
+			        }
 
-			//        if (verbose == 2)
-			//        {
-			//            string progress = " - validating: " + Math.Round(n / (float)validationData.Count * 100) + "%";
-			//            Console.Write(progress);
-			//            Console.Write(new string('\b', progress.Length));
-			//        }
-			//    }
+			        if (verbose == 2)
+			        {
+			            string progress = " - validating: " + Math.Round(n / (float)validationData.Count * 100) + "%";
+			            Console.Write(progress);
+			            Console.Write(new string('\b', progress.Length));
+			        }
+			    }
 
-			//    /*chartGen?.AddData(e, testTotalError / validationSamples, (int)Track::TestError);
-			//    chartGen?.AddData(e, (float)testHits / validationSamples / outputLayersCount, (int)Track::TestAccuracy);*/
-			//}
+			    /*chartGen?.AddData(e, testTotalError / validationSamples, (int)Track::TestError);
+			    chartGen?.AddData(e, (float)testHits / validationSamples / outputLayersCount, (int)Track::TestAccuracy);*/
+			}
 
 			/*if ((ChartSaveInterval > 0 && (e % ChartSaveInterval == 0)) || e == epochs)
 				chartGen ? .Save();*/
 		}
+
+        DeleteContainer(validInputsBatches);
+        DeleteContainer(validOutputsBatches);
 
         if (verbose > 0)
         {
