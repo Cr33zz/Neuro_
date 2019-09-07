@@ -32,5 +32,11 @@
     <ClInclude Include="include\MnistConvNetwork.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\DeepConvGAN.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GAN.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

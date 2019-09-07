@@ -16,7 +16,8 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Dropout::Dropout()
+    Dropout::Dropout(float p, const string& name)
+        : LayerBase(__FUNCTION__, Shape(), nullptr, name), m_Prob(p)
     {
     }
 
@@ -27,6 +28,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void Dropout::OnLink()
+    {
+        m_OutputShapes[0] = m_InputShapes[0];
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void Dropout::FeedForwardInternal(bool training)
     {
         if (training)
@@ -34,17 +41,17 @@ namespace Neuro
             if (m_Mask.GetShape() != m_Inputs[0]->GetShape())
                 m_Mask = Tensor(m_Inputs[0]->GetShape());
 
-            m_Inputs[0]->Dropout(m_Prob, m_Mask, m_Output);
+            m_Inputs[0]->Dropout(m_Prob, m_Mask, m_Outputs[0]);
         }
         else
         {
-            m_Inputs[0]->CopyTo(m_Output);
+            m_Inputs[0]->CopyTo(m_Outputs[0]);
         }
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Dropout::BackPropInternal(Tensor& outputGradient)
+    void Dropout::BackPropInternal(vector<Tensor>& outputGradients)
     {
-        outputGradient.DropoutGradient(outputGradient, m_Mask, m_InputsGradient[0]);
+        outputGradients[0].DropoutGradient(outputGradients[0], m_Mask, m_InputGradients[0]);
     }
 }

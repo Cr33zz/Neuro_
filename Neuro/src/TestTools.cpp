@@ -26,13 +26,13 @@ namespace Neuro
 		auto inputs = GenerateInputsForLayer(layer, batchSize);
 
         GlobalRngSeed(101);
-		auto output = layer->FeedForward(inputs, true);
-		auto outputGradient = Tensor(output->GetShape());
-		outputGradient.FillWithValue(1);
+		auto& output = layer->FeedForward(inputs, true);
+        vector<Tensor> outputGradient = { Tensor(output.GetShape()) };
+		outputGradient[0].FillWithValue(1);
 
 		layer->BackProp(outputGradient);
 
-		auto result = Tensor(output->GetShape());
+		auto result = Tensor(output.GetShape());
 
 		for (uint32_t n = 0; n < (int)inputs.size(); ++n)
 		{
@@ -45,18 +45,18 @@ namespace Neuro
 
 				input.SetFlat(oldValue - DERIVATIVE_EPSILON, i);
                 GlobalRngSeed(101);
-				auto output1 = *layer->FeedForward(inputs, true);
+				auto output1 = layer->FeedForward(inputs, true);
 				input.SetFlat(oldValue + DERIVATIVE_EPSILON, i);
                 GlobalRngSeed(101);
-				auto output2 = *layer->FeedForward(inputs, true);
+				auto output2 = layer->FeedForward(inputs, true);
 
 				input.SetFlat(oldValue, i);
 
 				output2.Sub(output1, result);
 
-				vector<float> approxGrad(output->GetShape().Length);
+				vector<float> approxGrad(output.GetShape().Length);
 				float approxGradient = 0;
-				for (uint32_t j = 0; j < output->GetShape().Length; j++)
+				for (uint32_t j = 0; j < output.GetShape().Length; j++)
 				{
 					approxGrad[j] = result.GetFlat(j) / (2.0f * DERIVATIVE_EPSILON);
 					approxGradient += approxGrad[j];
@@ -79,9 +79,9 @@ namespace Neuro
         Tensor::SetDefaultOpMode(EOpMode::CPU);
         auto inputs = GenerateInputsForLayer(layer, batchSize);
 
-        auto output = layer->FeedForward(inputs, true);
-        auto outputGradient = Tensor(output->GetShape());
-        outputGradient.FillWithValue(1);
+        auto& output = layer->FeedForward(inputs, true);
+        vector<Tensor> outputGradient = { Tensor(output.GetShape()) };
+        outputGradient[0].FillWithValue(1);
 
         layer->BackProp(outputGradient);
 
@@ -91,7 +91,7 @@ namespace Neuro
 		if (paramsAndGrads.empty())
 			return true;
 
-        auto result = Tensor(output->GetShape());
+        auto result = Tensor(output.GetShape());
 
 		auto parameters = paramsAndGrads[0].Parameters;
 		auto gradients = paramsAndGrads[0].Gradients;
@@ -102,17 +102,17 @@ namespace Neuro
 
 			float oldValue = parameters->GetFlat(i);
 			parameters->SetFlat(oldValue + DERIVATIVE_EPSILON, i);
-			auto output1 = Tensor(*layer->FeedForward(inputs, true));
+			auto output1 = Tensor(layer->FeedForward(inputs, true));
 			parameters->SetFlat(oldValue - DERIVATIVE_EPSILON, i);
-			auto output2 = Tensor(*layer->FeedForward(inputs, true));
+			auto output2 = Tensor(layer->FeedForward(inputs, true));
 
 			parameters->SetFlat(oldValue, i);
 
 			output1.Sub(output2, result);
 
-            vector<float> approxGrad(output->GetShape().Length);
+            vector<float> approxGrad(output.GetShape().Length);
             float approxGradient = 0;
-            for (uint32_t j = 0; j < output->GetShape().Length; j++)
+            for (uint32_t j = 0; j < output.GetShape().Length; j++)
             {
                 approxGrad[j] = result.GetFlat(j) / (2.0f * DERIVATIVE_EPSILON);
                 approxGradient += approxGrad[j];

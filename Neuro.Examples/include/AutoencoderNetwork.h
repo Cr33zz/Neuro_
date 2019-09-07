@@ -18,9 +18,9 @@ public:
 
         auto model = new Sequential();
         model->AddLayer(new Conv2D(Shape(28, 28, 1), 5, 10, 1, 0, new ReLU()));
-        model->AddLayer(new MaxPooling2D(model->LastLayer(), 2));
+        model->AddLayer(new MaxPooling2D(model->LastLayer(), 2, 2, 1));
         model->AddLayer(new Conv2D(model->LastLayer(), 2, 20, 1, 0, new ReLU()));
-        model->AddLayer(new MaxPooling2D(model->LastLayer(), 2));
+        model->AddLayer(new MaxPooling2D(model->LastLayer(), 2, 2, 1));
         model->AddLayer(new UpSampling2D(model->LastLayer(), 2));
         model->AddLayer(new Conv2DTranspose(model->LastLayer(), 2, 20, 1, 0, new ReLU()));
         model->AddLayer(new UpSampling2D(model->LastLayer(), 2));

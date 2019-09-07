@@ -64,7 +64,7 @@ namespace NeuroTests
             net->Optimize(new SGD(0.02f), new MeanSquareError());
             net->Fit(input, output, -1, 200, nullptr, nullptr, 1, Track::TrainError);
 
-            const Tensor* predictedOutput = net->Predict(input)[0];
+            auto& predictedOutput = net->Predict(input)[0];
 
             Assert::IsTrue(net->GetLastTrainError() < 0.001f);
         }

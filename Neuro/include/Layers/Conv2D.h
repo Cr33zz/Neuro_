@@ -10,13 +10,15 @@ namespace Neuro
     {
 	public:
         Conv2D(LayerBase* inputLayer, uint32_t filterSize, uint32_t filtersNum, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, const string& name = "");
+        // Make sure to link this layer to input when using this constructor.
+        Conv2D(uint32_t filterSize, uint32_t filtersNum, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, const string& name = "");
         // This constructor should only be used for input layer
         Conv2D(const Shape& inputShape, uint32_t filterSize, uint32_t filtersNum, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, const string& name = "");
 		~Conv2D();
 
 		virtual void CopyParametersTo(LayerBase& target, float tau) const override;
-		virtual int GetParamsNum() const override;
-		virtual void GetParametersAndGradients(vector<ParametersAndGradients>& result) override;
+		virtual uint32_t GetParamsNum() const override;
+		virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads) override;
 		
         Tensor& Kernels() { return m_Kernels; }
         Tensor& Bias() { return m_Bias; }
@@ -26,13 +28,14 @@ namespace Neuro
         Conv2D* SetUseBias(bool useBias);
 
 	protected:
-        Conv2D();
+        Conv2D() {}
 
 		virtual LayerBase* GetCloneInstance() const override;
 		virtual void OnClone(const LayerBase& source) override;
 		virtual void OnInit() override;
+        virtual void OnLink() override;
 		virtual void FeedForwardInternal(bool training) override;
-		virtual void BackPropInternal(Tensor& outputGradient) override;
+		virtual void BackPropInternal(vector<Tensor>& outputGradients) override;
 
         /*internal override void SerializeParameters(XmlElement elem)
         {

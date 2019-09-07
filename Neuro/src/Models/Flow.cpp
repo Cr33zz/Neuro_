@@ -9,6 +9,7 @@ namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
 	Flow::Flow(const vector<LayerBase*>& inputLayers, const vector<LayerBase*>& outputLayers)
+        : ModelBase(__FUNCTION__)
 	{
 		m_InputLayers = inputLayers;
 		m_OutputLayers = outputLayers;
@@ -22,15 +23,16 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Flow::Flow()
-	{
-	}
-
-    //////////////////////////////////////////////////////////////////////////
     Flow::~Flow()
     {
         for (auto layer : m_Order)
             delete layer;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    LayerBase* Flow::GetCloneInstance() const
+    {
+        return new Flow();
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -58,10 +60,10 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Flow::FeedForward(const tensor_ptr_vec_t& inputs, bool training)
+	void Flow::FeedForwardInternal(bool training)
 	{
-		for (uint32_t i = 0; i < (int)m_InputLayers.size(); ++i)
-			m_InputLayers[i]->FeedForward(inputs[i], training);
+		for (size_t i = 0; i < m_InputLayers.size(); ++i)
+			m_InputLayers[i]->FeedForward(m_Inputs[i], training);
 
 		for (auto layer : m_Order)
 		{
@@ -70,18 +72,24 @@ namespace Neuro
 				continue;
 
 			tensor_ptr_vec_t ins(layer->m_InputLayers.size());
-			for (uint32_t i = 0; i < (int)layer->m_InputLayers.size(); ++i)
-				ins[i] = &(layer->m_InputLayers[i]->m_Output);
+			for (size_t i = 0; i < layer->m_InputLayers.size(); ++i)
+				ins[i] = &(layer->m_InputLayers[i]->m_Outputs[0]);
 
 			layer->FeedForward(ins, training);
 		}
+
+        for (size_t i = 0; i < m_OutputLayers.size(); ++i)
+            m_Outputs[i] = m_OutputLayers[i]->Output();
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Flow::BackProp(vector<Tensor>& deltas)
+	void Flow::BackPropInternal(vector<Tensor>& outputGradients)
 	{
-		for (uint32_t i = 0; i < (int)m_OutputLayers.size(); ++i)
-			m_OutputLayers[i]->BackProp(deltas[i]);
+        for (uint32_t i = 0; i < (int)m_OutputLayers.size(); ++i)
+        {
+            vector<Tensor> grads = { outputGradients[i] };
+            m_OutputLayers[i]->BackProp(grads);
+        }
 
 		for (auto layer : m_ReversedOrder)
 		{
@@ -89,33 +97,24 @@ namespace Neuro
 			if (layer->m_OutputLayers.size() == 0)
 				continue;
 
-			Tensor avgDelta(layer->m_OutputShape);
-			for (uint32_t i = 0; i < (int)layer->m_OutputLayers.size(); ++i)
+			Tensor avgInputGradient(layer->m_OutputShapes[0]);
+			for (size_t i = 0; i < layer->m_OutputLayers.size(); ++i)
 			{
 				// we need to find this layer index in output layer's inputs to grab proper delta (it could be cached)
-				for (int j = 0; j < (int)layer->m_OutputLayers[i]->m_InputLayers.size(); ++j)
+				for (size_t j = 0; j < layer->m_OutputLayers[i]->m_InputLayers.size(); ++j)
 				{
 					if (layer->m_OutputLayers[i]->m_InputLayers[j] == layer)
 					{
-						avgDelta.Add(layer->m_OutputLayers[i]->m_InputsGradient[j], avgDelta);
+						avgInputGradient.Add(layer->m_OutputLayers[i]->m_InputGradients[j], avgInputGradient);
 						break;
 					}
 				}
 			}
 
-			avgDelta.Div((float)layer->m_OutputLayers.size(), avgDelta);
-
-			layer->BackProp(avgDelta);
+			avgInputGradient.Div((float)layer->m_OutputLayers.size(), avgInputGradient);
+            vector<Tensor> avgGrads = { avgInputGradient };
+            layer->BackProp(avgGrads);
 		}
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	tensor_ptr_vec_t Flow::GetOutputs() const
-	{
-		tensor_ptr_vec_t outputs(m_OutputLayers.size());
-		for (uint32_t i = 0; i < (int)m_OutputLayers.size(); ++i)
-			outputs[i] = &(m_OutputLayers[i]->m_Output);
-		return outputs;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -125,29 +124,31 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	int Flow::GetOutputLayersCount() const
+	uint32_t Flow::GetOutputLayersCount() const
 	{
-		return (int)m_OutputLayers.size();
+		return (uint32_t)m_OutputLayers.size();
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	ModelBase* Flow::Clone() const
+	void Flow::OnClone(const LayerBase& source)
 	{
+        __super::OnClone(source);
+
+        auto& sourceFlow = static_cast<const Flow&>(source);
+
 		// clone is not a frequently used functionality so I'm not too concerned about its performance
 
 		// make clones first and store then in dictionary
 		map<string, LayerBase*> clones;
 
-		for (auto layer : m_Order)
+		for (auto layer : sourceFlow.m_Order)
 		{
 			auto clone = layer->Clone();
 			clones[clone->Name()] = clone;
 		}
 
 		// then connect them in the same manner as in original network and clone order
-		auto flowClone = new Flow();
-
-		for (auto layer : m_Order)
+		for (auto layer : sourceFlow.m_Order)
 		{
 			auto layerClone = clones[layer->Name()];
 			for (auto inLayer : layer->InputLayers())
@@ -157,25 +158,23 @@ namespace Neuro
 				inLayerClone->m_OutputLayers.push_back(layerClone);
 			}
 
-			flowClone->m_Order.push_back(layerClone);
+			m_Order.push_back(layerClone);
 		}
 
-		flowClone->m_ReversedOrder.resize(flowClone->m_Order.size());
-		reverse_copy(flowClone->m_Order.begin(), flowClone->m_Order.end(), flowClone->m_ReversedOrder.begin());
+		m_ReversedOrder.resize(m_Order.size());
+		reverse_copy(m_Order.begin(), m_Order.end(), m_ReversedOrder.begin());
 
-		for (auto layer : m_InputLayers)
+        for (auto layer : sourceFlow.m_InputLayers)
 		{
 			auto layerClone = clones[layer->Name()];
-			flowClone->m_InputLayers.push_back(layerClone);
+			m_InputLayers.push_back(layerClone);
 		}
 
-		for (auto layer : m_OutputLayers)
+		for (auto layer : sourceFlow.m_OutputLayers)
 		{
 			auto layerClone = clones[layer->Name()];
-			flowClone->m_OutputLayers.push_back(layerClone);
+			m_OutputLayers.push_back(layerClone);
 		}
-
-		return flowClone;
 	}
 
 	//////////////////////////////////////////////////////////////////////////

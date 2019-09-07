@@ -6,9 +6,9 @@
 
 namespace Neuro
 {
-
 	//////////////////////////////////////////////////////////////////////////
 	Sequential::Sequential()
+        : ModelBase(__FUNCTION__)
 	{
 	}
 
@@ -20,47 +20,48 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-	ModelBase* Sequential::Clone() const
+    LayerBase* Sequential::GetCloneInstance() const
+    {
+        return new Sequential();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+	void Sequential::OnClone(const LayerBase& source)
 	{
-		Sequential* clone = new Sequential();
-		for(auto layer : m_Layers)
-			clone->m_Layers.push_back(layer->Clone());
-		return clone;
+        __super::OnClone(source);
+
+        auto& sourceSequence = static_cast<const Sequential&>(source);
+        for (auto layer : sourceSequence.m_Layers)
+            m_Layers.push_back(layer->Clone());
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Sequential::FeedForward(const tensor_ptr_vec_t& inputs, bool training)
+	void Sequential::FeedForwardInternal(bool training)
 	{
-		//if (inputs.size() > 1) throw new Exception("Only single input is allowed for sequential model.");
+		assert(m_Inputs.size() == 1);
 
 		for (int l = 0; l < (int)m_Layers.size(); ++l)
-			m_Layers[l]->FeedForward(l == 0 ? inputs[0] : &(m_Layers[l - 1]->Output()), training);
+			m_Layers[l]->FeedForward(l == 0 ? m_Inputs[0] : &(m_Layers[l - 1]->Output()), training);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Sequential::BackProp(vector<Tensor>& deltas)
+    void Sequential::BackPropInternal(vector<Tensor>& outputGradients)
 	{
-		//if (deltas.Length > 1) throw new Exception("Only single delta is allowed for sequential model.");
+		assert(outputGradients.size() == 1);
 
-		Tensor* delta = &deltas[0];
+        vector<Tensor>* gradients = &outputGradients;
 		for (int l = (int)m_Layers.size() - 1; l >= 0; --l)
-			delta = &m_Layers[l]->BackProp(*delta)[0];
+			gradients = &m_Layers[l]->BackProp(*gradients);
 	}
 
-	//////////////////////////////////////////////////////////////////////////
-	tensor_ptr_vec_t Sequential::GetOutputs() const
-	{
-		return { &(LastLayer()->Output()) };
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	const std::vector<LayerBase*>& Sequential::GetOutputLayers() const
+    //////////////////////////////////////////////////////////////////////////
+	const vector<LayerBase*>& Sequential::GetOutputLayers() const
 	{
 		return m_OutputLayers;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	int Sequential::GetOutputLayersCount() const
+    uint32_t Sequential::GetOutputLayersCount() const
 	{
 		return 1;
 	}
@@ -123,8 +124,14 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Sequential::AddLayer(LayerBase* layer)
 	{
-		m_OutputLayers.resize(1);
+        assert(layer->HasInputShape() == m_Layers.empty());
+		
+        m_OutputLayers.resize(1);
 		m_OutputLayers[0] = layer;
+        m_OutputShapes[0] = layer->OutputShape();
+
+        if (!m_Layers.empty())
+            layer->Link(m_Layers.back());
 		m_Layers.push_back(layer);
 	}
 }

@@ -11,7 +11,13 @@ namespace Neuro
 	{
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    Dense::Dense(int outputs, ActivationBase* activation, const string& name)
+        : LayerBase(__FUNCTION__, Shape(1, outputs), activation, name)
+    {
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	Dense::Dense(int inputs, int outputs, ActivationBase* activation, const string& name)
 		: LayerBase(__FUNCTION__, Shape(1, inputs), Shape(1, outputs), activation, name)
 	{
@@ -22,8 +28,8 @@ namespace Neuro
 	{
 	}
 
-	//////////////////////////////////////////////////////////////////////////
-	Dense::~Dense()
+    //////////////////////////////////////////////////////////////////////////
+    Dense::~Dense()
 	{
 		delete m_WeightsInitializer;
 		delete m_BiasInitializer;
@@ -51,36 +57,36 @@ namespace Neuro
 	{
 		__super::OnInit();
 
-		m_Weights = Tensor(Shape(InputShape().Length, m_OutputShape.Length), Name() + "/weights");
-		m_Bias = Tensor(m_OutputShape, Name() + "/bias");
+		m_Weights = Tensor(Shape(InputShape().Length, OutputShape().Length), Name() + "/weights");
+		m_Bias = Tensor(OutputShape(), Name() + "/bias");
 		m_WeightsGrad = Tensor(m_Weights.GetShape(), Name() + "/weights_grad");
         m_WeightsGrad.Zero();
 		m_BiasGrad = Tensor(m_Bias.GetShape(), Name() + "/bias_grad");
         m_BiasGrad.Zero();
 
-		m_WeightsInitializer->Init(m_Weights, InputShape().Length, m_OutputShape.Length);
+		m_WeightsInitializer->Init(m_Weights, InputShape().Length, OutputShape().Length);
 		if (m_UseBias)
-			m_BiasInitializer->Init(m_Bias, InputShape().Length, m_OutputShape.Length);
+			m_BiasInitializer->Init(m_Bias, InputShape().Length, OutputShape().Length);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Dense::FeedForwardInternal(bool training)
 	{
-		m_Weights.Mul(*m_Inputs[0], m_Output);
+		m_Weights.Mul(*m_Inputs[0], m_Outputs[0]);
 		if (m_UseBias)
-			m_Output.Add(m_Bias, m_Output);
+			m_Outputs[0].Add(m_Bias, m_Outputs[0]);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Dense::BackPropInternal(Tensor& outputGradient)
+	void Dense::BackPropInternal(vector<Tensor>& outputGradients)
 	{
 		// for explanation watch https://www.youtube.com/watch?v=8H2ODPNxEgA&t=898s
 		// each input is responsible for the output error proportionally to weights it is multiplied by
-		m_Weights.Transposed().Mul(outputGradient, m_InputsGradient[0]);
+		m_Weights.Transposed().Mul(outputGradients[0], m_InputGradients[0]);
 
-		m_WeightsGrad.Add(outputGradient.Mul(m_Inputs[0]->Transposed()).Sum(EAxis::Feature), m_WeightsGrad);
+		m_WeightsGrad.Add(outputGradients[0].Mul(m_Inputs[0]->Transposed()).Sum(EAxis::Feature), m_WeightsGrad);
 		if (m_UseBias)
-			m_BiasGrad.Add(outputGradient.Sum(EAxis::Feature), m_BiasGrad);
+			m_BiasGrad.Add(outputGradients[0].Sum(EAxis::Feature), m_BiasGrad);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -94,18 +100,18 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	int Dense::GetParamsNum() const
+	uint32_t Dense::GetParamsNum() const
 	{
-		return InputShape().Length * m_OutputShape.Length + (m_UseBias ? m_OutputShape.Length : 0);
+		return InputShape().Length * OutputShape().Length + (m_UseBias ? OutputShape().Length : 0);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Dense::GetParametersAndGradients(vector<ParametersAndGradients>& result)
+	void Dense::GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads)
 	{
-		result.push_back(ParametersAndGradients(&m_Weights, &m_WeightsGrad));
+        paramsAndGrads.push_back(ParametersAndGradients(&m_Weights, &m_WeightsGrad));
 
 		if (m_UseBias)
-			result.push_back(ParametersAndGradients(&m_Bias, &m_BiasGrad));
+            paramsAndGrads.push_back(ParametersAndGradients(&m_Bias, &m_BiasGrad));
 	}
 
     //////////////////////////////////////////////////////////////////////////

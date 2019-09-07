@@ -49,8 +49,8 @@ namespace Neuro
 		
         string FilePrefix() const;
 
-        tensor_ptr_vec_t Predict(const tensor_ptr_vec_t& inputs);
-        tensor_ptr_vec_t Predict(const Tensor& input);
+        const vector<Tensor>& Predict(const tensor_ptr_vec_t& inputs);
+        const vector<Tensor>& Predict(const Tensor& input);
 
         void FeedForward(const tensor_ptr_vec_t& inputs);
 		vector<ParametersAndGradients> GetParametersAndGradients();

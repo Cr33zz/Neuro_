@@ -4,35 +4,38 @@
 #include <vector>
 
 #include "Types.h"
+#include "Layers/LayerBase.h"
 #include "ParametersAndGradients.h"
 
 namespace Neuro
 {
 	using namespace std;
 
-	class LayerBase;
 	class Tensor;
 
-    class ModelBase
+    class ModelBase : public LayerBase
     {
 	public:
         virtual ~ModelBase() {}
-        virtual ModelBase* Clone() const = 0;
-		virtual void FeedForward(const tensor_ptr_vec_t& inputs, bool training) = 0;
-        virtual void BackProp(vector<Tensor>& deltas) = 0;
-        virtual void Optimize() { }
+        
+        virtual void Optimize() {}
         virtual const vector<LayerBase*>& GetLayers() const = 0;
-		virtual tensor_ptr_vec_t GetOutputs() const = 0;
         virtual const vector<LayerBase*>& GetOutputLayers() const = 0;
-        virtual int GetOutputLayersCount() const = 0;
+        virtual uint32_t GetOutputLayersCount() const = 0;
 
         string Summary() const;
         string TrainSummary() const;
 
+        const LayerBase* GetLayer(const string& name) const;
+        
         virtual void SaveStateXml(string filename) const { }
         virtual void LoadStateXml(string filename) { }
+        
+        virtual uint32_t GetParamsNum() const;
+        virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads);
 
-        const LayerBase* GetLayer(const string& name) const;
-        vector<ParametersAndGradients> GetParametersAndGradients();
+    protected:
+        ModelBase() {}
+        ModelBase(const string& constructorName);
 	};
 }

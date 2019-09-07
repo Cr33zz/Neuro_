@@ -142,6 +142,8 @@
   <ItemGroup>
     <ClInclude Include="include\AutoencoderNetwork.h" />
     <ClInclude Include="include\ConvNetwork.h" />
+    <ClInclude Include="include\DeepConvGAN.h" />
+    <ClInclude Include="include\GAN.h" />
     <ClInclude Include="include\IrisNetwork.h" />
     <ClInclude Include="include\FlowNetwork.h" />
     <ClInclude Include="include\MnistConvNetwork.h" />

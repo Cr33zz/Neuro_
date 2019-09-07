@@ -8,12 +8,15 @@ namespace Neuro
     {
     public:
         Concatenate(const vector<LayerBase*>& inputLayers, const string& name = "");
+        // Make sure to link this layer to input when using this constructor.
+        Concatenate(const string& name = "");
 
     protected:
-        Concatenate();
+        Concatenate(bool) {}
 
         virtual LayerBase* GetCloneInstance() const override;
+        virtual void OnLink() override;
         virtual void FeedForwardInternal(bool training) override;
-        virtual void BackPropInternal(Tensor& outputGradient) override;
+        virtual void BackPropInternal(vector<Tensor>& outputGradients) override;
     };
 }

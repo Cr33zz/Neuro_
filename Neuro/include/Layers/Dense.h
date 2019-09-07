@@ -12,13 +12,15 @@ namespace Neuro
     {
 	public:
         Dense(LayerBase* inputLayer, int outputs, ActivationBase* activation = nullptr, const string& name = "");
-        // Use this constructor for input layer only!
+        // Make sure to link this layer to input when using this constructor.
+        Dense(int outputs, ActivationBase* activation = nullptr, const string& name = "");
+        // Use this constructor for input layer only.
         Dense(int inputs, int outputs, ActivationBase* activation = nullptr, const string& name = "");
 		~Dense();
 
 	    virtual void CopyParametersTo(LayerBase& target, float tau) const override;
-		virtual int GetParamsNum() const override;
-		virtual void GetParametersAndGradients(vector<ParametersAndGradients>& result) override;
+		virtual uint32_t GetParamsNum() const override;
+		virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads) override;
 		
         Tensor& Weights() { return m_Weights; }
         Tensor& Bias() { return m_Bias; }
@@ -35,7 +37,7 @@ namespace Neuro
 		virtual void OnClone(const LayerBase& source) override;
 		virtual void OnInit() override;
         virtual void FeedForwardInternal(bool training) override;
-        virtual void BackPropInternal(Tensor& outputGradient) override;
+        virtual void BackPropInternal(vector<Tensor>& outputGradients) override;
 
 	private:
         Tensor m_Weights;

@@ -8,15 +8,18 @@ namespace Neuro
     {
     public:
         Dropout(LayerBase* inputLayer, float p, const string& name = "");
+        // Make sure to link this layer to input when using this constructor.
+        Dropout(float p, const string& name = "");
         // This constructor should only be used for input layer
         Dropout(const Shape& inputShape, float p, const string& name = "");
 
     protected:
-        Dropout();
+        Dropout() {}
 
         virtual LayerBase* GetCloneInstance() const override;
+        virtual void OnLink() override;
         virtual void FeedForwardInternal(bool training) override;
-        virtual void BackPropInternal(Tensor& outputGradient) override;
+        virtual void BackPropInternal(vector<Tensor>& outputGradients) override;
 
     private:
         Tensor m_Mask;

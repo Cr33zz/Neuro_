@@ -132,7 +132,7 @@ namespace NeuroTests
             net->Optimize(new SGD(0.02f), new MeanSquareError());
             net->Fit(inputs, outputs, batchSize, epochs, nullptr, nullptr, 0, Track::Nothing);
 
-            Assert::IsTrue(outputs.Equals(*net->Predict(inputs)[0], 0.02f));
+            Assert::IsTrue(outputs.Equals(net->Predict(inputs)[0], 0.02f));
         }
 
         TEST_METHOD(Streams_1Input_2Outputs_SimpleSplit)
@@ -151,8 +151,8 @@ namespace NeuroTests
             net->Fit(inputs, outputs, 1, 100, nullptr, 0, Track::Nothing, false);
 
             auto prediction = net->Predict(inputs);
-            Assert::IsTrue(prediction[0]->Equals(*outputs[0], 0.01f));
-            Assert::IsTrue(prediction[1]->Equals(*outputs[1], 0.01f));
+            Assert::IsTrue(prediction[0].Equals(*outputs[0], 0.01f));
+            Assert::IsTrue(prediction[1].Equals(*outputs[1], 0.01f));
         }
 
         TEST_METHOD(Streams_2Inputs_1Output_SimpleConcat)
@@ -171,7 +171,7 @@ namespace NeuroTests
             net->Fit(inputs, outputs, 1, 100, nullptr, nullptr, 0, Track::Nothing, false);
 
             auto prediction = net->Predict(inputs);
-            Assert::IsTrue(prediction[0]->Equals(*outputs[0], 0.01f));
+            Assert::IsTrue(prediction[0].Equals(*outputs[0], 0.01f));
         }
 
         TEST_METHOD(Streams_2Inputs_1Output_AvgMerge)
@@ -190,7 +190,7 @@ namespace NeuroTests
             net->Fit(inputs, outputs, 1, 100, nullptr, nullptr, 0, Track::Nothing, false);
 
             auto prediction = net->Predict(inputs);
-            Assert::IsTrue(prediction[0]->Equals(*outputs[0], 0.01f));
+            Assert::IsTrue(prediction[0].Equals(*outputs[0], 0.01f));
         }
 
         TEST_METHOD(Streams_2Inputs_1Output_MinMerge)
@@ -209,7 +209,7 @@ namespace NeuroTests
             net->Fit(inputs, outputs, 1, 100, nullptr, nullptr, 0, Track::Nothing, false);
 
             auto prediction = net->Predict(inputs);
-            Assert::IsTrue(prediction[0]->Equals(*outputs[0], 0.01f));
+            Assert::IsTrue(prediction[0].Equals(*outputs[0], 0.01f));
         }
 
         static Tensor MatMult(const Tensor& input, const Tensor& expectedParams)

@@ -8,12 +8,15 @@ namespace Neuro
     {
 	public:
         Flatten(LayerBase* inputLayer, const string& name = "");
+        // Make sure to link this layer to input when using this constructor.
+        Flatten(const string& name = "");
         // This constructor should only be used for input layer
         Flatten(const Shape& inputShape, const string& name = "");
 
 	protected:
-        Flatten();
+        Flatten(bool) {}
 
 		virtual LayerBase* GetCloneInstance() const override;
-	};
+        virtual void OnLink() override;
+    };
 }

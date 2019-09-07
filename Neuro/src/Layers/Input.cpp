@@ -23,12 +23,12 @@ namespace Neuro
 	void Input::FeedForwardInternal(bool training)
 	{
 		// output is already of proper shape thanks to LayerBase.FeedForward
-		m_Inputs[0]->CopyTo(m_Output);
+		m_Inputs[0]->CopyTo(m_Outputs[0]);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Input::BackPropInternal(Tensor& outputGradient)
+	void Input::BackPropInternal(vector<Tensor>& outputGradients)
 	{
-		m_InputsGradient[0] = outputGradient;
+		m_InputGradients[0] = outputGradients[0];
 	}
 }

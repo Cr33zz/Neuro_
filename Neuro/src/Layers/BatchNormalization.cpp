@@ -10,13 +10,14 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    BatchNormalization::BatchNormalization(const Shape& inputShape, const string& name)
-        : LayerBase(__FUNCTION__, inputShape, inputShape, nullptr, name)
+    BatchNormalization::BatchNormalization(const string& name)
+        : LayerBase(__FUNCTION__, Shape(), nullptr, name)
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    BatchNormalization::BatchNormalization()
+    BatchNormalization::BatchNormalization(const Shape& inputShape, const string& name)
+        : LayerBase(__FUNCTION__, inputShape, inputShape, nullptr, name)
     {
     }
 
@@ -31,16 +32,16 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    int BatchNormalization::GetParamsNum() const
+    uint32_t BatchNormalization::GetParamsNum() const
     {
         return m_Gamma.Length() + m_Beta.Length();
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void BatchNormalization::GetParametersAndGradients(vector<ParametersAndGradients>& result)
+    void BatchNormalization::GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads)
     {
-        result.push_back(ParametersAndGradients(&m_Gamma, &m_GammaGrad));
-        result.push_back(ParametersAndGradients(&m_Beta, &m_BetaGrad));
+        paramsAndGrads.push_back(ParametersAndGradients(&m_Gamma, &m_GammaGrad));
+        paramsAndGrads.push_back(ParametersAndGradients(&m_Beta, &m_BetaGrad));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -53,7 +54,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     LayerBase* BatchNormalization::GetCloneInstance() const
     {
-        return new BatchNormalization();
+        return new BatchNormalization(false);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -61,7 +62,7 @@ namespace Neuro
     {
         __super::OnInit();
 
-        m_Gamma = Tensor(Shape(m_OutputShape.Width(), m_OutputShape.Height(), m_OutputShape.Depth()), Name() + "/gamma");
+        m_Gamma = Tensor(Shape(m_OutputShapes[0].Width(), m_OutputShapes[0].Height(), m_OutputShapes[0].Depth()), Name() + "/gamma");
         m_Beta = Tensor(m_Gamma.GetShape(), Name() + "/beta");
         m_RunningMean = Tensor(m_Gamma.GetShape());
         m_RunningVar = Tensor(m_Gamma.GetShape());
@@ -76,17 +77,23 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void BatchNormalization::FeedForwardInternal(bool training)
+    void BatchNormalization::OnLink()
     {
-        if (training)
-            m_Inputs[0]->BatchNormalizationTrain(m_Gamma, m_Beta, m_Momentum, m_RunningMean, m_RunningVar, m_Mean, m_Variance, m_Output);
-        else
-            m_Inputs[0]->BatchNormalization(m_Gamma, m_Beta, m_RunningMean, m_RunningVar, m_Output);
+        m_OutputShapes[0] = m_InputShapes[0];
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void BatchNormalization::BackPropInternal(Tensor& outputGradient)
+    void BatchNormalization::FeedForwardInternal(bool training)
     {
-        outputGradient.BatchNormalizationGradient(*m_Inputs[0], m_Gamma, outputGradient, m_Mean, m_Variance, m_GammaGrad, m_BetaGrad, m_InputsGradient[0]);
+        if (training)
+            m_Inputs[0]->BatchNormalizationTrain(m_Gamma, m_Beta, m_Momentum, m_RunningMean, m_RunningVar, m_Mean, m_Variance, m_Outputs[0]);
+        else
+            m_Inputs[0]->BatchNormalization(m_Gamma, m_Beta, m_RunningMean, m_RunningVar, m_Outputs[0]);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void BatchNormalization::BackPropInternal(vector<Tensor>& outputGradients)
+    {
+        outputGradients[0].BatchNormalizationGradient(*m_Inputs[0], m_Gamma, outputGradients[0], m_Mean, m_Variance, m_GammaGrad, m_BetaGrad, m_InputGradients[0]);
     }
 }

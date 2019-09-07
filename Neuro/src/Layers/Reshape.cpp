@@ -15,11 +15,6 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Reshape::Reshape()
-    {
-    }
-
-    //////////////////////////////////////////////////////////////////////////
     Reshape::Reshape(const string& constructorName, LayerBase* inputLayer, const Shape& shape, const string& name)
         : LayerBase(constructorName, inputLayer, shape, nullptr, name)
     {
@@ -28,6 +23,12 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     Reshape::Reshape(const string& constructorName, const Shape& inputShape, const Shape& shape, const string& name)
         : LayerBase(constructorName, inputShape, shape, nullptr, name)
+    {
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Reshape::Reshape(const string& constructorName, const Shape& shape, const string& name)
+        : LayerBase(constructorName, shape, nullptr, name)
     {
     }
 
@@ -41,12 +42,12 @@ namespace Neuro
     void Reshape::FeedForwardInternal(bool training)
     {
         // output is already of proper shape thanks to LayerBase.FeedForward
-        m_Inputs[0]->CopyTo(m_Output);
+        m_Inputs[0]->CopyTo(m_Outputs[0]);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Reshape::BackPropInternal(Tensor& outputGradient)
+    void Reshape::BackPropInternal(vector<Tensor>& outputGradients)
     {
-        outputGradient.Reshaped(m_Inputs[0]->GetShape(), m_InputsGradient[0]);
+        outputGradients[0].Reshaped(m_Inputs[0]->GetShape(), m_InputGradients[0]);
     }
 }

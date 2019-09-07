@@ -16,6 +16,6 @@ namespace Neuro
 
 		virtual LayerBase* GetCloneInstance() const override;
 		virtual void FeedForwardInternal(bool training) override;
-		virtual void BackPropInternal(Tensor& outputGradient) override;
+		virtual void BackPropInternal(vector<Tensor>& outputGradients) override;
 	};
 }

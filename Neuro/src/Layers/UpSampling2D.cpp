@@ -10,15 +10,17 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    UpSampling2D::UpSampling2D(Shape inputShape, uint32_t scaleFactor, const string& name)
-        : LayerBase(__FUNCTION__, inputShape, Shape(inputShape.Width() * scaleFactor, inputShape.Height() * scaleFactor, inputShape.Depth(), inputShape.Batch()), nullptr, name)
+    UpSampling2D::UpSampling2D(uint32_t scaleFactor, const string& name)
+        : LayerBase(__FUNCTION__, Shape(), nullptr, name)
     {
         m_ScaleFactor = scaleFactor;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    UpSampling2D::UpSampling2D()
+    UpSampling2D::UpSampling2D(Shape inputShape, uint32_t scaleFactor, const string& name)
+        : LayerBase(__FUNCTION__, inputShape, Shape(inputShape.Width() * scaleFactor, inputShape.Height() * scaleFactor, inputShape.Depth(), inputShape.Batch()), nullptr, name)
     {
+        m_ScaleFactor = scaleFactor;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -37,14 +39,20 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void UpSampling2D::FeedForwardInternal(bool training)
+    void UpSampling2D::OnLink()
     {
-        m_Inputs[0]->UpSample2D(m_ScaleFactor, m_Output);
+        m_OutputShapes[0] = Shape(InputShape().Width() * m_ScaleFactor, InputShape().Height() * m_ScaleFactor, InputShape().Depth(), InputShape().Batch());
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void UpSampling2D::BackPropInternal(Tensor& outputGradient)
+    void UpSampling2D::FeedForwardInternal(bool training)
     {
-        outputGradient.UpSample2DGradient(outputGradient, m_ScaleFactor, m_InputsGradient[0]);
+        m_Inputs[0]->UpSample2D(m_ScaleFactor, m_Outputs[0]);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void UpSampling2D::BackPropInternal(vector<Tensor>& outputGradients)
+    {
+        outputGradients[0].UpSample2DGradient(outputGradients[0], m_ScaleFactor, m_InputGradients[0]);
     }
 }

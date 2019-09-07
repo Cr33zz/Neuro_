@@ -7,6 +7,13 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
+    ModelBase::ModelBase(const string& constructorName)
+        : LayerBase(constructorName, Shape())
+    {
+        // output shape will be established when layers are added
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     string ModelBase::Summary() const
     {
         stringstream ss;
@@ -68,17 +75,19 @@ namespace Neuro
 		return nullptr;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
-	vector<ParametersAndGradients> ModelBase::GetParametersAndGradients()
-	{
-		vector<ParametersAndGradients> result;
+    //////////////////////////////////////////////////////////////////////////
+    uint32_t ModelBase::GetParamsNum() const
+    {
+        uint32_t paramsNum = 0;
+        for (auto layer : GetLayers())
+            paramsNum += layer->GetParamsNum();
+        return paramsNum;
+    }
 
-		for(auto layer : GetLayers())
-		{
-			layer->GetParametersAndGradients(result);
-		}
-
-		return result;
-	}
-
+    //////////////////////////////////////////////////////////////////////////
+    void ModelBase::GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads)
+    {
+        for (auto layer : GetLayers())
+            layer->GetParametersAndGradients(paramsAndGrads);
+    }
 }

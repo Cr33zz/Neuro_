@@ -53,7 +53,7 @@ namespace Neuro.Layers
 
         protected override void BackPropInternal(Tensor outputGradient)
         {
-            BackPropOutputGradientFunc(outputGradient, m_InputsGradient);
+            BackPropOutputGradientFunc(outputGradient, m_InputGradients);
         }
 
         private LambdaFunc ProcessInputsFunc;

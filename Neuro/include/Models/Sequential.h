@@ -13,12 +13,15 @@ namespace Neuro
 	public:
 		Sequential();
         virtual ~Sequential();
-        virtual ModelBase* Clone() const override;
-        virtual void FeedForward(const tensor_ptr_vec_t& inputs, bool training) override;
-        virtual void BackProp(vector<Tensor>& deltas) override;
-        virtual tensor_ptr_vec_t GetOutputs() const override;
+
+        virtual LayerBase* GetCloneInstance() const override;
+        virtual void OnClone(const LayerBase& source) override;
+
+        virtual void FeedForwardInternal(bool training) override;
+        virtual void BackPropInternal(vector<Tensor>& outputGradients) override;
+        
         virtual const vector<LayerBase*>& GetOutputLayers() const override;
-        virtual int GetOutputLayersCount() const override;
+        virtual uint32_t GetOutputLayersCount() const override;
         virtual const vector<LayerBase*>& GetLayers() const override;
         virtual void SaveStateXml(string filename) const override;
         virtual void LoadStateXml(string filename) override;

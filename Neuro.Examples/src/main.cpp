@@ -4,6 +4,7 @@
 #include "IrisNetwork.h"
 #include "MnistConvNetwork.h"
 #include "MnistNetwork.h"
+#include "GAN.h"
 
 int main()
 {
@@ -24,8 +25,10 @@ int main()
     //IrisNetwork::Run();
     //ConvNetwork::Run();
     //FlowNetwork::Run();
-    MnistConvNetwork::Run();
+    //MnistConvNetwork::Run();
     //MnistNetwork::Run();
+    //AutoencoderNetwork::Run();
+    GAN::Run();
 
     return 0;
 }

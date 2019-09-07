@@ -48,7 +48,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
 	Neuro::NeuralNetwork* NeuralNetwork::Clone()
 	{
-        auto modelClone = m_Model->Clone();
+        auto modelClone = static_cast<ModelBase*>(m_Model->Clone());
 		auto clone = new NeuralNetwork(modelClone, m_Name, m_Seed);
 		clone->m_Optimizer = m_Optimizer ? m_Optimizer->Clone() : nullptr;
         for (auto loss : m_LossFuncs)
@@ -93,17 +93,17 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	tensor_ptr_vec_t NeuralNetwork::Predict(const tensor_ptr_vec_t& inputs)
+	const vector<Tensor>& NeuralNetwork::Predict(const tensor_ptr_vec_t& inputs)
     {
         m_Model->FeedForward(inputs, false);
-        return m_Model->GetOutputs();
+        return m_Model->Outputs();
     }
 
 	//////////////////////////////////////////////////////////////////////////
-    tensor_ptr_vec_t NeuralNetwork::Predict(const Tensor& input)
+    const vector<Tensor>& NeuralNetwork::Predict(const Tensor& input)
     {
 		m_Model->FeedForward({ &input }, false);
-        return m_Model->GetOutputs();
+        return m_Model->Outputs();
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -115,7 +115,9 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
     vector<ParametersAndGradients> NeuralNetwork::GetParametersAndGradients()
     {
-        return m_Model->GetParametersAndGradients();
+        vector<ParametersAndGradients> paramsAndGrads;
+        m_Model->GetParametersAndGradients(paramsAndGrads);
+        return paramsAndGrads;
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -343,15 +345,15 @@ namespace Neuro
                 {
                     FeedForward(validInputsBatches[b]);
 
-                    auto modelOutputs = m_Model->GetOutputs();
+                    auto& modelOutputs = m_Model->Outputs();
                     vector<Tensor> out;
                     for (uint32_t i = 0; i < (int)modelOutputs.size(); ++i)
                     {
-                        out.push_back(Tensor(modelOutputs[i]->GetShape()));
-                        m_LossFuncs[i]->Compute(*validOutputsBatches[b][i], *modelOutputs[i], out[i]);
+                        out.push_back(Tensor(modelOutputs[i].GetShape()));
+                        m_LossFuncs[i]->Compute(*validOutputsBatches[b][i], modelOutputs[i], out[i]);
 
-                        validationTotalError += out[i].Sum(EAxis::Global)(0) / modelOutputs[i]->BatchLength();
-                        validationHits += m_AccuracyFuncs[i] ? m_AccuracyFuncs[i](*validOutputsBatches[b][i], *modelOutputs[i]) : 0;
+                        validationTotalError += out[i].Sum(EAxis::Global)(0) / modelOutputs[i].BatchLength();
+                        validationHits += m_AccuracyFuncs[i] ? m_AccuracyFuncs[i](*validOutputsBatches[b][i], modelOutputs[i]) : 0;
                     }
 
                     if (verbose == 2)
@@ -414,12 +416,12 @@ namespace Neuro
 
         FeedForward(inputs);
         
-        auto modelOutputs = m_Model->GetOutputs();
+        auto& modelOutputs = m_Model->Outputs();
         vector<Tensor> outputsGrad;
-        for (uint32_t i = 0; i < (int)modelOutputs.size(); ++i)
+        for (size_t i = 0; i < modelOutputs.size(); ++i)
         {
-            outputsGrad.push_back(Tensor(modelOutputs[i]->GetShape()));
-            m_LossFuncs[i]->Compute(*outputs[i], *modelOutputs[i], outputsGrad[i]);
+            outputsGrad.push_back(Tensor(modelOutputs[i].GetShape()));
+            m_LossFuncs[i]->Compute(*outputs[i], modelOutputs[i], outputsGrad[i]);
 
 #ifdef LOG_GRADIENTS
             g_GradientsFile << "output" << i << endl;
@@ -429,9 +431,9 @@ namespace Neuro
             outputsGrad[i].DebugDumpValues(Replace(string("output") + to_string(i) + "_step" + to_string(NeuralNetwork::g_DebugStep) + ".log", "/", "__"));
 #endif
 
-            trainError += outputsGrad[i].Sum(EAxis::Global)(0) / modelOutputs[i]->BatchLength();
-            trainHits += m_AccuracyFuncs[i] ? m_AccuracyFuncs[i](*outputs[i], *modelOutputs[i]) : 0;
-            m_LossFuncs[i]->Derivative(*outputs[i], *modelOutputs[i], outputsGrad[i]);
+            trainError += outputsGrad[i].Sum(EAxis::Global)(0) / modelOutputs[i].BatchLength();
+            trainHits += m_AccuracyFuncs[i] ? m_AccuracyFuncs[i](*outputs[i], modelOutputs[i]) : 0;
+            m_LossFuncs[i]->Derivative(*outputs[i], modelOutputs[i], outputsGrad[i]);
 
 #ifdef LOG_GRADIENTS
             g_GradientsFile << "output" << i << "_grad" << endl;

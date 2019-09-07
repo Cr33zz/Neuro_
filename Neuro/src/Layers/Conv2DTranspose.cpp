@@ -15,8 +15,8 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Conv2DTranspose::Conv2DTranspose(const Shape& inputShape, uint32_t filterSize, uint32_t outputDepth, uint32_t stride, uint32_t padding, ActivationBase* activation, const string& name)
-        : LayerBase(__FUNCTION__, inputShape, Tensor::GetConvTransposeOutputShape(inputShape, outputDepth, filterSize, filterSize, stride, padding, padding), activation, name)
+    Conv2DTranspose::Conv2DTranspose(uint32_t filterSize, uint32_t outputDepth, uint32_t stride, uint32_t padding, ActivationBase* activation, const string& name)
+        : LayerBase(__FUNCTION__, Shape(), activation, name)
     {
         m_FilterSize = filterSize;
         m_OutputDepth = outputDepth;
@@ -25,9 +25,13 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Conv2DTranspose::Conv2DTranspose()
+    Conv2DTranspose::Conv2DTranspose(const Shape& inputShape, uint32_t filterSize, uint32_t outputDepth, uint32_t stride, uint32_t padding, ActivationBase* activation, const string& name)
+        : LayerBase(__FUNCTION__, inputShape, Tensor::GetConvTransposeOutputShape(inputShape, outputDepth, filterSize, filterSize, stride, padding, padding), activation, name)
     {
-
+        m_FilterSize = filterSize;
+        m_OutputDepth = outputDepth;
+        m_Stride = stride;
+        m_Padding = padding;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -43,15 +47,21 @@ namespace Neuro
         __super::OnInit();
 
         m_Kernels = Tensor(Shape(m_FilterSize, m_FilterSize, m_OutputDepth, InputShape().Depth()), Name() + "/kernels");
-        m_Bias = Tensor(Shape(m_OutputShape.Width(), m_OutputShape.Height(), m_OutputDepth), Name() + "/bias");
+        m_Bias = Tensor(Shape(OutputShape().Width(), OutputShape().Height(), m_OutputDepth), Name() + "/bias");
         m_KernelsGradient = Tensor(m_Kernels.GetShape(), Name() + "/kernels_grad");
         m_KernelsGradient.Zero();
         m_BiasGradient = Tensor(m_Bias.GetShape(), Name() + "/bias_grad");
         m_BiasGradient.Zero();
 
-        m_KernelInitializer->Init(m_Kernels, m_InputShapes[0].Length, m_OutputShape.Length);
+        m_KernelInitializer->Init(m_Kernels, m_InputShapes[0].Length, OutputShape().Length);
         if (m_UseBias)
-            m_BiasInitializer->Init(m_Bias, m_InputShapes[0].Length, m_OutputShape.Length);
+            m_BiasInitializer->Init(m_Bias, m_InputShapes[0].Length, OutputShape().Length);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Conv2DTranspose::OnLink()
+    {
+        m_OutputShapes[0] = Tensor::GetConvTransposeOutputShape(InputLayer()->OutputShape(), m_OutputDepth, m_FilterSize, m_FilterSize, m_Stride, m_Padding, m_Padding);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -78,28 +88,28 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Conv2DTranspose::FeedForwardInternal(bool training)
     {
-        m_Inputs[0]->Conv2DTransposed(m_Kernels, m_Stride, m_Padding, m_Output);
+        m_Inputs[0]->Conv2DTransposed(m_Kernels, m_Stride, m_Padding, m_Outputs[0]);
         if (m_UseBias)
-            m_Output.Add(m_Bias, m_Output);
+            m_Outputs[0].Add(m_Bias, m_Outputs[0]);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Conv2DTranspose::BackPropInternal(Tensor& outputGradient)
+    void Conv2DTranspose::BackPropInternal(vector<Tensor>& outputGradients)
     {
-        outputGradient.Conv2DTransposedInputsGradient(outputGradient, m_Kernels, m_Stride, m_Padding, m_InputsGradient[0]);
-        outputGradient.Conv2DTransposedKernelsGradient(outputGradient, *m_Inputs[0], m_Stride, m_Padding, m_KernelsGradient);
+        outputGradients[0].Conv2DTransposedInputsGradient(outputGradients[0], m_Kernels, m_Stride, m_Padding, m_InputGradients[0]);
+        outputGradients[0].Conv2DTransposedKernelsGradient(outputGradients[0], *m_Inputs[0], m_Stride, m_Padding, m_KernelsGradient);
 
         if (m_UseBias)
-            m_BiasGradient.Add(outputGradient.Sum(EAxis::Feature));
+            m_BiasGradient.Add(outputGradients[0].Sum(EAxis::Feature));
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Conv2DTranspose::GetParametersAndGradients(vector<ParametersAndGradients>& result)
+    void Conv2DTranspose::GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads)
     {
-        result.push_back(ParametersAndGradients(&m_Kernels, &m_KernelsGradient));
+        paramsAndGrads.push_back(ParametersAndGradients(&m_Kernels, &m_KernelsGradient));
 
         if (m_UseBias)
-            result.push_back(ParametersAndGradients(&m_Bias, &m_BiasGradient));
+            paramsAndGrads.push_back(ParametersAndGradients(&m_Bias, &m_BiasGradient));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -113,9 +123,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    int Conv2DTranspose::GetParamsNum() const
+    uint32_t Conv2DTranspose::GetParamsNum() const
     {
-        return m_FilterSize * m_FilterSize * m_OutputDepth;
+        return m_FilterSize * m_FilterSize * m_OutputDepth + (m_UseBias ? Shape(OutputShape().Width(), OutputShape().Height(), m_OutputDepth).Length : 0);
     }
 
     //////////////////////////////////////////////////////////////////////////
