@@ -31,6 +31,8 @@ namespace Neuro
         virtual void Map(const function<float(float, float)>& func, const Tensor& t1, const Tensor& t2, Tensor& result) const;
         virtual void Elu(const Tensor& input, float alpha, Tensor& output) const;
         virtual void EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const;
+        virtual void LeakyReLU(const Tensor& input, float alpha, Tensor& output) const;
+        virtual void LeakyReLUGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const;
         virtual void Softmax(const Tensor& input, Tensor& result) const;
         virtual void SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const;
 	};

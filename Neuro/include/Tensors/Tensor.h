@@ -238,10 +238,14 @@ namespace Neuro
         Tensor GetBatch(int batchId) const;
         Tensor GetDepth(int depthId, int batchId = 0) const;
         bool Equals(const Tensor& other, float epsilon = 0.00001f) const;        
+        
         void Elu(float alpha, Tensor& result) const;
         void EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& result) const;
+        void LeakyReLU(float alpha, Tensor& result) const;
+        void LeakyReLUGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& result) const;
         void Softmax(Tensor& result) const;
         void SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& result) const;
+
 		const Shape& GetShape() const { return m_Shape; }
 
         void CopyToDevice() const;

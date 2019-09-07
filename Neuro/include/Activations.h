@@ -48,8 +48,20 @@ namespace Neuro
         virtual void Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) const override;
 
 	private:
-        const float ALPHA;
+        const float m_Alpha;
 	};
+
+    class LeakyReLU : public ActivationBase
+    {
+    public:
+        LeakyReLU(float alpha);
+
+        virtual void Compute(const Tensor& input, Tensor& result) const override;
+        virtual void Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) const override;
+
+    private:
+        const float m_Alpha;
+    };
 
     class Softmax : public ActivationBase
     {

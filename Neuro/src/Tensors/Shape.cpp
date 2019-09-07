@@ -135,7 +135,7 @@ namespace Neuro
 	std::string Shape::ToString() const
 	{
 		stringstream ss;
-		ss << Width() << "x" << Height() << "x" << Depth() << "x" << Batch();
+		ss << "(" << Width() << ", " << Height() << ", " << Depth() << ", " << Batch() << ")";
 		return ss.str();
 	}
 

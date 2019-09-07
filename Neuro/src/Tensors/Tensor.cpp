@@ -1568,6 +1568,18 @@ namespace Neuro
 		Op()->EluGradient(output, outputGradient, alpha, result);
 	}
 
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::LeakyReLU(float alpha, Tensor& result) const
+    {
+        Op()->LeakyReLU(*this, alpha, result);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::LeakyReLUGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& result) const
+    {
+        Op()->LeakyReLUGradient(output, outputGradient, alpha, result);
+    }
+
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Softmax(Tensor& result) const
 	{

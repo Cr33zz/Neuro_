@@ -183,6 +183,18 @@ namespace Neuro
         output.Map([&](float x, float x2) { return (x > 0 ? 1 : (x + alpha)) * x2; }, outputGradient, inputGradient);
 	}
 
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::LeakyReLU(const Tensor& input, float alpha, Tensor& output) const
+    {
+        input.Map([&](float x) { return x >= 0 ? x : (alpha * x); }, output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::LeakyReLUGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const
+    {
+        output.Map([&](float x, float x2) { return (x > 0 ? 1 : alpha) * x2; }, outputGradient, inputGradient);
+    }
+
 	//////////////////////////////////////////////////////////////////////////
 	void TensorOpCpu::Softmax(const Tensor& input, Tensor& result) const
 	{

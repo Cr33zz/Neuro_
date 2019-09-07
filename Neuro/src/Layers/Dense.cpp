@@ -96,7 +96,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	int Dense::GetParamsNum() const
 	{
-		return InputShape().Length * m_OutputShape.Length;
+		return InputShape().Length * m_OutputShape.Length + (m_UseBias ? m_OutputShape.Length : 0);
 	}
 
 	//////////////////////////////////////////////////////////////////////////

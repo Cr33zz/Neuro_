@@ -54,21 +54,39 @@ namespace Neuro
 
 	//////////////////////////////////////////////////////////////////////////
 	ELU::ELU(float alpha)
-		: ALPHA(alpha)
+		: m_Alpha(alpha)
 	{
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void ELU::Compute(const Tensor& input, Tensor& result) const
 	{
-		input.Elu(ALPHA, result);
+		input.Elu(m_Alpha, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void ELU::Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
 	{
-		output.EluGradient(output, outputGradient, ALPHA, result);
+		output.EluGradient(output, outputGradient, m_Alpha, result);
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    LeakyReLU::LeakyReLU(float alpha)
+        : m_Alpha(alpha)
+    {
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void LeakyReLU::Compute(const Tensor& input, Tensor& result) const
+    {
+        input.LeakyReLU(m_Alpha, result);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void LeakyReLU::Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
+    {
+        output.LeakyReLUGradient(output, outputGradient, m_Alpha, result);
+    }
 
 	//////////////////////////////////////////////////////////////////////////
 	void Softmax::Compute(const Tensor& input, Tensor& result) const
