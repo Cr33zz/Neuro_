@@ -37,6 +37,8 @@ namespace Neuro
     string ModelBase::TrainSummary() const
     {
         stringstream ss;
+        ss.precision(2);
+        ss << fixed;
         int totalParams = 0;
         ss << "_____________________________________________________________________________\n";
         ss << "Layer                        FeedFwd     BackProp    ActFeedFwd  ActBackProp \n";
@@ -45,10 +47,10 @@ namespace Neuro
         for (auto layer : GetLayers())
         {
             ss << left << setw(29) << (layer->Name() + "(" + layer->ClassName() + ")");
-            ss << setw(12) << (to_string(layer->FeedForwardTime()/1000.f) + "s");
-            ss << setw(12) << (to_string(layer->BackPropTime()/1000.f) + "s");
-            ss << setw(12) << (to_string(layer->ActivationTime()/1000.f) + "s");
-            ss << setw(12) << (to_string(layer->ActivationBackPropTime()/1000.f) + "s") << "\n";
+            ss << setw(12) << (to_string(layer->FeedForwardTime() * 0.001f) + "s");
+            ss << setw(12) << (to_string(layer->BackPropTime() * 0.001f) + "s");
+            ss << setw(12) << (to_string(layer->ActivationTime() * 0.001f) + "s");
+            ss << setw(12) << (to_string(layer->ActivationBackPropTime() * 0.001f) + "s") << "\n";
             ss << "_____________________________________________________________________________\n";
         }
 

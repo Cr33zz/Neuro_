@@ -144,8 +144,8 @@
     <ClInclude Include="include\ConvNetwork.h" />
     <ClInclude Include="include\IrisNetwork.h" />
     <ClInclude Include="include\FlowNetwork.h" />
+    <ClInclude Include="include\MnistConvNetwork.h" />
     <ClInclude Include="include\MnistNetwork.h" />
-    <ClInclude Include="MnistConvNetwork.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Neuro\Neuro.vcxproj">

@@ -16,9 +16,9 @@ public:
 
         auto model = new Sequential();
         model->AddLayer(new Dense(784, 64, new ReLU()));
-        //model->AddLayer(new Dropout(model->LastLayer(), 0.2f));
+        model->AddLayer(new Dropout(model->LastLayer(), 0.2f));
         model->AddLayer(new Dense(model->LastLayer(), 64, new ReLU()));
-        //model->AddLayer(new Dropout(model->LastLayer(), 0.2f));
+        model->AddLayer(new Dropout(model->LastLayer(), 0.2f));
         model->AddLayer(new Dense(model->LastLayer(), 10, new Softmax()));
 
         cout << model->Summary();
@@ -27,10 +27,13 @@ public:
         net->Optimize(new Adam(), new BinaryCrossEntropy());
 
         Tensor input, output;
-        LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, false, 100);
+        LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, false, 6000);
         input.Reshape(Shape(1, -1, 1, input.Batch()));
+        Tensor validationInput, validationOutput;
+        LoadMnistData("data/t10k-images.idx3-ubyte", "data/t10k-labels.idx1-ubyte", validationInput, validationOutput, false, 1000);
+        validationInput.Reshape(Shape(1, -1, 1, validationInput.Batch()));
 
-        net->Fit(input, output, 10, 10, nullptr, nullptr, 2, Track::TrainError | Track::TrainAccuracy);
+        net->Fit(input, output, 128, 10, &validationInput, &validationOutput, 2, Track::All);
 
         cout << model->TrainSummary();
 

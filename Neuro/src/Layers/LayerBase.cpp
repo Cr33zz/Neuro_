@@ -5,8 +5,7 @@
 #include "Tensors/Shape.h"
 #include "Tools.h"
 #include "NeuralNetwork.h"
-
-//#define LOG_OUTPUTS
+#include "Types.h"
 
 namespace Neuro
 {
@@ -96,7 +95,7 @@ namespace Neuro
 
 #ifdef LOG_OUTPUTS
         for (int i = 0; i < (int)m_Inputs.size(); ++i)
-            m_Inputs[i]->DebugDumpValues(Replace(Name() + "input_" + to_string(i) + "_step" + to_string(NeuralNetwork::g_DebugStep) + ".log", "/", "__"));
+            m_Inputs[i]->DebugDumpValues(Replace(Name() + "_input_" + to_string(i) + "_step" + to_string(NeuralNetwork::g_DebugStep) + ".log", "/", "__"));
 #endif
 
 		m_FeedForwardTimer.Start();

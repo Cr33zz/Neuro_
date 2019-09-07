@@ -14,9 +14,6 @@
 #include "ChartGenerator.h"
 #include "Stopwatch.h"
 
-//#define LOG_GRADIENTS
-//#define LOG_OUTPUTS
-
 namespace Neuro
 {
 #ifdef LOG_GRADIENTS
@@ -297,7 +294,7 @@ namespace Neuro
 					outputLog << GetProgressString(processedTrainSamplesNum, trainSamplesCount);
 
                     float averageTimePerSample = trainTimer.ElapsedMiliseconds() / (float)processedTrainSamplesNum;
-                    outputLog << " - eta: " << fixed << averageTimePerSample * (trainSamplesCount - processedTrainSamplesNum) * 0.0001f << left << setw(10) << "s";
+                    outputLog << fixed << " - eta: " << averageTimePerSample * (trainSamplesCount - processedTrainSamplesNum) * 0.001f << left << setw(10) << "s";
 
 					cout << outputLog.str();
                     for (uint32_t i = 0; i < outputLog.str().length(); ++i)
@@ -328,13 +325,13 @@ namespace Neuro
 			if (verbose > 0)
 			{
                 summary.precision(2);
-                summary << " - " << fixed << trainTimer.ElapsedMiliseconds() * 0.0001f << "s";
+                summary << fixed << " - " << trainTimer.ElapsedMiliseconds() * 0.001f << "s";
                 summary.precision(4);
 
                 if (trackFlags & Track::TrainError)
-				    summary << " - loss: " << fixed << m_LastTrainError;
+				    summary << " - loss: " << m_LastTrainError;
 				if (trackFlags & Track::TrainAccuracy)
-					summary << " - acc: " << fixed << (float)trainHits / trainSamplesCount;
+					summary << " - acc: " << (float)trainHits / trainSamplesCount;
 			}
 
 			if (validInputs && validOutputs)
@@ -372,16 +369,16 @@ namespace Neuro
                 if (verbose > 0)
                 {
                     if (trackFlags & Track::TestError)
-                        summary << " - val_loss: " << fixed << validationError;
+                        summary << " - val_loss: " << validationError;
                     if (trackFlags & Track::TestAccuracy)
-                        summary << " - val_acc: " << fixed << (float)validationHits / validationSamplesCount;
+                        summary << " - val_acc: " << (float)validationHits / validationSamplesCount;
                 }
-
-                LogLine(summary.str());
 
 			    /*chartGen?.AddData(e, testTotalError / validationSamples, (int)Track::TestError);
 			    chartGen?.AddData(e, (float)testHits / validationSamples / outputLayersCount, (int)Track::TestAccuracy);*/
 			}
+
+            LogLine(summary.str());
 
 			/*if ((ChartSaveInterval > 0 && (e % ChartSaveInterval == 0)) || e == epochs)
 				chartGen ? .Save();*/
@@ -441,7 +438,7 @@ namespace Neuro
             g_GradientsFile << outputsGrad[i].ToString() << endl;
 #endif
 #ifdef LOG_OUTPUTS
-            outputsGrad[i].DebugDumpValues(Replace(string("output") + to_string(i) + "grad_step" + to_string(NeuralNetwork::g_DebugStep) + ".log", "/", "__"));
+            outputsGrad[i].DebugDumpValues(Replace(string("output") + to_string(i) + "_grad_step" + to_string(NeuralNetwork::g_DebugStep) + ".log", "/", "__"));
 #endif
         }
 

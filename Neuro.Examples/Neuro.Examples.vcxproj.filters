@@ -26,10 +26,10 @@
     <ClInclude Include="include\FlowNetwork.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="MnistConvNetwork.h">
+    <ClInclude Include="include\MnistNetwork.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\MnistNetwork.h">
+    <ClInclude Include="include\MnistConvNetwork.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
