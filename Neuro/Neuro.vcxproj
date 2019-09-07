@@ -121,6 +121,7 @@
     <ClInclude Include="include\Initializers\Normal.h" />
     <ClInclude Include="include\Initializers\Uniform.h" />
     <ClInclude Include="include\Initializers\Zeros.h" />
+    <ClInclude Include="include\Layers\Activation.h" />
     <ClInclude Include="include\Layers\BatchNormalization.h" />
     <ClInclude Include="include\Layers\Concatenate.h" />
     <ClInclude Include="include\Layers\Conv2D.h" />
@@ -133,6 +134,7 @@
     <ClInclude Include="include\Layers\LayerBase.h" />
     <ClInclude Include="include\Layers\Merge.h" />
     <ClInclude Include="include\Layers\Pooling2D.h" />
+    <ClInclude Include="include\Layers\Reshape.h" />
     <ClInclude Include="include\Layers\UpSampling2D.h" />
     <ClInclude Include="include\Loss.h" />
     <ClInclude Include="include\Models\Flow.h" />
@@ -168,6 +170,7 @@
     <ClCompile Include="src\Initializers\Normal.cpp" />
     <ClCompile Include="src\Initializers\Uniform.cpp" />
     <ClCompile Include="src\Initializers\Zeros.cpp" />
+    <ClCompile Include="src\Layers\Activation.cpp" />
     <ClCompile Include="src\Layers\BatchNormalization.cpp" />
     <ClCompile Include="src\Layers\Concatenate.cpp" />
     <ClCompile Include="src\Layers\Conv2D.cpp" />
@@ -180,6 +183,7 @@
     <ClCompile Include="src\Layers\LayerBase.cpp" />
     <ClCompile Include="src\Layers\Merge.cpp" />
     <ClCompile Include="src\Layers\Pooling2D.cpp" />
+    <ClCompile Include="src\Layers\Reshape.cpp" />
     <ClCompile Include="src\Layers\UpSampling2D.cpp" />
     <ClCompile Include="src\Loss.cpp" />
     <ClCompile Include="src\Models\Flow.cpp" />

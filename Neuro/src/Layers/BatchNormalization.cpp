@@ -44,6 +44,13 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    Neuro::BatchNormalization* BatchNormalization::SetMomentum(float momentum)
+    {
+        m_Momentum = momentum;
+        return this;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     LayerBase* BatchNormalization::GetCloneInstance() const
     {
         return new BatchNormalization();

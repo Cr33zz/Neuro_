@@ -1,10 +1,10 @@
 ﻿#pragma once
 
-#include "Layers/LayerBase.h"
+#include "Layers/Reshape.h"
 
 namespace Neuro
 {
-    class Flatten : public LayerBase
+    class Flatten : public Reshape
     {
 	public:
         Flatten(LayerBase* inputLayer, const string& name = "");
@@ -15,7 +15,5 @@ namespace Neuro
         Flatten();
 
 		virtual LayerBase* GetCloneInstance() const override;
-		virtual void FeedForwardInternal(bool training) override;
-		virtual void BackPropInternal(Tensor& outputGradient) override;
 	};
 }

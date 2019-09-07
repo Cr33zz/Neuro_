@@ -13,6 +13,8 @@ namespace Neuro
         Pooling2D(Shape inputShape, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, EPoolingMode mode = EPoolingMode::Max, const string& name = "");
 
     protected:
+        Pooling2D(const string& constructorName, LayerBase* inputLayer, uint32_t filterSize, uint32_t stride, uint32_t padding, EPoolingMode mode, const string& name);
+        Pooling2D(const string& constructorName, Shape inputShape, uint32_t filterSize, uint32_t stride, uint32_t padding, EPoolingMode mode, const string& name);
         Pooling2D();
 
         virtual LayerBase* GetCloneInstance() const override;

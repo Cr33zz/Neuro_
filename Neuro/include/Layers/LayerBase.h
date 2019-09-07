@@ -72,13 +72,13 @@ namespace Neuro
         virtual void OnClone(const LayerBase& source);
 		virtual void OnInit();
 
-        virtual void FeedForwardInternal(bool training) = 0;
+        virtual void FeedForwardInternal(bool training) {}
 
         // Overall implementation of back propagation should look like this:
         // - if there is activation function apply derivative of that function to the errors computed by previous layer Errors.MultElementWise(Output.Map(x => ActivationF(x, true)));
         // - update errors in next layer (how much each input contributes to our output errors in relation to our parameters) stored InputDelta
         // - update parameters using error and input
-        virtual void BackPropInternal(Tensor& outputGradient) = 0;
+        virtual void BackPropInternal(Tensor& outputGradient) {}
 
         //virtual void SerializeParameters(XmlElement elem) {}
         //virtual void DeserializeParameters(XmlElement elem) {}

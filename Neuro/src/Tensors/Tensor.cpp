@@ -984,6 +984,13 @@ namespace Neuro
 		return Tensor(m_Values, m_Shape.Reshaped((int)shape.Width(), (int)shape.Height(), (int)shape.Depth(), (int)shape.Batch()));
 	}
 
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Reshaped(const Shape& shape, Tensor& output) const
+    {
+        CopyTo(output);
+        output.Reshaped(shape);
+    }
+
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Reshape(const Shape& shape)
 	{

@@ -15,6 +15,8 @@ namespace Neuro
         virtual int GetParamsNum() const override;
         virtual void GetParametersAndGradients(vector<ParametersAndGradients>& result) override;
 
+        BatchNormalization* SetMomentum(float momentum);
+
     protected:
         BatchNormalization();
 

@@ -68,7 +68,10 @@ namespace Neuro
 		if (dToUpdate >= 0)
 		{
 			dimensions[dToUpdate] = (int)(Length / product);
+            product = Length;
 		}
+
+        assert(Length == product);
 
 		return From(dimensions, 4);
 	}

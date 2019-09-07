@@ -186,6 +186,12 @@
     <ClInclude Include="include\Tensors\Cuda\CudaErrorCheck.h">
       <Filter>include\Tensors\Cuda</Filter>
     </ClInclude>
+    <ClInclude Include="include\Layers\Reshape.h">
+      <Filter>include\Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Layers\Activation.h">
+      <Filter>include\Layers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\NeuralNetwork.cpp">
@@ -307,6 +313,12 @@
     </ClCompile>
     <ClCompile Include="src\Tensors\Cuda\CudaErrorCheck.cpp">
       <Filter>src\Tensors\Cuda</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Reshape.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Activation.cpp">
+      <Filter>src\Layers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
