@@ -32,37 +32,11 @@ namespace NeuroTests
             return net;
         }
 
-        TEST_METHOD(Single_Dense_Layer_BS10)
-        {
-            TestDenseLayer(3, 2, 100, 10, 50);
-        }
-
-        TEST_METHOD(Single_Dense_Layer_BS1)
-        {
-            TestDenseLayer(3, 2, 100, 1, 50);
-        }
-
-        TEST_METHOD(Single_Dense_Layer_FullBatch)
-        {
-            TestDenseLayer(3, 2, 100, -1, 300);
-        }
-
-        
-        TEST_METHOD(Batching_No_Reminder)
-        {
-            /*auto tData = GenerateTrainingData(100, Shape(1, 3), new Tensor(Shape(3, 2)), MatMult);
-
-            auto trainingBatches = Neuro.Tools.MergeData(tData, 10);
-
-            Assert::AreEqual(trainingBatches[0].Input.BatchSize, 10);
-            Assert::AreEqual(trainingBatches[0].Output.BatchSize, 10);*/
-        }
-
         TEST_METHOD(CopyParameters)
         {
             auto model = new Sequential();
             model->AddLayer(new Dense(2, 3, new Linear()));
-            model->AddLayer(new Dense(3, 3, new Linear()));
+            model->AddLayer(new Dense(3, new Linear()));
             auto net = new NeuralNetwork(model, "test");
             net->ForceInitLayers();
 
@@ -80,7 +54,7 @@ namespace NeuroTests
         {
             auto model = new Sequential();
             model->AddLayer(new Dense(2, 3, new Linear()));
-            model->AddLayer(new Dense(3, 3, new Linear()));
+            model->AddLayer(new Dense(3, new Linear()));
             auto net = new NeuralNetwork(model, "test");
             net->ForceInitLayers();
 
@@ -135,7 +109,7 @@ namespace NeuroTests
             Assert::IsTrue(outputs.Equals(net->Predict(inputs)[0], 0.02f));
         }
 
-        TEST_METHOD(Streams_1Input_2Outputs_SimpleSplit)
+        TEST_METHOD(Flow_1Input_2Outputs_SimpleSplit)
         {
             auto input1 = new Dense(2, 2, new Sigmoid(), "input1");
             auto upperStream1 = new Dense(input1, 2, new Linear(), "upperStream1");
@@ -155,7 +129,7 @@ namespace NeuroTests
             Assert::IsTrue(prediction[1].Equals(*outputs[1], 0.01f));
         }
 
-        TEST_METHOD(Streams_2Inputs_1Output_SimpleConcat)
+        TEST_METHOD(Flow_2Inputs_1Output_SimpleConcat)
         {
             LayerBase* mainInput = new Dense(2, 2, new Linear(), "main_input");
             LayerBase* auxInput = new Input(Shape(1, 2), "aux_input");
@@ -174,7 +148,7 @@ namespace NeuroTests
             Assert::IsTrue(prediction[0].Equals(*outputs[0], 0.01f));
         }
 
-        TEST_METHOD(Streams_2Inputs_1Output_AvgMerge)
+        TEST_METHOD(Flow_2Inputs_1Output_AvgMerge)
         {
             auto input1 = new Dense(2, 2, new Linear(), "input1");
             auto input2 = new Dense(2, 2, new Linear(), "input2");
@@ -193,7 +167,7 @@ namespace NeuroTests
             Assert::IsTrue(prediction[0].Equals(*outputs[0], 0.01f));
         }
 
-        TEST_METHOD(Streams_2Inputs_1Output_MinMerge)
+        TEST_METHOD(Flow_2Inputs_1Output_MinMerge)
         {
             LayerBase* input1 = new Dense(2, 2, new Linear(), "input1");
             LayerBase* input2 = new Dense(2, 2, new Linear(), "input2");

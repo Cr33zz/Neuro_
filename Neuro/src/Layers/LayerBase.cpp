@@ -71,7 +71,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void LayerBase::Link(LayerBase* inputLayer)
     {
+        assert(!HasInputShape());
         assert(inputLayer->m_OutputShapes.size() == 1);
+
         m_InputShapes.push_back(inputLayer->m_OutputShapes[0]);
         m_InputLayers.push_back(inputLayer);
         inputLayer->m_OutputLayers.push_back(this);

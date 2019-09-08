@@ -42,6 +42,8 @@ namespace Neuro
 
 		for (int l = 0; l < (int)m_Layers.size(); ++l)
 			m_Layers[l]->FeedForward(l == 0 ? m_Inputs[0] : &(m_Layers[l - 1]->Output()), training);
+
+        m_Outputs[0] = m_OutputLayers[0]->Output();
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -124,13 +126,14 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Sequential::AddLayer(LayerBase* layer)
 	{
-        assert(layer->HasInputShape() == m_Layers.empty());
+        assert(!m_Layers.empty() || layer->HasInputShape()); // first added layer must have input shape specified
+        assert(!layer->InputLayer() || layer->InputLayer() == m_Layers.back()); // if layer being added has input layer it must be the last one in the sequence
 		
         m_OutputLayers.resize(1);
 		m_OutputLayers[0] = layer;
         m_OutputShapes[0] = layer->OutputShape();
 
-        if (!m_Layers.empty())
+        if (!m_Layers.empty() && !layer->InputLayer())
             layer->Link(m_Layers.back());
 		m_Layers.push_back(layer);
 	}

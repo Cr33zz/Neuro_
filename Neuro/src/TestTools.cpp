@@ -232,7 +232,7 @@ namespace Neuro
     std::string TestTools::ProfileObj::ToString() const
     {
         stringstream stream;
-        stream << m_Timer.ElapsedMiliseconds() << "ms";
+        stream << m_Timer.ElapsedMilliseconds() << "ms";
         return stream.str();
     }
 

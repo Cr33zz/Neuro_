@@ -42,7 +42,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    __int64 Stopwatch::ElapsedMiliseconds() const
+    __int64 Stopwatch::ElapsedMilliseconds() const
     {
         return ElapsedMicroseconds() / 1000;
     }
@@ -56,7 +56,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     int Stopwatch::ElapsedSeconds() const
     {
-        return (int)(ElapsedMiliseconds() / 1000);
+        return (int)(ElapsedMilliseconds() / 1000);
     }
 
     //////////////////////////////////////////////////////////////////////////

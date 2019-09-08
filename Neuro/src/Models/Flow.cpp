@@ -13,6 +13,9 @@ namespace Neuro
 	{
 		m_InputLayers = inputLayers;
 		m_OutputLayers = outputLayers;
+        for (size_t i = 0; i < outputLayers.size(); ++i)
+            m_OutputShapes.push_back(outputLayers[i]->OutputShape());
+        m_Outputs.resize(outputLayers.size());
 
         vector<LayerBase*> visited;
         for (auto inputLayer : m_InputLayers)

@@ -15,7 +15,7 @@ namespace Neuro
         void Restart();
         void Start();
         void Stop();
-        __int64 ElapsedMiliseconds() const;
+        __int64 ElapsedMilliseconds() const;
         __int64 ElapsedMicroseconds() const;
         int ElapsedSeconds() const;
 

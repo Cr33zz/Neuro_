@@ -22,7 +22,7 @@ namespace Neuro
 
 		const Shape& InputShape() const { return m_InputShapes[0]; }
 		const vector<Shape>& InputShapes() const { return m_InputShapes; }
-		const Tensor* Input() { return m_Inputs[0]; }
+        const Tensor* Input() { return m_Inputs.empty() ? nullptr : m_Inputs[0]; }
 		const tensor_ptr_vec_t& Inputs() const { return m_Inputs; }
 		Tensor& InputGradient() { return m_InputGradients[0]; }
 		vector<Tensor>& InputsGradient() { return m_InputGradients; }
@@ -31,12 +31,13 @@ namespace Neuro
 		const Shape& OutputShape() const { return m_OutputShapes[0]; }
         const vector<Shape>& OutputShapes() const { return m_OutputShapes; }
 		const ActivationBase* Activation() const { return m_Activation; }
-        const LayerBase* InputLayer() const { return m_InputLayers[0]; }
+        const LayerBase* InputLayer() const { return m_InputLayers.empty() ? nullptr : m_InputLayers[0]; }
         const vector<LayerBase*>& InputLayers() const { return m_InputLayers; }
-        const LayerBase* OutputLayer() const { return m_OutputLayers[0]; }
+        const LayerBase* OutputLayer() const { return m_OutputLayers.empty() ? nullptr : m_OutputLayers[0]; }
 		const vector<LayerBase*>& OutputLayers() const { return m_OutputLayers; }
 
         bool HasInputShape() const { return !m_InputShapes.empty();  }
+        bool HasInputLayer() const { return !m_InputLayers.empty(); }
 
 		const string& Name() const { return m_Name; }
 
@@ -57,10 +58,10 @@ namespace Neuro
 		
         const string& ClassName() const { return m_ClassName; }
 
-        int FeedForwardTime() const { return (int)m_FeedForwardTimer.ElapsedMiliseconds(); }
-        int BackPropTime() const { return (int)m_BackPropTimer.ElapsedMiliseconds(); }
-        int ActivationTime() const { return (int)m_ActivationTimer.ElapsedMiliseconds(); }
-        int ActivationBackPropTime() const { return (int)m_ActivationBackPropTimer.ElapsedMiliseconds(); }
+        int FeedForwardTime() const { return (int)m_FeedForwardTimer.ElapsedMilliseconds(); }
+        int BackPropTime() const { return (int)m_BackPropTimer.ElapsedMilliseconds(); }
+        int ActivationTime() const { return (int)m_ActivationTimer.ElapsedMilliseconds(); }
+        int ActivationBackPropTime() const { return (int)m_ActivationBackPropTimer.ElapsedMilliseconds(); }
 
 	protected:
         // The concept of layer is that it is a 'block box' that supports forward and backward propagation.

@@ -295,7 +295,7 @@ namespace Neuro
                     int processedTrainSamplesNum = min((b + 1) * trainBatchSize, trainSamplesCount);
 					outputLog << GetProgressString(processedTrainSamplesNum, trainSamplesCount);
 
-                    float averageTimePerSample = trainTimer.ElapsedMiliseconds() / (float)processedTrainSamplesNum;
+                    float averageTimePerSample = trainTimer.ElapsedMilliseconds() / (float)processedTrainSamplesNum;
                     outputLog << fixed << " - eta: " << averageTimePerSample * (trainSamplesCount - processedTrainSamplesNum) * 0.001f << left << setw(10) << "s";
 
 					cout << outputLog.str();
@@ -327,7 +327,7 @@ namespace Neuro
 			if (verbose > 0)
 			{
                 summary.precision(2);
-                summary << fixed << " - " << trainTimer.ElapsedMiliseconds() * 0.001f << "s";
+                summary << fixed << " - " << trainTimer.ElapsedMilliseconds() * 0.001f << "s";
                 summary.precision(4);
 
                 if (trackFlags & Track::TrainError)
