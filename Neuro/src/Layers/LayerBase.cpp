@@ -125,7 +125,7 @@ namespace Neuro
 
 #ifdef LOG_OUTPUTS
         for (int i = 0; i < (int)m_Inputs.size(); ++i)
-            m_Inputs[i]->DebugDumpValues(Replace(Name() + "_input_" + to_string(i) + "_step" + to_string(NeuralNetwork::g_DebugStep) + ".log", "/", "__"));
+            m_Inputs[i]->DebugDumpValues(Replace(Name() + "_input_" + to_string(i) + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
 #endif
 
         m_FeedForwardTimer.Start();
@@ -134,7 +134,7 @@ namespace Neuro
 
 #ifdef LOG_OUTPUTS
         for (size_t o = 0; o < m_Outputs.size(); ++o)
-            m_Outputs[o].DebugDumpValues(Replace(m_Outputs[o].Name() + "_step" + to_string(NeuralNetwork::g_DebugStep) + ".log", "/", "__"));
+            m_Outputs[o].DebugDumpValues(Replace(m_Outputs[o].Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
 #endif
 
         if (m_Activation)
@@ -146,7 +146,7 @@ namespace Neuro
                 m_ActivationTimer.Stop();
 
 #ifdef LOG_OUTPUTS
-                m_Outputs[o].DebugDumpValues(Replace(m_Outputs[o].Name() + "_activation_step" + to_string(NeuralNetwork::g_DebugStep) + ".log", "/", "__"));
+                m_Outputs[o].DebugDumpValues(Replace(m_Outputs[o].Name() + "_activation_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
 #endif
             }
         }
@@ -198,7 +198,7 @@ namespace Neuro
                 m_ActivationBackPropTimer.Stop();
 
 #ifdef LOG_OUTPUTS
-                outputGradient.DebugDumpValues(Replace(Name() + "_activation_grad_step" + to_string(NeuralNetwork::g_DebugStep) + ".log", "/", "__"));
+                outputGradients[o].DebugDumpValues(Replace(Name() + "_activation" + to_string(o) + "_grad_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
 #endif
             }
 		}
@@ -210,7 +210,7 @@ namespace Neuro
 #ifdef LOG_OUTPUTS
         for (int i = 0; i < (int)m_InputShapes.size(); ++i)
         {
-            m_InputGradients[i].DebugDumpValues(Replace(m_InputGradients[i].Name() + "_step" + to_string(NeuralNetwork::g_DebugStep) + ".log", "/", "__"));
+            m_InputGradients[i].DebugDumpValues(Replace(m_InputGradients[i].Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
         }
 #endif
 

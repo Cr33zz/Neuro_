@@ -160,6 +160,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Conv2D(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, Tensor& output) const
     {
+        output.Zero();
         input.CopyToDevice();
         kernels.CopyToDevice();
         output.CopyToDevice();
@@ -488,7 +489,7 @@ namespace Neuro
         cudnnTensorDescriptor_t inputDesc; cudnnCreateTensorDescriptor(&inputDesc);
         cudnnTensorDescriptor_t resultDesc; cudnnCreateTensorDescriptor(&resultDesc);
 
-        uint32_t n = input.Batch(), c = input.Height(), h = input.Depth(), w = input.Width(); // cuDNN expects values to be in Channel so we need to fake 'reshape' our tensor
+        uint32_t n = input.Batch(), c = input.Depth(), h = input.Height(), w = input.Width();
 
         cudnnSetTensor4dDescriptor(inputDesc,CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
         cudnnSetTensor4dDescriptor(resultDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
@@ -497,7 +498,7 @@ namespace Neuro
         CUDA_CHECK(cudnnSoftmaxForward(
             s_CudnnHandle,
             CUDNN_SOFTMAX_ACCURATE,
-            CUDNN_SOFTMAX_MODE_CHANNEL,
+            CUDNN_SOFTMAX_MODE_INSTANCE,
             &alpha,
             inputDesc,
             input.GetDevicePtr(),
@@ -517,7 +518,7 @@ namespace Neuro
         cudnnTensorDescriptor_t outputGradientDesc; cudnnCreateTensorDescriptor(&outputGradientDesc);
         cudnnTensorDescriptor_t resultDesc; cudnnCreateTensorDescriptor(&resultDesc);
 
-        uint32_t n = output.Batch(), c = output.Height(), h = output.Depth(), w = output.Width(); // cuDNN expects values to be in Channel so we need to fake 'reshape' our tensor
+        uint32_t n = output.Batch(), c = output.Depth(), h = output.Height(), w = output.Width();
 
         cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
         cudnnSetTensor4dDescriptor(outputGradientDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
@@ -527,7 +528,7 @@ namespace Neuro
         CUDA_CHECK(cudnnSoftmaxBackward(
             s_CudnnHandle,
             CUDNN_SOFTMAX_ACCURATE,
-            CUDNN_SOFTMAX_MODE_CHANNEL,
+            CUDNN_SOFTMAX_MODE_INSTANCE,
             &alpha,
             outputDesc,
             output.GetDevicePtr(),

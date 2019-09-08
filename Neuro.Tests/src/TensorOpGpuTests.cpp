@@ -95,6 +95,34 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
+        TEST_METHOD(Softmax_CompareWithCpuResult)
+        {
+            Tensor t(Shape(20, 30, 1, 10)); t.FillWithRand(-1, -10, 10);
+
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            NEURO_PROFILE("CPU", Tensor r(t.GetShape()); t.Softmax(r);)
+
+            Tensor::SetForcedOpMode(EOpMode::GPU);
+            NEURO_PROFILE("GPU", Tensor r2(t.GetShape()); t.Softmax(r2);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(SoftmaxGradient_CompareWithCpuResult)
+        {
+            Tensor input(Shape(1, 30, 1, 10)); input.FillWithRand(-1, -10, 10);
+            Tensor output(input.GetShape()); input.Softmax(output);
+            Tensor gradient(input.GetShape()); gradient.FillWithRand();
+
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            NEURO_PROFILE("CPU", Tensor r(input.GetShape()); input.SoftmaxGradient(output, gradient, r);)
+
+            Tensor::SetForcedOpMode(EOpMode::GPU);
+            NEURO_PROFILE("GPU", Tensor r2(input.GetShape()); input.SoftmaxGradient(output, gradient, r2);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
         TEST_METHOD(Conv2D_Valid_CompareWithCpuResult)
         {
             Tensor t(Shape(26, 26, 3, 3)); t.FillWithRand();
@@ -162,20 +190,20 @@ namespace NeuroTests
 
         TEST_METHOD(Pool_Max_Valid_CompareWithCpuResult)
         {
-            Tensor t(Shape(27, 27, 2, 3)); t.FillWithRand(10);
+            Tensor t(Shape(28, 28, 1, 50)); t.FillWithRand();
             
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            NEURO_PROFILE("CPU", Tensor r = t.Pool2D(3, 2, EPoolingMode::Max, 0);)
+            NEURO_PROFILE("CPU", Tensor r = t.Pool2D(2, 2, EPoolingMode::Max, 0);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
-            NEURO_PROFILE("GPU", Tensor r2 = t.Pool2D(3, 2, EPoolingMode::Max, 0);)
+            NEURO_PROFILE("GPU", Tensor r2 = t.Pool2D(2, 2, EPoolingMode::Max, 0);)
 
             Assert::IsTrue(r.Equals(r2));
         }
 
         TEST_METHOD(Pool_Avg_Valid_CompareWithCpuResult)
         {
-            Tensor t(Shape(27, 27, 2, 3)); t.FillWithRand(10);
+            Tensor t(Shape(27, 27, 2, 10)); t.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
             NEURO_PROFILE("CPU", Tensor r = t.Pool2D(3, 2, EPoolingMode::Avg, 0);)
@@ -186,19 +214,45 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
+        TEST_METHOD(Pool_Max_Stride1_Valid_CompareWithCpuResult)
+        {
+            Tensor t(Shape(27, 27, 2, 10)); t.FillWithRand();
+            
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            NEURO_PROFILE("CPU", Tensor r = t.Pool2D(3, 1, EPoolingMode::Max, 0);)
+
+            Tensor::SetForcedOpMode(EOpMode::GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = t.Pool2D(3, 1, EPoolingMode::Max, 0);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(Pool_Avg_Stride1_Valid_CompareWithCpuResult)
+        {
+            Tensor t(Shape(27, 27, 2, 10)); t.FillWithRand();
+
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            NEURO_PROFILE("CPU", Tensor r = t.Pool2D(3, 1, EPoolingMode::Avg, 0);)
+
+            Tensor::SetForcedOpMode(EOpMode::GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = t.Pool2D(3, 1, EPoolingMode::Avg, 0);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
         TEST_METHOD(PoolGradient_Max_Valid_CompareWithCpuResult)
         {
-            Tensor input(Shape(27, 27, 2, 3)); input.FillWithRand();
-            Tensor output = input.Pool2D(3, 2, EPoolingMode::Max, 0);
+            Tensor input(Shape(28, 28, 2, 30)); input.FillWithRand(15);
+            Tensor output = input.Pool2D(2, 2, EPoolingMode::Max, 0);
             Tensor outputGradient(output.GetShape()); outputGradient.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor r(input.GetShape());
-            NEURO_PROFILE("CPU", output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Max, 0, r);)
+            NEURO_PROFILE("CPU", output.Pool2DGradient(output, input, outputGradient, 2, 2, EPoolingMode::Max, 0, r);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor r2(input.GetShape());
-            NEURO_PROFILE("GPU", output.Pool2DGradient(output, input, outputGradient, 3, 2, EPoolingMode::Max, 0, r2);)
+            NEURO_PROFILE("GPU", output.Pool2DGradient(output, input, outputGradient, 2, 2, EPoolingMode::Max, 0, r2);)
 
             Assert::IsTrue(r.Equals(r2));
         }

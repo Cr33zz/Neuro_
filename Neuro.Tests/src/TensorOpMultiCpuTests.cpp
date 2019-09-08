@@ -117,6 +117,34 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
+        TEST_METHOD(Softmax_CompareWithCpuResult)
+        {
+            Tensor t(Shape(20, 30, 1, 10)); t.FillWithRand(-1, -10, 10);
+
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            NEURO_PROFILE("CPU", Tensor r(t.GetShape()); t.Softmax(r);)
+
+            Tensor::SetForcedOpMode(EOpMode::MultiCPU);
+            NEURO_PROFILE("MultiCPU", Tensor r2(t.GetShape()); t.Softmax(r2);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(SoftmaxGradient_CompareWithCpuResult)
+        {
+            Tensor input(Shape(1, 30, 1, 5)); input.FillWithRand(-1, -10, 10);
+            Tensor output(input.GetShape()); input.Softmax(output);
+            Tensor gradient(input.GetShape()); gradient.FillWithRand();
+
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            NEURO_PROFILE("CPU", Tensor r(input.GetShape()); input.SoftmaxGradient(output, gradient, r);)
+
+            Tensor::SetForcedOpMode(EOpMode::MultiCPU);
+            NEURO_PROFILE("MultiCPU", Tensor r2(input.GetShape()); input.SoftmaxGradient(output, gradient, r2);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
         TEST_METHOD(Conv2D_Valid_CompareWithCpuResult)
         {
             Tensor t(Shape(26, 26, 3, 3)); t.FillWithRand();

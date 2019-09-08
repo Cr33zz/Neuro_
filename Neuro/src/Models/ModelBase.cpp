@@ -211,7 +211,7 @@ namespace Neuro
         uint32_t trainBatchSize = batchSize < 0 ? trainSamplesCount : batchSize;
         uint32_t validationBatchSize = batchSize < 0 ? validationSamplesCount : min(validationSamplesCount, (uint32_t)batchSize);
 
-        string outFilename = FilePrefix() + "_training_data_" + m_Optimizer->ClassName() + "_b" + to_string(trainBatchSize) + (m_Seed > 0 ? "(_seed" + to_string(m_Seed) + ")" : "");
+        string outFilename = FilePrefix() + "_training_data_" + m_Optimizer->ClassName() + "_b" + to_string(trainBatchSize) + (m_Seed > 0 ? "(seed" + to_string(m_Seed) + ")" : "");
 
         ChartGenerator* chartGen = nullptr;
         if (trackFlags != ETrack::Nothing)
@@ -450,7 +450,7 @@ namespace Neuro
             g_GradientsFile << outputsGrad[i].ToString() << endl;
 #endif
 #ifdef LOG_OUTPUTS
-            outputsGrad[i].DebugDumpValues(Replace(string("output") + to_string(i) + "_step" + to_string(NeuralNetwork::g_DebugStep) + ".log", "/", "__"));
+            outputsGrad[i].DebugDumpValues(Replace(string("output") + to_string(i) + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
 #endif
 
             trainError += outputsGrad[i].Sum(EAxis::Global)(0) / m_Outputs[i].BatchLength();
@@ -462,7 +462,7 @@ namespace Neuro
             g_GradientsFile << outputsGrad[i].ToString() << endl;
 #endif
 #ifdef LOG_OUTPUTS
-            outputsGrad[i].DebugDumpValues(Replace(string("output") + to_string(i) + "_grad_step" + to_string(NeuralNetwork::g_DebugStep) + ".log", "/", "__"));
+            outputsGrad[i].DebugDumpValues(Replace(string("output") + to_string(i) + "_grad_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
 #endif
         }
 
@@ -480,7 +480,7 @@ namespace Neuro
 #endif
 #ifdef LOG_OUTPUTS
         for (auto paramAndGrad : paramsAndGrads)
-            paramAndGrad.Gradients->DebugDumpValues(Replace(paramAndGrad.Gradients->Name() + "_step" + to_string(NeuralNetwork::g_DebugStep) + ".log", "/", "__"));
+            paramAndGrad.Gradients->DebugDumpValues(Replace(paramAndGrad.Gradients->Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
 #endif
 
         m_Optimizer->Step(paramsAndGrads, inputs[0]->Batch());
