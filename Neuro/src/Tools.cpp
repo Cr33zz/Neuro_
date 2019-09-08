@@ -244,7 +244,7 @@ namespace Neuro
                 if (image)
                 {
                     imageColor.rgbRed = imageColor.rgbGreen = imageColor.rgbBlue = color;
-                    FreeImage_SetPixelColor(image, (i % imageCols) * imgWidth + x, IMG_HEIGHT - ((i / imageCols) * imgHeight + y), &imageColor);
+                    FreeImage_SetPixelColor(image, (i % imageCols) * imgWidth + x, IMG_HEIGHT - ((i / imageCols) * imgHeight + y) - 1, &imageColor);
                 }
             }
 

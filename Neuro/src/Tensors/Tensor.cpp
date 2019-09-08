@@ -104,18 +104,18 @@ namespace Neuro
 
         assert(image);
 
-        uint32_t width = FreeImage_GetWidth(image);
-        uint32_t height = FreeImage_GetHeight(image);
+        const uint32_t WIDTH = FreeImage_GetWidth(image);
+        const uint32_t HEIGHT = FreeImage_GetHeight(image);
 
-        m_Shape = Shape(width, height, grayScale ? 1 : 3);
+        m_Shape = Shape(WIDTH, HEIGHT, grayScale ? 1 : 3);
         m_Values.resize(m_Shape.Length);
 
         RGBQUAD color;
 
-        for (uint32_t h = 0; h < height; ++h)
-        for (uint32_t w = 0; w < width; ++w)
+        for (uint32_t h = 0; h < HEIGHT; ++h)
+        for (uint32_t w = 0; w < WIDTH; ++w)
         {
-            FreeImage_GetPixelColor(image, (unsigned int)w, (unsigned int)h, &color);
+            FreeImage_GetPixelColor(image, (unsigned int)w, HEIGHT - (unsigned int)h - 1, &color);
             int r = color.rgbRed, g = color.rgbGreen, b = color.rgbBlue;
 
             if (grayScale)
@@ -158,7 +158,7 @@ namespace Neuro
                 color.rgbGreen = grayScale ? (int)(Get(w, h, 0, n) * (denormalize ? 255 : 1)) : (int)(Get(w, h, 1, n) * (denormalize ? 255 : 1));
                 color.rgbBlue = grayScale ? (int)(Get(w, h, 0, n) * (denormalize ? 255 : 1)) : (int)(Get(w, h, 2, n) * (denormalize ? 255 : 1));
 
-                FreeImage_SetPixelColor(image, w, HEIGHT - h, &color);
+                FreeImage_SetPixelColor(image, w, HEIGHT - h - 1, &color);
             }
 
             FreeImage_Save(format, image, Batch() == 1 ? imageFile.c_str() : (name + "_" + to_string(n) + ext).c_str());
