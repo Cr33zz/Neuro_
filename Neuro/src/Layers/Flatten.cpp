@@ -29,6 +29,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Flatten::OnLink()
     {
-        m_OutputShapes[0] = m_InputShapes[0];
+        m_OutputShapes[0] = Shape(1, m_InputShapes[0].Length);
     }
 }

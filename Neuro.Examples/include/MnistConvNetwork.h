@@ -12,19 +12,20 @@ class MnistConvNetwork
 public:
     static void Run()
     {
-        Tensor::SetDefaultOpMode(EOpMode::GPU);
+        Tensor::SetDefaultOpMode(EOpMode::CPU);
 
-        auto model = new Sequential("mnist_conv");
+        auto model = new Sequential("mnist_conv", 1337);
         model->AddLayer(new Conv2D(Shape(28, 28, 1), 3, 32, 1, 0, new ReLU()));
-        model->AddLayer(new MaxPooling2D(model->LastLayer(), 2));
-        model->AddLayer(new Dropout(model->LastLayer(), 0.2f));
-        model->AddLayer(new Flatten(model->LastLayer()));
-        model->AddLayer(new Dense(model->LastLayer(), 128, new ReLU()));
-        model->AddLayer(new Dense(model->LastLayer(), 10, new Softmax()));        
+        model->AddLayer(new MaxPooling2D(2, 2));
+        model->AddLayer(new Conv2D(3, 16, 1, 0, new ReLU()));
+        model->AddLayer(new MaxPooling2D(2, 2));
+        model->AddLayer(new Dropout(0.2f));
+        model->AddLayer(new Flatten());
+        model->AddLayer(new Dense(128, new ReLU()));
+        model->AddLayer(new Dense(10, new Softmax()));        
+        model->Optimize(new Adam(), new CategoricalCrossEntropy());
 
         cout << model->Summary();
-
-        model->Optimize(new Adam(), new CategoricalCrossEntropy());
 
         Tensor input, output;
         LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, false, 6000);

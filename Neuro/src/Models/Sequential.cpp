@@ -131,13 +131,13 @@ namespace Neuro
 
         if (m_Layers.empty())
             m_InputShapes.push_back(layer->InputShape());
+
+        if (!m_Layers.empty() && !layer->InputLayer())
+            layer->Link(m_Layers.back());
 		
         m_OutputLayers.resize(1);
 		m_OutputLayers[0] = layer;
         m_OutputShapes[0] = layer->OutputShape();
-
-        if (!m_Layers.empty() && !layer->InputLayer())
-            layer->Link(m_Layers.back());
 
 		m_Layers.push_back(layer);
 	}

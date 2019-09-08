@@ -141,6 +141,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AutoencoderNetwork.h" />
+    <ClInclude Include="include\ConvAutoencoderNetwork.h" />
     <ClInclude Include="include\ConvNetwork.h" />
     <ClInclude Include="include\DeepConvGAN.h" />
     <ClInclude Include="include\GAN.h" />

@@ -139,31 +139,33 @@ namespace Neuro
         auto format = GetFormat(imageFile);
         assert(format != FIF_UNKNOWN);
 
-        size_t dotPos = imageFile.find_last_of('.');
-        string name = imageFile.substr(0, dotPos);
-        string ext = imageFile.substr(dotPos, imageFile.length() - dotPos);
+        const uint32_t TENSOR_WIDTH = Width();
+        const uint32_t TENSOR_HEIGHT = Height();
+        const uint32_t IMG_ROWS = (uint32_t)ceil(sqrt((float)Batch()));
+        const uint32_t IMG_COLS = (uint32_t)ceil(sqrt((float)Batch()));
+        const uint32_t IMG_WIDTH = IMG_ROWS * TENSOR_WIDTH;
+        const uint32_t IMG_HEIGHT = IMG_COLS * TENSOR_HEIGHT;
+        const bool GRAYSCALE = (Depth() == 1);
         
-        const uint32_t WIDTH = Width();
-        const uint32_t HEIGHT = Height();
         RGBQUAD color;
+        color.rgbRed = color.rgbGreen = color.rgbBlue = 255;
+        
+        FIBITMAP* image = FreeImage_Allocate(IMG_WIDTH, IMG_HEIGHT, 24);
+        FreeImage_FillBackground(image, &color);
+
         for (uint32_t n = 0; n < Batch(); ++n)
+        for (uint32_t h = 0; h < Height(); ++h)
+        for (uint32_t w = 0; w < Width(); ++w)
         {
-            FIBITMAP* image = FreeImage_Allocate(WIDTH, HEIGHT, 32);
-            bool grayScale = (Depth() == 1);
+            color.rgbRed = (int)(Get(w, h, 0, n) * (denormalize ? 255.0f : 1.f));
+            color.rgbGreen = GRAYSCALE ? color.rgbRed : (int)(Get(w, h, 1, n) * (denormalize ? 255.0f : 1.f));
+            color.rgbBlue = GRAYSCALE ? color.rgbRed : (int)(Get(w, h, 2, n) * (denormalize ? 255.0f : 1.f));
 
-            for (uint32_t h = 0; h < Height(); ++h)
-            for (uint32_t w = 0; w < Width(); ++w)
-            {
-                color.rgbRed = (int)(Get(w, h, 0, n) * (denormalize ? 255 : 1));
-                color.rgbGreen = grayScale ? (int)(Get(w, h, 0, n) * (denormalize ? 255 : 1)) : (int)(Get(w, h, 1, n) * (denormalize ? 255 : 1));
-                color.rgbBlue = grayScale ? (int)(Get(w, h, 0, n) * (denormalize ? 255 : 1)) : (int)(Get(w, h, 2, n) * (denormalize ? 255 : 1));
-
-                FreeImage_SetPixelColor(image, w, HEIGHT - h - 1, &color);
-            }
-
-            FreeImage_Save(format, image, Batch() == 1 ? imageFile.c_str() : (name + "_" + to_string(n) + ext).c_str());
-            FreeImage_Unload(image);
+            FreeImage_SetPixelColor(image, (n % IMG_COLS) * TENSOR_WIDTH + w, IMG_HEIGHT - ((n / IMG_COLS) * TENSOR_HEIGHT + h) - 1, &color);
         }
+
+        FreeImage_Save(format, image, imageFile.c_str());
+        FreeImage_Unload(image);
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -1343,7 +1345,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::CopyBatchTo(int batchId, int targetBatchId, Tensor& result) const
+	void Tensor::CopyBatchTo(uint32_t batchId, uint32_t targetBatchId, Tensor& result) const
 	{
 		CopyToHost();
 		result.OverrideHost();
@@ -1355,7 +1357,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::CopyDepthTo(int depthId, int batchId, int targetDepthId, int targetBatchId, Tensor& result) const
+	void Tensor::CopyDepthTo(uint32_t depthId, uint32_t batchId, uint32_t targetDepthId, uint32_t targetBatchId, Tensor& result) const
 	{
 		CopyToHost();
 		result.OverrideHost();
@@ -1367,15 +1369,33 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::GetBatch(int batchId) const
+	Tensor Tensor::GetBatch(uint32_t batchId) const
 	{
 		Tensor result(Shape(Width(), Height(), Depth()));
 		CopyBatchTo(batchId, 0, result);
 		return result;
 	}
 
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::GetBatches(vector<uint32_t> batchIds) const
+    {
+        Tensor result(Shape(Width(), Height(), Depth(), (uint32_t)batchIds.size()));
+        GetBatches(batchIds, result);
+        return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::GetBatches(vector<uint32_t> batchIds, Tensor& result) const
+    {
+        assert(SameDimensionsExceptBatches(result));
+        assert(result.Batch() == (uint32_t)batchIds.size());
+
+        for (size_t i = 0; i < batchIds.size(); ++i)
+            CopyBatchTo(batchIds[i], (uint32_t)i, result);
+    }
+
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::GetDepth(int depthId, int batchId) const
+	Tensor Tensor::GetDepth(uint32_t depthId, uint32_t batchId) const
 	{
 		Tensor result(Shape(Width(), Height()));
 		CopyDepthTo(depthId, batchId, 0, 0, result);

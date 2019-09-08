@@ -1,4 +1,5 @@
 #include "AutoencoderNetwork.h"
+#include "ConvAutoencoderNetwork.h"
 #include "ConvNetwork.h"
 #include "FlowNetwork.h"
 #include "IrisNetwork.h"
@@ -18,17 +19,18 @@ int main()
     t.Conv2DTransposed(Tensor({ 1,1,1,1,-8,1,1,1,1, }, Shape(3, 3, 1)), 1, 1, 0).NormalizedMinMax(EAxis::Global).SaveAsImage("test_deconv.bmp", true);
     t.Pool2D(2, 2, EPoolingMode::Max, 0).SaveAsImage("test_maxpool.bmp", true);*/
 
-    //Tensor input, output;
-    //LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, true, 100);
-    //input.SaveAsImage("xx.png", true);
-
+    /*Tensor input, output;
+    LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, true, 10);
+    input.SaveAsImage("xx.png", true);*/
+    
     //IrisNetwork::Run();
     //ConvNetwork::Run();
     //FlowNetwork::Run();
-    //MnistConvNetwork::Run();
+    MnistConvNetwork::Run();
     //MnistNetwork::Run();
     //AutoencoderNetwork::Run();
-    GAN::Run();
+    //ConvAutoencoderNetwork::Run();
+    //GAN::Run();
 
     return 0;
 }

@@ -233,10 +233,12 @@ namespace Neuro
         void TrySet(float value, int w, int h = 0, int d = 0, int n = 0);
 
         void CopyTo(Tensor& result, float tau = 0) const;
-        void CopyBatchTo(int batchId, int targetBatchId, Tensor& result) const;
-        void CopyDepthTo(int depthId, int batchId, int targetDepthId, int targetBatchId, Tensor& result) const;
-        Tensor GetBatch(int batchId) const;
-        Tensor GetDepth(int depthId, int batchId = 0) const;
+        void CopyBatchTo(uint32_t batchId, uint32_t targetBatchId, Tensor& result) const;
+        void CopyDepthTo(uint32_t depthId, uint32_t batchId, uint32_t targetDepthId, uint32_t targetBatchId, Tensor& result) const;
+        Tensor GetBatch(uint32_t batchId) const;
+        Tensor GetBatches(vector<uint32_t> batchIds) const;
+        void GetBatches(vector<uint32_t> batchIds, Tensor& result) const;
+        Tensor GetDepth(uint32_t depthId, uint32_t batchId = 0) const;
         bool Equals(const Tensor& other, float epsilon = 0.00001f) const;        
         
         void Elu(float alpha, Tensor& result) const;

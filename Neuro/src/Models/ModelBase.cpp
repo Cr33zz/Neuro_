@@ -131,20 +131,19 @@ namespace Neuro
     string ModelBase::TrainSummary() const
     {
         stringstream ss;
-        ss.precision(2);
-        ss << fixed;
+        ss.precision(3);
         int totalParams = 0;
         ss << "_____________________________________________________________________________\n";
-        ss << "Layer                        FeedFwd     BackProp    ActFeedFwd  ActBackProp \n";
+        ss << "Layer                        Fwd[s]      Back[s]     ActFwd[s]   ActBack[s]  \n";
         ss << "=============================================================================\n";
 
         for (auto layer : GetLayers())
         {
             ss << left << setw(29) << (layer->Name() + "(" + layer->ClassName() + ")");
-            ss << setw(12) << (to_string(layer->FeedForwardTime() * 0.001f) + "s");
-            ss << setw(12) << (to_string(layer->BackPropTime() * 0.001f) + "s");
-            ss << setw(12) << (to_string(layer->ActivationTime() * 0.001f) + "s");
-            ss << setw(12) << (to_string(layer->ActivationBackPropTime() * 0.001f) + "s") << "\n";
+            ss << setw(12) << layer->FeedForwardTime() * 0.001f;
+            ss << setw(12) << layer->BackPropTime() * 0.001f;
+            ss << setw(12) << layer->ActivationTime() * 0.001f;
+            ss << setw(12) << layer->ActivationBackPropTime() * 0.001f << "\n";
             ss << "_____________________________________________________________________________\n";
         }
 
@@ -191,7 +190,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::Fit(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, int batchSize, uint32_t epochs, const tensor_ptr_vec_t* validInputs, const tensor_ptr_vec_t* validOutputs, uint32_t verbose, int trackFlags, bool shuffle)
     {
-        //cout << unitbuf; // disable buffering so progress 'animations' can work
+        cout << unitbuf; // disable buffering so progress 'animations' can work
 
 #ifdef LOG_GRADIENTS
         g_GradientsFile = ofstream("gradients.log");

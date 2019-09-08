@@ -23,6 +23,12 @@ public:
         ganModel->Optimize(new Adam(), new BinaryCrossEntropy());
         cout << ganModel->Summary();
 
+        Tensor input, output;
+        LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, false, 10000);
+        input.Reshape(Shape(1, 784, 1, -1));
+
+
+
         cin.get();
         return;
     }
