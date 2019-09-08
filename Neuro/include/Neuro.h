@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Types.h"
-#include "NeuralNetwork.h"
 #include "Activations.h"
 #include "Data.h"
 #include "Loss.h"
@@ -11,10 +10,12 @@
 #include "Stopwatch.h"
 
 #include "Layers/LayerBase.h"
+#include "Layers/Activation.h"
 #include "Layers/Conv2D.h"
 #include "Layers/Conv2DTranspose.h"
 #include "Layers/Dense.h"
 #include "Layers/Flatten.h"
+#include "Layers/Reshape.h"
 #include "Layers/Dropout.h"
 #include "Layers/BatchNormalization.h"
 #include "Layers/Input.h"

@@ -4,7 +4,7 @@
 #include "Layers/LayerBase.h"
 #include "Tensors/Shape.h"
 #include "Tools.h"
-#include "NeuralNetwork.h"
+#include "Models/ModelBase.h"
 #include "Types.h"
 
 namespace Neuro

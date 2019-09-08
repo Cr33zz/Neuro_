@@ -12,7 +12,7 @@ namespace Neuro
     class Flow : public ModelBase
     {
 	public:
-        Flow(const vector<LayerBase*>& inputLayers, const vector<LayerBase*>& outputLayers, const string& name = "");
+        Flow(const vector<LayerBase*>& inputLayers, const vector<LayerBase*>& outputLayers, const string& name = "", int seed = 0);
         ~Flow();
 
         virtual LayerBase* GetCloneInstance() const override;

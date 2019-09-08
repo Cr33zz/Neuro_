@@ -7,8 +7,8 @@
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	Sequential::Sequential(const string& name)
-        : ModelBase(__FUNCTION__, name)
+	Sequential::Sequential(const string& name, int seed)
+        : ModelBase(__FUNCTION__, name, seed)
 	{
 	}
 

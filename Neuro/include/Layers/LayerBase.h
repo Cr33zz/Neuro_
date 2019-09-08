@@ -44,6 +44,8 @@ namespace Neuro
         void Link(LayerBase* inputLayer);
         void Link(const vector<LayerBase*>& inputLayers);
 
+        // Tau specifies the percentage of copied parameters to be applied on a target network, when less than 1 target's network
+        // parameters will be updated as follows: this_parameters * tau + target_parameters * (1 - tau)
         virtual void CopyParametersTo(LayerBase& target, float tau = 0) const;
 
 		const Tensor& FeedForward(const Tensor* input, bool training);

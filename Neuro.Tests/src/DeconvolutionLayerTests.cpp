@@ -85,9 +85,8 @@ namespace NeuroTests
             GlobalRngSeed(101);
             Shape inputShape(4, 4, 3, batch);
 
-            auto model = new Sequential();
+            auto model = new Sequential("deconvolution_test", 7);
             model->AddLayer(new Conv2DTranspose(inputShape, 3, 3, stride, padding));
-            auto net = new NeuralNetwork(model, "deconvolution_test", 7);
 
             Tensor randomKernels(Shape(3, 3, 3, 3));
             randomKernels.FillWithRand();
@@ -96,12 +95,12 @@ namespace NeuroTests
             input.FillWithRand();
             Tensor output = input.Conv2DTransposed(randomKernels, 3, stride, padding);
 
-            net->Optimize(new SGD(0.04f), new MeanSquareError());
-            net->Fit(input, output, -1, 200, nullptr, nullptr, 1, Track::TrainError);
+            model->Optimize(new SGD(0.04f), new MeanSquareError());
+            model->Fit(input, output, -1, 200, nullptr, nullptr, 1, ETrack::TrainError);
 
-            auto& predictedOutput = net->Predict(input)[0];
+            auto& predictedOutput = model->Predict(input)[0];
 
-            Assert::IsTrue(net->GetLastTrainError() < 0.001f);
+            Assert::IsTrue(model->GetLastTrainError() < 0.001f);
         }
 
         LayerBase* CreateLayer(uint32_t padding)

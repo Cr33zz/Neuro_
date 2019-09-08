@@ -23,57 +23,53 @@ namespace NeuroTests
             TestDenseNetwork(2, 50, -1, 200);
         }
 
-        NeuralNetwork* CreateFitTestNet()
+        ModelBase* CreateFitTestNet()
         {
-            auto model = new Sequential();
-            auto net = new NeuralNetwork(model, "fit_test", 7);
+            auto model = new Sequential("fit_test", 7);
             model->AddLayer((new Dense(3, 2, new Linear()))->SetWeightsInitializer(new Constant(1))->SetUseBias(false));
-            net->Optimize(new SGD(0.07f), new MeanSquareError());
-            return net;
+            model->Optimize(new SGD(0.07f), new MeanSquareError());
+            return model;
         }
 
         TEST_METHOD(CopyParameters)
         {
-            auto model = new Sequential();
+            auto model = new Sequential("test");
             model->AddLayer(new Dense(2, 3, new Linear()));
             model->AddLayer(new Dense(3, new Linear()));
-            auto net = new NeuralNetwork(model, "test");
-            net->ForceInitLayers();
+            model->ForceInitLayers();
 
-            auto net2 = net->Clone();
-            net->CopyParametersTo(*net2);
+            auto model2 = model->Clone();
+            model->CopyParametersTo(*model2);
 
-            auto netParams = net2->GetParametersAndGradients();
-            auto net2Params = net2->GetParametersAndGradients();
+            vector<ParametersAndGradients> modelParams; model->GetParametersAndGradients(modelParams);
+            vector<ParametersAndGradients> model2Params; model2->GetParametersAndGradients(model2Params);
 
-            for (auto i = 0; i < netParams.size(); ++i)
-                Assert::IsTrue(netParams[i].Parameters->Equals(*net2Params[i].Parameters));
+            for (auto i = 0; i < modelParams.size(); ++i)
+                Assert::IsTrue(modelParams[i].Parameters->Equals(*model2Params[i].Parameters));
         }
 
         TEST_METHOD(CopyParameters_Soft)
         {
-            auto model = new Sequential();
+            auto model = new Sequential("test");
             model->AddLayer(new Dense(2, 3, new Linear()));
             model->AddLayer(new Dense(3, new Linear()));
-            auto net = new NeuralNetwork(model, "test");
-            net->ForceInitLayers();
+            model->ForceInitLayers();
 
-            auto net2 = net->Clone();
+            auto model2 = model->Clone();
 
-            net->CopyParametersTo(*net2, 0.1f);
+            model->CopyParametersTo(*model2, 0.1f);
 
-            auto netParams = net2->GetParametersAndGradients();
-            auto net2Params = net2->GetParametersAndGradients();
+            vector<ParametersAndGradients> modelParams; model->GetParametersAndGradients(modelParams);
+            vector<ParametersAndGradients> model2Params; model2->GetParametersAndGradients(model2Params);
 
-            for (uint32_t i = 0; i < netParams.size(); ++i)
-                Assert::IsTrue(netParams[i].Parameters->Equals(*net2Params[i].Parameters));
+            for (auto i = 0; i < modelParams.size(); ++i)
+                Assert::IsTrue(modelParams[i].Parameters->Equals(*model2Params[i].Parameters));
         }
 
         void TestDenseLayer(int inputsNum, int outputsNum, int samples, int batchSize, int epochs)
         {
-            auto model = new Sequential();
+            auto model = new Sequential("dense_test", 7);
             model->AddLayer((new Dense(inputsNum, outputsNum, new Linear()))->SetWeightsInitializer(new Constant(1))->SetUseBias(false));
-            auto net = new NeuralNetwork(model, "dense_test", 7);
 
             auto expectedWeights = Tensor({ 1.1f, 0.1f, -1.3f, 0.2f, -0.9f, 0.7f }, Shape(3, 2));
 
@@ -81,8 +77,8 @@ namespace NeuroTests
             Tensor outputs(inputs.GetShape());
             GenerateTrainingData(expectedWeights, MatMult, inputs, outputs);
 
-            net->Optimize(new SGD(0.07f), new MeanSquareError());
-            net->Fit(inputs, outputs, batchSize, epochs, nullptr, nullptr, 0, Track::Nothing);
+            model->Optimize(new SGD(0.07f), new MeanSquareError());
+            model->Fit(inputs, outputs, batchSize, epochs, nullptr, nullptr, 0, ETrack::Nothing);
 
             vector<ParametersAndGradients> paramsAndGrads;
             model->LastLayer()->GetParametersAndGradients(paramsAndGrads);
@@ -93,20 +89,19 @@ namespace NeuroTests
 
         void TestDenseNetwork(int inputsNum, int samples, int batchSize, int epochs)
         {
-            auto model = new Sequential();
+            auto model = new Sequential("deep_dense_test", 7);
             model->AddLayer(new Dense(inputsNum, 5, new Linear()));
             model->AddLayer(new Dense(model->LastLayer(), 4, new Linear()));
             model->AddLayer(new Dense(model->LastLayer(), inputsNum, new Linear()));
-            auto net = new NeuralNetwork(model, "deep_dense_test", 7);
 
             Tensor inputs(Shape::From(model->GetLayer(0)->InputShape(), samples));
             inputs.FillWithRand(10, -2, 2);
             Tensor outputs = inputs.Mul(1.7f);
             
-            net->Optimize(new SGD(0.02f), new MeanSquareError());
-            net->Fit(inputs, outputs, batchSize, epochs, nullptr, nullptr, 0, Track::Nothing);
+            model->Optimize(new SGD(0.02f), new MeanSquareError());
+            model->Fit(inputs, outputs, batchSize, epochs, nullptr, nullptr, 0, ETrack::Nothing);
 
-            Assert::IsTrue(outputs.Equals(net->Predict(inputs)[0], 0.02f));
+            Assert::IsTrue(outputs.Equals(model->Predict(inputs)[0], 0.02f));
         }
 
         TEST_METHOD(Flow_1Input_2Outputs_SimpleSplit)
@@ -115,16 +110,16 @@ namespace NeuroTests
             auto upperStream1 = new Dense(input1, 2, new Linear(), "upperStream1");
             auto lowerStream1 = new Dense(input1, 2, new Linear(), "lowerStream1");
 
-            auto net = new NeuralNetwork(new Flow({ input1 }, { upperStream1, lowerStream1 }), "test");
+            auto model = new Flow({ input1 }, { upperStream1, lowerStream1 }, "test");
 
-            net->Optimize(new SGD(0.05f), new MeanSquareError());
+            model->Optimize(new SGD(0.05f), new MeanSquareError());
 
             tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)) };
             tensor_ptr_vec_t outputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
 
-            net->Fit(inputs, outputs, 1, 100, nullptr, 0, Track::Nothing, false);
+            model->Fit(inputs, outputs, 1, 100, nullptr, 0, ETrack::Nothing, false);
 
-            auto prediction = net->Predict(inputs);
+            auto prediction = model->Predict(inputs);
             Assert::IsTrue(prediction[0].Equals(*outputs[0], 0.01f));
             Assert::IsTrue(prediction[1].Equals(*outputs[1], 0.01f));
         }
@@ -135,16 +130,16 @@ namespace NeuroTests
             LayerBase* auxInput = new Input(Shape(1, 2), "aux_input");
             LayerBase* concat = new Concatenate({ mainInput, auxInput }, "concat");
 
-            auto net = new NeuralNetwork(new Flow({ mainInput, auxInput }, { concat }), "test");
+            auto model = new Flow({ mainInput, auxInput }, { concat }, "test");
 
-            net->Optimize(new SGD(0.05f), new MeanSquareError());
+            model->Optimize(new SGD(0.05f), new MeanSquareError());
 
             tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
             tensor_ptr_vec_t outputs = { new Tensor({ 1, 2, 1, 2 }, Shape(1, 4)) };
 
-            net->Fit(inputs, outputs, 1, 100, nullptr, nullptr, 0, Track::Nothing, false);
+            model->Fit(inputs, outputs, 1, 100, nullptr, nullptr, 0, ETrack::Nothing, false);
 
-            auto prediction = net->Predict(inputs);
+            auto prediction = model->Predict(inputs);
             Assert::IsTrue(prediction[0].Equals(*outputs[0], 0.01f));
         }
 
@@ -154,16 +149,16 @@ namespace NeuroTests
             auto input2 = new Dense(2, 2, new Linear(), "input2");
             auto avgMerge = new Merge(vector<LayerBase*>{ input1, input2 }, Merge::Mode::Avg, "avg_merge");
 
-            auto net = new NeuralNetwork(new Flow({ input1, input2 }, { avgMerge }), "test");
+            auto model = new Flow({ input1, input2 }, { avgMerge }, "test");
 
-            net->Optimize(new SGD(0.05f), new MeanSquareError());
+            model->Optimize(new SGD(0.05f), new MeanSquareError());
 
             tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
             tensor_ptr_vec_t outputs = { new Tensor({ 2, 4 }, Shape(1, 2)) };
 
-            net->Fit(inputs, outputs, 1, 100, nullptr, nullptr, 0, Track::Nothing, false);
+            model->Fit(inputs, outputs, 1, 100, nullptr, nullptr, 0, ETrack::Nothing, false);
 
-            auto prediction = net->Predict(inputs);
+            auto prediction = model->Predict(inputs);
             Assert::IsTrue(prediction[0].Equals(*outputs[0], 0.01f));
         }
 
@@ -173,16 +168,16 @@ namespace NeuroTests
             LayerBase* input2 = new Dense(2, 2, new Linear(), "input2");
             LayerBase* merge = new Merge(vector<LayerBase*>{ input1, input2 }, Merge::Mode::Min, "min_merge");
 
-            auto net = new NeuralNetwork(new Flow({ input1, input2 }, { merge }), "test");
+            auto model = new Flow({ input1, input2 }, { merge }, "test");
 
-            net->Optimize(new SGD(0.05f), new MeanSquareError());
+            model->Optimize(new SGD(0.05f), new MeanSquareError());
 
             tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
             tensor_ptr_vec_t outputs = { new Tensor({ 2, 4 }, Shape(1, 2)) };
 
-            net->Fit(inputs, outputs, 1, 100, nullptr, nullptr, 0, Track::Nothing, false);
+            model->Fit(inputs, outputs, 1, 100, nullptr, nullptr, 0, ETrack::Nothing, false);
 
-            auto prediction = net->Predict(inputs);
+            auto prediction = model->Predict(inputs);
             Assert::IsTrue(prediction[0].Equals(*outputs[0], 0.01f));
         }
 

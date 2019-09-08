@@ -59,4 +59,14 @@ namespace Neuro
         Sample, // across single batch
         Feature, // across batches
     };
+
+    enum ETrack
+    {
+        Nothing = 0,
+        TrainError = 1 << 0,
+        TestError = 1 << 1,
+        TrainAccuracy = 1 << 2,
+        TestAccuracy = 1 << 3,
+        All = -1
+    };
 }

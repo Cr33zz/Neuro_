@@ -14,7 +14,7 @@ public:
     {
         Tensor::SetDefaultOpMode(EOpMode::GPU);
 
-        auto model = new Sequential();
+        auto model = new Sequential("iris", 100);
         model->AddLayer(new Dense(4, 1000, new ReLU()));
         model->AddLayer(new Dense(model->LastLayer(), 500, new ReLU()));
         model->AddLayer(new Dense(model->LastLayer(), 300, new ReLU()));
@@ -23,15 +23,14 @@ public:
 
         cout << model->Summary();
 
-        auto net = new NeuralNetwork(model, "iris", 100);
-        net->Optimize(new Adam(), new BinaryCrossEntropy());
+        model->Optimize(new Adam(), new BinaryCrossEntropy());
 
         Tensor inputs;
         Tensor outputs;
         LoadCSVData("data/iris_data.csv", 3, inputs, outputs, true);
         inputs = inputs.Normalized(EAxis::Feature);
 
-        net->Fit(inputs, outputs, 40, 20, nullptr, nullptr, 2, Track::TrainError | Track::TrainAccuracy);
+        model->Fit(inputs, outputs, 40, 20, nullptr, nullptr, 2, ETrack::TrainError | ETrack::TrainAccuracy);
 
         cout << model->TrainSummary();
 

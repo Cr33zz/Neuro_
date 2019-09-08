@@ -8,8 +8,8 @@
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	Flow::Flow(const vector<LayerBase*>& inputLayers, const vector<LayerBase*>& outputLayers, const string& name)
-        : ModelBase(__FUNCTION__, name)
+	Flow::Flow(const vector<LayerBase*>& inputLayers, const vector<LayerBase*>& outputLayers, const string& name, int seed)
+        : ModelBase(__FUNCTION__, name, seed)
 	{
         m_ModelInputLayers = inputLayers;
 		m_ModelOutputLayers = outputLayers;

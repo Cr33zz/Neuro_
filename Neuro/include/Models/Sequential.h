@@ -11,7 +11,7 @@ namespace Neuro
     class Sequential : public ModelBase
     {
 	public:
-		Sequential(const string& name = "");
+		Sequential(const string& name = "", int seed = 0);
         ~Sequential();
 
         virtual LayerBase* GetCloneInstance() const override;

@@ -45,9 +45,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\NeuralNetwork.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\Tensors\Shape.h">
       <Filter>include\Tensors</Filter>
     </ClInclude>
@@ -194,9 +191,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\NeuralNetwork.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\Tensors\Shape.cpp">
       <Filter>src\Tensors</Filter>
     </ClCompile>

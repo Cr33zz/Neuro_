@@ -45,9 +45,8 @@ namespace NeuroTests
             GlobalRngSeed(101);
             Shape inputShape(2, 5, 3, batch);
 
-            auto model = new Sequential();
+            auto model = new Sequential("batch_norm_test");
             model->AddLayer(new BatchNormalization(inputShape));
-            auto net = new NeuralNetwork(model, "batch_norm_test");
 
             Tensor input(inputShape);
             input.FillWithRand();
@@ -61,12 +60,12 @@ namespace NeuroTests
             Tensor output(inputShape);
             input.BatchNormalization(gamma, beta, runningMean, runningVar, output);
 
-            net->Optimize(new SGD(0.02f), new MeanSquareError());
-            net->Fit(input, output, -1, 200, nullptr, nullptr, 1, Track::TrainError);
+            model->Optimize(new SGD(0.02f), new MeanSquareError());
+            model->Fit(input, output, -1, 200, nullptr, nullptr, 1, ETrack::TrainError);
 
-            auto& predictedOutput = net->Predict(input)[0];
+            auto& predictedOutput = model->Predict(input)[0];
 
-            Assert::IsTrue(net->GetLastTrainError() < 0.001f);
+            Assert::IsTrue(model->GetLastTrainError() < 0.001f);
         }
 
         LayerBase* CreateLayer()

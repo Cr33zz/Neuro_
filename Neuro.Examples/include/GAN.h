@@ -17,9 +17,11 @@ public:
         auto generator = CreateGenerator(100);
         auto discriminator = CreateDiscriminator();
 
-        auto model = Sequential();
-        model.AddLayer(generator);
-        model.AddLayer(discriminator);
+        auto ganModel = new Sequential();
+        ganModel->AddLayer(generator);
+        ganModel->AddLayer(discriminator);
+        ganModel->Optimize(new Adam(), new BinaryCrossEntropy());
+        cout << ganModel->Summary();
 
         cin.get();
         return;
@@ -28,33 +30,27 @@ public:
 private:
     static ModelBase* CreateGenerator(uint32_t inputsNum)
     {
-        auto model = new Sequential("GAN_generator");
+        auto model = new Sequential("generator");
         model->AddLayer(new Dense(inputsNum, 256, new LeakyReLU(0.2f)));
         model->AddLayer(new Dense(512, new LeakyReLU(0.2f)));
         model->AddLayer(new Dense(1024, new LeakyReLU(0.2f)));
         model->AddLayer(new Dense(784, new Tanh()));
-
+        model->Optimize(new Adam(), new BinaryCrossEntropy());
         cout << model->Summary();
-
-        /*auto net = new NeuralNetwork(model, );
-        net->Optimize(new Adam(), new BinaryCrossEntropy());*/
         return model;
     }
 
     static ModelBase* CreateDiscriminator()
     {
-        auto model = new Sequential("GAN_discriminator");
+        auto model = new Sequential("discriminator");
         model->AddLayer(new Dense(784, 1024, new LeakyReLU(0.2f)));
         model->AddLayer(new Dropout(0.3f));
         model->AddLayer(new Dense(512, new LeakyReLU(0.2f)));
         model->AddLayer(new Dropout(0.3f));
         model->AddLayer(new Dense(256, new LeakyReLU(0.2f)));
         model->AddLayer(new Dense(1, new Sigmoid()));
-
+        model->Optimize(new Adam(), new BinaryCrossEntropy());
         cout << model->Summary();
-
-        /*auto net = new NeuralNetwork(model, "GAN_discriminator");
-        net->Optimize(new Adam(), new BinaryCrossEntropy());*/
         return model;
     }
 };

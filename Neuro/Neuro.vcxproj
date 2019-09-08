@@ -140,7 +140,6 @@
     <ClInclude Include="include\Models\Flow.h" />
     <ClInclude Include="include\Models\ModelBase.h" />
     <ClInclude Include="include\Models\Sequential.h" />
-    <ClInclude Include="include\NeuralNetwork.h" />
     <ClInclude Include="include\Neuro.h" />
     <ClInclude Include="include\Optimizers\Adam.h" />
     <ClInclude Include="include\Optimizers\OptimizerBase.h" />
@@ -189,7 +188,6 @@
     <ClCompile Include="src\Models\Flow.cpp" />
     <ClCompile Include="src\Models\ModelBase.cpp" />
     <ClCompile Include="src\Models\Sequential.cpp" />
-    <ClCompile Include="src\NeuralNetwork.cpp" />
     <ClCompile Include="src\Optimizers\Adam.cpp" />
     <ClCompile Include="src\Optimizers\OptimizerBase.cpp" />
     <ClCompile Include="src\Optimizers\SGD.cpp" />

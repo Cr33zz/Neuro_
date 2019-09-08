@@ -16,7 +16,7 @@ public:
 
         //Based on https://www.youtube.com/watch?v=6Lfra0Tym4M
 
-        auto model = new Sequential();
+        auto model = new Sequential("autoencoder");
         model->AddLayer(new Conv2D(Shape(28, 28, 1), 5, 10, 1, 0, new ReLU()));
         model->AddLayer(new MaxPooling2D(model->LastLayer(), 2, 2, 1));
         model->AddLayer(new Conv2D(model->LastLayer(), 2, 20, 1, 0, new ReLU()));
@@ -29,13 +29,12 @@ public:
 
         cout << model->Summary();
 
-        auto net = new NeuralNetwork(model, "autoencoder");
-        net->Optimize(new Adam(), new BinaryCrossEntropy());
+        model->Optimize(new Adam(), new BinaryCrossEntropy());
 
         Tensor input, output;
         LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, false, 1000);
 
-        net->Fit(input, output, 20, 10, nullptr, nullptr, 1, Track::TrainError);
+        model->Fit(input, output, 20, 10, nullptr, nullptr, 1, ETrack::TrainError);
 
         cout << model->TrainSummary();
 

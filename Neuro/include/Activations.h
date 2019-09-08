@@ -69,14 +69,4 @@ namespace Neuro
         virtual void Compute(const Tensor& input, Tensor& result) const override;
         virtual void Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) const override;
 	};
-
-	namespace Activation
-	{
-		static Linear LinearActivation;
-		static Sigmoid SigmoidActivation;
-		static Tanh TanhActivation;
-		static ReLU ReLUActivation;
-		static ELU ELU1Activation(1);
-		static Softmax SoftmaxActivation;
-	}
 }

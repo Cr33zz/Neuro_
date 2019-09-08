@@ -14,7 +14,7 @@ public:
     {
         Tensor::SetDefaultOpMode(EOpMode::GPU);
 
-        auto model = new Sequential();
+        auto model = new Sequential("mnist", 1337);
         model->AddLayer(new Dense(784, 64, new ReLU()));
         model->AddLayer(new Dropout(model->LastLayer(), 0.2f));
         model->AddLayer(new Dense(model->LastLayer(), 64, new ReLU()));
@@ -23,8 +23,7 @@ public:
 
         cout << model->Summary();
 
-        auto net = new NeuralNetwork(model, "mnist", 1337);
-        net->Optimize(new Adam(), new BinaryCrossEntropy());
+        model->Optimize(new Adam(), new BinaryCrossEntropy());
 
         Tensor input, output;
         LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, false, 6000);
@@ -33,7 +32,7 @@ public:
         LoadMnistData("data/t10k-images.idx3-ubyte", "data/t10k-labels.idx1-ubyte", validationInput, validationOutput, false, 1000);
         validationInput.Reshape(Shape(1, -1, 1, validationInput.Batch()));
 
-        net->Fit(input, output, 128, 10, &validationInput, &validationOutput, 2, Track::All);
+        model->Fit(input, output, 128, 10, &validationInput, &validationOutput, 2, ETrack::All);
 
         cout << model->TrainSummary();
 
