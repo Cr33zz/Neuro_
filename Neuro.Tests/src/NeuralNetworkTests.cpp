@@ -50,7 +50,7 @@ namespace NeuroTests
                 Assert::IsTrue(netParams[i].Parameters->Equals(*net2Params[i].Parameters));
         }
 
-        TEST_METHOD(SoftCopyParameters)
+        TEST_METHOD(CopyParameters_Soft)
         {
             auto model = new Sequential();
             model->AddLayer(new Dense(2, 3, new Linear()));
@@ -60,7 +60,7 @@ namespace NeuroTests
 
             auto net2 = net->Clone();
 
-            net->SoftCopyParametersTo(*net2, 0.1f);
+            net->CopyParametersTo(*net2, 0.1f);
 
             auto netParams = net2->GetParametersAndGradients();
             auto net2Params = net2->GetParametersAndGradients();

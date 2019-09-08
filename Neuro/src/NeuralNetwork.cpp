@@ -64,17 +64,7 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-    void NeuralNetwork::CopyParametersTo(NeuralNetwork& target)
-    {
-		auto& layers = m_Model->GetLayers();
-		auto& targetLayers = target.m_Model->GetLayers();
-
-		for (uint32_t i = 0; i < layers.size(); ++i)
-			layers[i]->CopyParametersTo(*targetLayers[i]);
-    }
-
-	//////////////////////////////////////////////////////////////////////////
-    void NeuralNetwork::SoftCopyParametersTo(NeuralNetwork& target, float tau)
+    void NeuralNetwork::CopyParametersTo(NeuralNetwork& target, float tau)
     {
         //if (tau > 1 || tau <= 0) throw new Exception("Tau has to be a value from range (0, 1>.");
 		auto& layers = m_Model->GetLayers();

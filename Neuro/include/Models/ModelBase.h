@@ -24,6 +24,8 @@ namespace Neuro
         string Summary() const;
         string TrainSummary() const;
 
+        void SetTrainable(bool trainable) { m_Trainable = trainable; }
+
         const LayerBase* GetLayer(const string& name) const;
         
         virtual void SaveStateXml(string filename) const { }
@@ -35,5 +37,7 @@ namespace Neuro
     protected:
         ModelBase() {}
         ModelBase(const string& constructorName, const string& name = "");
+
+        bool m_Trainable = true;
 	};
 }

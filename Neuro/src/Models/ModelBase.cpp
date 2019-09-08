@@ -87,6 +87,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads)
     {
+        if (!m_Trainable)
+            return;
+
         for (auto layer : GetLayers())
             layer->GetParametersAndGradients(paramsAndGrads);
     }
