@@ -12,8 +12,8 @@ namespace Neuro
     class Flow : public ModelBase
     {
 	public:
-        Flow(const vector<LayerBase*>& inputLayers, const vector<LayerBase*>& outputLayers);
-        virtual ~Flow();
+        Flow(const vector<LayerBase*>& inputLayers, const vector<LayerBase*>& outputLayers, const string& name = "");
+        ~Flow();
 
         virtual LayerBase* GetCloneInstance() const override;
         virtual void OnClone(const LayerBase& source) override;
@@ -30,8 +30,8 @@ namespace Neuro
 
         void ProcessLayer(LayerBase* layer, vector<LayerBase*>& visited);
         
-        vector<LayerBase*> m_InputLayers;
-        vector<LayerBase*> m_OutputLayers;
+        vector<LayerBase*> m_ModelInputLayers;
+        vector<LayerBase*> m_ModelOutputLayers;
 
         vector<LayerBase*> m_Order;
         vector<LayerBase*> m_ReversedOrder;

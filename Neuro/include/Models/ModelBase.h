@@ -16,8 +16,6 @@ namespace Neuro
     class ModelBase : public LayerBase
     {
 	public:
-        virtual ~ModelBase() {}
-        
         virtual void Optimize() {}
         virtual const vector<LayerBase*>& GetLayers() const = 0;
         virtual const vector<LayerBase*>& GetOutputLayers() const = 0;
@@ -36,6 +34,6 @@ namespace Neuro
 
     protected:
         ModelBase() {}
-        ModelBase(const string& constructorName);
+        ModelBase(const string& constructorName, const string& name = "");
 	};
 }

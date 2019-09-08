@@ -37,7 +37,7 @@ namespace Neuro
 		const vector<LayerBase*>& OutputLayers() const { return m_OutputLayers; }
 
         bool HasInputShape() const { return !m_InputShapes.empty();  }
-        bool HasInputLayer() const { return !m_InputLayers.empty(); }
+        bool HasInputLayers() const { return !m_InputLayers.empty(); }
 
 		const string& Name() const { return m_Name; }
 

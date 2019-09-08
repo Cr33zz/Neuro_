@@ -8,17 +8,19 @@
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	Flow::Flow(const vector<LayerBase*>& inputLayers, const vector<LayerBase*>& outputLayers)
-        : ModelBase(__FUNCTION__)
+	Flow::Flow(const vector<LayerBase*>& inputLayers, const vector<LayerBase*>& outputLayers, const string& name)
+        : ModelBase(__FUNCTION__, name)
 	{
-		m_InputLayers = inputLayers;
-		m_OutputLayers = outputLayers;
+        m_ModelInputLayers = inputLayers;
+		m_ModelOutputLayers = outputLayers;
         for (size_t i = 0; i < outputLayers.size(); ++i)
             m_OutputShapes.push_back(outputLayers[i]->OutputShape());
         m_Outputs.resize(outputLayers.size());
+        for (size_t i = 0; i < inputLayers.size(); ++i)
+            m_InputShapes.push_back(inputLayers[i]->InputShape());
 
         vector<LayerBase*> visited;
-        for (auto inputLayer : m_InputLayers)
+        for (auto inputLayer : m_ModelInputLayers)
             ProcessLayer(inputLayer, visited);
 
         m_ReversedOrder.resize(m_Order.size());
@@ -65,8 +67,8 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Flow::FeedForwardInternal(bool training)
 	{
-		for (size_t i = 0; i < m_InputLayers.size(); ++i)
-			m_InputLayers[i]->FeedForward(m_Inputs[i], training);
+		for (size_t i = 0; i < m_ModelInputLayers.size(); ++i)
+			m_ModelInputLayers[i]->FeedForward(m_Inputs[i], training);
 
 		for (auto layer : m_Order)
 		{
@@ -81,17 +83,17 @@ namespace Neuro
 			layer->FeedForward(ins, training);
 		}
 
-        for (size_t i = 0; i < m_OutputLayers.size(); ++i)
-            m_Outputs[i] = m_OutputLayers[i]->Output();
+        for (size_t i = 0; i < m_ModelOutputLayers.size(); ++i)
+            m_Outputs[i] = m_ModelOutputLayers[i]->Output();
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Flow::BackPropInternal(vector<Tensor>& outputGradients)
 	{
-        for (uint32_t i = 0; i < (int)m_OutputLayers.size(); ++i)
+        for (uint32_t i = 0; i < (int)m_ModelOutputLayers.size(); ++i)
         {
             vector<Tensor> grads = { outputGradients[i] };
-            m_OutputLayers[i]->BackProp(grads);
+            m_ModelOutputLayers[i]->BackProp(grads);
         }
 
 		for (auto layer : m_ReversedOrder)
@@ -123,13 +125,13 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	const vector<LayerBase*>& Flow::GetOutputLayers() const
 	{
-		return m_OutputLayers;
+		return m_ModelOutputLayers;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	uint32_t Flow::GetOutputLayersCount() const
 	{
-		return (uint32_t)m_OutputLayers.size();
+		return (uint32_t)m_ModelOutputLayers.size();
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -167,16 +169,16 @@ namespace Neuro
 		m_ReversedOrder.resize(m_Order.size());
 		reverse_copy(m_Order.begin(), m_Order.end(), m_ReversedOrder.begin());
 
-        for (auto layer : sourceFlow.m_InputLayers)
+        for (auto layer : sourceFlow.m_ModelInputLayers)
 		{
 			auto layerClone = clones[layer->Name()];
-			m_InputLayers.push_back(layerClone);
+            m_ModelInputLayers.push_back(layerClone);
 		}
 
-		for (auto layer : sourceFlow.m_OutputLayers)
+        for (auto layer : sourceFlow.m_ModelOutputLayers)
 		{
 			auto layerClone = clones[layer->Name()];
-			m_OutputLayers.push_back(layerClone);
+            m_ModelOutputLayers.push_back(layerClone);
 		}
 	}
 

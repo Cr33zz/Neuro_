@@ -7,8 +7,8 @@
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	Sequential::Sequential()
-        : ModelBase(__FUNCTION__)
+	Sequential::Sequential(const string& name)
+        : ModelBase(__FUNCTION__, name)
 	{
 	}
 
@@ -22,7 +22,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     LayerBase* Sequential::GetCloneInstance() const
     {
-        return new Sequential();
+        return new Sequential(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -128,6 +128,9 @@ namespace Neuro
 	{
         assert(!m_Layers.empty() || layer->HasInputShape()); // first added layer must have input shape specified
         assert(!layer->InputLayer() || layer->InputLayer() == m_Layers.back()); // if layer being added has input layer it must be the last one in the sequence
+
+        if (m_Layers.empty())
+            m_InputShapes.push_back(layer->InputShape());
 		
         m_OutputLayers.resize(1);
 		m_OutputLayers[0] = layer;
@@ -135,6 +138,7 @@ namespace Neuro
 
         if (!m_Layers.empty() && !layer->InputLayer())
             layer->Link(m_Layers.back());
+
 		m_Layers.push_back(layer);
 	}
 }

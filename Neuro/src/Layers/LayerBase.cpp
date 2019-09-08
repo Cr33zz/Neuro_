@@ -71,25 +71,38 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void LayerBase::Link(LayerBase* inputLayer)
     {
-        assert(!HasInputShape());
-        assert(inputLayer->m_OutputShapes.size() == 1);
+        assert(!HasInputLayers());
 
-        m_InputShapes.push_back(inputLayer->m_OutputShapes[0]);
-        m_InputLayers.push_back(inputLayer);
+        // check if we only need to latch outputs to inputs
+        if (!m_InputShapes.empty() && m_InputShapes.size() == inputLayer->OutputShapes().size())
+        {
+            for (size_t i = 0; i < m_InputShapes.size(); ++i)
+                assert(m_InputShapes[i] == inputLayer->OutputShapes()[i]);            
+        }
+
+        m_InputShapes = inputLayer->OutputShapes();
+        m_InputLayers.resize(1);
+        m_InputLayers[0] = inputLayer;
         inputLayer->m_OutputLayers.push_back(this);
+
         OnLink();
     }
 
     //////////////////////////////////////////////////////////////////////////
     void LayerBase::Link(const vector<LayerBase*>& inputLayers)
     {
+        assert(!HasInputLayers());
+
         m_InputLayers.insert(m_InputLayers.end(), inputLayers.begin(), inputLayers.end());
+        m_InputShapes.clear();
+
         for (auto inLayer : inputLayers)
         {
             assert(inLayer->m_OutputShapes.size() == 1);
             m_InputShapes.push_back(inLayer->m_OutputShapes[0]);
             inLayer->m_OutputLayers.push_back(this);
         }
+
         OnLink();
     }
 

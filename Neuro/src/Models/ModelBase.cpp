@@ -7,8 +7,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    ModelBase::ModelBase(const string& constructorName)
-        : LayerBase(constructorName, Shape())
+    ModelBase::ModelBase(const string& constructorName, const string& name)
+        : LayerBase(constructorName, Shape(), nullptr, name)
     {
         // output shape will be established when layers are added
     }

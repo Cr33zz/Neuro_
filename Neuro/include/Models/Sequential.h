@@ -11,8 +11,8 @@ namespace Neuro
     class Sequential : public ModelBase
     {
 	public:
-		Sequential();
-        virtual ~Sequential();
+		Sequential(const string& name = "");
+        ~Sequential();
 
         virtual LayerBase* GetCloneInstance() const override;
         virtual void OnClone(const LayerBase& source) override;
@@ -32,6 +32,8 @@ namespace Neuro
         void AddLayer(LayerBase* layer);
 
 	private:
+        Sequential(int) {}
+
         vector<LayerBase*> m_Layers;
 		vector<LayerBase*> m_OutputLayers;
 	};
