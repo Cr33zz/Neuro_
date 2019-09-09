@@ -6,7 +6,7 @@ using namespace Neuro;
 
 namespace NeuroTests
 {
-    TEST_CLASS(NeuralNetworkTests)
+    TEST_CLASS(ModelTests)
     {
         TEST_METHOD(Dense_Network_BS1)
         {
@@ -73,7 +73,7 @@ namespace NeuroTests
 
             auto expectedWeights = Tensor({ 1.1f, 0.1f, -1.3f, 0.2f, -0.9f, 0.7f }, Shape(3, 2));
 
-            Tensor inputs(Shape::From(model->GetLayer(0)->InputShape(), samples));
+            Tensor inputs(Shape::From(model->Layer(0)->InputShape(), samples));
             Tensor outputs(inputs.GetShape());
             GenerateTrainingData(expectedWeights, MatMult, inputs, outputs);
 
@@ -94,7 +94,7 @@ namespace NeuroTests
             model->AddLayer(new Dense(model->LastLayer(), 4, new Linear()));
             model->AddLayer(new Dense(model->LastLayer(), inputsNum, new Linear()));
 
-            Tensor inputs(Shape::From(model->GetLayer(0)->InputShape(), samples));
+            Tensor inputs(Shape::From(model->Layer(0)->InputShape(), samples));
             inputs.FillWithRand(10, -2, 2);
             Tensor outputs = inputs.Mul(1.7f);
             

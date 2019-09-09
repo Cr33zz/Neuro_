@@ -52,7 +52,7 @@ namespace Neuro
 		const Tensor& FeedForward(const tensor_ptr_vec_t& inputs, bool training);
 		vector<Tensor>& BackProp(vector<Tensor>& outputGradients);
 
-        virtual uint32_t GetParamsNum() const { return 0; }
+        virtual uint32_t ParamsNum() const { return 0; }
         virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads) {}
 
 		LayerBase* Clone();

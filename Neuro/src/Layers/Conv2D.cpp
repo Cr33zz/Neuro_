@@ -121,7 +121,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	uint32_t Conv2D::GetParamsNum() const
+	uint32_t Conv2D::ParamsNum() const
 	{
 		return m_FilterSize * m_FilterSize * m_FiltersNum + (m_UseBias ? Shape(OutputShape().Width(), OutputShape().Height(), m_FiltersNum).Length : 0);
 	}

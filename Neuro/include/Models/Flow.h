@@ -21,9 +21,9 @@ namespace Neuro
         virtual void FeedForwardInternal(bool training) override;
         virtual void BackPropInternal(vector<Tensor>& outputGradients) override;
 
-		virtual const vector<LayerBase*>& GetOutputLayers() const override;
-		virtual uint32_t GetOutputLayersCount() const override;
-		virtual const vector<LayerBase*>& GetLayers() const override;
+		virtual const vector<LayerBase*>& OutputLayers() const override;
+		virtual uint32_t OutputLayersCount() const override;
+		virtual const vector<LayerBase*>& Layers() const override;
 
 	private:
 		Flow() {}

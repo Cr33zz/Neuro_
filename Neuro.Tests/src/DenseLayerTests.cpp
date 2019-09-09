@@ -60,7 +60,7 @@ namespace NeuroTests
 
             auto& predictedOutput = model->Predict(input)[0];
 
-            Assert::IsTrue(model->GetLastTrainError() < 0.001f);
+            Assert::IsTrue(model->LastTrainError() < 0.001f);
         }
 
         LayerBase* CreateLayer()

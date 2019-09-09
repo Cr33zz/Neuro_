@@ -1,4 +1,5 @@
-﻿#include "CppUnitTest.h"
+﻿#include <fstream>
+#include "CppUnitTest.h"
 #include "Neuro.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -1099,23 +1100,19 @@ namespace NeuroTests
             Assert::IsTrue(t.Equals(t2, 0.01f));
         }
 
-        TEST_METHOD(Serialize_Deserialize)
+        TEST_METHOD(Save_Load)
         {
-            /*string tempFilename = "tensor_tmp.txt";
-
-            auto t = Tensor(Shape(5, 4, 3, 2));
+            auto t = Tensor(Shape(5, 4, 3, 2), "1337");
             t.FillWithRand();
-            using (BinaryWriter writer = new BinaryWriter(File.Open(tempFilename, FileMode.Create)))
-            {
-                t.Serialize(writer);
-            }
+            
+            string filename = "tensor_tmp.bin";
+            ofstream ostream(filename, ios::out | ios::binary);
+            t.SaveBin(ostream);
+            ostream.close();
 
-            using (BinaryReader reader = new BinaryReader(File.Open(tempFilename, FileMode.Open)))
-            {
-                Assert::IsTrue(t.Equals(Tensor.Deserialize(reader)));
-            }
-
-            File.Delete(tempFilename);*/
+            ifstream istream(filename, ios::in | ios::binary);
+            Assert::IsTrue(t.Equals(Tensor(istream)));
+            istream.close();
         }
     };
 }

@@ -32,24 +32,24 @@ namespace Neuro
         const vector<Tensor>& Predict(const tensor_ptr_vec_t& inputs);
         const vector<Tensor>& Predict(const Tensor& input);
 
-        virtual const vector<LayerBase*>& GetLayers() const = 0;
-        virtual const vector<LayerBase*>& GetOutputLayers() const = 0;
-        virtual uint32_t GetOutputLayersCount() const = 0;
+        virtual const vector<LayerBase*>& Layers() const = 0;
+        virtual const vector<LayerBase*>& OutputLayers() const = 0;
+        virtual uint32_t OutputLayersCount() const = 0;
 
-        virtual void SaveStateXml(string filename) const { }
-        virtual void LoadStateXml(string filename) { }
+        void SaveWeights(const string& filename) const;
+        void LoadWeights(const string& filename);
         
-        virtual uint32_t GetParamsNum() const;
-        virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads);
+        virtual uint32_t ParamsNum() const;
+        virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable = true) const;
 
         string Summary() const;
         string TrainSummary() const;
 
         void SetTrainable(bool trainable) { m_Trainable = trainable; }
 
-        const LayerBase* GetLayer(const string& name) const;
+        const LayerBase* Layer(const string& name) const;
 
-        float GetLastTrainError() const { return m_LastTrainError; }
+        float LastTrainError() const { return m_LastTrainError; }
 
         static int g_DebugStep;
 

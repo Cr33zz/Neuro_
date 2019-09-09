@@ -20,13 +20,11 @@ namespace Neuro
         virtual void FeedForwardInternal(bool training) override;
         virtual void BackPropInternal(vector<Tensor>& outputGradients) override;
         
-        virtual const vector<LayerBase*>& GetOutputLayers() const override;
-        virtual uint32_t GetOutputLayersCount() const override;
-        virtual const vector<LayerBase*>& GetLayers() const override;
-        virtual void SaveStateXml(string filename) const override;
-        virtual void LoadStateXml(string filename) override;
+        virtual const vector<LayerBase*>& OutputLayers() const override;
+        virtual uint32_t OutputLayersCount() const override;
+        virtual const vector<LayerBase*>& Layers() const override;
 
-		LayerBase* GetLayer(int i);
+		LayerBase* Layer(int i);
         LayerBase* LastLayer() const;
         int LayersCount() const;
         void AddLayer(LayerBase* layer);

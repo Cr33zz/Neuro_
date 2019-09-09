@@ -123,7 +123,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    uint32_t Conv2DTranspose::GetParamsNum() const
+    uint32_t Conv2DTranspose::ParamsNum() const
     {
         return m_FilterSize * m_FilterSize * m_OutputDepth + (m_UseBias ? Shape(OutputShape().Width(), OutputShape().Height(), m_OutputDepth).Length : 0);
     }

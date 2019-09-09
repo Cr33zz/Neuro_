@@ -55,7 +55,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::ForceInitLayers()
     {
-        for (auto layer : GetLayers())
+        for (auto layer : Layers())
             layer->Init();
     }
 
@@ -77,7 +77,7 @@ namespace Neuro
     void ModelBase::Optimize(OptimizerBase* optimizer, LossBase* loss)
     {
         m_Optimizer = optimizer;
-        m_LossFuncs.resize(GetOutputLayersCount());
+        m_LossFuncs.resize(OutputLayersCount());
         m_LossFuncs[0] = loss;
         for (int i = 1; i < (int)m_LossFuncs.size(); ++i)
             m_LossFuncs[i] = loss->Clone();
@@ -92,9 +92,9 @@ namespace Neuro
         //if (lossDict.size() != Model->GetOutputLayersCount()) throw new Exception($"Mismatched number of loss functions ({lossDict.Count}) and output layers ({Model->GetOutputLayersCount()})!");
 #endif
 
-        m_LossFuncs.resize(GetOutputLayersCount());
+        m_LossFuncs.resize(OutputLayersCount());
         uint32_t i = 0;
-        for (auto outLayer : GetOutputLayers())
+        for (auto outLayer : OutputLayers())
         {
             m_LossFuncs[i++] = lossDict[outLayer->Name()];
         }
@@ -109,12 +109,12 @@ namespace Neuro
         ss << "Layer                        Output Shape              Param #   \n";
         ss << "=================================================================\n";
 
-        for (auto layer : GetLayers())
+        for (auto layer : Layers())
         {
-            totalParams += layer->GetParamsNum();
+            totalParams += layer->ParamsNum();
             ss << left << setw(29) << (layer->Name() + "(" + layer->ClassName() + ")");
             ss << setw(26) << layer->OutputShape().ToString();
-            ss << setw(13) << layer->GetParamsNum() << "\n";
+            ss << setw(13) << layer->ParamsNum() << "\n";
             if (layer->InputLayers().size() > 1)
             {
                 for (int i = 0; i < (int)layer->InputLayers().size(); ++i)
@@ -137,7 +137,7 @@ namespace Neuro
         ss << "Layer                        Fwd[s]      Back[s]     ActFwd[s]   ActBack[s]  \n";
         ss << "=============================================================================\n";
 
-        for (auto layer : GetLayers())
+        for (auto layer : Layers())
         {
             ss << left << setw(29) << (layer->Name() + "(" + layer->ClassName() + ")");
             ss << setw(12) << layer->FeedForwardTime() * 0.001f;
@@ -151,9 +151,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-	const LayerBase* ModelBase::GetLayer(const string& name) const
+	const LayerBase* ModelBase::Layer(const string& name) const
 	{
-		for (auto layer : GetLayers())
+		for (auto layer : Layers())
 		{
 			if (layer->Name() == name)
 				return layer;
@@ -162,21 +162,43 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    uint32_t ModelBase::GetParamsNum() const
+    void ModelBase::SaveWeights(const string& filename) const
+    {
+        ofstream stream(filename, ios::out | ios::binary);
+        vector<ParametersAndGradients> paramsAndGrads;
+        GetParametersAndGradients(paramsAndGrads, false);
+        for (auto i = 0; i < paramsAndGrads.size(); ++i)
+            paramsAndGrads[i].Parameters->SaveBin(stream);
+        stream.close();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void ModelBase::LoadWeights(const string& filename)
+    {
+        ifstream stream(filename, ios::in | ios::binary);
+        vector<ParametersAndGradients> paramsAndGrads;
+        GetParametersAndGradients(paramsAndGrads, false);
+        for (auto i = 0; i < paramsAndGrads.size(); ++i)
+            paramsAndGrads[i].Parameters->LoadBin(stream);
+        stream.close();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    uint32_t ModelBase::ParamsNum() const
     {
         uint32_t paramsNum = 0;
-        for (auto layer : GetLayers())
-            paramsNum += layer->GetParamsNum();
+        for (auto layer : Layers())
+            paramsNum += layer->ParamsNum();
         return paramsNum;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads)
+    void ModelBase::GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable) const
     {
-        if (!m_Trainable)
+        if (onlyTrainable && !m_Trainable)
             return;
 
-        for (auto layer : GetLayers())
+        for (auto layer : Layers())
             layer->GetParametersAndGradients(paramsAndGrads);
     }
 
@@ -198,7 +220,7 @@ namespace Neuro
 
         assert((validInputs && validOutputs) || (!validInputs && !validOutputs));
         //assert(inputs.size() == GetInputLayersCount());
-        assert(outputs.size() == GetOutputLayersCount());
+        assert(outputs.size() == OutputLayersCount());
 
         uint32_t trainSamplesCount = inputs[0]->Batch();
         uint32_t validationSamplesCount = validInputs ? (*validInputs)[0]->Batch() : 0;
@@ -234,7 +256,7 @@ namespace Neuro
 
                 if ((trackFlags & ETrack::TrainAccuracy) || (trackFlags & ETrack::TestAccuracy))
                 {
-                    if (GetOutputLayers()[i]->OutputShape().Length == 1)
+                    if (OutputLayers()[i]->OutputShape().Length == 1)
                         m_AccuracyFuncs[i] = AccBinaryClassificationEquality;
                     else
                         m_AccuracyFuncs[i] = AccCategoricalClassificationEquality;
@@ -343,7 +365,7 @@ namespace Neuro
             if (chartGen)
             {
                 chartGen->AddData((float)e, m_LastTrainError, (int)ETrack::TrainError);
-                chartGen->AddData((float)e, (float)trainHits / trainSamplesCount / GetOutputLayersCount(), (int)ETrack::TrainAccuracy);
+                chartGen->AddData((float)e, (float)trainHits / trainSamplesCount / OutputLayersCount(), (int)ETrack::TrainAccuracy);
             }
 
             stringstream summary;

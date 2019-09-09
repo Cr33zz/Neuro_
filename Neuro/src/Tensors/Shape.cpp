@@ -24,14 +24,20 @@ namespace Neuro
             NDim = 1;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
-	Neuro::Shape Shape::From(const vector<int>& dimensions)
+    //////////////////////////////////////////////////////////////////////////
+    Shape::Shape(istream& stream)
+    {
+        LoadBin(stream);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+	Shape Shape::From(const vector<int>& dimensions)
 	{
 		return From(dimensions.data(), (int)dimensions.size());
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Neuro::Shape Shape::From(const int* dimensions, int dimNum)
+	Shape Shape::From(const int* dimensions, int dimNum)
 	{
 		switch (dimNum)
 		{
@@ -43,13 +49,13 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    Neuro::Shape Shape::From(const Shape& shapeWithoutBatches, int batchSize)
+    Shape Shape::From(const Shape& shapeWithoutBatches, int batchSize)
     {
         return Shape(shapeWithoutBatches.Width(), shapeWithoutBatches.Height(), shapeWithoutBatches.Depth(), batchSize);
     }
 
     //////////////////////////////////////////////////////////////////////////
-	Neuro::Shape Shape::Reshaped(int w, int h, int d, int n) const
+	Shape Shape::Reshaped(int w, int h, int d, int n) const
 	{
 		int dimensions[4] = { w, h, d, n };
 		int dToUpdate = -1;
@@ -139,7 +145,29 @@ namespace Neuro
 		return ss.str();
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    void Shape::SaveBin(ostream& stream) const
+    {
+        stream.write((char*)Dimensions, sizeof(Dimensions));
+        stream.write((char*)&Dim0, sizeof(Dim0));
+        stream.write((char*)&Dim0Dim1, sizeof(Dim0Dim1));
+        stream.write((char*)&Dim0Dim1Dim2, sizeof(Dim0Dim1Dim2));
+        stream.write((char*)&Length, sizeof(Length));
+        stream.write((char*)&NDim, sizeof(NDim));
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Shape::LoadBin(istream& stream)
+    {
+        stream.read((char*)Dimensions, sizeof(Dimensions));
+        stream.read((char*)&Dim0, sizeof(Dim0));
+        stream.read((char*)&Dim0Dim1, sizeof(Dim0Dim1));
+        stream.read((char*)&Dim0Dim1Dim2, sizeof(Dim0Dim1Dim2));
+        stream.read((char*)&Length, sizeof(Length));
+        stream.read((char*)&NDim, sizeof(NDim));
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	bool Shape::operator!=(const Shape& other) const
 	{
 		return !(*this == other);

@@ -13,9 +13,6 @@
     <ClCompile Include="src\ActivationTests.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\NeuralNetworkTests.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\ConvolutionLayerTests.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -56,6 +53,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\DropoutLayerTests.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ModelTests.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

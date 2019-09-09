@@ -32,7 +32,22 @@ namespace Neuro
         return fif;
     }
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    Tensor::Tensor(const Shape& shape, const string& name)
+        : Tensor(name)
+    {
+        m_Shape = shape;
+        m_Values.resize(shape.Length);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor::Tensor(istream& stream)
+        : Tensor("")
+    {
+        LoadBin(stream);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     Tensor::Tensor(const string& name)
         : m_Name(name)
 	{
@@ -42,14 +57,6 @@ namespace Neuro
 			g_DefaultOpCpu = g_OpCpu;
 
 		m_Op = g_DefaultOpCpu;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	Tensor::Tensor(const Shape& shape, const string& name)
-		: Tensor(name)
-	{
-		m_Shape = shape;
-		m_Values.resize(shape.Length);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -1265,6 +1272,30 @@ namespace Neuro
                      (inputShape.Height() - 1) * stride + kernelHeight - 2 * paddingY,
                      outputDepth, 
                      inputShape.Batch());
+    }
+
+    void Tensor::SaveBin(ostream& stream) const
+    {
+        m_Shape.SaveBin(stream);
+        size_t valuesNum = m_Values.size();
+        stream.write((const char*)&valuesNum, sizeof(valuesNum));
+        stream.write((const char*)&m_Values[0], valuesNum * sizeof(float));
+        size_t nameLen = m_Name.length();
+        stream.write((const char*)&nameLen, sizeof(nameLen));
+        stream.write(m_Name.c_str(), nameLen);
+    }
+
+    void Tensor::LoadBin(istream& stream)
+    {
+        m_Shape.LoadBin(stream);
+        size_t valuesNum = 0;
+        stream.read((char*)&valuesNum, sizeof(valuesNum));
+        m_Values.resize(valuesNum);
+        stream.read((char*)&m_Values[0], valuesNum * sizeof(float));
+        size_t nameLen = 0;
+        stream.read((char*)&nameLen, sizeof(nameLen));
+        m_Name.resize(nameLen);
+        stream.read(&m_Name[0], nameLen);
     }
 
     //////////////////////////////////////////////////////////////////////////
