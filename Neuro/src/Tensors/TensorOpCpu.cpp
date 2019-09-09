@@ -351,7 +351,6 @@ namespace Neuro
 		input.CopyToHost();
 		outputGradient.CopyToHost();
 		result.OverrideHost();
-
 		result.Zero();
 
 		for (int outN = 0; outN < (int)output.Batch(); ++outN)
@@ -361,13 +360,23 @@ namespace Neuro
 		{
 			if (type == EPoolingMode::Max)
 			{
-				for (int poolH = 0; poolH < (int)filterSize; ++poolH)
-				for (int poolW = 0; poolW < (int)filterSize; ++poolW)
-				{
-                    float value = input.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN);
-					if (value == output(outW, outH, outD, outN))
-						result.TrySet(result.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN), w + poolW, h + poolH, outD, outN);
-				}
+                bool maxFound = false;
+                for (int poolH = 0; poolH < (int)filterSize; ++poolH)
+                {
+                    for (int poolW = 0; poolW < (int)filterSize; ++poolW)
+                    {
+                        float value = input.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN);
+                        if (value == output(outW, outH, outD, outN))
+                        {
+                            result.TrySet(result.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN), w + poolW, h + poolH, outD, outN);
+                            maxFound = true;
+                            break;
+                        }
+                    }
+
+                    if (maxFound)
+                        break;
+                }
 			}
 			else if (type == EPoolingMode::Avg)
 			{

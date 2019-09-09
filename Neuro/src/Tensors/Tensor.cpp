@@ -1335,8 +1335,10 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::CopyTo(Tensor& result, float tau) const
 	{
+		assert(m_Shape.Length == result.m_Shape.Length);
+
 		CopyToHost();
-		//if (m_Shape.Length != result.m_Shape.Length) throw new Exception("Incompatible tensors.");
+        result.OverrideHost();
 
 		if (tau <= 0)
 			copy(m_Values.begin(), m_Values.end(), result.m_Values.begin());
@@ -1347,10 +1349,13 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::CopyBatchTo(uint32_t batchId, uint32_t targetBatchId, Tensor& result) const
 	{
-		CopyToHost();
+        assert(SameDimensionsExceptBatches(result));
+        assert(batchId < Batch());
+        assert(targetBatchId < result.Batch());
+		
+        CopyToHost();
 		result.OverrideHost();
-		//if (m_Shape.Width != result.m_Shape.Width || m_Shape.Height != result.m_Shape.Height || m_Shape.Depth != result.m_Shape.Depth) throw new Exception("Incompatible tensors.");
-
+        
 		copy(m_Values.begin() + batchId * m_Shape.Dim0Dim1Dim2, 
 			 m_Values.begin() + batchId * m_Shape.Dim0Dim1Dim2 + m_Shape.Dim0Dim1Dim2,
 			 result.m_Values.begin() + targetBatchId * m_Shape.Dim0Dim1Dim2);

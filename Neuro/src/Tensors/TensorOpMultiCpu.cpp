@@ -264,7 +264,6 @@ namespace Neuro
         input.CopyToHost();
         outputGradient.CopyToHost();
         result.OverrideHost();
-
         result.Zero();
 
         parallel_for(0, (int)output.Batch(), [&](int outN) {
@@ -274,13 +273,22 @@ namespace Neuro
         {
             if (type == EPoolingMode::Max)
             {
-                // use 1 for all elements equal to max value in each pooled matrix and 0 for all others
+                bool maxFound = false;
                 for (int poolH = 0; poolH < (int)filterSize; ++poolH)
-                for (int poolW = 0; poolW < (int)filterSize; ++poolW)
                 {
-                    float value = input.TryGet(-numeric_limits<float>::max(), w + poolW, h + poolH, outD, outN);
-                    if (value == output(outW, outH, outD, outN))
-                        result.TrySet(result.TryGet(-numeric_limits<float>::max(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN), w + poolW, h + poolH, outD, outN);
+                    for (int poolW = 0; poolW < (int)filterSize; ++poolW)
+                    {
+                        float value = input.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN);
+                        if (value == output(outW, outH, outD, outN))
+                        {
+                            result.TrySet(result.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN), w + poolW, h + poolH, outD, outN);
+                            maxFound = true;
+                            break;
+                        }
+                    }
+
+                    if (maxFound)
+                        break;
                 }
             }
             else if (type == EPoolingMode::Avg)
