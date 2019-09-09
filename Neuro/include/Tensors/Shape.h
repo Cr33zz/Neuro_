@@ -14,6 +14,7 @@ namespace Neuro
     {
 	public:
         explicit Shape(uint32_t width = 1, uint32_t height = 1, uint32_t depth = 1, uint32_t batchSize = 1);
+        Shape(istream& stream);
 
 		bool operator==(const Shape& other) const;
 		bool operator!=(const Shape& other) const;
@@ -34,19 +35,8 @@ namespace Neuro
 
 		string ToString() const;
 
-        /*void Serialize(BinaryWriter writer)
-        {
-            writer.Write(Width);
-            writer.Write(Height);
-            writer.Write(Depth);
-            writer.Write(BatchSize);
-        }
-
-        static Shape Deserialize(BinaryReader reader)
-        {
-            int[] dims = new [] { reader.ReadInt32(), reader.ReadInt32(), reader.ReadInt32(), reader.ReadInt32() };
-            return Shape.From(dims);
-        }*/
+        void SaveBin(ostream& stream) const;
+        void LoadBin(istream& stream);
 
         uint32_t Width() const { return Dimensions[0]; }
         uint32_t Height() const { return Dimensions[1]; }
@@ -54,7 +44,6 @@ namespace Neuro
         uint32_t Batch() const { return Dimensions[3]; }
 
         uint32_t Dimensions[4];
-
         uint32_t Dim0;
         uint32_t Dim0Dim1;
         uint32_t Dim0Dim1Dim2;

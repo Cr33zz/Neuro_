@@ -14,7 +14,7 @@ namespace Neuro
         BatchNormalization(const Shape& inputShape, const string& name = "");
 
         virtual void CopyParametersTo(LayerBase& target, float tau) const override;
-        virtual uint32_t GetParamsNum() const override;
+        virtual uint32_t ParamsNum() const override;
         virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads) override;
 
         BatchNormalization* SetMomentum(float momentum);

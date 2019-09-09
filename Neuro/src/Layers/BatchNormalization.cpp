@@ -32,7 +32,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    uint32_t BatchNormalization::GetParamsNum() const
+    uint32_t BatchNormalization::ParamsNum() const
     {
         return m_Gamma.Length() + m_Beta.Length();
     }

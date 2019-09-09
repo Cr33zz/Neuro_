@@ -18,7 +18,7 @@ namespace Neuro
         ~Conv2DTranspose();
 
         virtual void CopyParametersTo(LayerBase& target, float tau) const override;
-        virtual uint32_t GetParamsNum() const override;
+        virtual uint32_t ParamsNum() const override;
         virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads) override;
 
         Tensor& Kernels() { return m_Kernels; }

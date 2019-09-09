@@ -100,7 +100,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	uint32_t Dense::GetParamsNum() const
+	uint32_t Dense::ParamsNum() const
 	{
 		return InputShape().Length * OutputShape().Length + (m_UseBias ? OutputShape().Length : 0);
 	}

@@ -57,56 +57,25 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-	const vector<LayerBase*>& Sequential::GetOutputLayers() const
+	const vector<LayerBase*>& Sequential::OutputLayers() const
 	{
 		return m_OutputLayers;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-    uint32_t Sequential::GetOutputLayersCount() const
+    uint32_t Sequential::OutputLayersCount() const
 	{
 		return 1;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	const std::vector<LayerBase*>& Sequential::GetLayers() const
+	const vector<LayerBase*>& Sequential::Layers() const
 	{
 		return m_Layers;
 	}
 
-    //////////////////////////////////////////////////////////////////////////
-	void Sequential::SaveStateXml(string filename) const
-	{
-		/*XmlDocument doc = new XmlDocument();
-		XmlElement modelElem = doc.CreateElement("Sequential");
-
-		for (int l = 0; l < Layers.Count; l++)
-		{
-			XmlElement layerElem = doc.CreateElement(Layers[l].GetType().Name);
-			Layers[l].SerializeParameters(layerElem);
-			modelElem.AppendChild(layerElem);
-		}
-
-		doc.AppendChild(modelElem);
-		doc.Save(filename);*/
-	}
-
 	//////////////////////////////////////////////////////////////////////////
-	void Sequential::LoadStateXml(string filename)
-	{
-		/*XmlDocument doc = new XmlDocument();
-		doc.Load(filename);
-		XmlElement modelElem = doc.FirstChild as XmlElement;
-
-		for (int l = 0; l < Layers.Count; l++)
-		{
-			XmlElement layerElem = modelElem.ChildNodes.Item(l) as XmlElement;
-			Layers[l].DeserializeParameters(layerElem);
-		}*/
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	LayerBase* Sequential::GetLayer(int i)
+	LayerBase* Sequential::Layer(int i)
 	{
 		return m_Layers[i];
 	}

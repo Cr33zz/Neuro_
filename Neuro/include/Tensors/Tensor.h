@@ -29,6 +29,7 @@ namespace Neuro
         Tensor(const vector<float>&, const Shape& shape, const string& name = "");
         Tensor(const vector<float>&, const string& name = "");
         Tensor(const string& imageFile, bool normalize, bool grayScale = false, const string& name = "");
+        Tensor(istream& stream);
         Tensor(const Tensor& t);
         Tensor& operator=(const Tensor& t);
 
@@ -202,23 +203,8 @@ namespace Neuro
         //    Values = elem.InnerText.Split(',').Select(w => float.Parse(w)).ToArray();
         //}
 
-        //void Serialize(BinaryWriter writer)
-        //{
-        //    Shape.Serialize(writer);
-        //    writer.Write(Values.Length);
-        //    foreach (var val in Values)
-        //        writer.Write(val);
-        //}
-
-        //static Tensor Deserialize(BinaryReader reader)
-        //{
-        //    var t = new Tensor(Shape.Deserialize(reader));
-        //    int valuesCount = reader.ReadInt32();
-        //    t.Values = new float[valuesCount];
-        //    for (uint32_t i = 0; i < valuesCount; ++i)
-        //        t.Values[i] = reader.ReadSingle();
-        //    return t;
-        //}
+        void SaveBin(ostream& stream) const;
+        void LoadBin(istream& stream);
 
         float& operator()(uint32_t w, uint32_t h = 0, uint32_t d = 0, uint32_t n = 0);
         float operator()(uint32_t w, uint32_t h = 0, uint32_t d = 0, uint32_t n = 0) const;
@@ -283,8 +269,8 @@ namespace Neuro
         mutable GPUData m_GpuData;
 		TensorOpCpu* m_Op;
         mutable ELocation m_CurrentLocation;
-        mutable vector<float_t> m_Values;
 		Shape m_Shape;
+        mutable vector<float_t> m_Values;
         string m_Name;
 
         TensorOpCpu* Op() const { return g_ForcedOp ? g_ForcedOp : m_Op; }

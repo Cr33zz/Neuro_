@@ -123,13 +123,13 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	const vector<LayerBase*>& Flow::GetOutputLayers() const
+	const vector<LayerBase*>& Flow::OutputLayers() const
 	{
 		return m_ModelOutputLayers;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	uint32_t Flow::GetOutputLayersCount() const
+	uint32_t Flow::OutputLayersCount() const
 	{
 		return (uint32_t)m_ModelOutputLayers.size();
 	}
@@ -183,7 +183,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	const vector<LayerBase*>& Flow::GetLayers() const
+	const vector<LayerBase*>& Flow::Layers() const
 	{
 		return m_Order;
 	}
