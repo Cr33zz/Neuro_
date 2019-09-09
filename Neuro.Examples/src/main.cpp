@@ -26,10 +26,10 @@ int main()
     //IrisNetwork::Run();
     //ConvNetwork::Run();
     //FlowNetwork::Run();
-    MnistConvNetwork::Run();
+    //MnistConvNetwork::Run();
     //MnistNetwork::Run();
     //AutoencoderNetwork::Run();
-    //ConvAutoencoderNetwork::Run();
+    ConvAutoencoderNetwork::Run();
     //GAN::Run();
 
     return 0;

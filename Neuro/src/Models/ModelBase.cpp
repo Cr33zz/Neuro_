@@ -166,7 +166,7 @@ namespace Neuro
     {
         ofstream stream(filename, ios::out | ios::binary);
         vector<ParametersAndGradients> paramsAndGrads;
-        GetParametersAndGradients(paramsAndGrads, false);
+        const_cast<ModelBase*>(this)->GetParametersAndGradients(paramsAndGrads, false);
         for (auto i = 0; i < paramsAndGrads.size(); ++i)
             paramsAndGrads[i].Parameters->SaveBin(stream);
         stream.close();
@@ -193,13 +193,13 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable) const
+    void ModelBase::GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable)
     {
         if (onlyTrainable && !m_Trainable)
             return;
 
         for (auto layer : Layers())
-            layer->GetParametersAndGradients(paramsAndGrads);
+            layer->GetParametersAndGradients(paramsAndGrads, onlyTrainable);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -494,7 +494,7 @@ namespace Neuro
         GetParametersAndGradients(paramsAndGrads);
 
 #ifdef LOG_GRADIENTS
-        for (auto paramAndGrad : paramsAndGrads)
+        for (auto paramAndGrad : paramsAndGrads, bool onlyTrainable)
         {
             g_GradientsFile << paramAndGrad.Gradients->Name() << endl;
             g_GradientsFile << paramAndGrad.Gradients->ToString() << endl;

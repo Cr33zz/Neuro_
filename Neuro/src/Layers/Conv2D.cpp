@@ -102,8 +102,11 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-	void Conv2D::GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads)
+	void Conv2D::GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable)
 	{
+        if (onlyTrainable && !m_Trainable)
+            return;
+
         paramsAndGrads.push_back(ParametersAndGradients(&m_Kernels, &m_KernelsGradient));
 
 		if (m_UseBias)

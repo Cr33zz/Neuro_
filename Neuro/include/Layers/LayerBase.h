@@ -52,8 +52,10 @@ namespace Neuro
 		const Tensor& FeedForward(const tensor_ptr_vec_t& inputs, bool training);
 		vector<Tensor>& BackProp(vector<Tensor>& outputGradients);
 
+        void SetTrainable(bool trainable) { m_Trainable = trainable; }
+
         virtual uint32_t ParamsNum() const { return 0; }
-        virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads) {}
+        virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable = true) {}
 
 		LayerBase* Clone();
 		void Init();
@@ -106,6 +108,7 @@ namespace Neuro
 		vector<Tensor> m_Outputs;
         // Only models can have multiple outputs shapes
 		vector<Shape> m_OutputShapes;
+        bool m_Trainable = true;
 
 	private:
 		void ExecuteFeedForward(bool training);

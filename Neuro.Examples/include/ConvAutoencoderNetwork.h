@@ -22,23 +22,25 @@ public:
         encoder.AddLayer(new MaxPooling2D(2, 2));
         encoder.AddLayer(new Conv2D(3, 8, 1, 1, new ReLU()));
         encoder.AddLayer(new MaxPooling2D(2, 2));
+        cout << encoder.Summary();
         auto decoder = Sequential("decoder");
         decoder.AddLayer(new Conv2D(Shape(7, 7, 8), 3, 8, 1, 1, new ReLU()));
         decoder.AddLayer(new UpSampling2D(2));
         decoder.AddLayer(new Conv2D(3, 16, 1, 1, new ReLU()));
         decoder.AddLayer(new UpSampling2D(2));
         decoder.AddLayer(new Conv2D(3, 1, 1, 1, new Sigmoid()));
+        cout << decoder.Summary();
 
-        auto model = Sequential("conv_autoencoder", 1337);
+        auto model = Sequential("conv_autoencoder");
         model.AddLayer(&encoder);
         model.AddLayer(&decoder);
         model.Optimize(new Adam(), new BinaryCrossEntropy());
-        cout << model.Summary();
+        //cout << model.Summary();
 
         Tensor input, output;
-        LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, false, 6000);
+        LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, false, 600);
 
-        model.Fit(input, input, 128, 50, nullptr, nullptr, 2, ETrack::TrainError);
+        model.Fit(input, input, 256, 10, nullptr, nullptr, 2, ETrack::TrainError);
 
         cout << model.TrainSummary();
 

@@ -15,7 +15,7 @@ namespace Neuro
 
         virtual void CopyParametersTo(LayerBase& target, float tau) const override;
         virtual uint32_t ParamsNum() const override;
-        virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads) override;
+        virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable = true) override;
 
         BatchNormalization* SetMomentum(float momentum);
 
