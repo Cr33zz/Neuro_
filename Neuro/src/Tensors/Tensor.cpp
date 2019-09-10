@@ -1,5 +1,6 @@
 ﻿#include <algorithm>
 #include <fstream>
+#include <numeric>
 #include <FreeImage.h>
 
 #include "Tensors/Tensor.h"
@@ -214,13 +215,13 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-	Tensor& Tensor::FillWithRand(int seed, float min, float max)
+    Tensor& Tensor::FillWithRand(int seed, float min, float max, uint32_t offset)
 	{
 		OverrideHost();
 
 		auto fillUp = [&](Random& rng)
 		{
-			for (uint32_t i = 0; i < m_Values.size(); ++i)
+			for (uint32_t i = offset; i < m_Values.size(); ++i)
 				m_Values[i] = min + (max - min) * rng.NextFloat();
 		};
 
@@ -236,28 +237,28 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor& Tensor::FillWithRange(float start, float increment)
+    Tensor& Tensor::FillWithRange(float start, float increment, uint32_t offset)
 	{
 		OverrideHost();
-		for (uint32_t i = 0; i < m_Values.size(); ++i)
+        for (uint32_t i = offset; i < m_Values.size(); ++i)
 			m_Values[i] = start + i * increment;
 		return *this;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor& Tensor::FillWithValue(float value)
+	Tensor& Tensor::FillWithValue(float value, uint32_t offset)
 	{
 		OverrideHost();
-		for (uint32_t i = 0; i < m_Values.size(); ++i)
+		for (uint32_t i = offset; i < m_Values.size(); ++i)
 			m_Values[i] = value;
 		return *this;
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor& Tensor::FillWithFunc(const function<float()>& func)
+    Tensor& Tensor::FillWithFunc(const function<float()>& func, uint32_t offset)
     {
         OverrideHost();
-        for (uint32_t i = 0; i < m_Values.size(); ++i)
+        for (uint32_t i = offset; i < m_Values.size(); ++i)
             m_Values[i] = func();
         return *this;
     }
@@ -653,36 +654,59 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Concat(const tensor_ptr_vec_t& inputs, Tensor& result)
+	void Tensor::Concat(EAxis axis, const tensor_ptr_vec_t& inputs, Tensor& result)
 	{
-		for (uint32_t b = 0; b < result.Batch(); ++b)
-		{
-			uint32_t elementsCopied = 0;
-			for (uint32_t i = 0; i < inputs.size(); ++i)
-			{
-				inputs[i]->CopyToHost();
-				copy(inputs[i]->m_Values.begin() + b * inputs[i]->BatchLength(), inputs[i]->m_Values.begin() + (b + 1) * inputs[i]->BatchLength(), result.m_Values.begin() + b * result.BatchLength() + elementsCopied);
-				elementsCopied += inputs[i]->BatchLength();
-			}
-		}
+        result.OverrideHost();
+
+        if (axis == EAxis::Sample)
+        {
+            for (uint32_t b = 0; b < result.Batch(); ++b)
+            {
+                uint32_t elementsCopied = 0;
+                for (uint32_t i = 0; i < inputs.size(); ++i)
+                {
+                    inputs[i]->CopyToHost();
+                    copy(inputs[i]->m_Values.begin() + b * inputs[i]->BatchLength(), inputs[i]->m_Values.begin() + (b + 1) * inputs[i]->BatchLength(), result.m_Values.begin() + b * result.BatchLength() + elementsCopied);
+                    elementsCopied += inputs[i]->BatchLength();
+                }
+            }
+        }
+        else if (axis == EAxis::Global)
+        {
+            uint32_t elementsCopied = 0;
+            for (uint32_t i = 0; i < inputs.size(); ++i)
+            {
+                inputs[i]->CopyToHost();
+                copy(inputs[i]->m_Values.begin(), inputs[i]->m_Values.end(), result.m_Values.begin() + elementsCopied);
+                elementsCopied += inputs[i]->Length();
+            }
+        }
+        else //if (axis == EAxis::Feature)
+            assert(false); // not supported yet
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Split(vector<Tensor>& outputs) const
+	void Tensor::Split(EAxis axis, vector<Tensor>& outputs) const
 	{
 		CopyToHost();
-		for (uint32_t b = 0; b < Batch(); ++b)
-		{
-            uint32_t elementsCopied = 0;
-			for (uint32_t i = 0; i < outputs.size(); ++i)
-			{
-				outputs[i].CopyToHost();
-				copy(m_Values.begin() + b * BatchLength() + elementsCopied, 
-                     m_Values.begin() + b * BatchLength() + elementsCopied + outputs[i].BatchLength(),
-                     outputs[i].m_Values.begin() + b * outputs[i].BatchLength());
-				elementsCopied += outputs[i].BatchLength();
-			}
-		}
+
+        if (axis == EAxis::Sample)
+        {
+            for (uint32_t b = 0; b < Batch(); ++b)
+            {
+                uint32_t elementsCopied = 0;
+                for (uint32_t i = 0; i < outputs.size(); ++i)
+                {
+                    outputs[i].OverrideHost();
+                    copy(m_Values.begin() + b * BatchLength() + elementsCopied,
+                         m_Values.begin() + b * BatchLength() + elementsCopied + outputs[i].BatchLength(),
+                         outputs[i].m_Values.begin() + b * outputs[i].BatchLength());
+                    elementsCopied += outputs[i].BatchLength();
+                }
+            }
+        }
+        else
+            assert(false); // not supported yet
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -1430,7 +1454,20 @@ namespace Neuro
             CopyBatchTo(batchIds[i], (uint32_t)i, result);
     }
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::GetRandomBatches(uint32_t batchSize) const
+    {
+        assert(batchSize <= Batch());
+
+        vector<uint32_t> indices(Batch());
+        iota(indices.begin(), indices.end(), 0);
+        random_shuffle(indices.begin(), indices.end(), [&](size_t max) { return GlobalRng().Next((int)max); });
+        indices.resize(batchSize);
+
+        return GetBatches(indices);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::GetDepth(uint32_t depthId, uint32_t batchId) const
 	{
 		Tensor result(Shape(Width(), Height()));

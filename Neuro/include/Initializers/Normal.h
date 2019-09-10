@@ -9,7 +9,7 @@ namespace Neuro
 	public:
         Normal(float mean = 0, float variance = 1, float scale = 1);
 
-        static float NextSingle(float mean, float stdDeviation, float scale);
+        static float NextSingle(float mean, float stdDeviation, float scale = 1.f);
 
 		virtual void Init(Tensor& t, int fanIn, int fanOut) override;
 

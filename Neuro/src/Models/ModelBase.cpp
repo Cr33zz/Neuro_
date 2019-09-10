@@ -326,13 +326,13 @@ namespace Neuro
                     auto inputsBatch = GenerateBatch(inputs, trainBatchesIndices[b]);
                     auto outputsBatch = GenerateBatch(outputs, trainBatchesIndices[b]);
 
-                    TrainStep(inputsBatch, outputsBatch, trainTotalError, trainHits);
+                    TrainStep(inputsBatch, outputsBatch, &trainTotalError, &trainHits);
 
                     DeleteContainer(inputsBatch);
                     DeleteContainer(outputsBatch);
                 }
                 else
-                    TrainStep(inputs, outputs, trainTotalError, trainHits);
+                    TrainStep(inputs, outputs, &trainTotalError, &trainHits);
 
                 if (verbose == 2)
                 {
@@ -455,7 +455,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::TrainStep(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, float& trainError, int& trainHits)
+    void ModelBase::TrainStep(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, float* trainError, int* trainHits)
     {
         ++g_DebugStep;
 
@@ -475,8 +475,12 @@ namespace Neuro
             outputsGrad[i].DebugDumpValues(Replace(string("output") + to_string(i) + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
 #endif
 
-            trainError += outputsGrad[i].Sum(EAxis::Global)(0) / m_Outputs[i].BatchLength();
-            trainHits += m_AccuracyFuncs[i] ? m_AccuracyFuncs[i](*outputs[i], m_Outputs[i]) : 0;
+            if (trainError)
+                *trainError += outputsGrad[i].Sum(EAxis::Global)(0) / m_Outputs[i].BatchLength();
+
+            if (trainHits)
+                *trainHits += m_AccuracyFuncs[i] ? m_AccuracyFuncs[i](*outputs[i], m_Outputs[i]) : 0;
+
             m_LossFuncs[i]->Derivative(*outputs[i], m_Outputs[i], outputsGrad[i]);
 
 #ifdef LOG_GRADIENTS
@@ -506,6 +510,18 @@ namespace Neuro
 #endif
 
         m_Optimizer->Step(paramsAndGrads, inputs[0]->Batch());
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void ModelBase::TrainOnBatch(const Tensor& input, const Tensor& output)
+    {
+        TrainOnBatch({ &input }, { &output });
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void ModelBase::TrainOnBatch(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs)
+    {
+        TrainStep(inputs, outputs);
     }
 
     //////////////////////////////////////////////////////////////////////////

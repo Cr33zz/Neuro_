@@ -34,12 +34,12 @@ namespace Neuro
     void Concatenate::FeedForwardInternal(bool training)
     {
         // output is already of proper shape thanks to LayerBase.FeedForward
-        Tensor::Concat(m_Inputs, m_Outputs[0]);
+        Tensor::Concat(EAxis::Sample, m_Inputs, m_Outputs[0]);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Concatenate::BackPropInternal(vector<Tensor>& outputsGradient)
     {
-        outputsGradient[0].Split(m_InputsGradient);
+        outputsGradient[0].Split(EAxis::Sample, m_InputsGradient);
     }
 }

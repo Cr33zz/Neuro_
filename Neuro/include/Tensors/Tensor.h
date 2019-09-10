@@ -53,10 +53,10 @@ namespace Neuro
 
         void SaveAsImage(const string& imageFile, bool denormalize) const;
 
-        Tensor& FillWithRand(int seed = -1, float min = -1, float max = 1);
-        Tensor& FillWithRange(float start = 0, float increment = 1);
-        Tensor& FillWithValue(float value);
-        Tensor& FillWithFunc(const function<float()>& func);
+        Tensor& FillWithRand(int seed = -1, float min = -1, float max = 1, uint32_t offset = 0);
+        Tensor& FillWithRange(float start = 0, float increment = 1, uint32_t offset = 0);
+        Tensor& FillWithValue(float value, uint32_t offset = 0);
+        Tensor& FillWithFunc(const function<float()>& func, uint32_t offset = 0);
 
         void Zero();
 
@@ -113,10 +113,9 @@ namespace Neuro
         // In case number of tensors is smaller than forcedDepth, first tensor will be repeated to account for missing tensors
         static Tensor MergeIntoDepth(const vector<Tensor>& tensors, uint32_t forcedDepth = 0);
 
-		// This operation will concatenate elements of all input tensors separately for each batch
-		static void Concat(const tensor_ptr_vec_t& inputs, Tensor& result);
+		static void Concat(EAxis axis, const tensor_ptr_vec_t& inputs, Tensor& result);
         // This is reverse Concat operation
-        void Split(vector<Tensor>& outputs) const;
+        void Split(EAxis axis, vector<Tensor>& outputs) const;
 
         static void MergeMin(const tensor_ptr_vec_t& inputs, Tensor& result);
         static void MergeMax(const tensor_ptr_vec_t& inputs, Tensor& result);
@@ -223,6 +222,7 @@ namespace Neuro
         void CopyDepthTo(uint32_t depthId, uint32_t batchId, uint32_t targetDepthId, uint32_t targetBatchId, Tensor& result) const;
         Tensor GetBatch(uint32_t batchId) const;
         Tensor GetBatches(vector<uint32_t> batchIds) const;
+        Tensor GetRandomBatches(uint32_t batchSize) const;
         void GetBatches(vector<uint32_t> batchIds, Tensor& result) const;
         Tensor GetDepth(uint32_t depthId, uint32_t batchId = 0) const;
         bool Equals(const Tensor& other, float epsilon = 0.00001f) const;        

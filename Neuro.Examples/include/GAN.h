@@ -23,11 +23,47 @@ public:
         ganModel->Optimize(new Adam(), new BinaryCrossEntropy());
         cout << ganModel->Summary();
 
-        Tensor input, output;
-        LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, false, 10000);
-        input.Reshape(Shape(1, 784, 1, -1));
+        Tensor images, labels;
+        LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", images, labels, false, 600);
+        images.Reshape(Shape(1, 784, 1, -1));
 
+        const uint32_t BATCH_SIZE = 128;
+        const uint32_t EPOCHS = 40;
 
+        uint32_t batchCount = images.Batch() / BATCH_SIZE;
+        Tensor discriminatorInput(Shape::From(discriminator->InputShape(), 2 * BATCH_SIZE));
+        Tensor discriminatorOutput(Shape::From(discriminator->OutputShape(), 2 * BATCH_SIZE));
+        Tensor ganInput(Shape::From(generator->InputShape(), BATCH_SIZE));
+        Tensor ganOutput(Shape::From(discriminator->OutputShape(), BATCH_SIZE));
+        
+        for (uint32_t e = 1; e <= EPOCHS; ++e)
+        {
+            cout << "Epoch " << e << endl;
+
+            for (uint32_t i = 0; i < BATCH_SIZE; ++i)
+            {
+                ganInput.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
+
+                Tensor generatedImages = generator->Predict(ganInput)[0];
+                Tensor realImages = images.GetRandomBatches(BATCH_SIZE);
+
+                generatedImages.Concat(EAxis::Global, { &generatedImages, &realImages }, discriminatorInput);
+                discriminatorOutput.Zero();
+                discriminatorOutput.FillWithValue(0.9f, BATCH_SIZE);
+
+                discriminator->SetTrainable(true);
+                discriminator->TrainOnBatch(discriminatorInput, discriminatorOutput);
+
+                ganInput.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
+                ganOutput.FillWithValue(1.f);
+
+                discriminator->SetTrainable(false);
+                ganModel->TrainOnBatch(ganInput, ganOutput);
+            }
+
+            if (e == 1 || e % 20 == 0)
+                generator->Output().SaveAsImage("generator_" + to_string(e) + ".png", true);
+        }
 
         cin.get();
         return;

@@ -1023,7 +1023,7 @@ namespace NeuroTests
 
             auto result = Tensor(Shape(1, outputLen, 1, 2));
 
-            Tensor::Concat(inputs, result);
+            Tensor::Concat(EAxis::Sample, inputs, result);
 
             auto correct = Tensor({0,1,2,3,8,9,10,11,4,5,6,7,12,13,14,15}, result.GetShape());
 
@@ -1046,7 +1046,7 @@ namespace NeuroTests
 
             auto concated = Tensor({ 0, 1, 2, 3, 8, 9, 10, 11, 4, 5, 6, 7, 12, 13, 14, 15 }, Shape(1, outputLen, 1, 2));
 
-            concated.Split(inputs);
+            concated.Split(EAxis::Sample, inputs);
 
             auto correct1 = Tensor(Shape(2, 2, 1, 2)); correct1.FillWithRange();
             auto correct2 = Tensor(Shape(2, 2, 1, 2)); correct2.FillWithRange(8);
