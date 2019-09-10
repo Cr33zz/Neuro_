@@ -10,49 +10,49 @@ namespace Neuro
     using namespace std;
 
 	//////////////////////////////////////////////////////////////////////////
-	void Neuro::TensorOpCpu::Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& result) const
+	void Neuro::TensorOpCpu::Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const
 	{
 		t1.CopyToHost();
 		t2.CopyToHost();
-		result.OverrideHost();
+		output.OverrideHost();
 
         auto& t1Values = t1.GetValues();
         auto& t2Values = t2.GetValues();
-        auto& resultValues = result.GetValues();
+        auto& outputValues = output.GetValues();
 
 		if (t2.Batch() == t1.Batch())
 		{
 			for (uint32_t i = 0; i < (int)t1Values.size(); ++i)
-				resultValues[i] = alpha * t1Values[i] + beta * t2Values[i];
+				outputValues[i] = alpha * t1Values[i] + beta * t2Values[i];
 			return;
 		}
 
 		for (uint32_t n = 0; n < t1.Batch(); ++n)
 		for (uint32_t i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
-			resultValues[idx] = alpha * t1Values[idx] + beta * t2Values[i];
+			outputValues[idx] = alpha * t1Values[idx] + beta * t2Values[i];
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::Sub(const Tensor& t1, const Tensor& t2, Tensor& result) const
+	void TensorOpCpu::Sub(const Tensor& t1, const Tensor& t2, Tensor& output) const
 	{
-		Add(1, t1, -1, t2, result);
+		Add(1, t1, -1, t2, output);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::Mul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& result) const
+	void TensorOpCpu::Mul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
 	{
 		const Tensor& t1Temp = transposeT1 ? t1.Transposed() : t1;
         const Tensor& t2Temp = transposeT2 ? t2.Transposed() : t2;
 
 		t1Temp.CopyToHost();
 		t2Temp.CopyToHost();
-		result.Zero();
+		output.Zero();
 
         uint32_t N = t1Temp.Height();
         uint32_t M = t2Temp.Width();
         uint32_t K = t1Temp.Width();
 
-		for (uint32_t n = 0; n < result.Batch(); ++n)
+		for (uint32_t n = 0; n < output.Batch(); ++n)
 		{
             uint32_t t1N = min(n, t1Temp.Batch() - 1);
             uint32_t t2N = min(n, t2Temp.Batch() - 1);
@@ -61,42 +61,42 @@ namespace Neuro
 			for (uint32_t i = 0; i < N; ++i)
 			for (uint32_t j = 0; j < M; ++j)
 			for (uint32_t k = 0; k < K; ++k)
-				result(j, i, d, n) += t1Temp(k, i, d, t1N) * t2Temp(j, k, d, t2N);
+				output(j, i, d, n) += t1Temp(k, i, d, t1N) * t2Temp(j, k, d, t2N);
 		}
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::MulElem(const Tensor& t1, const Tensor& t2, Tensor& result) const
+	void TensorOpCpu::MulElem(const Tensor& t1, const Tensor& t2, Tensor& output) const
 	{
 		t1.CopyToHost();
 		t2.CopyToHost();
-		result.OverrideHost();
+		output.OverrideHost();
 
         auto& t1Values = t1.GetValues();
         auto& t2Values = t2.GetValues();
-        auto& resultValues = result.GetValues();
+        auto& outputValues = output.GetValues();
 
         if (t2.Batch() == t1.Batch())
         {
             for (uint32_t i = 0; i < (int)t1Values.size(); ++i)
-                resultValues[i] = t1Values[i] * t2Values[i];
+                outputValues[i] = t1Values[i] * t2Values[i];
             return;
         }
 
         for (uint32_t n = 0; n < t1.Batch(); ++n)
         for (uint32_t i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
-            resultValues[idx] = t1Values[idx] * t2Values[i];
+            outputValues[idx] = t1Values[idx] * t2Values[i];
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::Sum(const Tensor& input, EAxis axis, int batch, Tensor& result) const
+    void TensorOpCpu::Sum(const Tensor& input, EAxis axis, int batch, Tensor& output) const
     {
-        result.Zero();
+        output.Zero();
         input.CopyToHost();
-        result.OverrideHost();
+        output.OverrideHost();
 
         auto& inputValues = input.GetValues();
-        auto& resultValues = result.GetValues();
+        auto& outputValues = output.GetValues();
 
         if (axis == EAxis::Sample)
         {
@@ -106,69 +106,69 @@ namespace Neuro
 
             for (uint32_t n = batchMin, outN = 0; n < batchMax; ++n, ++outN)
             for (uint32_t i = 0, idx = n * batchLen; i < batchLen; ++i, ++idx)
-                resultValues[outN] += inputValues[idx];
+                outputValues[outN] += inputValues[idx];
         }
         else if (axis == EAxis::Feature)
         {
             uint32_t batchLen = input.BatchLength();
 
             for (uint32_t i = 0; i < input.Length(); ++i)
-                resultValues[i % batchLen] += inputValues[i];
+                outputValues[i % batchLen] += inputValues[i];
         }
         else //if (axis == EAxis::Global)
         {
             for (uint32_t i = 0; i < input.Length(); ++i)
-                resultValues[0] += inputValues[i];
+                outputValues[0] += inputValues[i];
         }
     }
 
     //////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::Transpose(const Tensor& input, Tensor& result) const
+	void TensorOpCpu::Transpose(const Tensor& input, Tensor& output) const
 	{
 		input.CopyToHost();
-        result.OverrideHost();
+        output.OverrideHost();
 
 		for (uint32_t n = 0; n < input.Batch(); ++n)
 		for (uint32_t d = 0; d < input.Depth(); ++d)
 		for (uint32_t h = 0; h < input.Height(); ++h)
 		for (uint32_t w = 0; w < input.Width(); ++w)
-			result(h, w, d, n) = input(w, h, d, n);
+			output(h, w, d, n) = input(w, h, d, n);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::Map(const function<float(float)>& func, const Tensor& t, Tensor& result) const
+	void TensorOpCpu::Map(const function<float(float)>& func, const Tensor& t, Tensor& output) const
 	{
 		t.CopyToHost();
-        result.OverrideHost();
+        output.OverrideHost();
 
         auto& tValues = t.GetValues();
-        auto& resultValues = result.GetValues();
+        auto& outputValues = output.GetValues();
 
 		for (uint32_t i = 0; i < (uint32_t)tValues.size(); ++i)
-			resultValues[i] = func(tValues[i]);
+			outputValues[i] = func(tValues[i]);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::Map(const function<float(float, float)>& func, const Tensor& t1, const Tensor& t2, Tensor& result) const
+	void TensorOpCpu::Map(const function<float(float, float)>& func, const Tensor& t1, const Tensor& t2, Tensor& output) const
 	{
 		t1.CopyToHost();
         t2.CopyToHost();
-        result.OverrideHost();
+        output.OverrideHost();
 
         auto& t1Values = t1.GetValues();
         auto& t2Values = t2.GetValues();
-        auto& resultValues = result.GetValues();
+        auto& outputValues = output.GetValues();
 
         if (t2.Batch() == t1.Batch())
         {
             for (uint32_t i = 0; i < (uint32_t)t1Values.size(); ++i)
-                resultValues[i] = func(t1Values[i], t2Values[i]);
+                outputValues[i] = func(t1Values[i], t2Values[i]);
             return;
         }
 
         for (uint32_t n = 0; n < t1.Batch(); ++n)
         for (uint32_t i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
-            resultValues[idx] = func(t1Values[idx], t2Values[i]);
+            outputValues[idx] = func(t1Values[idx], t2Values[i]);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -196,23 +196,23 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::Softmax(const Tensor& input, Tensor& result) const
+	void TensorOpCpu::Softmax(const Tensor& input, Tensor& output) const
 	{
 		input.CopyToHost();
-        result.OverrideHost();
+        output.OverrideHost();
 
 		Tensor shifted = input.Sub(input.Max(EAxis::Global)(0));
         Tensor exps = shifted.Map([&](float x) { return (float)exp(x); });
 
         auto& expsValues = exps.GetValues();
-        auto& resultValues = result.GetValues();
+        auto& outputValues = output.GetValues();
 
 		for (uint32_t n = 0; n < input.Batch(); ++n)
 		{
 			float sum = exps.Sum(EAxis::Sample, n)(0);
 
             for (uint32_t i = 0, idx = n * input.BatchLength(); i < input.BatchLength(); ++i, ++idx)
-                resultValues[idx] = expsValues[idx] / sum;
+                outputValues[idx] = expsValues[idx] / sum;
 		}
 	}
 
@@ -252,11 +252,11 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, Tensor& inputGradients) const
+	void TensorOpCpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, Tensor& inputGradient) const
 	{
 		gradient.CopyToHost();
 		kernels.CopyToHost();
-		inputGradients.CopyToHost();
+		inputGradient.CopyToHost();
 
         for (int outN = 0; outN < (int)gradient.Batch(); ++outN)
         for (int outD = 0; outD < (int)gradient.Depth(); ++outD)
@@ -271,10 +271,10 @@ namespace Neuro
                 for (int kernelW = 0; kernelW < (int)kernels.Width(); ++kernelW)
                 {
                     int inW = w + kernelW;
-                    if (inH >= 0 && inH < (int)inputGradients.Height() && inW >= 0 && inW < (int)inputGradients.Width())
+                    if (inH >= 0 && inH < (int)inputGradient.Height() && inW >= 0 && inW < (int)inputGradient.Width())
                     {
                         for (int kernelD = 0; kernelD < (int)kernels.Depth(); ++kernelD)
-                            inputGradients(inW, inH, kernelD, outN) += kernels.Get(kernelW, kernelH, kernelD, outD) * chainGradient;
+                            inputGradient(inW, inH, kernelD, outN) += kernels.Get(kernelW, kernelH, kernelD, outD) * chainGradient;
                     }
                 }
             }
@@ -345,13 +345,13 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t paddingX, uint32_t paddingY, Tensor& result) const
+    void TensorOpCpu::Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t paddingX, uint32_t paddingY, Tensor& inputGradient) const
 	{
 		output.CopyToHost();
 		input.CopyToHost();
 		outputGradient.CopyToHost();
-		result.OverrideHost();
-		result.Zero();
+		inputGradient.OverrideHost();
+		inputGradient.Zero();
 
 		for (int outN = 0; outN < (int)output.Batch(); ++outN)
 		for (int outD = 0; outD < (int)output.Depth(); ++outD)
@@ -368,7 +368,7 @@ namespace Neuro
                         float value = input.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN);
                         if (value == output(outW, outH, outD, outN))
                         {
-                            result.TrySet(result.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN), w + poolW, h + poolH, outD, outN);
+                            inputGradient.TrySet(inputGradient.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN), w + poolW, h + poolH, outD, outN);
                             maxFound = true;
                             break;
                         }
@@ -385,7 +385,7 @@ namespace Neuro
 				for (int poolH = 0; poolH < (int)filterSize; ++poolH)
 				for (int poolW = 0; poolW < (int)filterSize; ++poolW)
 				{
-					result.TrySet(result.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN) / filterElementsNum, w + poolW, h + poolH, outD, outN);
+					inputGradient.TrySet(inputGradient.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN) / filterElementsNum, w + poolW, h + poolH, outD, outN);
 				}
 			}
 		}
@@ -394,6 +394,10 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::UpSample2D(const Tensor& input, uint32_t scaleFactor, Tensor& output) const
     {
+        output.CopyToHost();
+        output.OverrideHost();
+        output.Zero();
+
         for (uint32_t n = 0; n < input.Batch(); ++n)
         for (uint32_t d = 0; d < input.Depth(); ++d)
         for (uint32_t h = 0; h < input.Height(); ++h)
@@ -408,6 +412,10 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::UpSample2DGradient(const Tensor& outputGradient, uint32_t scaleFactor, Tensor& inputGradient) const
     {
+        outputGradient.CopyToHost();
+        inputGradient.OverrideHost();
+        inputGradient.Zero();
+
         for (uint32_t n = 0; n < outputGradient.Batch(); ++n)
         for (uint32_t d = 0; d < outputGradient.Depth(); ++d)
         for (uint32_t h = 0; h < outputGradient.Height(); ++h)

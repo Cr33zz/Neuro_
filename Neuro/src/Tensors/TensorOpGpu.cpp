@@ -40,11 +40,11 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& result) const
+    void TensorOpGpu::Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const
     {
         t1.CopyToDevice();
         t2.CopyToDevice();
-        result.CopyToDevice();
+        output.CopyToDevice();
 
         if (t2.Batch() == t1.Batch())
         {
@@ -60,8 +60,8 @@ namespace Neuro
                 &beta,
                 t2.GetDevicePtr(),
                 t2.Length(),
-                result.GetDevicePtr(),
-                result.Length()));
+                output.GetDevicePtr(),
+                output.Length()));
             return;
         }
 
@@ -79,18 +79,18 @@ namespace Neuro
                 &beta,
                 t2.GetDevicePtr(),
                 t2.BatchLength(),
-                CudaDeviceVariable<float>(result.GetDeviceVar(), n * result.BatchLength()).GetDevicePtr(),
-                result.BatchLength()));
+                CudaDeviceVariable<float>(output.GetDeviceVar(), n * output.BatchLength()).GetDevicePtr(),
+                output.BatchLength()));
         }
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Mul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& result) const
+    void TensorOpGpu::Mul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
     {
-        result.Zero();
+        output.Zero();
         t1.CopyToDevice();
         t2.CopyToDevice();
-        result.CopyToDevice();
+        output.CopyToDevice();
 
         int m = t1.Height();
         int n = t2.Width();
@@ -98,7 +98,7 @@ namespace Neuro
 
         float alpha = 1, beta = 0;
 
-        for (uint32_t b = 0; b < result.Batch(); ++b)
+        for (uint32_t b = 0; b < output.Batch(); ++b)
         {
             uint32_t t1B = min(b, t1.Batch() - 1);
             uint32_t t2B = min(b, t2.Batch() - 1);
@@ -118,17 +118,17 @@ namespace Neuro
                     CudaDeviceVariable<float>(t1.GetDeviceVar(), d * t1.GetShape().Dim0Dim1 + t1B * t1.BatchLength()).GetDevicePtr(),
                     k,
                     &beta,
-                    CudaDeviceVariable<float>(result.GetDeviceVar(), d * result.GetShape().Dim0Dim1 + b * result.BatchLength()).GetDevicePtr(),
+                    CudaDeviceVariable<float>(output.GetDeviceVar(), d * output.GetShape().Dim0Dim1 + b * output.BatchLength()).GetDevicePtr(),
                     n));
             }
         }
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Transpose(const Tensor& input, Tensor& result) const
+    void TensorOpGpu::Transpose(const Tensor& input, Tensor& output) const
     {
         input.CopyToDevice();
-        result.CopyToDevice();
+        output.CopyToDevice();
 
         int m = input.Height();
         uint32_t n = input.Width();
@@ -153,7 +153,7 @@ namespace Neuro
                 &beta,
                 tVar.GetDevicePtr(),
                 m,
-                CudaDeviceVariable<float>(result.GetDeviceVar(), b * result.GetShape().Dim0Dim1).GetDevicePtr(), m));
+                CudaDeviceVariable<float>(output.GetDeviceVar(), b * output.GetShape().Dim0Dim1).GetDevicePtr(), m));
         }
     }
 
@@ -200,28 +200,28 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, Tensor& inputGradients) const
+    void TensorOpGpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, Tensor& inputGradient) const
     {
         gradient.CopyToDevice();
         kernels.CopyToDevice();
-        inputGradients.CopyToDevice();
+        inputGradient.CopyToDevice();
 
         cudnnConvolutionDescriptor_t convolutionDesc; cudnnCreateConvolutionDescriptor(&convolutionDesc);
         cudnnTensorDescriptor_t gradientDesc; cudnnCreateTensorDescriptor(&gradientDesc);
         cudnnFilterDescriptor_t kernelsDesc; cudnnCreateFilterDescriptor(&kernelsDesc);
-        cudnnTensorDescriptor_t inputGradientsDesc; cudnnCreateTensorDescriptor(&inputGradientsDesc);
+        cudnnTensorDescriptor_t inputGradientDesc; cudnnCreateTensorDescriptor(&inputGradientDesc);
 
         cudnnSetConvolution2dDescriptor(convolutionDesc, paddingY, paddingX, stride, stride, 1, 1, CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT);
         cudnnSetTensor4dDescriptor(gradientDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, gradient.GetShape().Dimensions[3], gradient.GetShape().Dimensions[2], gradient.GetShape().Dimensions[1], gradient.GetShape().Dimensions[0]);
         cudnnSetFilter4dDescriptor(kernelsDesc, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW, kernels.GetShape().Dimensions[3], kernels.GetShape().Dimensions[2], kernels.GetShape().Dimensions[1], kernels.GetShape().Dimensions[0]);
-        cudnnSetTensor4dDescriptor(inputGradientsDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, inputGradients.GetShape().Dimensions[3], inputGradients.GetShape().Dimensions[2], inputGradients.GetShape().Dimensions[1], inputGradients.GetShape().Dimensions[0]);
+        cudnnSetTensor4dDescriptor(inputGradientDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, inputGradient.GetShape().Dimensions[3], inputGradient.GetShape().Dimensions[2], inputGradient.GetShape().Dimensions[1], inputGradient.GetShape().Dimensions[0]);
 
         cudnnConvolutionBwdDataAlgo_t algo;
-        cudnnGetConvolutionBackwardDataAlgorithm(s_CudnnHandle, kernelsDesc, gradientDesc, convolutionDesc, inputGradientsDesc, CUDNN_CONVOLUTION_BWD_DATA_PREFER_FASTEST, 0, &algo);
+        cudnnGetConvolutionBackwardDataAlgorithm(s_CudnnHandle, kernelsDesc, gradientDesc, convolutionDesc, inputGradientDesc, CUDNN_CONVOLUTION_BWD_DATA_PREFER_FASTEST, 0, &algo);
 
         size_t workspaceSize;
-        cudnnGetConvolutionBackwardDataWorkspaceSize(s_CudnnHandle, kernelsDesc, gradientDesc, convolutionDesc, inputGradientsDesc, algo, &workspaceSize);
-        inputGradients.m_GpuData.UpdateWorkspace(inputGradients.m_GpuData.m_ConvBackWorkspace, workspaceSize);
+        cudnnGetConvolutionBackwardDataWorkspaceSize(s_CudnnHandle, kernelsDesc, gradientDesc, convolutionDesc, inputGradientDesc, algo, &workspaceSize);
+        inputGradient.m_GpuData.UpdateWorkspace(inputGradient.m_GpuData.m_ConvBackWorkspace, workspaceSize);
 
         float alpha = 1, beta = 0;
         CUDA_CHECK(cudnnConvolutionBackwardData(
@@ -233,11 +233,11 @@ namespace Neuro
             gradient.GetDevicePtr(),
             convolutionDesc,
             algo,
-            inputGradients.m_GpuData.m_ConvBackWorkspace->GetDevicePtr(),
+            inputGradient.m_GpuData.m_ConvBackWorkspace->GetDevicePtr(),
             workspaceSize,
             &beta,
-            inputGradientsDesc,
-            inputGradients.GetDevicePtr()));
+            inputGradientDesc,
+            inputGradient.GetDevicePtr()));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -308,24 +308,24 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t paddingX, uint32_t paddingY, Tensor& result) const
+    void TensorOpGpu::Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t paddingX, uint32_t paddingY, Tensor& inputGradient) const
     {
         output.CopyToDevice();
         input.CopyToDevice();
         outputGradient.CopyToDevice();
-        result.CopyToDevice();
+        inputGradient.CopyToDevice();
 
         cudnnPoolingDescriptor_t poolingDesc; cudnnCreatePoolingDescriptor(&poolingDesc);
         cudnnTensorDescriptor_t outputDesc; cudnnCreateTensorDescriptor(&outputDesc);
         cudnnTensorDescriptor_t inputDesc; cudnnCreateTensorDescriptor(&inputDesc);
         cudnnTensorDescriptor_t outputGradientDesc; cudnnCreateTensorDescriptor(&outputGradientDesc);
-        cudnnTensorDescriptor_t resultDesc; cudnnCreateTensorDescriptor(&resultDesc);
+        cudnnTensorDescriptor_t inputGradientDesc; cudnnCreateTensorDescriptor(&inputGradientDesc);
 
         cudnnSetPooling2dDescriptor(poolingDesc, GetCudnnPoolType(type), CUDNN_NOT_PROPAGATE_NAN, filterSize, filterSize, paddingX, paddingY, stride, stride);
         cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, output.GetShape().Dimensions[3], output.GetShape().Dimensions[2], output.GetShape().Dimensions[1], output.GetShape().Dimensions[0]);
         cudnnSetTensor4dDescriptor(inputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
         cudnnSetTensor4dDescriptor(outputGradientDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, outputGradient.GetShape().Dimensions[3], outputGradient.GetShape().Dimensions[2], outputGradient.GetShape().Dimensions[1], outputGradient.GetShape().Dimensions[0]);
-        cudnnSetTensor4dDescriptor(resultDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, result.GetShape().Dimensions[3], result.GetShape().Dimensions[2], result.GetShape().Dimensions[1], result.GetShape().Dimensions[0]);
+        cudnnSetTensor4dDescriptor(inputGradientDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, inputGradient.GetShape().Dimensions[3], inputGradient.GetShape().Dimensions[2], inputGradient.GetShape().Dimensions[1], inputGradient.GetShape().Dimensions[0]);
 
         float alpha = 1, beta = 0;
         CUDA_CHECK(cudnnPoolingBackward(
@@ -339,8 +339,8 @@ namespace Neuro
             inputDesc,
             input.GetDevicePtr(),
             &beta,
-            resultDesc,
-            result.GetDevicePtr()));
+            inputGradientDesc,
+            inputGradient.GetDevicePtr()));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -458,41 +458,41 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Elu(const Tensor& input, float alpha, Tensor& result) const
+    void TensorOpGpu::Elu(const Tensor& input, float alpha, Tensor& output) const
     {
         dim3 blocks, threads;
         GetKernelRunParams(input.Length(), blocks, threads);
         input.CopyToDevice();
-        result.CopyToDevice();
+        output.CopyToDevice();
 
-        CudaKernels::Elu(blocks, threads, input.Length(), input.GetDevicePtr(), alpha, result.GetDevicePtr());
+        CudaKernels::Elu(blocks, threads, input.Length(), input.GetDevicePtr(), alpha, output.GetDevicePtr());
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& result) const
+    void TensorOpGpu::EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const
     {
         dim3 blocks, threads;
         GetKernelRunParams(output.Length(), blocks, threads);
         output.CopyToDevice();
         outputGradient.CopyToDevice();
-        result.CopyToDevice();
+        inputGradient.CopyToDevice();
 
-        CudaKernels::EluGradient(blocks, threads, output.Length(), output.GetDevicePtr(), outputGradient.GetDevicePtr(), alpha, result.GetDevicePtr());
+        CudaKernels::EluGradient(blocks, threads, output.Length(), output.GetDevicePtr(), outputGradient.GetDevicePtr(), alpha, inputGradient.GetDevicePtr());
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Softmax(const Tensor& input, Tensor& result) const
+    void TensorOpGpu::Softmax(const Tensor& input, Tensor& output) const
     {
         input.CopyToDevice();
-        result.CopyToDevice();
+        output.CopyToDevice();
 
         cudnnTensorDescriptor_t inputDesc; cudnnCreateTensorDescriptor(&inputDesc);
-        cudnnTensorDescriptor_t resultDesc; cudnnCreateTensorDescriptor(&resultDesc);
+        cudnnTensorDescriptor_t outputDesc; cudnnCreateTensorDescriptor(&outputDesc);
 
         uint32_t n = input.Batch(), c = input.Depth(), h = input.Height(), w = input.Width();
 
         cudnnSetTensor4dDescriptor(inputDesc,CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
-        cudnnSetTensor4dDescriptor(resultDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
+        cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
 
         float alpha = 1, beta = 0;
         CUDA_CHECK(cudnnSoftmaxForward(
@@ -503,26 +503,26 @@ namespace Neuro
             inputDesc,
             input.GetDevicePtr(),
             &beta,
-            resultDesc,
-            result.GetDevicePtr()));
+            outputDesc,
+            output.GetDevicePtr()));
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
+    void TensorOpGpu::SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const
     {
         output.CopyToDevice();
         outputGradient.CopyToDevice();
-        result.CopyToDevice();
+        inputGradient.CopyToDevice();
 
         cudnnTensorDescriptor_t outputDesc; cudnnCreateTensorDescriptor(&outputDesc);
         cudnnTensorDescriptor_t outputGradientDesc; cudnnCreateTensorDescriptor(&outputGradientDesc);
-        cudnnTensorDescriptor_t resultDesc; cudnnCreateTensorDescriptor(&resultDesc);
+        cudnnTensorDescriptor_t inputGradientDesc; cudnnCreateTensorDescriptor(&inputGradientDesc);
 
         uint32_t n = output.Batch(), c = output.Depth(), h = output.Height(), w = output.Width();
 
         cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
         cudnnSetTensor4dDescriptor(outputGradientDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
-        cudnnSetTensor4dDescriptor(resultDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
+        cudnnSetTensor4dDescriptor(inputGradientDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
 
         float alpha = 1, beta = 0;
         CUDA_CHECK(cudnnSoftmaxBackward(
@@ -535,8 +535,8 @@ namespace Neuro
             outputGradientDesc,
             outputGradient.GetDevicePtr(),
             &beta,
-            resultDesc,
-            result.GetDevicePtr()));
+            inputGradientDesc,
+            inputGradient.GetDevicePtr()));
     }
 
     //////////////////////////////////////////////////////////////////////////

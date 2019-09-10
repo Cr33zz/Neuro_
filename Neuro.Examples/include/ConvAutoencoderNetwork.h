@@ -38,9 +38,9 @@ public:
         //cout << model.Summary();
 
         Tensor input, output;
-        LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, false, 600);
+        LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, false, 6000);
 
-        model.Fit(input, input, 256, 10, nullptr, nullptr, 2, ETrack::TrainError);
+        model.Fit(input, input, 256, 50, nullptr, nullptr, 2, ETrack::TrainError);
 
         cout << model.TrainSummary();
 

@@ -7,21 +7,21 @@ namespace Neuro
     using namespace concurrency;
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& result) const
+    void TensorOpMultiCpu::Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const
     {
         t1.CopyToHost();
         t2.CopyToHost();
-        result.OverrideHost();
+        output.OverrideHost();
 
         auto& t1Values = t1.GetValues();
         auto& t2Values = t2.GetValues();
-        auto& resultValues = result.GetValues();
+        auto& outputValues = output.GetValues();
 
         if (t2.Batch() == t1.Batch())
         {
             parallel_for((uint32_t)0, (uint32_t)t1Values.size(), [&](uint32_t i)
             {
-                resultValues[i] = alpha * t1Values[i] + beta * t2Values[i];
+                outputValues[i] = alpha * t1Values[i] + beta * t2Values[i];
             });
             return;
         }
@@ -29,21 +29,21 @@ namespace Neuro
         parallel_for((uint32_t)0, t1.Batch(), [&](uint32_t n)
         {
             for (uint32_t i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
-                resultValues[idx] = alpha * t1Values[idx] + beta * t2Values[i];
+                outputValues[idx] = alpha * t1Values[idx] + beta * t2Values[i];
         });
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Mul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& result) const
+    void TensorOpMultiCpu::Mul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
     {
         auto t1Temp = transposeT1 ? t1.Transposed() : t1;
         auto t2Temp = transposeT2 ? t2.Transposed() : t2;
 
         t1Temp.CopyToHost();
         t2Temp.CopyToHost();
-        result.Zero();
+        output.Zero();
 
-        parallel_for((uint32_t)0, result.Batch(), [&](uint32_t n)
+        parallel_for((uint32_t)0, output.Batch(), [&](uint32_t n)
         {
             uint32_t t1N = min(n, t1Temp.Batch() - 1);
             uint32_t t2N = min(n, t2Temp.Batch() - 1);
@@ -53,27 +53,27 @@ namespace Neuro
                 for (uint32_t h = 0; h < t1Temp.Height(); ++h)
                 for (uint32_t w = 0; w < t2Temp.Width(); ++w)
                 for (uint32_t i = 0; i < t1Temp.Width(); ++i)
-                    result(w, h, d, n) += t1Temp.Get(i, h, d, t1N) * t2Temp.Get(w, i, d, t2N);
+                    output(w, h, d, n) += t1Temp.Get(i, h, d, t1N) * t2Temp.Get(w, i, d, t2N);
             });
         });
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::MulElem(const Tensor& t1, const Tensor& t2, Tensor& result) const
+    void TensorOpMultiCpu::MulElem(const Tensor& t1, const Tensor& t2, Tensor& output) const
     {
         t1.CopyToHost();
         t2.CopyToHost();
-        result.OverrideHost();
+        output.OverrideHost();
 
         auto& t1Values = t1.GetValues();
         auto& t2Values = t2.GetValues();
-        auto& resultValues = result.GetValues();
+        auto& outputValues = output.GetValues();
 
         if (t2.Batch() == t1.Batch())
         {
             parallel_for((uint32_t)0, (uint32_t)t1Values.size(), [&](uint32_t i)
             {
-                resultValues[i] = t1Values[i] * t2Values[i];
+                outputValues[i] = t1Values[i] * t2Values[i];
             });
             return;
         }
@@ -81,19 +81,19 @@ namespace Neuro
         parallel_for((uint32_t)0, t1.Batch(), [&](uint32_t n)
         {
             for (uint32_t i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
-                resultValues[idx] = t1Values[idx] * t2Values[i];
+                outputValues[idx] = t1Values[idx] * t2Values[i];
         });
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Sum(const Tensor& input, EAxis axis, int batch, Tensor& result) const
+    void TensorOpMultiCpu::Sum(const Tensor& input, EAxis axis, int batch, Tensor& output) const
     {
-        result.Zero();
+        output.Zero();
         input.CopyToHost();
-        result.OverrideHost();
+        output.OverrideHost();
 
         auto& inputValues = input.GetValues();
-        auto& resultValues = result.GetValues();
+        auto& outputValues = output.GetValues();
 
         if (axis == EAxis::Sample)
         {
@@ -103,7 +103,7 @@ namespace Neuro
 
             parallel_for(batchMin, batchMax, [&](uint32_t n) {
             for (uint32_t i = 0, idx = n * batchLen; i < batchLen; ++i, ++idx)
-                resultValues[n - batchMin] += inputValues[idx];
+                outputValues[n - batchMin] += inputValues[idx];
             });
         }
         else if (axis == EAxis::Feature)
@@ -112,42 +112,42 @@ namespace Neuro
 
             parallel_for((uint32_t)0, input.BatchLength(), [&](uint32_t f) {
             for (uint32_t n = 0; n < input.Batch(); ++n)
-                resultValues[f] += inputValues[f + n * input.BatchLength()];
+                outputValues[f] += inputValues[f + n * input.BatchLength()];
             });
         }
         else //if (axis == EAxis::Global)
         {
             for (uint32_t i = 0; i < input.Length(); ++i)
-                resultValues[0] += inputValues[i];
+                outputValues[0] += inputValues[i];
         }
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Transpose(const Tensor& input, Tensor& result) const
+    void TensorOpMultiCpu::Transpose(const Tensor& input, Tensor& output) const
     {
         input.CopyToHost();
-        result.OverrideHost();
+        output.OverrideHost();
 
         parallel_for((uint32_t)0, input.Batch(), [&](uint32_t n) {
         parallel_for((uint32_t)0, input.Depth(), [&](uint32_t d) {
         for (uint32_t h = 0; h < input.Height(); ++h)
         for (uint32_t w = 0; w < input.Width(); ++w)
-            result(h, w, d, n) = input(w, h, d, n);
+            output(h, w, d, n) = input(w, h, d, n);
         });
         });
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Conv2D(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, Tensor& result) const
+    void TensorOpMultiCpu::Conv2D(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, Tensor& output) const
     {
         input.CopyToHost();
         kernels.CopyToHost();
-        result.OverrideHost();
+        output.OverrideHost();
 
         parallel_for(0, (int)input.Batch(), [&](int n) {
         parallel_for(0, (int)kernels.Batch(), [&](int outD) {
-        for (int h = -(int)paddingY, outH = 0; outH < (int)result.Height(); h += (int)stride, ++outH)
-        for (int w = -(int)paddingX, outW = 0; outW < (int)result.Width(); w += (int)stride, ++outW)
+        for (int h = -(int)paddingY, outH = 0; outH < (int)output.Height(); h += (int)stride, ++outH)
+        for (int w = -(int)paddingX, outW = 0; outW < (int)output.Width(); w += (int)stride, ++outW)
         {
             float val = 0;
 
@@ -156,18 +156,18 @@ namespace Neuro
             for (int kernelW = 0; kernelW < (int)kernels.Width(); ++kernelW)
                 val += input.TryGet(0, w + kernelW, h + kernelH, kernelD, n) * kernels(kernelW, kernelH, kernelD, outD);
 
-            result(outW, outH, outD, n) = val;
+            output(outW, outH, outD, n) = val;
         }
         });
         });
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, Tensor& inputGradients) const
+    void TensorOpMultiCpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, Tensor& inputGradient) const
     {
         gradient.CopyToHost();
         kernels.CopyToHost();
-        inputGradients.CopyToHost();
+        inputGradient.CopyToHost();
 
         parallel_for(0, (int)gradient.Batch(), [&](int outN) {
         for (int outD = 0; outD < (int)gradient.Depth(); ++outD)
@@ -182,10 +182,10 @@ namespace Neuro
                 for (int kernelW = 0; kernelW < (int)kernels.Width(); ++kernelW)
                 {
                     int inW = w + kernelW;
-                    if (inH >= 0 && inH < (int)inputGradients.Height() && inW >= 0 && inW < (int)inputGradients.Width())
+                    if (inH >= 0 && inH < (int)inputGradient.Height() && inW >= 0 && inW < (int)inputGradient.Width())
                     {
                         for (int kernelD = 0; kernelD < (int)kernels.Depth(); ++kernelD)
-                            inputGradients(inW, inH, kernelD, outN) += kernels.Get(kernelW, kernelH, kernelD, outD) * chainGradient;
+                            inputGradient(inW, inH, kernelD, outN) += kernels.Get(kernelW, kernelH, kernelD, outD) * chainGradient;
                     }
                 }
             }
@@ -258,13 +258,13 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t paddingX, uint32_t paddingY, Tensor& result) const
+    void TensorOpMultiCpu::Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t paddingX, uint32_t paddingY, Tensor& inputGradient) const
     {
         output.CopyToHost();
         input.CopyToHost();
         outputGradient.CopyToHost();
-        result.OverrideHost();
-        result.Zero();
+        inputGradient.OverrideHost();
+        inputGradient.Zero();
 
         parallel_for(0, (int)output.Batch(), [&](int outN) {
         parallel_for(0, (int)output.Depth(), [&](int outD) {
@@ -281,7 +281,7 @@ namespace Neuro
                         float value = input.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN);
                         if (value == output(outW, outH, outD, outN))
                         {
-                            result.TrySet(result.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN), w + poolW, h + poolH, outD, outN);
+                            inputGradient.TrySet(inputGradient.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN), w + poolW, h + poolH, outD, outN);
                             maxFound = true;
                             break;
                         }
@@ -298,7 +298,7 @@ namespace Neuro
                 for (int poolH = 0; poolH < (int)filterSize; ++poolH)
                 for (int poolW = 0; poolW < (int)filterSize; ++poolW)
                 {
-                    result.TrySet(result.TryGet(-numeric_limits<float>::max(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN) / filterElementsNum, w + poolW, h + poolH, outD, outN);
+                    inputGradient.TrySet(inputGradient.TryGet(-numeric_limits<float>::max(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN) / filterElementsNum, w + poolW, h + poolH, outD, outN);
                 }
             }
         }
@@ -307,8 +307,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::UpSample2D(const Tensor& t, uint32_t scaleFactor, Tensor& result) const
+    void TensorOpMultiCpu::UpSample2D(const Tensor& t, uint32_t scaleFactor, Tensor& output) const
     {
+        output.CopyToHost();
+        output.OverrideHost();
+        output.Zero();
+
         parallel_for((uint32_t)0, t.Batch(), [&](uint32_t n) {
         parallel_for((uint32_t)0, t.Depth(), [&](uint32_t d) {
         for (uint32_t h = 0; h < t.Height(); ++h)
@@ -316,55 +320,59 @@ namespace Neuro
         {
             for (uint32_t outH = h * scaleFactor; outH < (h + 1) * scaleFactor; ++outH)
             for (uint32_t outW = w * scaleFactor; outW < (w + 1) * scaleFactor; ++outW)
-                result(outW, outH, d, n) = t(w, h, d, n);
+                output(outW, outH, d, n) = t(w, h, d, n);
         }
         });
         });
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::UpSample2DGradient(const Tensor& outputGradient, uint32_t scaleFactor, Tensor& result) const
+    void TensorOpMultiCpu::UpSample2DGradient(const Tensor& outputGradient, uint32_t scaleFactor, Tensor& inputGradient) const
     {
+        outputGradient.CopyToHost();
+        inputGradient.OverrideHost();
+        inputGradient.Zero();
+
         parallel_for((uint32_t)0, outputGradient.Batch(), [&](uint32_t n) {
         parallel_for((uint32_t)0, outputGradient.Depth(), [&](uint32_t d) {
         for (uint32_t h = 0; h < outputGradient.Height(); ++h)
         for (uint32_t w = 0; w < outputGradient.Width(); ++w)
-            result(w / scaleFactor, h / scaleFactor, d, n) += outputGradient(w, h, d, n);
+            inputGradient(w / scaleFactor, h / scaleFactor, d, n) += outputGradient(w, h, d, n);
         });
         });
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Map(const function<float(float)>& func, const Tensor& input, Tensor& result) const
+    void TensorOpMultiCpu::Map(const function<float(float)>& func, const Tensor& input, Tensor& output) const
     {
         input.CopyToHost();
-        result.OverrideHost();
+        output.OverrideHost();
 
         auto& inputValues = input.GetValues();
-        auto& resultValues = result.GetValues();
+        auto& outputValues = output.GetValues();
 
         parallel_for(0, (int)inputValues.size(), [&](int i)
         {
-            resultValues[i] = func(inputValues[i]);
+            outputValues[i] = func(inputValues[i]);
         });
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Map(const function<float(float, float)>& func, const Tensor& t1, const Tensor& t2, Tensor& result) const
+    void TensorOpMultiCpu::Map(const function<float(float, float)>& func, const Tensor& t1, const Tensor& t2, Tensor& output) const
     {
         t1.CopyToHost();
         t2.CopyToHost();
-        result.OverrideHost();
+        output.OverrideHost();
 
         auto& t1Values = t1.GetValues();
         auto& t2Values = t2.GetValues();
-        auto& resultValues = result.GetValues();
+        auto& outputValues = output.GetValues();
 
         if (t2.Batch() == t1.Batch())
         {
             parallel_for((uint32_t)0, (uint32_t)t1Values.size(), [&](uint32_t i)
             {
-                resultValues[i] = func(t1Values[i], t2Values[i]);
+                outputValues[i] = func(t1Values[i], t2Values[i]);
             });
             return;
         }
@@ -372,7 +380,7 @@ namespace Neuro
         parallel_for((uint32_t)0, t1.Batch(), [&](uint32_t n)
         {
             for (uint32_t i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
-                resultValues[idx] = func(t1Values[idx], t2Values[i]);
+                outputValues[idx] = func(t1Values[idx], t2Values[i]);
         });
     }
 }
