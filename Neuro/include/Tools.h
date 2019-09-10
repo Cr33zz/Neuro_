@@ -50,12 +50,15 @@ namespace Neuro
     {
     public:
         Tqdm(uint32_t maxIterations);
-        void NextStep();
+        void NextStep(uint32_t iterations = 1);
+        string Str() const { return m_Stream.str(); }
+        __int64 ElapsedMilliseconds() const { return m_Timer.ElapsedMilliseconds(); }
 
     private:
         int m_Iteration = -1;
         uint32_t m_MaxIterations;
         Stopwatch m_Timer;
+        stringstream m_Stream;
     };
 
     //////////////////////////////////////////////////////////////////////////

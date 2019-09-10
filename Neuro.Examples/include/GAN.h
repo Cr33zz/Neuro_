@@ -24,7 +24,7 @@ public:
         cout << ganModel->Summary();
 
         Tensor images, labels;
-        LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", images, labels, false, 600);
+        LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", images, labels, false, 6000);
         images.Reshape(Shape(1, 784, 1, -1));
 
         const uint32_t BATCH_SIZE = 128;
@@ -40,8 +40,8 @@ public:
         {
             cout << "Epoch " << e << endl;
 
-            Tqdm progress(BATCH_SIZE);
-            for (uint32_t i = 0; i < BATCH_SIZE; ++i, progress.NextStep())
+            Tqdm progress(batchCount);
+            for (uint32_t i = 0; i < batchCount; ++i, progress.NextStep())
             {
                 ganInput.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
 
@@ -62,7 +62,7 @@ public:
                 ganModel->TrainOnBatch(ganInput, ganOutput);
             }
 
-            if (e == 1 || e % 20 == 0)
+            if (e == 1 || e % 2 == 0)
                 generator->Output().Reshaped(Shape(28, 28, 1, -1)).SaveAsImage("generator_" + to_string(e) + ".png", true);
         }
 

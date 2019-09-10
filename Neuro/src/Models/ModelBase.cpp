@@ -264,8 +264,6 @@ namespace Neuro
             }
         }
 
-        Stopwatch trainTimer;
-
         vector<uint32_t> indices(trainSamplesCount);
         iota(indices.begin(), indices.end(), 0);
 
@@ -313,18 +311,20 @@ namespace Neuro
                 }
             }
 
-            stringstream outputLog;
             float trainTotalError = 0;
             int trainHits = 0;
 
-            trainTimer.Restart();
-
+            Tqdm progress(trainSamplesCount);
             for (uint32_t b = 0; b < trainBatchesNum; ++b)
             {
+                uint32_t samplesInBatch = inputs[0]->Batch();
+
                 if (trainSamplesCount > 1 && trainBatchSize < trainSamplesCount)
                 {
                     auto inputsBatch = GenerateBatch(inputs, trainBatchesIndices[b]);
                     auto outputsBatch = GenerateBatch(outputs, trainBatchesIndices[b]);
+
+                    samplesInBatch = inputsBatch[0]->Batch();
 
                     TrainStep(inputsBatch, outputsBatch, &trainTotalError, &trainHits);
 
@@ -335,30 +335,11 @@ namespace Neuro
                     TrainStep(inputs, outputs, &trainTotalError, &trainHits);
 
                 if (verbose == 2)
-                {
-                    outputLog.precision(2);
-
-                    int processedTrainSamplesNum = min((b + 1) * trainBatchSize, trainSamplesCount);
-                    outputLog << GetProgressString(processedTrainSamplesNum, trainSamplesCount);
-
-                    float averageTimePerSample = trainTimer.ElapsedMilliseconds() / (float)processedTrainSamplesNum;
-                    outputLog << fixed << " - eta: " << averageTimePerSample * (trainSamplesCount - processedTrainSamplesNum) * 0.001f << left << setw(10) << "s";
-
-                    cout << outputLog.str();
-                    for (uint32_t i = 0; i < outputLog.str().length(); ++i)
-                        cout << '\b';
-
-                    outputLog.str("");
-                }
+                    progress.NextStep(samplesInBatch);
             }
-
-            trainTimer.Stop();
 
             if (verbose == 2)
-            {
-                outputLog << left << setw(60) << GetProgressString(trainSamplesCount, trainSamplesCount);
-                LogLine(outputLog.str());
-            }
+                LogLine(progress.Str(), false);
 
             m_LastTrainError = trainTotalError / trainSamplesCount;
 
@@ -369,13 +350,10 @@ namespace Neuro
             }
 
             stringstream summary;
+            summary.precision(4);
 
             if (verbose > 0)
             {
-                summary.precision(2);
-                summary << fixed << " - " << trainTimer.ElapsedMilliseconds() * 0.001f << "s";
-                summary.precision(4);
-
                 if (trackFlags & ETrack::TrainError)
                     summary << " - loss: " << m_LastTrainError;
                 if (trackFlags & ETrack::TrainAccuracy)
@@ -404,9 +382,9 @@ namespace Neuro
                     if (verbose == 2)
                     {
                         int processedValidationSamplesNum = min((b + 1) * validationBatchSize, validationSamplesCount);
-                        string progress = " - validating: " + to_string((int)round(processedValidationSamplesNum / (float)validationSamplesCount * 100.f)) + "%";
-                        cout << progress;
-                        for (uint32_t i = 0; i < progress.length(); ++i)
+                        string progressStr = " - validating: " + to_string((int)round(processedValidationSamplesNum / (float)validationSamplesCount * 100.f)) + "%";
+                        cout << progressStr;
+                        for (uint32_t i = 0; i < progressStr.length(); ++i)
                             cout << '\b';
                     }
                 }
@@ -553,9 +531,10 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::LogLine(const string& text)
+    void ModelBase::LogLine(const string& text, bool print)
     {
         m_LogLines.push_back(text);
-        cout << text << "\n";
+        if (print)
+            cout << text << "\n";
     }
 }

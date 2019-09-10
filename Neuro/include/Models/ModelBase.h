@@ -68,7 +68,7 @@ namespace Neuro
         tensor_ptr_vec_t GenerateBatch(const tensor_ptr_vec_t& inputs, const vector<uint32_t>& batchIndices);
 
         string FilePrefix() const;
-        void LogLine(const string& text);
+        void LogLine(const string& text, bool print = true);
 
         vector<LossBase*> m_LossFuncs;
         OptimizerBase* m_Optimizer = nullptr;

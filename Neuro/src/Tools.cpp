@@ -363,60 +363,49 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tqdm::NextStep()
+    void Tqdm::NextStep(uint32_t iterations)
     {        
         const int BAR_LENGTH = 30;
-        const char blankSymbol = (char)176;
-        const char fullSymbol = (char)219;
-        const char activeSymbol = (char)178;
+        const char BLANK_SYMBOL = (char)176;
+        const char FULL_SYMBOL = (char)219;
+        const char ACTIVE_SYMBOL = (char)176;
 
-        ++m_Iteration;
+        m_Iteration += iterations;
 
         float pct = m_Iteration / (float)m_MaxIterations * 100;
 
-        stringstream stream;
-        stream << right << setw(4) << (to_string((int)pct) + "%") << '[';
+        m_Stream.str("");
+        m_Stream << right << setw(4) << (to_string((int)pct) + "%") << '[';
 
         float step = m_MaxIterations / (float)BAR_LENGTH;
-        int currStep = min((int)ceil(m_Iteration / step), BAR_LENGTH);
+        int currStep = max(min((int)ceil(m_Iteration / step), BAR_LENGTH), 1);
 
         for (int i = 0; i < currStep - 1; ++i)
-            stream << fullSymbol;
-        stream << ((m_Iteration == m_MaxIterations) ? fullSymbol : activeSymbol);
+            m_Stream << FULL_SYMBOL;
+        m_Stream << ((m_Iteration == m_MaxIterations) ? FULL_SYMBOL : ACTIVE_SYMBOL);
         for (int i = 0; i < BAR_LENGTH - currStep; ++i)
-            stream << blankSymbol;
+            m_Stream << BLANK_SYMBOL;
 
-        stream << '|';
+        m_Stream << "] " << right << setw(to_string(m_MaxIterations).length()) << m_Iteration << "/" << m_MaxIterations;
 
         if (m_Iteration > 0)
         {
             float averageTimePerStep = m_Timer.ElapsedMilliseconds() / (float)m_Iteration;
-            stream << " eta: " << fixed << setprecision(3) << averageTimePerStep * (m_MaxIterations - m_Iteration) * 0.001f << "s [" << m_Timer.ElapsedMilliseconds() * 0.001f << "s]  ";
+            m_Stream << " - eta: " << fixed << setprecision(2) << averageTimePerStep * (m_MaxIterations - m_Iteration) * 0.001f << "s";
+            m_Stream << " - elapsed: " << m_Timer.ElapsedMilliseconds() * 0.001f << "s    ";
         }
 
-        cout << stream.str();
+        cout << m_Stream.str();
 
-        if (m_Iteration == m_MaxIterations)
+        if (m_Iteration >= (int)m_MaxIterations)
+        {
+            m_Timer.Stop();
             cout << endl;
+        }
         else
         {
-            for (uint32_t i = 0; i < stream.str().length(); ++i)
+            for (uint32_t i = 0; i < m_Stream.str().length(); ++i)
                 cout << '\b';
         }
-
-        /*int maxIterLen = (int)to_string(m_MaxIterations).length();
-        float step = maxIterations / (float)barLength;
-        int currStep = min((int)ceil(iteration / step), barLength);
-
-        stringstream ss;
-        ss << setw(maxIterLen) << iteration << "/" << maxIterations << " [";
-        for (int i = 0; i < currStep - 1; ++i)
-            ss << fullSymbol;
-        ss << ((iteration == maxIterations) ? "=" : ">");
-        for (int i = 0; i < barLength - currStep; ++i)
-            ss << blankSymbol;
-        ss << "] " << extraStr;
-        return ss.str();*/
-        
     }
 }
