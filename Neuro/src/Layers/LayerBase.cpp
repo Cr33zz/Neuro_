@@ -176,45 +176,45 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-    vector<Tensor>& LayerBase::BackProp(vector<Tensor>& outputGradients)
+    vector<Tensor>& LayerBase::BackProp(vector<Tensor>& outputsGradient)
 	{
-		m_InputGradients.resize(m_InputShapes.size());
+		m_InputsGradient.resize(m_InputShapes.size());
 
 		for (uint32_t i = 0; i < (int)m_InputShapes.size(); ++i)
 		{
 			auto& inputShape = m_InputShapes[i];
-			Shape deltaShape(inputShape.Width(), inputShape.Height(), inputShape.Depth(), outputGradients[0].Batch());
-			if (m_InputGradients[i].GetShape() != deltaShape)
-				m_InputGradients[i] = Tensor(deltaShape, Name() + "/input_" + to_string(i) + "_grad");
+			Shape deltaShape(inputShape.Width(), inputShape.Height(), inputShape.Depth(), outputsGradient[0].Batch());
+			if (m_InputsGradient[i].GetShape() != deltaShape)
+				m_InputsGradient[i] = Tensor(deltaShape, Name() + "/input_" + to_string(i) + "_grad");
 		}
 
 		// apply derivative of our activation function to the errors computed by previous layer
 		if (m_Activation)
 		{
-            for (size_t o = 0; o < outputGradients.size(); ++o)
+            for (size_t o = 0; o < outputsGradient.size(); ++o)
             {
                 m_ActivationBackPropTimer.Start();
-                m_Activation->Derivative(m_Outputs[o], outputGradients[o], outputGradients[o]);
+                m_Activation->Derivative(m_Outputs[o], outputsGradient[o], outputsGradient[o]);
                 m_ActivationBackPropTimer.Stop();
 
 #ifdef LOG_OUTPUTS
-                outputGradients[o].DebugDumpValues(Replace(Name() + "_activation" + to_string(o) + "_grad_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
+                outputsGradient[o].DebugDumpValues(Replace(Name() + "_activation" + to_string(o) + "_grad_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
 #endif
             }
 		}
 
 		m_BackPropTimer.Start();
-		BackPropInternal(outputGradients);
+		BackPropInternal(outputsGradient);
 		m_BackPropTimer.Stop();
 
 #ifdef LOG_OUTPUTS
         for (int i = 0; i < (int)m_InputShapes.size(); ++i)
         {
-            m_InputGradients[i].DebugDumpValues(Replace(m_InputGradients[i].Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
+            m_InputsGradient[i].DebugDumpValues(Replace(m_InputsGradient[i].Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
         }
 #endif
 
-		return m_InputGradients;
+		return m_InputsGradient;
 	}
 
 	//////////////////////////////////////////////////////////////////////////

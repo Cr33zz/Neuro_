@@ -51,8 +51,8 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void UpSampling2D::BackPropInternal(vector<Tensor>& outputGradients)
+    void UpSampling2D::BackPropInternal(vector<Tensor>& outputsGradient)
     {
-        outputGradients[0].UpSample2DGradient(outputGradients[0], m_ScaleFactor, m_InputGradients[0]);
+        outputsGradient[0].UpSample2DGradient(outputsGradient[0], m_ScaleFactor, m_InputsGradient[0]);
     }
 }

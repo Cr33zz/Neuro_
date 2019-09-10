@@ -27,8 +27,8 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Input::BackPropInternal(vector<Tensor>& outputGradients)
+	void Input::BackPropInternal(vector<Tensor>& outputsGradient)
 	{
-		m_InputGradients[0] = outputGradients[0];
+		m_InputsGradient[0] = outputsGradient[0];
 	}
 }

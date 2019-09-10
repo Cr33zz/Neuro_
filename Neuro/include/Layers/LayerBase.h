@@ -24,8 +24,8 @@ namespace Neuro
 		const vector<Shape>& InputShapes() const { return m_InputShapes; }
         const Tensor* Input() { return m_Inputs.empty() ? nullptr : m_Inputs[0]; }
 		const tensor_ptr_vec_t& Inputs() const { return m_Inputs; }
-		Tensor& InputGradient() { return m_InputGradients[0]; }
-		vector<Tensor>& InputsGradient() { return m_InputGradients; }
+		Tensor& InputGradient() { return m_InputsGradient[0]; }
+		vector<Tensor>& InputsGradient() { return m_InputsGradient; }
 		const Tensor& Output() const { return m_Outputs[0]; }
         const vector<Tensor>& Outputs() const { return m_Outputs; }
 		const Shape& OutputShape() const { return m_OutputShapes[0]; }
@@ -50,7 +50,7 @@ namespace Neuro
 
 		const Tensor& FeedForward(const Tensor* input, bool training);
 		const Tensor& FeedForward(const tensor_ptr_vec_t& inputs, bool training);
-		vector<Tensor>& BackProp(vector<Tensor>& outputGradients);
+		vector<Tensor>& BackProp(vector<Tensor>& outputsGradient);
 
         void SetTrainable(bool trainable) { m_Trainable = trainable; }
 
@@ -94,7 +94,7 @@ namespace Neuro
         // - if there is activation function apply derivative of that function to the errors computed by previous layer Errors.MultElementWise(Output.Map(x => ActivationF(x, true)));
         // - update errors in next layer (how much each input contributes to our output errors in relation to our parameters) stored InputDelta
         // - update parameters using error and input
-        virtual void BackPropInternal(vector<Tensor>& outputGradients) {}
+        virtual void BackPropInternal(vector<Tensor>& outputsGradient) {}
 
         //virtual void SerializeParameters(XmlElement elem) {}
         //virtual void DeserializeParameters(XmlElement elem) {}
@@ -103,7 +103,7 @@ namespace Neuro
 
 		vector<const Tensor*> m_Inputs;
 		vector<Shape> m_InputShapes;
-		vector<Tensor> m_InputGradients;
+		vector<Tensor> m_InputsGradient;
         // Only models can have multiple outputs
 		vector<Tensor> m_Outputs;
         // Only models can have multiple outputs shapes

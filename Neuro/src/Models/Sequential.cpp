@@ -40,20 +40,22 @@ namespace Neuro
 	{
 		assert(m_Inputs.size() == 1);
 
-		for (int l = 0; l < (int)m_Layers.size(); ++l)
-			m_Layers[l]->FeedForward(l == 0 ? m_Inputs[0] : &(m_Layers[l - 1]->Output()), training);
+		for (size_t i = 0; i < m_Layers.size(); ++i)
+			m_Layers[i]->FeedForward(i == 0 ? m_Inputs[0] : &(m_Layers[i - 1]->Output()), training);
 
         m_Outputs[0] = m_OutputLayers[0]->Output();
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-    void Sequential::BackPropInternal(vector<Tensor>& outputGradients)
+    void Sequential::BackPropInternal(vector<Tensor>& outputsGradient)
 	{
-		assert(outputGradients.size() == 1);
+		assert(outputsGradient.size() == 1);
 
-        vector<Tensor>* gradients = &outputGradients;
-		for (int l = (int)m_Layers.size() - 1; l >= 0; --l)
-			gradients = &m_Layers[l]->BackProp(*gradients);
+        vector<Tensor>* lastOutputsGradient = &outputsGradient;
+		for (int i = (int)m_Layers.size() - 1; i >= 0; --i)
+			lastOutputsGradient = &m_Layers[i]->BackProp(*lastOutputsGradient);
+
+        m_InputsGradient[0] = m_Layers[0]->InputGradient();
 	}
 
     //////////////////////////////////////////////////////////////////////////

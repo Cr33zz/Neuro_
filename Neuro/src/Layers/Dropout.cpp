@@ -50,8 +50,8 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Dropout::BackPropInternal(vector<Tensor>& outputGradients)
+    void Dropout::BackPropInternal(vector<Tensor>& outputsGradient)
     {
-        outputGradients[0].DropoutGradient(outputGradients[0], m_Mask, m_InputGradients[0]);
+        outputsGradient[0].DropoutGradient(outputsGradient[0], m_Mask, m_InputsGradient[0]);
     }
 }

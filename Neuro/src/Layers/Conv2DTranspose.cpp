@@ -94,13 +94,13 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Conv2DTranspose::BackPropInternal(vector<Tensor>& outputGradients)
+    void Conv2DTranspose::BackPropInternal(vector<Tensor>& outputsGradient)
     {
-        outputGradients[0].Conv2DTransposedInputsGradient(outputGradients[0], m_Kernels, m_Stride, m_Padding, m_InputGradients[0]);
-        outputGradients[0].Conv2DTransposedKernelsGradient(outputGradients[0], *m_Inputs[0], m_Stride, m_Padding, m_KernelsGradient);
+        outputsGradient[0].Conv2DTransposedInputsGradient(outputsGradient[0], m_Kernels, m_Stride, m_Padding, m_InputsGradient[0]);
+        outputsGradient[0].Conv2DTransposedKernelsGradient(outputsGradient[0], *m_Inputs[0], m_Stride, m_Padding, m_KernelsGradient);
 
         if (m_UseBias)
-            m_BiasGradient.Add(outputGradients[0].Sum(EAxis::Feature));
+            m_BiasGradient.Add(outputsGradient[0].Sum(EAxis::Feature));
     }
 
     //////////////////////////////////////////////////////////////////////////

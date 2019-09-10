@@ -80,9 +80,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Pooling2D::BackPropInternal(vector<Tensor>& outputGradients)
+    void Pooling2D::BackPropInternal(vector<Tensor>& outputsGradient)
     {
-        m_Inputs[0]->Pool2DGradient(m_Outputs[0], *m_Inputs[0], outputGradients[0], m_FilterSize, m_Stride, m_Mode, m_Padding, m_InputGradients[0]);
+        m_Inputs[0]->Pool2DGradient(m_Outputs[0], *m_Inputs[0], outputsGradient[0], m_FilterSize, m_Stride, m_Mode, m_Padding, m_InputsGradient[0]);
     }
 
     //////////////////////////////////////////////////////////////////////////

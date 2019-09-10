@@ -88,11 +88,11 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Flow::BackPropInternal(vector<Tensor>& outputGradients)
+	void Flow::BackPropInternal(vector<Tensor>& outputsGradient)
 	{
         for (uint32_t i = 0; i < (int)m_ModelOutputLayers.size(); ++i)
         {
-            vector<Tensor> grads = { outputGradients[i] };
+            vector<Tensor> grads = { outputsGradient[i] };
             m_ModelOutputLayers[i]->BackProp(grads);
         }
 
@@ -110,7 +110,7 @@ namespace Neuro
 				{
 					if (layer->m_OutputLayers[i]->m_InputLayers[j] == layer)
 					{
-						avgInputGradient.Add(layer->m_OutputLayers[i]->m_InputGradients[j], avgInputGradient);
+						avgInputGradient.Add(layer->m_OutputLayers[i]->m_InputsGradient[j], avgInputGradient);
 						break;
 					}
 				}
@@ -120,6 +120,9 @@ namespace Neuro
             vector<Tensor> avgGrads = { avgInputGradient };
             layer->BackProp(avgGrads);
 		}
+
+        for (size_t i = 0; i < m_ModelInputLayers.size(); ++i)
+            m_InputsGradient[i] = m_ModelInputLayers[i]->InputGradient();
 	}
 
 	//////////////////////////////////////////////////////////////////////////

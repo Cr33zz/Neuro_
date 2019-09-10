@@ -95,8 +95,8 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void BatchNormalization::BackPropInternal(vector<Tensor>& outputGradients)
+    void BatchNormalization::BackPropInternal(vector<Tensor>& outputsGradient)
     {
-        outputGradients[0].BatchNormalizationGradient(*m_Inputs[0], m_Gamma, outputGradients[0], m_Mean, m_Variance, m_GammaGrad, m_BetaGrad, m_InputGradients[0]);
+        outputsGradient[0].BatchNormalizationGradient(*m_Inputs[0], m_Gamma, outputsGradient[0], m_Mean, m_Variance, m_GammaGrad, m_BetaGrad, m_InputsGradient[0]);
     }
 }

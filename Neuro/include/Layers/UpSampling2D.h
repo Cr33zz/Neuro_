@@ -20,7 +20,7 @@ namespace Neuro
         virtual void OnClone(const LayerBase& source) override;
         virtual void OnLink() override;
         virtual void FeedForwardInternal(bool training) override;
-        virtual void BackPropInternal(vector<Tensor>& outputGradients) override;
+        virtual void BackPropInternal(vector<Tensor>& outputsGradient) override;
 
     private:
         int m_ScaleFactor;

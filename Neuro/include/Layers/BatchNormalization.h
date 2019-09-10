@@ -26,7 +26,7 @@ namespace Neuro
         virtual void OnInit() override;
         virtual void OnLink() override;
         virtual void FeedForwardInternal(bool training) override;
-        virtual void BackPropInternal(vector<Tensor>& outputGradients) override;
+        virtual void BackPropInternal(vector<Tensor>& outputsGradient) override;
 
     private:
         Tensor m_Mean;

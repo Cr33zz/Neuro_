@@ -38,8 +38,8 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Concatenate::BackPropInternal(vector<Tensor>& outputGradients)
+    void Concatenate::BackPropInternal(vector<Tensor>& outputsGradient)
     {
-        outputGradients[0].Split(m_InputGradients);
+        outputsGradient[0].Split(m_InputsGradient);
     }
 }

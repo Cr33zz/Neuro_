@@ -65,19 +65,19 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Merge::BackPropInternal(vector<Tensor>& outputGradients)
+    void Merge::BackPropInternal(vector<Tensor>& outputsGradient)
     {
         switch (m_MergeMode)
         {
         case Mode::Avg:
-            Tensor::MergeAvgGradient(m_Outputs[0], m_Inputs, outputGradients[0], m_InputGradients);
+            Tensor::MergeAvgGradient(m_Outputs[0], m_Inputs, outputsGradient[0], m_InputsGradient);
             break;
         case Mode::Max:
         case Mode::Min:
-            Tensor::MergeMinMaxGradient(m_Outputs[0], m_Inputs, outputGradients[0], m_InputGradients);
+            Tensor::MergeMinMaxGradient(m_Outputs[0], m_Inputs, outputsGradient[0], m_InputsGradient);
             break;
         case Mode::Sum:
-            Tensor::MergeSumGradient(m_Outputs[0], m_Inputs, outputGradients[0], m_InputGradients);
+            Tensor::MergeSumGradient(m_Outputs[0], m_Inputs, outputsGradient[0], m_InputsGradient);
             break;
         }
     }
