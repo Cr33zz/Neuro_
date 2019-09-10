@@ -5,6 +5,7 @@
 
 #include "Random.h"
 #include "Data.h"
+#include "Stopwatch.h"
 
 namespace Neuro
 {
@@ -35,7 +36,7 @@ namespace Neuro
     vector<string> Split(const string& str, const string& delimiter);
     string Replace(const string& str, const string& pattern, const string& replacement);
 
-    string GetProgressString(int iteration, int maxIterations, const string& extraStr = "", int barLength = 30);
+    string GetProgressString(int iteration, int maxIterations, const string& extraStr = "", int barLength = 30, char blankSymbol = '.', char fullSymbol = '=');
 
     void LoadMnistData(const string& imagesFile, const string& labelsFile, Tensor& input, Tensor& output, bool generateImage = false, int maxImages = -1);
     //void SaveMnistData(const Tensor& input, const Tensor& output, const string& imagesFile, const string& labelsFile);
@@ -44,6 +45,18 @@ namespace Neuro
 
     void ImageLibInit();
     extern bool g_ImageLibInitialized;
+
+    class Tqdm
+    {
+    public:
+        Tqdm(uint32_t maxIterations);
+        void NextStep();
+
+    private:
+        int m_Iteration = -1;
+        uint32_t m_MaxIterations;
+        Stopwatch m_Timer;
+    };
 
     //////////////////////////////////////////////////////////////////////////
     template<typename C>

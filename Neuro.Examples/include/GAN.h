@@ -40,7 +40,8 @@ public:
         {
             cout << "Epoch " << e << endl;
 
-            for (uint32_t i = 0; i < BATCH_SIZE; ++i)
+            Tqdm progress(BATCH_SIZE);
+            for (uint32_t i = 0; i < BATCH_SIZE; ++i, progress.NextStep())
             {
                 ganInput.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
 
@@ -62,7 +63,7 @@ public:
             }
 
             if (e == 1 || e % 20 == 0)
-                generator->Output().SaveAsImage("generator_" + to_string(e) + ".png", true);
+                generator->Output().Reshaped(Shape(28, 28, 1, -1)).SaveAsImage("generator_" + to_string(e) + ".png", true);
         }
 
         cin.get();

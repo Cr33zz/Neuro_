@@ -9,6 +9,12 @@
 
 int main()
 {
+    /*Tqdm progress(10);
+    for (uint32_t i = 0; i < 10; ++i, progress.NextStep())
+    {
+        cin.get();
+    }*/
+
     // tensor image-related operations
     /*Tensor t(Shape(50, 50, 1));
     t.FillWithRand(-1, 0, 1);

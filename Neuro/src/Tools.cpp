@@ -1,4 +1,5 @@
 ﻿#include <algorithm>
+#include <iostream>
 #include <iomanip>
 #include <sstream>
 #include <fstream>
@@ -149,7 +150,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-	string GetProgressString(int iteration, int maxIterations, const string& extraStr, int barLength)
+	string GetProgressString(int iteration, int maxIterations, const string& extraStr, int barLength, char blankSymbol, char fullSymbol)
 	{
 		int maxIterLen = (int)to_string(maxIterations).length();
 		float step = maxIterations / (float)barLength;
@@ -158,10 +159,10 @@ namespace Neuro
 		stringstream ss;
 		ss << setw(maxIterLen) << iteration << "/" << maxIterations << " [";
 		for (int i = 0; i < currStep - 1; ++i)
-			ss << "=";
+			ss << fullSymbol;
 		ss << ((iteration == maxIterations) ? "=" : ">");
 		for (int i = 0; i < barLength - currStep; ++i)
-			ss << ".";
+			ss << blankSymbol;
 		ss << "] " << extraStr;
 		return ss.str();
 	}
@@ -351,5 +352,71 @@ namespace Neuro
             FreeImage_Initialise();
             g_ImageLibInitialized = true;
         }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tqdm::Tqdm(uint32_t maxIterations)
+        : m_MaxIterations(maxIterations)
+    {
+        m_Timer.Start();
+        NextStep();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tqdm::NextStep()
+    {        
+        const int BAR_LENGTH = 30;
+        const char blankSymbol = (char)176;
+        const char fullSymbol = (char)219;
+        const char activeSymbol = (char)178;
+
+        ++m_Iteration;
+
+        float pct = m_Iteration / (float)m_MaxIterations * 100;
+
+        stringstream stream;
+        stream << right << setw(4) << (to_string((int)pct) + "%") << '[';
+
+        float step = m_MaxIterations / (float)BAR_LENGTH;
+        int currStep = min((int)ceil(m_Iteration / step), BAR_LENGTH);
+
+        for (int i = 0; i < currStep - 1; ++i)
+            stream << fullSymbol;
+        stream << ((m_Iteration == m_MaxIterations) ? fullSymbol : activeSymbol);
+        for (int i = 0; i < BAR_LENGTH - currStep; ++i)
+            stream << blankSymbol;
+
+        stream << '|';
+
+        if (m_Iteration > 0)
+        {
+            float averageTimePerStep = m_Timer.ElapsedMilliseconds() / (float)m_Iteration;
+            stream << " eta: " << fixed << setprecision(3) << averageTimePerStep * (m_MaxIterations - m_Iteration) * 0.001f << "s [" << m_Timer.ElapsedMilliseconds() * 0.001f << "s]  ";
+        }
+
+        cout << stream.str();
+
+        if (m_Iteration == m_MaxIterations)
+            cout << endl;
+        else
+        {
+            for (uint32_t i = 0; i < stream.str().length(); ++i)
+                cout << '\b';
+        }
+
+        /*int maxIterLen = (int)to_string(m_MaxIterations).length();
+        float step = maxIterations / (float)barLength;
+        int currStep = min((int)ceil(iteration / step), barLength);
+
+        stringstream ss;
+        ss << setw(maxIterLen) << iteration << "/" << maxIterations << " [";
+        for (int i = 0; i < currStep - 1; ++i)
+            ss << fullSymbol;
+        ss << ((iteration == maxIterations) ? "=" : ">");
+        for (int i = 0; i < barLength - currStep; ++i)
+            ss << blankSymbol;
+        ss << "] " << extraStr;
+        return ss.str();*/
+        
     }
 }
