@@ -102,6 +102,7 @@ namespace Neuro
 		Tensor Map(const function<float(float, float)>& func, const Tensor& other) const;
 
         Tensor Sum(EAxis axis, int batch = -1) const;
+        void Sum(EAxis axis, int batch, Tensor& output) const;
 		Tensor Avg(EAxis axis, int batch = -1) const;
         Tensor Max(EAxis axis, int batch = -1, Tensor* maxIndex = nullptr) const;
         Tensor Min(EAxis axis, int batch = -1, Tensor* minIndex = nullptr) const;
@@ -133,6 +134,9 @@ namespace Neuro
         Tensor Reshaped(const Shape& shape) const;
         void Reshaped(const Shape& shape, Tensor& output) const;
         void Reshape(const Shape& shape);
+
+        // Changes shape and resizes values if neccessary.
+        void Resize(const Shape& shape);
 
         // Create new tensor with different batch length and use current tensors values to fill the new tensor.
         // Number of batches will be the same as in source tensor.

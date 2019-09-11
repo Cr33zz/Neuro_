@@ -571,24 +571,30 @@ namespace Neuro
         if (axis == EAxis::Sample)
         {
             Tensor sum(Shape(batch < 0 ? Batch() : 1));
-            Op()->Sum(*this, axis, batch, sum);
+            Sum(axis, batch, sum);
             return sum;
         }
         else if (axis == EAxis::Feature)
         {
             Tensor sum(Shape(Width(), Height(), Depth(), 1));
-            Op()->Sum(*this, axis, batch, sum);
+            Sum(axis, batch, sum);
             return sum;
         }
         else //if (axis == EAxis::Global)
         {
             Tensor sum({ 0 }, Shape(1));
-            Op()->Sum(*this, axis, batch, sum);
+            Sum(axis, batch, sum);
             return sum;
         }
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Sum(EAxis axis, int batch, Tensor& output) const
+    {
+        Op()->Sum(*this, axis, batch, output);        
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     Tensor Tensor::Avg(EAxis axis, int batch) const
 	{
 		Tensor sum = Sum(axis, batch);
@@ -1029,6 +1035,17 @@ namespace Neuro
 	{
 		m_Shape = m_Shape.Reshaped((int)shape.Width(), (int)shape.Height(), (int)shape.Depth(), (int)shape.Batch());
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Resize(const Shape& shape)
+    {
+        if (m_Shape == shape)
+            return;
+
+        m_Shape = shape;
+        m_Values.resize(shape.Length);
+        m_GpuData.Release();
+    }
 
 	//////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::Resized(uint32_t width, uint32_t height, uint32_t depth) const

@@ -42,7 +42,7 @@ public:
         cout << model.Summary();
 
         Tensor input, output;
-        LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, false, 6000);
+        LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, false, 60000);
         input.Reshape(Shape(1, 784, 1, -1));
 
         model.Fit(input, input, 256, 50, nullptr, nullptr, 2, ETrack::TrainError);

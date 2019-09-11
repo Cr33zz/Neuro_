@@ -86,7 +86,20 @@ namespace Neuro
 
         if (m_Trainable)
         {
-            m_WeightsGrad.Add(outputsGradient[0].Mul(m_Inputs[0]->Transposed()).Sum(EAxis::Feature), m_WeightsGrad);
+            const bool USE_TEMPS = true;
+            if (USE_TEMPS)
+            {
+                _temp1.Resize(Shape(m_Inputs[0]->Height(), m_Inputs[0]->Width(), 1, m_Inputs[0]->Batch()));
+                m_Inputs[0]->Transpose(_temp1);
+                _temp2.Resize(Shape::From(m_WeightsGrad.GetShape(), m_Inputs[0]->Batch()));
+                outputsGradient[0].Mul(_temp1, _temp2);
+                _temp3.Resize(m_WeightsGrad.GetShape());
+                _temp2.Sum(EAxis::Feature, -1, _temp3);
+                m_WeightsGrad.Add(_temp3, m_WeightsGrad);
+            }
+            else
+                m_WeightsGrad.Add(outputsGradient[0].Mul(m_Inputs[0]->Transposed()).Sum(EAxis::Feature), m_WeightsGrad);
+
             if (m_UseBias)
                 m_BiasGrad.Add(outputsGradient[0].Sum(EAxis::Feature), m_BiasGrad);
         }
