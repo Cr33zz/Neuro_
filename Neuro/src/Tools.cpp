@@ -374,6 +374,9 @@ namespace Neuro
 
         float pct = m_Iteration / (float)m_MaxIterations * 100;
 
+        for (uint32_t i = 0; i < m_Stream.str().length(); ++i)
+            cout << "\b \b";
+
         m_Stream.str("");
         m_Stream << right << setw(4) << (to_string((int)pct) + "%") << '[';
 
@@ -392,7 +395,7 @@ namespace Neuro
         {
             float averageTimePerStep = m_Timer.ElapsedMilliseconds() / (float)m_Iteration;
             m_Stream << " - eta: " << fixed << setprecision(2) << averageTimePerStep * (m_MaxIterations - m_Iteration) * 0.001f << "s";
-            m_Stream << " - elapsed: " << m_Timer.ElapsedMilliseconds() * 0.001f << "s    ";
+            m_Stream << " - elap: " << m_Timer.ElapsedMilliseconds() * 0.001f << "s";
         }
 
         cout << m_Stream.str();
@@ -401,11 +404,6 @@ namespace Neuro
         {
             m_Timer.Stop();
             cout << endl;
-        }
-        else
-        {
-            for (uint32_t i = 0; i < m_Stream.str().length(); ++i)
-                cout << '\b';
         }
     }
 }
