@@ -337,7 +337,7 @@ namespace NeuroTests
             Tensor gammaGradient(Shape(2, 2, 3, 1));
             Tensor betaGradient(Shape(2, 2, 3, 1));
             Tensor inputGradient(Shape(2, 2, 3, 3));
-            NEURO_PROFILE("CPU", input.BatchNormalizationGradient(input, gamma, outputGradient, saveMean, saveInvVariance, gammaGradient, betaGradient, inputGradient);)
+            NEURO_PROFILE("CPU", input.BatchNormalizationGradient(input, gamma, outputGradient, saveMean, saveInvVariance, gammaGradient, betaGradient, true, inputGradient);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor result2(input.GetShape());
@@ -347,7 +347,7 @@ namespace NeuroTests
             Tensor gammaGradient2(Shape(2, 2, 3, 1));
             Tensor betaGradient2(Shape(2, 2, 3, 1));
             Tensor inputGradient2(Shape(2, 2, 3, 3));
-            NEURO_PROFILE("GPU", input.BatchNormalizationGradient(input, gamma, outputGradient, saveMean2, saveInvVariance2, gammaGradient2, betaGradient2, inputGradient2);)
+            NEURO_PROFILE("GPU", input.BatchNormalizationGradient(input, gamma, outputGradient, saveMean2, saveInvVariance2, gammaGradient2, betaGradient2, true, inputGradient2);)
 
             Assert::IsTrue(inputGradient.Equals(inputGradient2, 0.0001f));
             Assert::IsTrue(gammaGradient.Equals(gammaGradient2, 0.0001f)); // precision difference between CUDA and CPU

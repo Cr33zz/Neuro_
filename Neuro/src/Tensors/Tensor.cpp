@@ -1187,9 +1187,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, Tensor& inputGradient) const
+    void Tensor::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const
     {
-        Op()->BatchNormalizationGradient(input, gamma, outputGradient, savedMean, savedInvVariance, gammaGradient, betaGradient, inputGradient);
+        Op()->BatchNormalizationGradient(input, gamma, outputGradient, savedMean, savedInvVariance, gammaGradient, betaGradient, trainable, inputGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////

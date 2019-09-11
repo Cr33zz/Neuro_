@@ -448,18 +448,21 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, Tensor& inputGradient) const
+    void TensorOpCpu::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const
     {
         float n = (float)outputGradient.Batch();
 
         Tensor xmu = input.Sub(savedMean);
-        Tensor carre = xmu.Map([](float x) { return x * x; });
-        Tensor va2 = xmu.MulElem(savedInvVariance);
+        Tensor carre = xmu.Map([](float x) { return x * x; });        
         Tensor variance = carre.Avg(EAxis::Feature);
         Tensor sqrtvar = variance.Map([](float x) { return sqrt(x); });
 
-        betaGradient = outputGradient.Sum(EAxis::Feature);
-        gammaGradient = va2.MulElem(outputGradient).Sum(EAxis::Feature);
+        if (trainable)
+        {
+            betaGradient = outputGradient.Sum(EAxis::Feature);
+            Tensor va2 = xmu.MulElem(savedInvVariance);
+            gammaGradient = va2.MulElem(outputGradient).Sum(EAxis::Feature);
+        }
 
         Tensor dva2 = outputGradient.MulElem(gamma);
         Tensor dxmu = dva2.MulElem(savedInvVariance);

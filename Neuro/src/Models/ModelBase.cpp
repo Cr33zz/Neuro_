@@ -15,10 +15,6 @@
 
 namespace Neuro
 {
-#ifdef LOG_GRADIENTS
-    ofstream g_GradientsFile;
-#endif
-
     int ModelBase::g_DebugStep = 0;
 
     //////////////////////////////////////////////////////////////////////////
@@ -44,7 +40,7 @@ namespace Neuro
         for (auto loss : sourceModel.m_LossFuncs)
             m_LossFuncs.push_back(loss->Clone());
     }
-
+    
     //////////////////////////////////////////////////////////////////////////
     ModelBase::~ModelBase()
     {
@@ -203,6 +199,15 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void ModelBase::SetTrainable(bool trainable)
+    {
+        m_Trainable = trainable;
+
+        for (auto layer : Layers())
+            layer->SetTrainable(trainable);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void ModelBase::Fit(const Tensor& input, const Tensor& output, int batchSize, uint32_t epochs, const Tensor* validInput, const Tensor* validOutput, uint32_t verbose, int trackFlags, bool shuffle)
     {
         tensor_ptr_vec_t validInputs = { validInput }, validOutputs = { validOutput };
@@ -213,10 +218,6 @@ namespace Neuro
     void ModelBase::Fit(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, int batchSize, uint32_t epochs, const tensor_ptr_vec_t* validInputs, const tensor_ptr_vec_t* validOutputs, uint32_t verbose, int trackFlags, bool shuffle)
     {
         cout << unitbuf; // disable buffering so progress 'animations' can work
-
-#ifdef LOG_GRADIENTS
-        g_GradientsFile = ofstream("gradients.log");
-#endif
 
         assert((validInputs && validOutputs) || (!validInputs && !validOutputs));
         //assert(inputs.size() == GetInputLayersCount());
@@ -290,9 +291,6 @@ namespace Neuro
 
         for (uint32_t e = 1; e <= epochs; ++e)
         {
-#ifdef LOG_GRADIENTS
-            g_GradientsFile << "Epoch " << e << endl;
-#endif
             if (verbose > 0)
                 LogLine("Epoch " + to_string(e) + "/" + to_string(epochs));
 
@@ -426,10 +424,6 @@ namespace Neuro
                 file.close();
             }
         }
-
-#ifdef LOG_GRADIENTS
-        g_GradientsFile.close();
-#endif
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -445,13 +439,9 @@ namespace Neuro
             outputsGrad.push_back(Tensor(m_Outputs[i].GetShape()));
             m_LossFuncs[i]->Compute(*outputs[i], m_Outputs[i], outputsGrad[i]);
 
-#ifdef LOG_GRADIENTS
-            g_GradientsFile << "output" << i << endl;
-            g_GradientsFile << outputsGrad[i].ToString() << endl;
-#endif
-#ifdef LOG_OUTPUTS
+#           ifdef LOG_OUTPUTS
             outputsGrad[i].DebugDumpValues(Replace(string("output") + to_string(i) + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
-#endif
+#           endif
 
             if (trainError)
                 *trainError += outputsGrad[i].Sum(EAxis::Global)(0) / m_Outputs[i].BatchLength();
@@ -461,13 +451,9 @@ namespace Neuro
 
             m_LossFuncs[i]->Derivative(*outputs[i], m_Outputs[i], outputsGrad[i]);
 
-#ifdef LOG_GRADIENTS
-            g_GradientsFile << "output" << i << "_grad" << endl;
-            g_GradientsFile << outputsGrad[i].ToString() << endl;
-#endif
-#ifdef LOG_OUTPUTS
+#           ifdef LOG_OUTPUTS
             outputsGrad[i].DebugDumpValues(Replace(string("output") + to_string(i) + "_grad_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
-#endif
+#           endif
         }
 
         BackProp(outputsGrad);
@@ -475,17 +461,10 @@ namespace Neuro
         vector<ParametersAndGradients> paramsAndGrads;
         GetParametersAndGradients(paramsAndGrads);
 
-#ifdef LOG_GRADIENTS
-        for (auto paramAndGrad : paramsAndGrads, bool onlyTrainable)
-        {
-            g_GradientsFile << paramAndGrad.Gradients->Name() << endl;
-            g_GradientsFile << paramAndGrad.Gradients->ToString() << endl;
-        }
-#endif
-#ifdef LOG_OUTPUTS
+#       ifdef LOG_OUTPUTS
         for (auto paramAndGrad : paramsAndGrads)
             paramAndGrad.Gradients->DebugDumpValues(Replace(paramAndGrad.Gradients->Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
-#endif
+#       endif
 
         m_Optimizer->Step(paramsAndGrads, inputs[0]->Batch());
     }

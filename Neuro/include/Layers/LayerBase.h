@@ -52,7 +52,8 @@ namespace Neuro
 		const Tensor& FeedForward(const tensor_ptr_vec_t& inputs, bool training);
 		vector<Tensor>& BackProp(vector<Tensor>& outputsGradient);
 
-        void SetTrainable(bool trainable) { m_Trainable = trainable; }
+        virtual void SetTrainable(bool trainable) { m_Trainable = trainable; }
+        bool Trainable() const { return m_Trainable; }
 
         virtual uint32_t ParamsNum() const { return 0; }
         virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable = true) {}
@@ -86,7 +87,8 @@ namespace Neuro
         virtual LayerBase* GetCloneInstance() const = 0;
         virtual void OnClone(const LayerBase& source);
         virtual void OnInit() {}
-        virtual void OnLink() {}
+        virtual void OnLink(LayerBase* layer, bool input);
+        virtual void OnLink(const vector<LayerBase*>& layers, bool input);
         
         virtual void FeedForwardInternal(bool training) {}
 
@@ -96,6 +98,8 @@ namespace Neuro
         // - update parameters using error and input
         virtual void BackPropInternal(vector<Tensor>& outputsGradient) {}
 
+        bool CanStopBackProp() const;
+
         //virtual void SerializeParameters(XmlElement elem) {}
         //virtual void DeserializeParameters(XmlElement elem) {}
         
@@ -103,22 +107,23 @@ namespace Neuro
 
 		vector<const Tensor*> m_Inputs;
 		vector<Shape> m_InputShapes;
+        vector<LayerBase*> m_InputLayers;
 		vector<Tensor> m_InputsGradient;
         // Only models can have multiple outputs
 		vector<Tensor> m_Outputs;
         // Only models can have multiple outputs shapes
 		vector<Shape> m_OutputShapes;
+        vector<LayerBase*> m_OutputLayers;
         bool m_Trainable = true;
 
 	private:
 		void ExecuteFeedForward(bool training);
 		
 		ActivationBase* m_Activation;
-		vector<LayerBase*> m_InputLayers;
-		vector<LayerBase*> m_OutputLayers;
+		
 		string m_Name;
         string m_ClassName;
-		bool Initialized = false;        
+		bool Initialized = false;
 
 		Stopwatch m_FeedForwardTimer;
 		Stopwatch m_ActivationTimer;
@@ -128,5 +133,6 @@ namespace Neuro
 		static map<string, int> s_LayersCountPerType;
 
 		friend class Flow;
+        friend class Sequential;
 	};
 }

@@ -17,6 +17,6 @@ namespace Neuro
         Flatten(bool) {}
 
 		virtual LayerBase* GetCloneInstance() const override;
-        virtual void OnLink() override;
+        virtual void OnLink(LayerBase* layer, bool input) override;
     };
 }

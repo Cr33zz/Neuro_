@@ -1,4 +1,5 @@
-﻿#include <iomanip>
+﻿#include <algorithm>
+#include <iomanip>
 #include <sstream>
 
 #include "Layers/LayerBase.h"
@@ -34,6 +35,17 @@ namespace Neuro
         for (auto layer : sourceSequence.m_Layers)
             m_Layers.push_back(layer->Clone());
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    void Sequential::OnLink(LayerBase* layer, bool input)
+    {
+        __super::OnLink(layer, input);
+
+        if (input)
+            m_Layers.front()->OnLink(layer, true);
+        else
+            m_Layers.back()->OnLink(layer, false);
+    }
 
 	//////////////////////////////////////////////////////////////////////////
 	void Sequential::FeedForwardInternal(bool training)

@@ -15,7 +15,6 @@ namespace Neuro
         ~Sequential();
 
         virtual LayerBase* GetCloneInstance() const override;
-        virtual void OnClone(const LayerBase& source) override;
 
         virtual void FeedForwardInternal(bool training) override;
         virtual void BackPropInternal(vector<Tensor>& outputsGradient) override;
@@ -28,6 +27,10 @@ namespace Neuro
         LayerBase* LastLayer() const;
         int LayersCount() const;
         void AddLayer(LayerBase* layer);
+
+    protected:
+        virtual void OnClone(const LayerBase& source) override;
+        virtual void OnLink(LayerBase* layer, bool input) override;
 
 	private:
         Sequential(int) {}

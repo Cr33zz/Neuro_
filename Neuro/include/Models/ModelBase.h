@@ -45,6 +45,8 @@ namespace Neuro
         virtual uint32_t ParamsNum() const;
         virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable = true) override;
 
+        virtual void SetTrainable(bool trainable) override;
+
         string Summary() const;
         string TrainSummary() const;
 
@@ -58,7 +60,7 @@ namespace Neuro
         ModelBase() {}
         ModelBase(const string& constructorName, const string& name = "", int seed = 0);
 
-        virtual void OnClone(const LayerBase& source);
+        virtual void OnClone(const LayerBase& source) override;
 
     private:
         // This is vectorized gradient descent

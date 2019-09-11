@@ -28,9 +28,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Dropout::OnLink()
+    void Dropout::OnLink(LayerBase* layer, bool input)
     {
-        m_OutputShapes[0] = m_InputShapes[0];
+        __super::OnLink(layer, input);
+
+        if (input)
+            m_OutputShapes[0] = m_InputShapes[0];
     }
 
     //////////////////////////////////////////////////////////////////////////

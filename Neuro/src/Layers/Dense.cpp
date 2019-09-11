@@ -84,9 +84,12 @@ namespace Neuro
 		// each input is responsible for the output error proportionally to weights it is multiplied by
 		m_Weights.Transposed().Mul(outputsGradient[0], m_InputsGradient[0]);
 
-		m_WeightsGrad.Add(outputsGradient[0].Mul(m_Inputs[0]->Transposed()).Sum(EAxis::Feature), m_WeightsGrad);
-		if (m_UseBias)
-			m_BiasGrad.Add(outputsGradient[0].Sum(EAxis::Feature), m_BiasGrad);
+        if (m_Trainable)
+        {
+            m_WeightsGrad.Add(outputsGradient[0].Mul(m_Inputs[0]->Transposed()).Sum(EAxis::Feature), m_WeightsGrad);
+            if (m_UseBias)
+                m_BiasGrad.Add(outputsGradient[0].Sum(EAxis::Feature), m_BiasGrad);
+        }
 	}
 
 	//////////////////////////////////////////////////////////////////////////

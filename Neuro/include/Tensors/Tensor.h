@@ -171,7 +171,7 @@ namespace Neuro
 
         void BatchNormalization(const Tensor& gamma, const Tensor& beta, const Tensor& runningMean, const Tensor& runningVar, Tensor& result) const;
         void BatchNormalizationTrain(const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const;
-        void BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, Tensor& inputGradient) const;
+        void BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const;
 
         void Dropout(float prob, Tensor& saveMask, Tensor& output) const;
         void DropoutGradient(const Tensor& outputGradient, const Tensor& savedMask, Tensor& inputGradient) const;
@@ -270,7 +270,7 @@ namespace Neuro
 		TensorOpCpu* m_Op;
         mutable ELocation m_CurrentLocation;
 		Shape m_Shape;
-        mutable vector<float_t> m_Values;
+        mutable vector<float> m_Values;
         string m_Name;
 
         TensorOpCpu* Op() const { return g_ForcedOp ? g_ForcedOp : m_Op; }

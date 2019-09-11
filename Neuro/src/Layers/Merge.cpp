@@ -39,9 +39,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Merge::OnLink()
+    void Merge::OnLink(const vector<LayerBase*>& layers, bool input)
     {
-        m_OutputShapes[0] = m_InputShapes[0];
+        __super::OnLink(layers, input);
+
+        if (input)
+            m_OutputShapes[0] = m_InputShapes[0];
     }
 
     //////////////////////////////////////////////////////////////////////////

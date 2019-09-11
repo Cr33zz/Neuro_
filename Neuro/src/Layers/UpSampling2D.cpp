@@ -39,9 +39,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void UpSampling2D::OnLink()
+    void UpSampling2D::OnLink(LayerBase* layer, bool input)
     {
-        m_OutputShapes[0] = Shape(InputShape().Width() * m_ScaleFactor, InputShape().Height() * m_ScaleFactor, InputShape().Depth(), InputShape().Batch());
+        __super::OnLink(layer, input);
+
+        if (input)
+            m_OutputShapes[0] = Shape(InputShape().Width() * m_ScaleFactor, InputShape().Height() * m_ScaleFactor, InputShape().Depth(), InputShape().Batch());
     }
 
     //////////////////////////////////////////////////////////////////////////

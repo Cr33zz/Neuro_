@@ -59,9 +59,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Conv2DTranspose::OnLink()
+    void Conv2DTranspose::OnLink(LayerBase* layer, bool input)
     {
-        m_OutputShapes[0] = Tensor::GetConvTransposeOutputShape(InputLayer()->OutputShape(), m_OutputDepth, m_FilterSize, m_FilterSize, m_Stride, m_Padding, m_Padding);
+        __super::OnLink(layer, input);
+
+        if (input)
+            m_OutputShapes[0] = Tensor::GetConvTransposeOutputShape(layer->OutputShape(), m_OutputDepth, m_FilterSize, m_FilterSize, m_Stride, m_Padding, m_Padding);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -97,10 +100,13 @@ namespace Neuro
     void Conv2DTranspose::BackPropInternal(vector<Tensor>& outputsGradient)
     {
         outputsGradient[0].Conv2DTransposedInputsGradient(outputsGradient[0], m_Kernels, m_Stride, m_Padding, m_InputsGradient[0]);
-        outputsGradient[0].Conv2DTransposedKernelsGradient(outputsGradient[0], *m_Inputs[0], m_Stride, m_Padding, m_KernelsGradient);
 
-        if (m_UseBias)
-            m_BiasGradient.Add(outputsGradient[0].Sum(EAxis::Feature));
+        if (m_Trainable)
+        {
+            outputsGradient[0].Conv2DTransposedKernelsGradient(outputsGradient[0], *m_Inputs[0], m_Stride, m_Padding, m_KernelsGradient);
+            if (m_UseBias)
+                m_BiasGradient.Add(outputsGradient[0].Sum(EAxis::Feature));
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -2,8 +2,6 @@
 
 #include <vector>
 
-//#define DOUBLE_ENABLED
-//#define LOG_GRADIENTS
 //#define LOG_OUTPUTS
 
 namespace Neuro
@@ -11,12 +9,6 @@ namespace Neuro
 	using namespace std;
 
 	class Tensor;
-
-#ifdef DOUBLE_ENABLED
-	typedef double float_t;
-#else
-	typedef float float_t;
-#endif
 
     typedef vector<const Tensor*> tensor_ptr_vec_t;	
 	typedef int(*accuracy_func_t)(const Tensor& targetOutput, const Tensor& output);

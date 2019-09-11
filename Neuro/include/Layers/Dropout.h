@@ -17,7 +17,7 @@ namespace Neuro
         Dropout() {}
 
         virtual LayerBase* GetCloneInstance() const override;
-        virtual void OnLink() override;
+        virtual void OnLink(LayerBase* layer, bool input) override;
         virtual void FeedForwardInternal(bool training) override;
         virtual void BackPropInternal(vector<Tensor>& outputsGradient) override;
 

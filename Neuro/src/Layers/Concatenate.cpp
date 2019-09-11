@@ -6,7 +6,7 @@ namespace Neuro
     Concatenate::Concatenate(const vector<LayerBase*>& inputLayers, const string& name)
         : LayerBase(__FUNCTION__, inputLayers, Shape(), nullptr, name)
     {
-        OnLink();
+        OnLink(inputLayers, true);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -22,12 +22,17 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Concatenate::OnLink()
+    void Concatenate::OnLink(const vector<LayerBase*>& layers, bool input)
     {
-        int totalLen = 0;
-        for (auto input : InputLayers())
-            totalLen += input->OutputShape().Length;
-        m_OutputShapes[0] = Shape(1, totalLen);
+        __super::OnLink(layers, input);
+
+        if (input)
+        {
+            int totalLen = 0;
+            for (auto input : InputLayers())
+                totalLen += input->OutputShape().Length;
+            m_OutputShapes[0] = Shape(1, totalLen);
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////

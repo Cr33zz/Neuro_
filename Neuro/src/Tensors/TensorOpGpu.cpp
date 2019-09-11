@@ -417,7 +417,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, Tensor& inputGradient) const
+    void TensorOpGpu::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const
     {
         input.CopyToDevice();
         gamma.CopyToDevice();
@@ -434,14 +434,14 @@ namespace Neuro
         cudnnSetTensor4dDescriptor(inputOutputGradientDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
         cudnnSetTensor4dDescriptor(gammaBetaGradientDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, gamma.GetShape().Dimensions[3], gamma.GetShape().Dimensions[2], gamma.GetShape().Dimensions[1], gamma.GetShape().Dimensions[0]);
 
-        float alpha = 1, beta = 0;
+        float alpha = 1.f, beta = 0.f, paramsGradAlpha = (trainable ? 1.f : 0.f), paramsGradBeta = 0.f;
         CUDA_CHECK(cudnnBatchNormalizationBackward(
             s_CudnnHandle,
             CUDNN_BATCHNORM_PER_ACTIVATION,
             &alpha,
             &beta,
-            &alpha,
-            &beta,
+            &paramsGradAlpha,
+            &paramsGradBeta,
             inputOutputGradientDesc,
             input.GetDevicePtr(),
             inputOutputGradientDesc,

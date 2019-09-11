@@ -80,9 +80,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void BatchNormalization::OnLink()
+    void BatchNormalization::OnLink(LayerBase* layer, bool input)
     {
-        m_OutputShapes[0] = m_InputShapes[0];
+        __super::OnLink(layer, input);
+
+        if (input)
+            m_OutputShapes[0] = m_InputShapes[0];
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -97,6 +100,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void BatchNormalization::BackPropInternal(vector<Tensor>& outputsGradient)
     {
-        outputsGradient[0].BatchNormalizationGradient(*m_Inputs[0], m_Gamma, outputsGradient[0], m_Mean, m_Variance, m_GammaGrad, m_BetaGrad, m_InputsGradient[0]);
+        outputsGradient[0].BatchNormalizationGradient(*m_Inputs[0], m_Gamma, outputsGradient[0], m_Mean, m_Variance, m_GammaGrad, m_BetaGrad, m_Trainable, m_InputsGradient[0]);
     }
 }
