@@ -95,6 +95,19 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
+        TEST_METHOD(Sum_Feature_CompareWithCpuResult)
+        {
+            Tensor t(Shape(8, 9, 3, 3)); t.FillWithRand();
+
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            NEURO_PROFILE("CPU", Tensor r = t.Sum(EAxis::Feature);)
+
+            Tensor::SetForcedOpMode(EOpMode::GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = t.Sum(EAxis::Feature);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
         TEST_METHOD(Softmax_CompareWithCpuResult)
         {
             Tensor t(Shape(20, 30, 1, 10)); t.FillWithRand(-1, -10, 10);

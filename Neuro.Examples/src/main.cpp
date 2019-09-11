@@ -35,8 +35,8 @@ int main()
     //MnistConvNetwork::Run();
     //MnistNetwork::Run();
     //AutoencoderNetwork::Run();
-    ConvAutoencoderNetwork::Run();
-    //GAN::Run();
+    //ConvAutoencoderNetwork::Run();
+    GAN::Run();
 
     return 0;
 }

@@ -540,6 +540,36 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::Sum(const Tensor& input, EAxis axis, int batch, Tensor& output) const
+    {
+        if (axis != EAxis::Feature)
+            return __super::Sum(input, axis, batch, output);
+
+        output.Zero();
+        input.CopyToDevice();
+        output.CopyToDevice();
+
+        float alpha = 1, beta = 1;
+        for (uint32_t n = 0; n < input.Batch(); ++n)
+        {
+            CUDA_CHECK(cublasSgeam(
+                s_CublasHandle,
+                CUBLAS_OP_N,
+                CUBLAS_OP_N,
+                input.BatchLength(),
+                1,
+                &alpha,
+                CudaDeviceVariable<float>(input.GetDeviceVar(), n * input.BatchLength()).GetDevicePtr(),
+                input.BatchLength(),
+                &beta,
+                output.GetDevicePtr(),
+                output.BatchLength(),
+                output.GetDevicePtr(),
+                output.BatchLength()));
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     cudnnPoolingMode_t TensorOpGpu::GetCudnnPoolType(EPoolingMode type)
     {
         if (type == EPoolingMode::Max)
