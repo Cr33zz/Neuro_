@@ -1,6 +1,5 @@
 ﻿#include <algorithm>
 #include <iostream>
-#include <fstream>
 #include <numeric>
 #include <cctype>
 #include <iomanip>
@@ -236,6 +235,9 @@ namespace Neuro
 
         string outFilename = FilePrefix() + "_training_data_" + m_Optimizer->ClassName() + "_b" + to_string(trainBatchSize) + (m_Seed > 0 ? "(seed" + to_string(m_Seed) + ")" : "");
 
+        if (verbose > 0)
+            m_LogFile = new ofstream(outFilename + ".log");
+
         ChartGenerator* chartGen = nullptr;
         if (trackFlags != ETrack::Nothing)
             chartGen = new ChartGenerator(outFilename, Name()/* + "\nloss=" + [{string.Join(", ", Losses.Select(x => x.GetType().Name))}] optimizer={Optimizer} batch_size={trainBatchSize}\nseed={(Seed > 0 ? Seed.ToString() : "None")}"*/, "Epoch");
@@ -413,16 +415,10 @@ namespace Neuro
             DeleteContainer(validOutputsBatches[b]);
         }
 
-        if (verbose > 0)
+        if (m_LogFile->is_open())
         {
-            ofstream file(outFilename + ".log");
-
-            if (file.is_open())
-            {
-                for (string line : m_LogLines)
-                    file << line << endl;
-                file.close();
-            }
+            m_LogFile->close();
+            delete m_LogFile;
         }
     }
 
@@ -512,7 +508,12 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::LogLine(const string& text, bool print)
     {
-        m_LogLines.push_back(text);
+        if (m_LogFile && m_LogFile->is_open())
+        {
+            (*m_LogFile) << text << endl;
+            m_LogFile->flush();
+        }
+
         if (print)
             cout << text << "\n";
     }

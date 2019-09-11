@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <fstream>
 
 #include "Types.h"
 #include "Layers/LayerBase.h"
@@ -76,7 +77,7 @@ namespace Neuro
         OptimizerBase* m_Optimizer = nullptr;
         vector<accuracy_func_t> m_AccuracyFuncs;
 
-        vector<string> m_LogLines;
+        ofstream* m_LogFile;
         int m_ChartSaveInterval = 20;
         int m_Seed;
         float m_LastTrainError;

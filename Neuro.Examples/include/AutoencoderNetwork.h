@@ -17,8 +17,8 @@ public:
 
         //Based on https://blog.keras.io/building-autoencoders-in-keras.html
 
-        auto encoder = Dense(784, 32, new ReLU());
-        auto decoder = Dense(32, 784, new Sigmoid());
+        auto encoder = new Dense(784, 32, new ReLU());
+        auto decoder = new Dense(32, 784, new Sigmoid());
         /*auto encoder = Sequential("encoder");
         encoder.AddLayer(new Conv2D(Shape(28, 28, 1), 3, 16, 1, 2, new ReLU()));
         encoder.AddLayer(new MaxPooling2D(2, 2));
@@ -36,8 +36,8 @@ public:
         decoder.AddLayer(new Conv2D(3, 1, 1, 2, new Sigmoid()));*/
 
         auto model = Sequential("autoencoder", 1337);
-        model.AddLayer(&encoder);
-        model.AddLayer(&decoder);
+        model.AddLayer(encoder);
+        model.AddLayer(decoder);
         model.Optimize(new Adam(), new BinaryCrossEntropy());
         cout << model.Summary();
 
