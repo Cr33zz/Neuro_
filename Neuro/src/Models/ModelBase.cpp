@@ -341,12 +341,14 @@ namespace Neuro
             if (verbose == 2)
                 LogLine(progress.Str(), false);
 
-            m_LastTrainError = trainTotalError / trainSamplesCount;
+            float trainError = trainTotalError / trainSamplesCount / outputs.size();
+            float trainAcc = (float)trainHits / trainSamplesCount / outputs.size();
+            m_LastTrainError = trainError;
 
             if (chartGen)
             {
-                chartGen->AddData((float)e, m_LastTrainError, (int)ETrack::TrainError);
-                chartGen->AddData((float)e, (float)trainHits / trainSamplesCount / OutputLayersCount(), (int)ETrack::TrainAccuracy);
+                chartGen->AddData((float)e, trainError, (int)ETrack::TrainError);
+                chartGen->AddData((float)e, trainAcc, (int)ETrack::TrainAccuracy);
             }
 
             stringstream summary;
@@ -355,9 +357,9 @@ namespace Neuro
             if (verbose > 0)
             {
                 if (trackFlags & ETrack::TrainError)
-                    summary << " - loss: " << m_LastTrainError;
+                    summary << " - loss: " << trainError;
                 if (trackFlags & ETrack::TrainAccuracy)
-                    summary << " - acc: " << (float)trainHits / trainSamplesCount;
+                    summary << " - acc: " << trainAcc;
             }
 
             if (validInputs && validOutputs)
@@ -389,14 +391,15 @@ namespace Neuro
                     }
                 }
 
-                float validationError = validationTotalError / validationSamplesCount;
+                float validationError = validationTotalError / validationSamplesCount / outputs.size();
+                float validationAcc = (float)validationHits / validationSamplesCount / outputs.size();
 
                 if (verbose > 0)
                 {
                     if (trackFlags & ETrack::TestError)
                         summary << " - val_loss: " << validationError;
                     if (trackFlags & ETrack::TestAccuracy)
-                        summary << " - val_acc: " << (float)validationHits / validationSamplesCount;
+                        summary << " - val_acc: " << validationAcc;
                 }
 
                 /*chartGen?.AddData(e, testTotalError / validationSamples, (int)Track::TestError);
@@ -466,15 +469,17 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::TrainOnBatch(const Tensor& input, const Tensor& output)
+    float ModelBase::TrainOnBatch(const Tensor& input, const Tensor& output)
     {
-        TrainOnBatch({ &input }, { &output });
+        return TrainOnBatch({ &input }, { &output });
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::TrainOnBatch(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs)
+    float ModelBase::TrainOnBatch(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs)
     {
-        TrainStep(inputs, outputs);
+        float totalError = 0;
+        TrainStep(inputs, outputs, &totalError);
+        return totalError / inputs[0]->Batch() / outputs.size();
     }
 
     //////////////////////////////////////////////////////////////////////////

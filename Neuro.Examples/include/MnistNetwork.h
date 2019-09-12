@@ -26,10 +26,10 @@ public:
         model->Optimize(new Adam(), new BinaryCrossEntropy());
 
         Tensor input, output;
-        LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, false, 6000);
+        LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, true, false, 6000);
         input.Reshape(Shape(1, -1, 1, input.Batch()));
         Tensor validationInput, validationOutput;
-        LoadMnistData("data/t10k-images.idx3-ubyte", "data/t10k-labels.idx1-ubyte", validationInput, validationOutput, false, 1000);
+        LoadMnistData("data/t10k-images.idx3-ubyte", "data/t10k-labels.idx1-ubyte", validationInput, validationOutput, true, false, 1000);
         validationInput.Reshape(Shape(1, -1, 1, validationInput.Batch()));
 
         model->Fit(input, output, 128, 10, &validationInput, &validationOutput, 2, ETrack::All);

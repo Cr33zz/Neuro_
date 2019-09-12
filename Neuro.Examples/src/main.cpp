@@ -26,7 +26,7 @@ int main()
     t.Pool2D(2, 2, EPoolingMode::Max, 0).SaveAsImage("test_maxpool.bmp", true);*/
 
     /*Tensor input, output;
-    LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, true, 10);
+    LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, true, true, 10);
     input.SaveAsImage("xx.png", true);*/
     
     //IrisNetwork::Run();

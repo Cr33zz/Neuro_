@@ -189,7 +189,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void LoadMnistData(const string& imagesFile, const string& labelsFile, Tensor& input, Tensor& output, bool generateImage, int maxImages)
+    void LoadMnistData(const string& imagesFile, const string& labelsFile, Tensor& input, Tensor& output, bool normalize, bool generateImage, int maxImages)
     {
         auto ReadBigInt32 = [](const unique_ptr<char[]>& buffer, size_t offset)
         {
@@ -236,16 +236,16 @@ namespace Neuro
 
         for (uint32_t i = 0; i < (uint32_t)maxImages; ++i)
         {
-            for (uint32_t y = 0; y < imgWidth; ++y)
-            for (uint32_t x = 0; x < imgHeight; ++x)
+            for (uint32_t h = 0; h < imgWidth; ++h)
+            for (uint32_t w = 0; w < imgHeight; ++w)
             {
                 uint8_t color = *(pixelOffset++);
-                input(x, y, 0, i) = color / 255.f;
+                input(w, h, 0, i) = normalize ? color / 255.f : color;
 
                 if (image)
                 {
                     imageColor.rgbRed = imageColor.rgbGreen = imageColor.rgbBlue = color;
-                    FreeImage_SetPixelColor(image, (i % imageCols) * imgWidth + x, IMG_HEIGHT - ((i / imageCols) * imgHeight + y) - 1, &imageColor);
+                    FreeImage_SetPixelColor(image, (i % imageCols) * imgWidth + w, IMG_HEIGHT - ((i / imageCols) * imgHeight + h) - 1, &imageColor);
                 }
             }
 
