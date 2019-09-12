@@ -28,6 +28,7 @@
     <ClCompile Include="src\FlattenLayerTests.cpp" />
     <ClCompile Include="src\MergeLayerTests.cpp" />
     <ClCompile Include="src\ModelTests.cpp" />
+    <ClCompile Include="src\OptimizerTests.cpp" />
     <ClCompile Include="src\PoolingLayerTests.cpp" />
     <ClCompile Include="src\RandomTests.cpp" />
     <ClCompile Include="src\ShapeTests.cpp" />

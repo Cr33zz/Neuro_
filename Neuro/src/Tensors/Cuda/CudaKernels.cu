@@ -51,10 +51,4 @@ namespace Neuro
         div<<<blocks, threads>>>(inputLen, inputDev, v, outputDev);
         cudaDeviceSynchronize();
     }
-
-    void CudaKernels::Map(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, const nvstd::function<float(float)>& func, float* outputDev)
-    {
-        map<<<blocks, threads>>>(inputLen, inputDev, func, outputDev);
-        cudaDeviceSynchronize();
-    }
 }

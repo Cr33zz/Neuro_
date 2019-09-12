@@ -248,6 +248,9 @@ namespace Neuro
         const float* GetDevicePtr() const;
         float* GetDevicePtr();
 
+        static TensorOpCpu* DefaultOp();
+        static TensorOpCpu* ActiveOp();
+
         void DebugDumpValues(const string& outFile) const;
         void DebugRecoverValues(const string& inFile);
 
@@ -281,7 +284,7 @@ namespace Neuro
 
 		static TensorOpCpu* GetOpFromMode(EOpMode mode);
 
-		static TensorOpCpu* g_DefaultOpCpu;
+		static TensorOpCpu* g_DefaultOp;
         static TensorOpCpu* g_ForcedOp;
 		static TensorOpCpu* g_OpCpu;
         static TensorOpCpu* g_OpMultiCpu;

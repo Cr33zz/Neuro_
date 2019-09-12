@@ -2,6 +2,7 @@
 
 #include "Optimizers/Adam.h"
 #include "Tensors/Tensor.h"
+#include "Tensors/TensorOpCpu.h"
 
 namespace Neuro
 {    
@@ -29,25 +30,17 @@ namespace Neuro
 			}
 		}
 
+        float learningRate = m_LearningRate * (float)sqrt(1.0 - pow(m_Beta2, m_Iteration)) / (1.0f - (float)pow(m_Beta1, m_Iteration));
+
 		for (uint32_t i = 0; i < paramsAndGrads.size(); ++i)
 		{
-			auto& parametersAndGradient = paramsAndGrads[i];
-			auto parameters = parametersAndGradient.Parameters;
-			auto gradients = parametersAndGradient.Gradients;
-			auto& mGrad = m_MGradients[i];
+			auto& parameterAndGradient = paramsAndGrads[i];
+			auto parameter = parameterAndGradient.Parameters;
+			auto gradient = parameterAndGradient.Gradients;
+            auto& mGrad = m_MGradients[i];
 			auto& vGrad = m_VGradients[i];
 
-			gradients->Div((float)batchSize, *gradients);
-
-			float tempLearningRate = m_LearningRate * (float)sqrt(1.0 - pow(m_Beta2, m_Iteration)) / (1.0f - (float)pow(m_Beta1, m_Iteration));
-
-			//mGrad.Map((m, g) => m * Beta1 + (1 - Beta1) * g, gradients, mGrad);
-			mGrad.Add(m_Beta1, 1 - m_Beta1, *gradients, mGrad);
-			vGrad.Map([&](float v, float g) { return v * m_Beta2 + (1 - m_Beta2) * g * g; }, *gradients, vGrad);
-
-			parameters->Sub(mGrad.Div(vGrad.Map([&](float x) { return (float)sqrt(x) + m_Epsilon; })).Mul(tempLearningRate), *parameters);
-
-			gradients->Zero();
+            Tensor::ActiveOp()->AdamStep(*parameter, *gradient, mGrad, vGrad, (float)batchSize, learningRate, m_Beta1, m_Beta2, m_Epsilon);
 		}
 	}
 

@@ -241,7 +241,27 @@ namespace Neuro
 		jacob.Mul(outputGradient, inputGradient);
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::AdamStep(Tensor& parameter, Tensor& gradient, Tensor& mGrad, Tensor& vGrad, float batchSize, float lr, float beta1, float beta2, float epsilon) const
+    {
+        parameter.CopyToHost();
+        gradient.CopyToHost();
+        mGrad.CopyToHost();
+        vGrad.CopyToHost();
+
+        gradient.Div(batchSize, gradient);
+
+        // mGrad = beta1 * mGrad + (1 - beta1) * gradient
+        mGrad.Add(beta1, 1 - beta1, gradient, mGrad);
+        // vGrad = beta2 * vGrad + (1 - beta2) * sqr(gradient)
+        vGrad.Map([&](float v, float g) { return v * beta2 + (1 - beta2) * g * g; }, gradient, vGrad);
+        // parameter = parameter - mGrad / (sqrt(vGrad) + epsilon) * lr
+        parameter.Sub(mGrad.Div(vGrad.Map([&](float x) { return (float)sqrt(x) + epsilon; })).Mul(lr), parameter);
+
+        gradient.Zero();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void TensorOpCpu::Conv2D(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, Tensor& output) const
 	{
 		input.CopyToHost();

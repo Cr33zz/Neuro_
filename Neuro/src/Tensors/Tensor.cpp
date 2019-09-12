@@ -20,7 +20,7 @@ namespace Neuro
     TensorOpCpu* Tensor::g_OpMultiCpu = nullptr;
     TensorOpCpu* Tensor::g_OpGpu = nullptr;
 
-    TensorOpCpu* Tensor::g_DefaultOpCpu = nullptr;
+    TensorOpCpu* Tensor::g_DefaultOp = nullptr;
     TensorOpCpu* Tensor::g_ForcedOp = nullptr;
 
     FREE_IMAGE_FORMAT GetFormat(const string& fileName)
@@ -53,11 +53,7 @@ namespace Neuro
         : m_Name(name)
 	{
 		OverrideHost();
-
-		if (g_DefaultOpCpu == nullptr)
-			g_DefaultOpCpu = g_OpCpu;
-
-		m_Op = g_DefaultOpCpu;
+		m_Op = DefaultOp();
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -179,7 +175,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::SetDefaultOpMode(EOpMode mode)
 	{
-		g_DefaultOpCpu = GetOpFromMode(mode);
+		g_DefaultOp = GetOpFromMode(mode);
 	}
 
     //////////////////////////////////////////////////////////////////////////
@@ -1746,6 +1742,21 @@ namespace Neuro
     float* Tensor::GetDevicePtr()
     {
         return static_cast<float*>(GetDeviceVar().GetDevicePtr());
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    TensorOpCpu* Tensor::DefaultOp()
+    {
+        if (g_DefaultOp == nullptr)
+            g_DefaultOp = g_OpCpu;
+
+        return g_DefaultOp;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    TensorOpCpu* Tensor::ActiveOp()
+    {
+        return g_ForcedOp ? g_ForcedOp : DefaultOp();
     }
 
     //////////////////////////////////////////////////////////////////////////

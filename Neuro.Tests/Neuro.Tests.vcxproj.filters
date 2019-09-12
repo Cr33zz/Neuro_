@@ -58,5 +58,8 @@
     <ClCompile Include="src\ModelTests.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\OptimizerTests.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
