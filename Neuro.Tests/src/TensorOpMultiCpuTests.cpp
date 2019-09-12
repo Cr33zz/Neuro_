@@ -117,6 +117,34 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
+        TEST_METHOD(Div_CompareWithCpuResult)
+        {
+            Tensor t(Shape(10, 20, 30, 40)); t.FillWithRand();
+
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            NEURO_PROFILE("CPU", Tensor r = t.Div(2.f);)
+
+            Tensor::SetForcedOpMode(EOpMode::MultiCPU);
+            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Div(2.f);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(Map_CompareWithCpuResult)
+        {
+            Tensor t(Shape(10, 20, 30, 40)); t.FillWithRand();
+
+            auto func = [](float x) { return 2 * x; };
+
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            NEURO_PROFILE("CPU", Tensor r = t.Map(func);)
+
+            Tensor::SetForcedOpMode(EOpMode::MultiCPU);
+            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Map(func);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
         TEST_METHOD(Softmax_CompareWithCpuResult)
         {
             Tensor t(Shape(20, 30, 1, 10)); t.FillWithRand(-1, -10, 10);

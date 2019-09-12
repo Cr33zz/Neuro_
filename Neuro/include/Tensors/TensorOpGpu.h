@@ -15,6 +15,7 @@ namespace Neuro
 
         virtual void Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const override;
         virtual void Mul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const override;
+        virtual void Div(const Tensor& input, float v, Tensor& output) const override;
         virtual void Sum(const Tensor& input, EAxis axis, int batch, Tensor& output) const override;
         virtual void Transpose(const Tensor& input, Tensor& output) const override;
         virtual void Conv2D(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, Tensor& output) const override;
@@ -29,6 +30,8 @@ namespace Neuro
         virtual void EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const override;
         virtual void Softmax(const Tensor& input, Tensor& output) const override;
         virtual void SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const override;
+        virtual void Map(const function<float(float)>& func, const Tensor& t, Tensor& output) const override;
+        virtual void Map(const function<float(float, float)>& func, const Tensor& t1, const Tensor& t2, Tensor& output) const override;
 
     private:
         static cudnnPoolingMode_t GetCudnnPoolType(EPoolingMode type);

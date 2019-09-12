@@ -13,6 +13,7 @@ namespace Neuro
         virtual void Sub(const Tensor& t1, const Tensor& t2, Tensor& output) const;
         virtual void Mul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const;
 		virtual void MulElem(const Tensor& t1, const Tensor& t2, Tensor& output) const;
+        virtual void Div(const Tensor& input, float v, Tensor& output) const;
         virtual void Sum(const Tensor& input, EAxis axis, int batch, Tensor& output) const;
         virtual void Transpose(const Tensor& input, Tensor& output) const;
         virtual void Conv2D(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, Tensor& output) const;

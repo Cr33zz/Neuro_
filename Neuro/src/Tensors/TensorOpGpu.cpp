@@ -124,6 +124,16 @@ namespace Neuro
         }
     }
 
+    void TensorOpGpu::Div(const Tensor& input, float v, Tensor& output) const
+    {
+        dim3 blocks, threads;
+        GetKernelRunParams(input.Length(), blocks, threads);
+        input.CopyToDevice();
+        output.CopyToDevice();
+
+        CudaKernels::Div(blocks, threads, input.Length(), input.GetDevicePtr(), v, output.GetDevicePtr());
+    }
+
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Transpose(const Tensor& input, Tensor& output) const
     {
@@ -568,6 +578,24 @@ namespace Neuro
                 output.BatchLength()));
         }
     }
+
+    //////////////////////////////////////////////////////////////////////////
+	void TensorOpGpu::Map(const function<float(float)>& func, const Tensor& input, Tensor& output) const
+	{
+        __super::Map(func, input, output);
+        /*dim3 blocks, threads;
+        GetKernelRunParams(input.Length(), blocks, threads);
+        input.CopyToDevice();
+        output.CopyToDevice();
+
+        CudaKernels::Map(blocks, threads, input.Length(), input.GetDevicePtr(), func, output.GetDevicePtr());*/
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	void TensorOpGpu::Map(const function<float(float, float)>& func, const Tensor& t1, const Tensor& t2, Tensor& output) const
+	{
+        __super::Map(func, t1, t2, output);
+	}
 
     //////////////////////////////////////////////////////////////////////////
     cudnnPoolingMode_t TensorOpGpu::GetCudnnPoolType(EPoolingMode type)

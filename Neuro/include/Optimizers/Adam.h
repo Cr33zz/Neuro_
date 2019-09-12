@@ -8,7 +8,7 @@ namespace Neuro
     class Adam : public OptimizerBase
     {
 	public:
-        Adam(float lr = 0.001f);
+        Adam(float lr = 0.001f, float beta1 = 0.9f, float beta2 = 0.999f);
 
         virtual void OnStep(vector<ParametersAndGradients>& paramsAndGrads, int batchSize) override;
         virtual OptimizerBase* Clone() const override;
@@ -17,8 +17,8 @@ namespace Neuro
 
 	private:
         float m_LearningRate;
-        float m_Beta1 = 0.9f;
-        float m_Beta2 = 0.999f;
+        float m_Beta1;
+        float m_Beta2;
         float m_Epsilon = 1e-8f;
 
         vector<Tensor> m_MGradients;

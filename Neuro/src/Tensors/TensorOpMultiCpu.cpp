@@ -86,6 +86,21 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpMultiCpu::Div(const Tensor& input, float v, Tensor& output) const
+    {
+        input.CopyToHost();
+        output.OverrideHost();
+
+        auto& inputValues = input.GetValues();
+        auto& outputValues = output.GetValues();
+
+        parallel_for((uint32_t)0, (uint32_t)inputValues.size(), [&](uint32_t i)
+        {
+            outputValues[i] = inputValues[i] / v;
+        });
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpMultiCpu::Sum(const Tensor& input, EAxis axis, int batch, Tensor& output) const
     {
         output.Zero();

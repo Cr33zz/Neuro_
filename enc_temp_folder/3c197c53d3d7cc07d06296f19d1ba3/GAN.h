@@ -33,7 +33,7 @@ public:
         const uint32_t HALF_BATCH_SIZE = BATCH_SIZE / 2;
         const uint32_t EPOCHS = 100;
 
-        uint32_t BATCHES_NUM = images.Batch() / BATCH_SIZE;
+        uint32_t batchCount = images.Batch() / BATCH_SIZE;
         Tensor discriminatorFakeInput(Shape::From(discriminator->InputShape(), HALF_BATCH_SIZE));
         Tensor discriminatorRealInput(Shape::From(discriminator->InputShape(), HALF_BATCH_SIZE));
         Tensor discriminatorFakeOutput(Shape::From(discriminator->OutputShape(), HALF_BATCH_SIZE));
@@ -52,8 +52,8 @@ public:
             float totalGanError = 0.f;
             float totalDiscriminatorError = 0.f;
 
-            Tqdm progress(BATCHES_NUM);
-            for (uint32_t i = 0; i < BATCHES_NUM; ++i, progress.NextStep())
+            Tqdm progress(batchCount);
+            for (uint32_t i = 0; i < batchCount; ++i, progress.NextStep())
             {
                 ganHalfInput.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
 
@@ -73,7 +73,7 @@ public:
                 totalGanError += ganModel->TrainOnBatch(ganInput, ganOutput);
             }
 
-            cout << " - d_error: " << setprecision(4) << totalDiscriminatorError / BATCHES_NUM << " - g_error: " << totalGanError / BATCHES_NUM << endl;
+            cout << " - d_error: " << setprecision(4) << totalDiscriminatorError / BATCH_SIZE << " - g_error: " << totalGanError / BATCH_SIZE << endl;
 
             if (e == 1 || e % 10 == 0)
                 generator->Output().Map([](float x) { return x * 127.5f + 127.5f; }).Reshaped(Shape(28, 28, 1, -1)).SaveAsImage("generator_" + to_string(e) + ".png", true);

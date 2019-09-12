@@ -74,6 +74,7 @@
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <Include>
       </Include>
+      <AdditionalOptions>--expt-extended-lambda %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
     <ProjectReference>
       <LinkLibraryDependencies>
@@ -104,6 +105,7 @@
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <Include>
       </Include>
+      <AdditionalOptions>--expt-extended-lambda %(AdditionalOptions)</AdditionalOptions>
     </CudaCompile>
     <ProjectReference>
       <LinkLibraryDependencies>

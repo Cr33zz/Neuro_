@@ -6,9 +6,11 @@
 namespace Neuro
 {    
 	//////////////////////////////////////////////////////////////////////////
-	Adam::Adam(float lr)
+    Adam::Adam(float lr, float beta1, float beta2)
 	{
 		m_LearningRate = lr;
+        m_Beta1 = beta1;
+        m_Beta2 = beta2;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -16,7 +18,9 @@ namespace Neuro
 	{
 		if (m_MGradients.size() != paramsAndGrads.size())
 		{
-			for (uint32_t i = 0; i < paramsAndGrads.size(); ++i)
+            assert(m_MGradients.empty() && m_VGradients.empty());
+			
+            for (uint32_t i = 0; i < paramsAndGrads.size(); ++i)
 			{
 				auto gradients = paramsAndGrads[i].Gradients;
 
