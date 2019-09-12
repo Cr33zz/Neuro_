@@ -24,6 +24,19 @@ __global__ void div(int inputLen, const float* __restrict input, float v, float*
         result[i] = input[i] / v;
 }
 
+__global__ void adamStep(int inputLen, float* __restrict parameterDev, float* __restrict gradientDev, float* __restrict mGradDev, float* __restrict vGradDev, float batchSize, float lr, float beta1, float beta2, float epsilon)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < inputLen)
+    {
+        gradientDev[i] /= batchSize;
+        mGradDev[i] = beta1 * mGradDev[i] + (1 - beta1) * gradientDev[i];
+        vGradDev[i] = beta2 * vGradDev[i] + (1 - beta2) * gradientDev[i] * gradientDev[i];
+        parameterDev[i] -= mGradDev[i] / (sqrt(vGradDev[i]) + epsilon) * lr;
+        gradientDev[i] = 0;
+    }
+}
+
 template<class F>
 __global__ void map(int inputLen, const float* __restrict input, F f, float* __restrict result)
 {
@@ -49,6 +62,12 @@ namespace Neuro
     void CudaKernels::Div(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float v, float* outputDev)
     {
         div<<<blocks, threads>>>(inputLen, inputDev, v, outputDev);
+        cudaDeviceSynchronize();
+    }
+
+    void CudaKernels::AdamStep(const dim3& blocks, const dim3& threads, int inputLen, float* parameterDev, float* gradientDev, float* mGradDev, float* vGradDev, float batchSize, float lr, float beta1, float beta2, float epsilon)
+    {
+        adamStep<<<blocks, threads>>>(inputLen, parameterDev, gradientDev, mGradDev, vGradDev, batchSize, lr, beta1, beta2, epsilon);
         cudaDeviceSynchronize();
     }
 }

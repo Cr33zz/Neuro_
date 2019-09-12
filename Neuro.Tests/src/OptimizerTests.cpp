@@ -18,6 +18,12 @@ namespace NeuroTests
             TestOptimizer(new Adam());
         }
 
+        TEST_METHOD(Adam_Optimize_GPU)
+        {
+            Tensor::SetForcedOpMode(GPU);
+            TestOptimizer(new Adam());
+        }
+
         void TestOptimizer(OptimizerBase* optimizer)
         {
             Tensor input(Shape(2, 2, 2, 2));

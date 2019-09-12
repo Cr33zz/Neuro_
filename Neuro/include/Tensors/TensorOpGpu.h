@@ -30,8 +30,7 @@ namespace Neuro
         virtual void EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const override;
         virtual void Softmax(const Tensor& input, Tensor& output) const override;
         virtual void SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const override;
-        virtual void Map(const function<float(float)>& func, const Tensor& t, Tensor& output) const override;
-        virtual void Map(const function<float(float, float)>& func, const Tensor& t1, const Tensor& t2, Tensor& output) const override;
+        virtual void AdamStep(Tensor& parameter, Tensor& gradient, Tensor& mGrad, Tensor& vGrad, float batchSize, float lr, float beta1, float beta2, float epsilon) const override;
 
     private:
         static cudnnPoolingMode_t GetCudnnPoolType(EPoolingMode type);

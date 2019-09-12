@@ -580,22 +580,18 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-	void TensorOpGpu::Map(const function<float(float)>& func, const Tensor& input, Tensor& output) const
-	{
-        __super::Map(func, input, output);
-        /*dim3 blocks, threads;
-        GetKernelRunParams(input.Length(), blocks, threads);
-        input.CopyToDevice();
-        output.CopyToDevice();
+    void TensorOpGpu::AdamStep(Tensor& parameter, Tensor& gradient, Tensor& mGrad, Tensor& vGrad, float batchSize, float lr, float beta1, float beta2, float epsilon) const
+    {
+        parameter.CopyToDevice();
+        gradient.CopyToDevice();
+        mGrad.CopyToDevice();
+        vGrad.CopyToDevice();
 
-        CudaKernels::Map(blocks, threads, input.Length(), input.GetDevicePtr(), func, output.GetDevicePtr());*/
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	void TensorOpGpu::Map(const function<float(float, float)>& func, const Tensor& t1, const Tensor& t2, Tensor& output) const
-	{
-        __super::Map(func, t1, t2, output);
-	}
+        dim3 blocks, threads;
+        GetKernelRunParams(parameter.Length(), blocks, threads);
+        
+        CudaKernels::AdamStep(blocks, threads, parameter.Length(), parameter.GetDevicePtr(), gradient.GetDevicePtr(), mGrad.GetDevicePtr(), vGrad.GetDevicePtr(), batchSize, lr, beta1, beta2, epsilon);
+    }
 
     //////////////////////////////////////////////////////////////////////////
     cudnnPoolingMode_t TensorOpGpu::GetCudnnPoolType(EPoolingMode type)
