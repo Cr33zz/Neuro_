@@ -14,6 +14,7 @@ namespace Neuro
 		Dimensions[2] = depth;
 		Dimensions[3] = batchSize;
 
+        NDim = 0;
         if (batchSize > 1)
             NDim = 4;
         else if (depth > 1)

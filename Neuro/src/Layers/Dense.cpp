@@ -80,28 +80,45 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Dense::BackPropInternal(vector<Tensor>& outputsGradient)
 	{
+        const bool USE_TEMPS = true;
+
 		// for explanation watch https://www.youtube.com/watch?v=8H2ODPNxEgA&t=898s
 		// each input is responsible for the output error proportionally to weights it is multiplied by
-		m_Weights.Transposed().Mul(outputsGradient[0], m_InputsGradient[0]);
+        if (USE_TEMPS)
+        {
+            _igGradTemp1.Resize(Shape(m_Weights.Height(), m_Weights.Width(), 1, 1));
+            m_Weights.Transpose(_igGradTemp1);
+            _igGradTemp1.Mul(outputsGradient[0], m_InputsGradient[0]);
+        }
+        else
+            m_Weights.Transposed().Mul(outputsGradient[0], m_InputsGradient[0]);
 
         if (m_Trainable)
         {
-            const bool USE_TEMPS = true;
             if (USE_TEMPS)
             {
-                _temp1.Resize(Shape(m_Inputs[0]->Height(), m_Inputs[0]->Width(), 1, m_Inputs[0]->Batch()));
-                m_Inputs[0]->Transpose(_temp1);
-                _temp2.Resize(Shape::From(m_WeightsGrad.GetShape(), m_Inputs[0]->Batch()));
-                outputsGradient[0].Mul(_temp1, _temp2);
-                _temp3.Resize(m_WeightsGrad.GetShape());
-                _temp2.Sum(EAxis::Feature, -1, _temp3);
-                m_WeightsGrad.Add(_temp3, m_WeightsGrad);
+                _wGradTemp1.Resize(Shape(m_Inputs[0]->Height(), m_Inputs[0]->Width(), 1, m_Inputs[0]->Batch()));
+                m_Inputs[0]->Transpose(_wGradTemp1);
+                _wGradTemp2.Resize(Shape::From(m_WeightsGrad.GetShape(), m_Inputs[0]->Batch()));
+                outputsGradient[0].Mul(_wGradTemp1, _wGradTemp2);
+                _wGradTemp3.Resize(m_WeightsGrad.GetShape());
+                _wGradTemp2.Sum(EAxis::Feature, -1, _wGradTemp3);
+                m_WeightsGrad.Add(_wGradTemp3, m_WeightsGrad);
             }
             else
                 m_WeightsGrad.Add(outputsGradient[0].Mul(m_Inputs[0]->Transposed()).Sum(EAxis::Feature), m_WeightsGrad);
 
             if (m_UseBias)
-                m_BiasGrad.Add(outputsGradient[0].Sum(EAxis::Feature), m_BiasGrad);
+            {
+                if (USE_TEMPS)
+                {
+                    _bGradTemp1.Resize(m_BiasGrad.GetShape());
+                    outputsGradient[0].Sum(EAxis::Feature, -1, _bGradTemp1);
+                    m_BiasGrad.Add(_bGradTemp1, m_BiasGrad);
+                }
+                else
+                    m_BiasGrad.Add(outputsGradient[0].Sum(EAxis::Feature), m_BiasGrad);
+            }
         }
 	}
 

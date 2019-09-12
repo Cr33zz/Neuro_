@@ -53,6 +53,7 @@ namespace Neuro
         : m_Name(name)
 	{
 		OverrideHost();
+        m_Values.resize(m_Shape.Length);
 		m_Op = DefaultOp();
 	}
 

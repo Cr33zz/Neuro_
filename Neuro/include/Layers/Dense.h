@@ -50,9 +50,11 @@ namespace Neuro
         InitializerBase* m_WeightsInitializer = new GlorotUniform();
         InitializerBase* m_BiasInitializer = new Zeros();
 
-        Tensor _temp1;
-        Tensor _temp2;
-        Tensor _temp3;
+        Tensor _igGradTemp1;
+        Tensor _wGradTemp1;
+        Tensor _wGradTemp2;
+        Tensor _wGradTemp3;
+        Tensor _bGradTemp1;
 
         /*virtual void SerializeParameters(XmlElement elem)
         {
