@@ -1,4 +1,5 @@
 ﻿#include <sstream>
+#include <iomanip>
 
 #include "Optimizers/Adam.h"
 #include "Tensors/Tensor.h"
@@ -32,7 +33,7 @@ namespace Neuro
 
         float learningRate = m_LearningRate * (float)sqrt(1.0 - pow(m_Beta2, m_Iteration)) / (1.0f - (float)pow(m_Beta1, m_Iteration));
 
-		for (uint32_t i = 0; i < paramsAndGrads.size(); ++i)
+		for (auto i = 0; i < paramsAndGrads.size(); ++i)
 		{
 			auto& parameterAndGradient = paramsAndGrads[i];
 			auto parameter = parameterAndGradient.Parameters;
@@ -54,9 +55,8 @@ namespace Neuro
 	string Adam::ToString()
 	{
 		stringstream ss;
-		ss << "Adam(lr=" << m_LearningRate << ")";
+		ss << setprecision(5) << "Adam(lr=" << m_LearningRate << ", beta1=" << m_Beta1 << ", beta2=" << m_Beta2 << ")";
 		return ss.str();
-		//return $"Adam(lr={LearningRate}, beta1={Beta1}, beta2={Beta2}, epsilon={Epsilon})";
 	}
 
 	//////////////////////////////////////////////////////////////////////////

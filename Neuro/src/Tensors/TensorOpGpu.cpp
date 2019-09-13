@@ -468,6 +468,42 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::Sigmoid(const Tensor& input, Tensor& output) const
+    {
+        Activation(CUDNN_ACTIVATION_SIGMOID, input, output, 0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::SigmoidGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const
+    {
+        ActivationGradient(CUDNN_ACTIVATION_SIGMOID, output, outputGradient, inputGradient, 0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::Tanh(const Tensor& input, Tensor& output) const
+    {
+        Activation(CUDNN_ACTIVATION_TANH, input, output, 0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::TanhGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const
+    {
+        ActivationGradient(CUDNN_ACTIVATION_TANH, output, outputGradient, inputGradient, 0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::ReLU(const Tensor& input, Tensor& output) const
+    {
+        Activation(CUDNN_ACTIVATION_RELU, input, output, 0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::ReLUGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const
+    {
+        ActivationGradient(CUDNN_ACTIVATION_RELU, output, outputGradient, inputGradient, 0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Elu(const Tensor& input, float alpha, Tensor& output) const
     {
         Activation(CUDNN_ACTIVATION_ELU, input, output, alpha);
@@ -603,6 +639,18 @@ namespace Neuro
         GetKernelRunParams(parameter.Length(), blocks, threads);
         
         CudaKernels::AdamStep(blocks, threads, parameter.Length(), parameter.GetDevicePtr(), gradient.GetDevicePtr(), mGrad.GetDevicePtr(), vGrad.GetDevicePtr(), batchSize, lr, beta1, beta2, epsilon);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::SgdStep(Tensor& parameter, Tensor& gradient, float batchSize, float lr) const
+    {
+        parameter.CopyToDevice();
+        gradient.CopyToDevice();
+
+        dim3 blocks, threads;
+        GetKernelRunParams(parameter.Length(), blocks, threads);
+
+        CudaKernels::SgdStep(blocks, threads, parameter.Length(), parameter.GetDevicePtr(), gradient.GetDevicePtr(), batchSize, lr);
     }
 
     //////////////////////////////////////////////////////////////////////////

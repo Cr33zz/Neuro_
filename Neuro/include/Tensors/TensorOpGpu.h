@@ -26,13 +26,21 @@ namespace Neuro
         virtual void BatchNormalization(const Tensor& t, const Tensor& gamma, const Tensor& beta, const Tensor& runningMean, const Tensor& runningVar, Tensor& output) const override;
         virtual void BatchNormalizationTrain(const Tensor& t, const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& output) const override;
         virtual void BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const override;
+        virtual void Sigmoid(const Tensor& input, Tensor& output) const override;
+        virtual void SigmoidGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const override;
+        virtual void Tanh(const Tensor& input, Tensor& output) const override;
+        virtual void TanhGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const override;
+        virtual void ReLU(const Tensor& input, Tensor& output) const override;
+        virtual void ReLUGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const override;
         virtual void Elu(const Tensor& input, float alpha, Tensor& output) const override;
         virtual void EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const override;
         virtual void LeakyReLU(const Tensor& input, float alpha, Tensor& output) const override;
         virtual void LeakyReLUGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const override;
         virtual void Softmax(const Tensor& input, Tensor& output) const override;
         virtual void SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const override;
+
         virtual void AdamStep(Tensor& parameter, Tensor& gradient, Tensor& mGrad, Tensor& vGrad, float batchSize, float lr, float beta1, float beta2, float epsilon) const override;
+        virtual void SgdStep(Tensor& parameter, Tensor& gradient, float batchSize, float lr) const override;
 
     private:
         void Activation(const cudnnActivationMode_t& activationMode, const Tensor& input, Tensor& output, float coeff) const;

@@ -298,6 +298,14 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::SgdStep(Tensor& parameter, Tensor& gradient, float batchSize, float lr) const
+    {
+        gradient.Mul(lr / batchSize, gradient);
+        parameter.Sub(gradient, parameter);
+        gradient.Zero();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void TensorOpCpu::Conv2D(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, Tensor& output) const
 	{
 		input.CopyToHost();

@@ -1,7 +1,9 @@
 ﻿#include <sstream>
+#include <iomanip>
 
 #include "Optimizers/SGD.h"
 #include "Tensors/Tensor.h"
+#include "Tensors/TensorOpCpu.h"
 
 namespace Neuro
 {
@@ -21,7 +23,7 @@ namespace Neuro
 	std::string SGD::ToString()
 	{
 		stringstream ss;
-		ss << "SGD(lr=" << m_LearningRate << ")";
+		ss << setprecision(5) << "SGD(lr=" << m_LearningRate << ")";
 		return ss.str();
 	}
 
@@ -34,18 +36,15 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void SGD::OnStep(vector<ParametersAndGradients>& paramsAndGrads, int batchSize)
 	{
+        float learningRate = m_LearningRate;
+
 		for (auto i = 0; i < paramsAndGrads.size(); ++i)
 		{
 			auto& parametersAndGradient = paramsAndGrads[i];
-			auto parameters = parametersAndGradient.Parameters;
-			auto gradients = parametersAndGradient.Gradients;
+			auto parameter = parametersAndGradient.Parameters;
+			auto gradient = parametersAndGradient.Gradients;
 
-			float tempLearningRate = m_LearningRate / batchSize;
-
-			gradients->Mul(tempLearningRate, *gradients);
-			parameters->Sub(*gradients, *parameters);
-
-			gradients->Zero();
+            Tensor::ActiveOp()->SgdStep(*parameter, *gradient, (float)batchSize, learningRate);
 		}
 	}
 
