@@ -184,7 +184,43 @@ namespace Neuro
             outputValues[idx] = func(t1Values[idx], t2Values[i]);
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Sigmoid(const Tensor& input, Tensor& output) const
+    {
+        input.Map([&](float x) { return 1 / (1 + (float)exp(-x)); }, output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::SigmoidGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const
+    {
+        output.Map([&](float x, float x2) { return x * (1 - x) * x2; }, outputGradient, inputGradient);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Tanh(const Tensor& input, Tensor& output) const
+    {
+        input.Map([&](float x) { return 2 / (1 + (float)exp(-2 * x)) - 1; }, output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::TanhGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const
+    {
+        output.Map([&](float x, float x2) { return (1 - x * x) * x2; }, outputGradient, inputGradient);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::ReLU(const Tensor& input, Tensor& output) const
+    {
+        input.Map([&](float x) { return max(0.f, x); }, output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::ReLUGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const
+    {
+        output.Map([&](float x, float x2) { return x > 0 ? x2 : 0; }, outputGradient, inputGradient);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void TensorOpCpu::Elu(const Tensor& input, float alpha, Tensor& output) const
 	{
         input.Map([&](float x) { return x >= 0 ? x : alpha * ((float)exp(x) - 1); }, output);

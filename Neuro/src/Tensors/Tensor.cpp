@@ -1663,6 +1663,42 @@ namespace Neuro
         }
     }
 
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Sigmoid(Tensor& result) const
+    {
+        Op()->Sigmoid(*this, result);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::SigmoidGradient(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
+    {
+        Op()->SigmoidGradient(output, outputGradient, result);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Tanh(Tensor& result) const
+    {
+        Op()->Tanh(*this, result);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::TanhGradient(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
+    {
+        Op()->TanhGradient(output, outputGradient, result);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::ReLU(Tensor& result) const
+    {
+        Op()->ReLU(*this, result);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::ReLUGradient(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
+    {
+        Op()->ReLUGradient(output, outputGradient, result);
+    }
+
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Elu(float alpha, Tensor& result) const
 	{

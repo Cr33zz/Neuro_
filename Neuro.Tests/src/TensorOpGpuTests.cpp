@@ -8,6 +8,35 @@ namespace NeuroTests
 {
     TEST_CLASS(TensorOpGpuTests)
     {
+        TEST_METHOD(Elu_CompareWithCpuResult)
+        {
+            Tensor input(Shape(8, 9, 3, 3)); input.FillWithRand();
+
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            NEURO_PROFILE("CPU", Tensor r(input.GetShape()); input.Elu(0.5f, r);)
+
+            Tensor::SetForcedOpMode(EOpMode::GPU);
+            NEURO_PROFILE("GPU", Tensor r2(input.GetShape()); input.Elu(0.5f, r2);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(EluGradient_CompareWithCpuResult)
+        {
+            Tensor output(Shape(8, 9, 3, 3)); output.FillWithRand();
+            Tensor outputGrad(Shape(8, 9, 3, 3)); outputGrad.FillWithRand();
+
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            NEURO_PROFILE("CPU", Tensor r(output.GetShape()); output.EluGradient(output, outputGrad, 0.5f, r);)
+
+            Tensor::SetForcedOpMode(EOpMode::GPU);
+            NEURO_PROFILE("GPU", Tensor r2(output.GetShape()); output.EluGradient(output, outputGrad, 0.5f, r2);)
+
+            output.CopyToHost();
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
         TEST_METHOD(Mult_CompareWithCpuResult)
         {
             Tensor t1(Shape(82, 40, 3, 5)); t1.FillWithRand();

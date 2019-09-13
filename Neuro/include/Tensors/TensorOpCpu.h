@@ -30,6 +30,12 @@ namespace Neuro
         virtual void DropoutGradient(const Tensor& outputGradient, const Tensor& savedMask, Tensor& inputGradient);
 		virtual void Map(const function<float(float)>& func, const Tensor& t, Tensor& output) const;
         virtual void Map(const function<float(float, float)>& func, const Tensor& t1, const Tensor& t2, Tensor& output) const;
+        virtual void Sigmoid(const Tensor& input, Tensor& output) const;
+        virtual void SigmoidGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const;
+        virtual void Tanh(const Tensor& input, Tensor& output) const;
+        virtual void TanhGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const;
+        virtual void ReLU(const Tensor& input, Tensor& output) const;
+        virtual void ReLUGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const;
         virtual void Elu(const Tensor& input, float alpha, Tensor& output) const;
         virtual void EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const;
         virtual void LeakyReLU(const Tensor& input, float alpha, Tensor& output) const;

@@ -7,7 +7,7 @@ __global__ void elu(int inputLen, const float* __restrict input, float alpha, fl
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < inputLen)
-        result[i] = input[i] > 0 ? input[i] : alpha * (exp(input[i]) - 1);
+        result[i] = input[i] > 0 ? input[i] : (alpha * (exp(input[i]) - 1));
 }
 
 __global__ void eluGrad(int inputLen, const float* __restrict output, const float* __restrict outputGradient, float alpha, float* __restrict result)
@@ -15,6 +15,20 @@ __global__ void eluGrad(int inputLen, const float* __restrict output, const floa
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < inputLen)
         result[i] = (output[i] > 0 ? 1 : (output[i] + alpha)) * outputGradient[i];
+}
+
+__global__ void leakyRelu(int inputLen, const float* __restrict input, float alpha, float* __restrict result)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < inputLen)
+        result[i] = input[i] > 0 ? input[i] : (alpha * input[i]);
+}
+
+__global__ void leakyReluGrad(int inputLen, const float* __restrict output, const float* __restrict outputGradient, float alpha, float* __restrict result)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < inputLen)
+        result[i] = (output[i] > 0 ? 1 : alpha) * outputGradient[i];
 }
 
 __global__ void div(int inputLen, const float* __restrict input, float v, float* __restrict result)
@@ -58,6 +72,18 @@ namespace Neuro
         eluGrad<<<blocks, threads>>>(inputLen, outputDev, outputGradientDev, alpha, inputGradientDev);
         cudaDeviceSynchronize();
 	}
+
+    void CudaKernels::LeakyReLU(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float alpha, float* outputDev)
+    {
+        leakyRelu<<<blocks, threads>>>(inputLen, inputDev, alpha, outputDev);
+        cudaDeviceSynchronize();
+    }
+
+    void CudaKernels::LeakyReLUGradient(const dim3& blocks, const dim3& threads, int inputLen, const float* outputDev, const float* outputGradientDev, float alpha, float* inputGradientDev)
+    {
+        leakyReluGrad<<<blocks, threads>>>(inputLen, outputDev, outputGradientDev, alpha, inputGradientDev);
+        cudaDeviceSynchronize();
+    }
 
     void CudaKernels::Div(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float v, float* outputDev)
     {

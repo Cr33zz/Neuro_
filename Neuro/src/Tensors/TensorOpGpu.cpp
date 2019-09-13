@@ -470,16 +470,28 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Elu(const Tensor& input, float alpha, Tensor& output) const
     {
+        Activation(CUDNN_ACTIVATION_ELU, input, output, alpha);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const
+    {
+        ActivationGradient(CUDNN_ACTIVATION_ELU, output, outputGradient, inputGradient, alpha);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::LeakyReLU(const Tensor& input, float alpha, Tensor& output) const
+    {
         dim3 blocks, threads;
         GetKernelRunParams(input.Length(), blocks, threads);
         input.CopyToDevice();
         output.CopyToDevice();
 
-        CudaKernels::Elu(blocks, threads, input.Length(), input.GetDevicePtr(), alpha, output.GetDevicePtr());
+        CudaKernels::LeakyReLU(blocks, threads, input.Length(), input.GetDevicePtr(), alpha, output.GetDevicePtr());
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const
+    void TensorOpGpu::LeakyReLUGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const
     {
         dim3 blocks, threads;
         GetKernelRunParams(output.Length(), blocks, threads);
@@ -487,7 +499,7 @@ namespace Neuro
         outputGradient.CopyToDevice();
         inputGradient.CopyToDevice();
 
-        CudaKernels::EluGradient(blocks, threads, output.Length(), output.GetDevicePtr(), outputGradient.GetDevicePtr(), alpha, inputGradient.GetDevicePtr());
+        CudaKernels::LeakyReLUGradient(blocks, threads, output.Length(), output.GetDevicePtr(), outputGradient.GetDevicePtr(), alpha, inputGradient.GetDevicePtr());
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -591,6 +603,69 @@ namespace Neuro
         GetKernelRunParams(parameter.Length(), blocks, threads);
         
         CudaKernels::AdamStep(blocks, threads, parameter.Length(), parameter.GetDevicePtr(), gradient.GetDevicePtr(), mGrad.GetDevicePtr(), vGrad.GetDevicePtr(), batchSize, lr, beta1, beta2, epsilon);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::Activation(const cudnnActivationMode_t& activationMode, const Tensor& input, Tensor& output, float coeff) const
+    {
+        input.CopyToDevice();
+        output.CopyToDevice();
+
+        cudnnTensorDescriptor_t inputDesc; cudnnCreateTensorDescriptor(&inputDesc);
+        cudnnTensorDescriptor_t outputDesc; cudnnCreateTensorDescriptor(&outputDesc);
+        cudnnActivationDescriptor_t activationDesc; cudnnCreateActivationDescriptor(&activationDesc);
+
+        uint32_t n = input.Batch(), c = input.Depth(), h = input.Height(), w = input.Width();
+
+        cudnnSetTensor4dDescriptor(inputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
+        cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
+        cudnnSetActivationDescriptor(activationDesc, activationMode, CUDNN_PROPAGATE_NAN, coeff);
+
+        float alpha = 1, beta = 0;
+        CUDA_CHECK(cudnnActivationForward(
+            s_CudnnHandle,
+            activationDesc,
+            &alpha,
+            inputDesc,
+            input.GetDevicePtr(),
+            &beta,
+            outputDesc,
+            output.GetDevicePtr()));
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::ActivationGradient(const cudnnActivationMode_t& activationMode, const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient, float coeff) const
+    {
+        output.CopyToDevice();
+        outputGradient.CopyToDevice();
+        inputGradient.CopyToDevice();
+
+        cudnnTensorDescriptor_t outputDesc; cudnnCreateTensorDescriptor(&outputDesc);
+        cudnnTensorDescriptor_t outputGradientDesc; cudnnCreateTensorDescriptor(&outputGradientDesc);
+        cudnnTensorDescriptor_t inputGradientDesc; cudnnCreateTensorDescriptor(&inputGradientDesc);
+        cudnnActivationDescriptor_t activationDesc; cudnnCreateActivationDescriptor(&activationDesc);
+
+        uint32_t n = output.Batch(), c = output.Depth(), h = output.Height(), w = output.Width();
+
+        cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
+        cudnnSetTensor4dDescriptor(outputGradientDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
+        cudnnSetTensor4dDescriptor(inputGradientDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, n, c, h, w);
+        cudnnSetActivationDescriptor(activationDesc, activationMode, CUDNN_PROPAGATE_NAN, coeff);
+
+        float alpha = 1, beta = 0;
+        CUDA_CHECK(cudnnActivationBackward(
+            s_CudnnHandle,
+            activationDesc,
+            &alpha,
+            outputDesc,
+            output.GetDevicePtr(),
+            outputGradientDesc,
+            outputGradient.GetDevicePtr(),
+            outputDesc,
+            output.GetDevicePtr(),
+            &beta,
+            inputGradientDesc,
+            inputGradient.GetDevicePtr()));
     }
 
     //////////////////////////////////////////////////////////////////////////
