@@ -4,21 +4,21 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     UpSampling2D::UpSampling2D(LayerBase* inputLayer, uint32_t scaleFactor, const string& name)
-        : LayerBase(__FUNCTION__, inputLayer, Shape(inputLayer->OutputShape().Width() * scaleFactor, inputLayer->OutputShape().Height() * scaleFactor, inputLayer->OutputShape().Depth(), inputLayer->OutputShape().Batch()), nullptr, name)
+        : SingleLayer(__FUNCTION__, inputLayer, Shape(inputLayer->OutputShape().Width() * scaleFactor, inputLayer->OutputShape().Height() * scaleFactor, inputLayer->OutputShape().Depth(), inputLayer->OutputShape().Batch()), nullptr, name)
     {
         m_ScaleFactor = scaleFactor;
     }
 
     //////////////////////////////////////////////////////////////////////////
     UpSampling2D::UpSampling2D(uint32_t scaleFactor, const string& name)
-        : LayerBase(__FUNCTION__, Shape(), nullptr, name)
+        : SingleLayer(__FUNCTION__, Shape(), nullptr, name)
     {
         m_ScaleFactor = scaleFactor;
     }
 
     //////////////////////////////////////////////////////////////////////////
     UpSampling2D::UpSampling2D(Shape inputShape, uint32_t scaleFactor, const string& name)
-        : LayerBase(__FUNCTION__, inputShape, Shape(inputShape.Width() * scaleFactor, inputShape.Height() * scaleFactor, inputShape.Depth(), inputShape.Batch()), nullptr, name)
+        : SingleLayer(__FUNCTION__, inputShape, Shape(inputShape.Width() * scaleFactor, inputShape.Height() * scaleFactor, inputShape.Depth(), inputShape.Batch()), nullptr, name)
     {
         m_ScaleFactor = scaleFactor;
     }

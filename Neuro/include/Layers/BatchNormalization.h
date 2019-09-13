@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Layers/LayerBase.h"
+#include "Layers/SingleLayer.h"
 
 namespace Neuro
 {
-    class BatchNormalization : public LayerBase
+    class BatchNormalization : public SingleLayer
     {
     public:
         BatchNormalization(LayerBase* inputLayer, const string& name = "");

@@ -23,7 +23,7 @@ namespace Neuro
         bool ValidateLayer(LayerBase* layer);
         bool VerifyInputGradient(LayerBase* layer, int batchSize = 1);
         bool VerifyParametersGradient(LayerBase* layer, int batchSize = 1);
-        tensor_ptr_vec_t GenerateInputsForLayer(LayerBase* layer, int batchSize);
+        tensor_ptr_vec_t GenerateInputsForLayer(const LayerBase* layer, int batchSize);
         bool VerifyActivationFuncDerivative(const ActivationBase& func, int batchSize = 1, EOpMode mode = EOpMode::CPU);
         bool VerifyLossFuncDerivative(const LossBase& func, const Tensor& targetOutput, bool onlyPositiveOutput = false, int batchSize = 1, float tolerance = 0.01f);
         template <typename F> bool VerifyLossFunc(const LossBase& func, const Tensor& targetOutput, F& testFunc, bool onlyPositiveOutput = false, int batchSize = 1);

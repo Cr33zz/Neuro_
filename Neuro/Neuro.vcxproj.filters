@@ -189,6 +189,9 @@
     <ClInclude Include="include\Layers\Activation.h">
       <Filter>include\Layers</Filter>
     </ClInclude>
+    <ClInclude Include="include\Layers\SingleLayer.h">
+      <Filter>include\Layers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -312,6 +315,9 @@
       <Filter>src\Layers</Filter>
     </ClCompile>
     <ClCompile Include="src\Layers\Activation.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\SingleLayer.cpp">
       <Filter>src\Layers</Filter>
     </ClCompile>
   </ItemGroup>

@@ -22,7 +22,7 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     Pooling2D::Pooling2D(const string& constructorName, Shape inputShape, uint32_t filterSize, uint32_t stride, uint32_t padding, EPoolingMode mode, const string& name)
-        : LayerBase(constructorName, inputShape, Tensor::GetPooling2DOutputShape(inputShape, filterSize, filterSize, stride, padding, padding), nullptr, name)
+        : SingleLayer(constructorName, inputShape, Tensor::GetPooling2DOutputShape(inputShape, filterSize, filterSize, stride, padding, padding), nullptr, name)
     {
         m_Mode = mode;
         m_FilterSize = filterSize;
@@ -32,7 +32,7 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     Pooling2D::Pooling2D(const string& constructorName, LayerBase* inputLayer, uint32_t filterSize, uint32_t stride, uint32_t padding, EPoolingMode mode, const string& name)
-        : LayerBase(constructorName, inputLayer, Tensor::GetPooling2DOutputShape(inputLayer->OutputShape(), filterSize, filterSize, stride, padding, padding), nullptr, name)
+        : SingleLayer(constructorName, inputLayer, Tensor::GetPooling2DOutputShape(inputLayer->OutputShape(), filterSize, filterSize, stride, padding, padding), nullptr, name)
     {
         m_Mode = mode;
         m_FilterSize = filterSize;
@@ -42,7 +42,7 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     Pooling2D::Pooling2D(const string& constructorName, uint32_t filterSize, uint32_t stride, uint32_t padding, EPoolingMode mode, const string& name)
-        : LayerBase(constructorName, Shape(), nullptr, name)
+        : SingleLayer(constructorName, Shape(), nullptr, name)
     {
         m_Mode = mode;
         m_FilterSize = filterSize;

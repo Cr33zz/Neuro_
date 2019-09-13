@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Layers/LayerBase.h"
+#include "Layers/SingleLayer.h"
 
 namespace Neuro
 {
-    class Reshape : public LayerBase
+    class Reshape : public SingleLayer
     {
     public:
         Reshape(LayerBase* inputLayer, const Shape& shape, const string& name = "");

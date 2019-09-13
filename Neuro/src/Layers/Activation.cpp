@@ -4,13 +4,13 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     Activation::Activation(LayerBase* inputLayer, ActivationBase* activation, const string& name)
-        : LayerBase(__FUNCTION__, inputLayer, inputLayer->OutputShape(), activation, name)
+        : SingleLayer(__FUNCTION__, inputLayer, inputLayer->OutputShape(), activation, name)
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
     Activation::Activation(const Shape& inputShape, ActivationBase* activation, const string& name)
-        : LayerBase(__FUNCTION__, inputShape, inputShape, activation, name)
+        : SingleLayer(__FUNCTION__, inputShape, inputShape, activation, name)
     {
     }
 

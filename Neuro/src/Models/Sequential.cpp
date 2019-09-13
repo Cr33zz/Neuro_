@@ -50,12 +50,10 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Sequential::FeedForwardInternal(bool training)
 	{
-		assert(m_Inputs.size() == 1);
+		assert(Inputs().size() == 1);
 
 		for (size_t i = 0; i < m_Layers.size(); ++i)
-			m_Layers[i]->FeedForward(i == 0 ? m_Inputs[0] : &(m_Layers[i - 1]->Output()), training);
-
-        m_Outputs[0] = m_OutputLayers[0]->Output();
+			m_Layers[i]->FeedForward(i == 0 ? Inputs()[0] : &(m_Layers[i - 1]->Output()), training);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -66,14 +64,12 @@ namespace Neuro
         vector<Tensor>* lastOutputsGradient = &outputsGradient;
 		for (int i = (int)m_Layers.size() - 1; i >= 0; --i)
 			lastOutputsGradient = &m_Layers[i]->BackProp(*lastOutputsGradient);
-
-        m_InputsGradient[0] = m_Layers[0]->InputGradient();
 	}
 
     //////////////////////////////////////////////////////////////////////////
-	const vector<LayerBase*>& Sequential::OutputLayers() const
+	const vector<LayerBase*>& Sequential::ModelOutputLayers() const
 	{
-		return m_OutputLayers;
+		return m_ModelOutputLayers;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -112,15 +108,11 @@ namespace Neuro
         assert(!m_Layers.empty() || layer->HasInputShape()); // first added layer must have input shape specified
         assert(!layer->InputLayer() || layer->InputLayer() == m_Layers.back()); // if layer being added has input layer it must be the last one in the sequence
 
-        if (m_Layers.empty())
-            m_InputShapes.push_back(layer->InputShape());
-
         if (!m_Layers.empty() && !layer->InputLayer())
             layer->Link(m_Layers.back());
 		
-        m_OutputLayers.resize(1);
-		m_OutputLayers[0] = layer;
-        m_OutputShapes[0] = layer->OutputShape();
+        m_ModelOutputLayers.resize(1);
+        m_ModelOutputLayers[0] = layer;
 
 		m_Layers.push_back(layer);
 	}

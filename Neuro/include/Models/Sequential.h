@@ -19,7 +19,7 @@ namespace Neuro
         virtual void FeedForwardInternal(bool training) override;
         virtual void BackPropInternal(vector<Tensor>& outputsGradient) override;
         
-        virtual const vector<LayerBase*>& OutputLayers() const override;
+        virtual const vector<LayerBase*>& ModelOutputLayers() const override;
         virtual uint32_t OutputLayersCount() const override;
         virtual const vector<LayerBase*>& Layers() const override;
 
@@ -36,6 +36,6 @@ namespace Neuro
         Sequential(int) {}
 
         vector<LayerBase*> m_Layers;
-		vector<LayerBase*> m_OutputLayers;
+        vector<LayerBase*> m_ModelOutputLayers;
 	};
 }

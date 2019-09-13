@@ -1,10 +1,10 @@
 ﻿#pragma once
 
-#include "Layers/LayerBase.h"
+#include "Layers/SingleLayer.h"
 
 namespace Neuro
 {
-    class Concatenate : public LayerBase
+    class Concatenate : public SingleLayer
     {
     public:
         Concatenate(const vector<LayerBase*>& inputLayers, const string& name = "");

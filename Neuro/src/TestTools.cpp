@@ -129,7 +129,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Neuro::tensor_ptr_vec_t TestTools::GenerateInputsForLayer(LayerBase* layer, int batchSize)
+	Neuro::tensor_ptr_vec_t TestTools::GenerateInputsForLayer(const LayerBase* layer, int batchSize)
 	{
 		tensor_ptr_vec_t inputs(layer->InputShapes().size());
 

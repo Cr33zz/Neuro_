@@ -137,6 +137,7 @@
     <ClInclude Include="include\Layers\Merge.h" />
     <ClInclude Include="include\Layers\Pooling2D.h" />
     <ClInclude Include="include\Layers\Reshape.h" />
+    <ClInclude Include="include\Layers\SingleLayer.h" />
     <ClInclude Include="include\Layers\UpSampling2D.h" />
     <ClInclude Include="include\Loss.h" />
     <ClInclude Include="include\Models\Flow.h" />
@@ -185,6 +186,7 @@
     <ClCompile Include="src\Layers\Merge.cpp" />
     <ClCompile Include="src\Layers\Pooling2D.cpp" />
     <ClCompile Include="src\Layers\Reshape.cpp" />
+    <ClCompile Include="src\Layers\SingleLayer.cpp" />
     <ClCompile Include="src\Layers\UpSampling2D.cpp" />
     <ClCompile Include="src\Loss.cpp" />
     <ClCompile Include="src\Models\Flow.cpp" />

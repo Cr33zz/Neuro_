@@ -1,11 +1,11 @@
 ﻿#pragma once
 
-#include "Layers/LayerBase.h"
+#include "Layers/SingleLayer.h"
 
 namespace Neuro
 {
     // https://www.youtube.com/watch?v=8oOgPUO-TBY
-    class Pooling2D : public LayerBase
+    class Pooling2D : public SingleLayer
     {
     public:
         Pooling2D(LayerBase* inputLayer, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, EPoolingMode mode = EPoolingMode::Max, const string& name = "");

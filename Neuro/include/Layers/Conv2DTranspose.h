@@ -1,13 +1,13 @@
 #pragma once
 
-#include "Layers/LayerBase.h"
+#include "Layers/SingleLayer.h"
 #include "Initializers/GlorotUniform.h"
 #include "Initializers/Zeros.h"
 
 namespace Neuro
 {
     //http://deeplearning.net/software/theano_versions/dev/tutorial/conv_arithmetic.html#transposed-convolution-arithmetic
-    class Conv2DTranspose : public LayerBase
+    class Conv2DTranspose : public SingleLayer
     {
     public:
         Conv2DTranspose(LayerBase* inputLayer, uint32_t filterSize, uint32_t outputDepth, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, const string& name = "");

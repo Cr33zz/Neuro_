@@ -5,19 +5,19 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     Dropout::Dropout(LayerBase* inputLayer, float p, const string& name)
-        : LayerBase(__FUNCTION__, inputLayer, inputLayer->OutputShape(), nullptr, name), m_Prob(p)
+        : SingleLayer(__FUNCTION__, inputLayer, inputLayer->OutputShape(), nullptr, name), m_Prob(p)
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
     Dropout::Dropout(const Shape& inputShape, float p, const string& name)
-        : LayerBase(__FUNCTION__, inputShape, inputShape, nullptr, name), m_Prob(p)
+        : SingleLayer(__FUNCTION__, inputShape, inputShape, nullptr, name), m_Prob(p)
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
     Dropout::Dropout(float p, const string& name)
-        : LayerBase(__FUNCTION__, Shape(), nullptr, name), m_Prob(p)
+        : SingleLayer(__FUNCTION__, Shape(), nullptr, name), m_Prob(p)
     {
     }
 

@@ -27,7 +27,7 @@ public:
         tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)) };
         tensor_ptr_vec_t outputs = { new Tensor({ 0, 1 }, Shape(1, 2)) };
 
-        model->Fit(inputs, outputs, 1, 60, nullptr, nullptr, 2, ETrack::Nothing, false);
+        model->Fit(inputs, outputs, 1, 60, nullptr, nullptr, 2, ETrack::TrainError, false);
 
         cout << model->TrainSummary();
         

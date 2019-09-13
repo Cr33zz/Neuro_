@@ -4,7 +4,7 @@ namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
 	Input::Input(const Shape& inputShape, const string& name)
-		: LayerBase(__FUNCTION__, inputShape, inputShape, nullptr, name)
+		: SingleLayer(__FUNCTION__, inputShape, inputShape, nullptr, name)
 	{
 	}
 

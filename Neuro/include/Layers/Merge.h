@@ -1,10 +1,10 @@
 ﻿#pragma once
 
-#include "Layers/LayerBase.h"
+#include "Layers/SingleLayer.h"
 
 namespace Neuro
 {
-    class Merge : public LayerBase
+    class Merge : public SingleLayer
     {
     public:
         enum Mode

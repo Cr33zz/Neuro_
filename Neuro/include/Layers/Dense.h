@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "Layers/LayerBase.h"
+#include "Layers/SingleLayer.h"
 #include "Initializers/GlorotUniform.h"
 #include "Initializers/Zeros.h"
 
@@ -8,7 +8,7 @@ namespace Neuro
 {
 	class InitializerBase;
 
-    class Dense : public LayerBase
+    class Dense : public SingleLayer
     {
 	public:
         Dense(LayerBase* inputLayer, int outputs, ActivationBase* activation = nullptr, const string& name = "");

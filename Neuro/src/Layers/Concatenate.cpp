@@ -4,19 +4,19 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     Concatenate::Concatenate(const vector<LayerBase*>& inputLayers, const string& name)
-        : LayerBase(__FUNCTION__, inputLayers, Shape(), nullptr, name)
+        : SingleLayer(__FUNCTION__, inputLayers, Shape(), nullptr, name)
     {
         OnLink(inputLayers, true);
     }
 
     //////////////////////////////////////////////////////////////////////////
     Concatenate::Concatenate(const string& name)
-        : LayerBase(__FUNCTION__, Shape(), nullptr, name)
+        : SingleLayer(__FUNCTION__, Shape(), nullptr, name)
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Neuro::LayerBase* Concatenate::GetCloneInstance() const
+    LayerBase* Concatenate::GetCloneInstance() const
     {
         return new Concatenate(false);
     }

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Layers/LayerBase.h"
+#include "Layers/SingleLayer.h"
 
 namespace Neuro
 {
-    class UpSampling2D : public LayerBase
+    class UpSampling2D : public SingleLayer
     {
     public:
         UpSampling2D(LayerBase* inputLayer, uint32_t scaleFactor, const string& name = "");

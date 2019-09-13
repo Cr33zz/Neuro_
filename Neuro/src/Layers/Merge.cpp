@@ -4,21 +4,21 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     Merge::Merge(const vector<LayerBase*>& inputLayers, Mode mergeMode, const string& name)
-        : LayerBase(__FUNCTION__, inputLayers, inputLayers[0]->OutputShape(), nullptr, name)
+        : SingleLayer(__FUNCTION__, inputLayers, inputLayers[0]->OutputShape(), nullptr, name)
     {
         m_MergeMode = mergeMode;
     }
 
     //////////////////////////////////////////////////////////////////////////
     Merge::Merge(Mode mergeMode, const string& name)
-        : LayerBase(__FUNCTION__, Shape(), nullptr, name)
+        : SingleLayer(__FUNCTION__, Shape(), nullptr, name)
     {
         m_MergeMode = mergeMode;
     }
 
     //////////////////////////////////////////////////////////////////////////
     Merge::Merge(const Shape& inputsShape, Mode mergeMode, const string& name)
-        : LayerBase(__FUNCTION__, inputsShape, inputsShape, nullptr, name)
+        : SingleLayer(__FUNCTION__, inputsShape, inputsShape, nullptr, name)
     {
         m_MergeMode = mergeMode;
     }

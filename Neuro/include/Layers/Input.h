@@ -1,12 +1,12 @@
 ﻿#pragma once
 
-#include "Layers/LayerBase.h"
+#include "Layers/SingleLayer.h"
 
 namespace Neuro
 {
     // This layer should only be used when we want to combine raw input with output of another layer
     // somewhere inside a network
-    class Input : public LayerBase
+    class Input : public SingleLayer
     {
 	public:
         Input(const Shape& inputShape, const string& name = "");

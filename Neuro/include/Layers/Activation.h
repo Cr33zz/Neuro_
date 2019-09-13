@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Layers/LayerBase.h"
+#include "Layers/SingleLayer.h"
 
 namespace Neuro
 {
-    class Activation : public LayerBase
+    class Activation : public SingleLayer
     {
     public:
         Activation(LayerBase* inputLayer, ActivationBase* activation, const string& name = "");

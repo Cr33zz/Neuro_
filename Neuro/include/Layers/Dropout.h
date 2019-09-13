@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Layers/LayerBase.h"
+#include "Layers/SingleLayer.h"
 
 namespace Neuro
 {
-    class Dropout : public LayerBase
+    class Dropout : public SingleLayer
     {
     public:
         Dropout(LayerBase* inputLayer, float p, const string& name = "");

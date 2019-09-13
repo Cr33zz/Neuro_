@@ -5,19 +5,19 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     BatchNormalization::BatchNormalization(LayerBase* inputLayer, const string& name)
-        : LayerBase(__FUNCTION__, inputLayer, inputLayer->OutputShape(), nullptr, name)
+        : SingleLayer(__FUNCTION__, inputLayer, inputLayer->OutputShape(), nullptr, name)
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
     BatchNormalization::BatchNormalization(const string& name)
-        : LayerBase(__FUNCTION__, Shape(), nullptr, name)
+        : SingleLayer(__FUNCTION__, Shape(), nullptr, name)
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
     BatchNormalization::BatchNormalization(const Shape& inputShape, const string& name)
-        : LayerBase(__FUNCTION__, inputShape, inputShape, nullptr, name)
+        : SingleLayer(__FUNCTION__, inputShape, inputShape, nullptr, name)
     {
     }
 

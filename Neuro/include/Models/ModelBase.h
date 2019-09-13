@@ -21,6 +21,14 @@ namespace Neuro
 	public:
         ~ModelBase();
 
+        virtual const vector<Shape>& InputShapes() const override;
+        virtual const tensor_ptr_vec_t& Inputs() const override;
+        virtual vector<Tensor>& InputsGradient() override;
+        virtual const vector<Tensor>& Outputs() const override;
+        virtual const vector<Shape>& OutputShapes() const override;
+        virtual const vector<LayerBase*>& InputLayers() const override;
+        virtual const vector<LayerBase*>& OutputLayers() const override;
+
         void ForceInitLayers();
 
         void Optimize(OptimizerBase* optimizer, LossBase* loss);
@@ -37,7 +45,7 @@ namespace Neuro
         const vector<Tensor>& Predict(const Tensor& input);
 
         virtual const vector<LayerBase*>& Layers() const = 0;
-        virtual const vector<LayerBase*>& OutputLayers() const = 0;
+        virtual const vector<LayerBase*>& ModelOutputLayers() const = 0;
         virtual uint32_t OutputLayersCount() const = 0;
 
         void SaveWeights(const string& filename) const;
@@ -60,6 +68,13 @@ namespace Neuro
     protected:
         ModelBase() {}
         ModelBase(const string& constructorName, const string& name = "", int seed = 0);
+
+        virtual vector<Shape>& InputShapes() override;
+        virtual tensor_ptr_vec_t& Inputs() override;
+        virtual vector<Tensor>& Outputs() override;
+        virtual vector<Shape>& OutputShapes() override;
+        virtual vector<LayerBase*>& InputLayers() override;
+        virtual vector<LayerBase*>& OutputLayers() override;
 
         virtual void OnClone(const LayerBase& source) override;
 

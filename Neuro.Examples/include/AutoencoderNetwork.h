@@ -17,23 +17,14 @@ public:
 
         //Based on https://blog.keras.io/building-autoencoders-in-keras.html
 
-        auto encoder = new Dense(784, 32, new ReLU());
-        auto decoder = new Dense(32, 784, new Sigmoid());
-        /*auto encoder = Sequential("encoder");
-        encoder.AddLayer(new Conv2D(Shape(28, 28, 1), 3, 16, 1, 2, new ReLU()));
-        encoder.AddLayer(new MaxPooling2D(2, 2));
-        encoder.AddLayer(new Conv2D(3, 8, 1, 2, new ReLU()));
-        encoder.AddLayer(new MaxPooling2D(2, 2));
-        encoder.AddLayer(new Conv2D(3, 8, 1, 2, new ReLU()));
-        encoder.AddLayer(new MaxPooling2D(2, 2));
-        auto decoder = Sequential("decoder");
-        decoder.AddLayer(new Conv2D(Shape(4, 4, 8), 3, 8, 1, 2, new ReLU()));
-        decoder.AddLayer(new UpSampling2D(2));
-        decoder.AddLayer(new Conv2D(3, 8, 1, 2, new ReLU()));
-        decoder.AddLayer(new UpSampling2D(2));
-        decoder.AddLayer(new Conv2D(3, 16, 1, 2, new ReLU()));
-        decoder.AddLayer(new UpSampling2D(2));
-        decoder.AddLayer(new Conv2D(3, 1, 1, 2, new Sigmoid()));*/
+        auto encoder = new Sequential("encoder");
+        encoder->AddLayer(new Dense(784, 128, new ReLU()));
+        encoder->AddLayer(new Dense(64, new ReLU()));
+        encoder->AddLayer(new Dense(32, new ReLU()));
+        auto decoder = new Sequential("decoder");
+        decoder->AddLayer(new Dense(32, 64, new ReLU()));
+        decoder->AddLayer(new Dense(128, new ReLU()));
+        decoder->AddLayer(new Dense(784, new Sigmoid()));
 
         auto model = Sequential("autoencoder", 1337);
         model.AddLayer(encoder);
@@ -45,7 +36,7 @@ public:
         LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, true, false, 60000);
         input.Reshape(Shape(1, 784, 1, -1));
 
-        model.Fit(input, input, 256, 50, nullptr, nullptr, 2, ETrack::TrainError);
+        model.Fit(input, input, 256, 20, nullptr, nullptr, 2, ETrack::TrainError);
 
         cout << model.TrainSummary();
         

@@ -7,19 +7,19 @@ namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
 	Dense::Dense(LayerBase* inputLayer, int outputs, ActivationBase* activation, const string& name)
-        : LayerBase(__FUNCTION__, inputLayer, Shape(1, outputs), activation, name)
+        : SingleLayer(__FUNCTION__, inputLayer, Shape(1, outputs), activation, name)
 	{
 	}
 
     //////////////////////////////////////////////////////////////////////////
     Dense::Dense(int outputs, ActivationBase* activation, const string& name)
-        : LayerBase(__FUNCTION__, Shape(1, outputs), activation, name)
+        : SingleLayer(__FUNCTION__, Shape(1, outputs), activation, name)
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
 	Dense::Dense(int inputs, int outputs, ActivationBase* activation, const string& name)
-		: LayerBase(__FUNCTION__, Shape(1, inputs), Shape(1, outputs), activation, name)
+		: SingleLayer(__FUNCTION__, Shape(1, inputs), Shape(1, outputs), activation, name)
 	{
 	}
 

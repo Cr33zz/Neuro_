@@ -16,19 +16,19 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     Reshape::Reshape(const string& constructorName, LayerBase* inputLayer, const Shape& shape, const string& name)
-        : LayerBase(constructorName, inputLayer, shape, nullptr, name)
+        : SingleLayer(constructorName, inputLayer, shape, nullptr, name)
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
     Reshape::Reshape(const string& constructorName, const Shape& inputShape, const Shape& shape, const string& name)
-        : LayerBase(constructorName, inputShape, shape, nullptr, name)
+        : SingleLayer(constructorName, inputShape, shape, nullptr, name)
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
     Reshape::Reshape(const string& constructorName, const Shape& shape, const string& name)
-        : LayerBase(constructorName, shape, nullptr, name)
+        : SingleLayer(constructorName, shape, nullptr, name)
     {
     }
 

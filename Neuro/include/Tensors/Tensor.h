@@ -250,6 +250,8 @@ namespace Neuro
         void CopyToDevice() const;
         void CopyToHost() const;
         void OverrideHost() const;
+        bool IsOnHost() const { return m_CurrentLocation == ELocation::Host; }
+        bool IsOnDevice() const { return m_CurrentLocation == ELocation::Device; }
         
         const CudaDeviceVariable<float>& GetDeviceVar() const;
         const float* GetDevicePtr() const;
