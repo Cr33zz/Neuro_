@@ -1406,6 +1406,12 @@ namespace Neuro
 	{
 		assert(m_Shape.Length == result.m_Shape.Length);
 
+        if (tau <= 0 && IsOnDevice() && result.IsOnDevice())
+        {
+            GetDeviceVar().CopyTo(result.GetDevicePtr());
+            return;
+        }
+
 		CopyToHost();
         result.OverrideHost();
 

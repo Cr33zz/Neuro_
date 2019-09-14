@@ -10,9 +10,9 @@ using namespace Neuro;
 class MnistConvNetwork
 {
 public:
-    static void Run()
+    void Run()
     {
-        Tensor::SetDefaultOpMode(EOpMode::GPU);
+        Tensor::SetDefaultOpMode(GPU);
 
         auto model = Sequential("mnist_conv", 1337);
         model.AddLayer(new Conv2D(Shape(28, 28, 1), 3, 32, 1, 0, new ReLU()));
@@ -25,14 +25,15 @@ public:
         model.AddLayer(new Dense(10, new Softmax()));        
         model.Optimize(new Adam(), new CategoricalCrossEntropy());
 
+        cout << "Example: " << model.Name() << endl;
         cout << model.Summary();
 
         Tensor input, output;
-        LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, true, false, 6000);
+        LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, true, false, -1);
         Tensor validationInput, validationOutput;
-        LoadMnistData("data/t10k-images.idx3-ubyte", "data/t10k-labels.idx1-ubyte", validationInput, validationOutput, true, false, 1000);
+        LoadMnistData("data/t10k-images.idx3-ubyte", "data/t10k-labels.idx1-ubyte", validationInput, validationOutput, true, false, -1);
 
-        model.Fit(input, output, 200, 10, &validationInput, &validationOutput, 2, ETrack::All);
+        model.Fit(input, output, 200, 2, &validationInput, &validationOutput, 2, All);
 
         cout << model.TrainSummary();
 

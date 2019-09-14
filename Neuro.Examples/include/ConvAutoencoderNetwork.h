@@ -13,7 +13,7 @@ class ConvAutoencoderNetwork
 public:
     static void Run()
     {
-        Tensor::SetDefaultOpMode(EOpMode::GPU);
+        Tensor::SetDefaultOpMode(GPU);
 
         //Based on https://blog.keras.io/building-autoencoders-in-keras.html
 
@@ -35,12 +35,14 @@ public:
         model.AddLayer(encoder);
         model.AddLayer(decoder);
         model.Optimize(new Adam(), new BinaryCrossEntropy());
-        //cout << model.Summary();
+
+        cout << "Example: " << model.Name() << endl;
+        cout << model.Summary();
 
         Tensor input, output;
         LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, true);
 
-        model.Fit(input, input, 256, 20, nullptr, nullptr, 2, ETrack::TrainError);
+        model.Fit(input, input, 256, 20, nullptr, nullptr, 2, TrainError);
 
         cout << model.TrainSummary();
 

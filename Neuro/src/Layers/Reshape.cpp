@@ -63,6 +63,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Reshape::BackPropInternal(vector<Tensor>& outputsGradient)
     {
-        outputsGradient[0].Reshaped(m_Inputs[0]->GetShape(), m_InputsGradient[0]);
+        outputsGradient[0].CopyTo(m_InputsGradient[0]);
     }
 }

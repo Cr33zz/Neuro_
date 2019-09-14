@@ -1,28 +1,42 @@
 #include "GAN.h"
 
+#define TEST_DISCRIMINATOR_TRAINING
+
 //////////////////////////////////////////////////////////////////////////
 void GAN::Run()
 {
-    Tensor::SetDefaultOpMode(EOpMode::GPU);
+    Tensor::SetDefaultOpMode(GPU);
+
+    GlobalRngSeed(1337);
+
+    cout << "Example: " << Name() << endl;
 
     auto generator = CreateGenerator(100);
+    cout << "Generator" << endl << generator->Summary();
     auto discriminator = CreateDiscriminator();
+    cout << "Discriminator" << endl << discriminator->Summary();
 
     auto ganModel = new Sequential(Name());
     ganModel->AddLayer(generator);
     ganModel->AddLayer(discriminator);
     ganModel->Optimize(new Adam(0.0002f, 0.5f), new BinaryCrossEntropy());
+    
     cout << ganModel->Summary();
 
     Tensor images, labels;
-    LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", images, labels, false, false, 60000);
+    LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", images, labels, false, false, -1);
     images.Map([](float x) { return (x - 127.5f) / 127.5f; }, images);
     images.Reshape(Shape(1, 784, 1, -1));
 
     const uint32_t BATCH_SIZE = 64;
-    const uint32_t EPOCHS = 100;
 
-    uint32_t BATCHES_NUM = images.Batch() / BATCH_SIZE;
+#ifdef TEST_DISCRIMINATOR_TRAINING
+    const uint32_t BATCHES_NUM = 3;
+    const uint32_t EPOCHS = 10;
+#else
+    const uint32_t BATCHES_NUM = images.Batch() / BATCH_SIZE;
+    const uint32_t EPOCHS = 30;
+#endif
     
     Tensor noise(Shape::From(generator->InputShape(), BATCH_SIZE));
     Tensor real(Shape::From(discriminator->OutputShape(), BATCH_SIZE));
@@ -43,8 +57,12 @@ void GAN::Run()
             noise.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
             
             //generator->ForceLearningPhase(true); // without it batch normalization will not normalize in the first pass
+#           ifdef TEST_DISCRIMINATOR_TRAINING
+            Tensor genImages(Shape::From(discriminator->InputShape(), BATCH_SIZE)); genImages.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
+#           else
             // generate fake images from noise
             Tensor genImages = generator->Predict(noise)[0];
+#           endif       
             //generatedImages.Map([](float x) { return x * 127.5f + 127.5f; }).Reshaped(Shape(28, 28, 1, -1)).SaveAsImage("generated_images.png", false);
             // grab random batch of real images
             Tensor realImages = images.GetRandomBatches(BATCH_SIZE);
@@ -58,14 +76,18 @@ void GAN::Run()
             totalDiscriminatorError += discriminatorError * 0.5f;
 
             // perform step of training generator to generate more real images (the more discriminator is confident that a particular image is fake the more generator will learn)
+#           ifndef TEST_DISCRIMINATOR_TRAINING
             discriminator->SetTrainable(false);
             totalGanError += ganModel->TrainOnBatch(noise, real);
+#           endif
         }
 
         cout << " - discriminator_error: " << setprecision(4) << totalDiscriminatorError / BATCHES_NUM << " - gan_error: " << totalGanError / BATCHES_NUM << endl;
 
+#       ifndef TEST_DISCRIMINATOR_TRAINING
         if (e == 1 || e % 10 == 0)
             generator->Output().Map([](float x) { return x * 127.5f + 127.5f; }).Reshaped(Shape(28, 28, 1, -1)).SaveAsImage(Name() + "_" + to_string(e) + ".png", false);
+#       endif
     }
 
     cin.get();
@@ -80,7 +102,6 @@ ModelBase* GAN::CreateGenerator(uint32_t inputsNum)
     model->AddLayer(new Dense(512, new LeakyReLU(0.2f)));
     model->AddLayer(new Dense(1024, new LeakyReLU(0.2f)));
     model->AddLayer(new Dense(784, new Tanh()));
-    //cout << model->Summary();
     return model;
 }
 
@@ -95,7 +116,6 @@ ModelBase* GAN::CreateDiscriminator()
     model->AddLayer(new Dense(256, new LeakyReLU(0.2f)));
     model->AddLayer(new Dense(1, new Sigmoid()));
     model->Optimize(new Adam(0.0002f, 0.5f), new BinaryCrossEntropy());
-    //cout << model->Summary();
     return model;
 }
 

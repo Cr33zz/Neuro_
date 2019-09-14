@@ -10,33 +10,33 @@ using namespace Neuro;
 class IrisNetwork
 {
 public:
-    static void Run()
+    void Run()
     {
-        Tensor::SetDefaultOpMode(EOpMode::GPU);
+        Tensor::SetDefaultOpMode(GPU);
 
-        auto model = new Sequential("iris", 100);
-        model->AddLayer(new Dense(4, 1000, new ReLU()));
-        model->AddLayer(new Dense(model->LastLayer(), 500, new ReLU()));
-        model->AddLayer(new Dense(model->LastLayer(), 300, new ReLU()));
+        auto model = Sequential("iris", 100);
+        model.AddLayer(new Dense(4, 1000, new ReLU()));
+        model.AddLayer(new Dense(model.LastLayer(), 500, new ReLU()));
+        model.AddLayer(new Dense(model.LastLayer(), 300, new ReLU()));
 
-        auto dropout = new Dropout(model->LastLayer(), 0.2f);
+        auto dropout = new Dropout(model.LastLayer(), 0.2f);
         dropout->SetTrainable(false);
 
-        model->AddLayer(dropout);
-        model->AddLayer(new Dense(model->LastLayer(), 3, new Softmax()));
+        model.AddLayer(dropout);
+        model.AddLayer(new Dense(model.LastLayer(), 3, new Softmax()));
+        model.Optimize(new Adam(), new BinaryCrossEntropy());
 
-        cout << model->Summary();
-
-        model->Optimize(new Adam(), new BinaryCrossEntropy());
+        cout << "Example: " << model.Name() << endl;
+        cout << model.Summary();
 
         Tensor inputs;
         Tensor outputs;
         LoadCSVData("data/iris_data.csv", 3, inputs, outputs, true);
-        inputs = inputs.Normalized(EAxis::Feature);
+        inputs = inputs.Normalized(Feature);
 
-        model->Fit(inputs, outputs, 40, 20, nullptr, nullptr, 2, ETrack::TrainError | ETrack::TrainAccuracy);
+        model.Fit(inputs, outputs, 40, 20, nullptr, nullptr, 2, TrainError|TrainAccuracy);
 
-        cout << model->TrainSummary();
+        cout << model.TrainSummary();
 
         cin.get();
         return;

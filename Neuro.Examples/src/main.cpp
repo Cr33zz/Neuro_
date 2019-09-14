@@ -10,20 +10,6 @@
 
 int main()
 {
-    const uint32_t BATCH_SIZE = 64;
-    Tensor t1(Shape(500, 300, 1, BATCH_SIZE)); t1.FillWithRand(10);
-    Tensor t2(Shape(1, 500, 1, BATCH_SIZE)); t2.FillWithRand(11);
-
-    Tensor::SetForcedOpMode(GPU);
-    for (int i = 0; i < 10; ++i)
-    {
-        AutoStopwatch p(Microseconds);
-        t1.Mul(t2);
-        cout << p.ToString() << endl;
-    }
-    
-
-
     // tensor image-related operations
     /*Tensor t(Shape(50, 50, 1));
     t.FillWithRand(-1, 0, 1);
@@ -34,18 +20,14 @@ int main()
     t.Conv2DTransposed(Tensor({ 1,1,1,1,-8,1,1,1,1, }, Shape(3, 3, 1)), 1, 1, 0).NormalizedMinMax(EAxis::Global).SaveAsImage("test_deconv.bmp", true);
     t.Pool2D(2, 2, EPoolingMode::Max, 0).SaveAsImage("test_maxpool.bmp", true);*/
 
-    /*Tensor input, output;
-    LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, true, true, 10);
-    input.SaveAsImage("xx.png", true);*/
-    
-    //IrisNetwork::Run();
-    //ConvNetwork::Run();
-    //FlowNetwork::Run();
-    //MnistConvNetwork::Run();
+    //IrisNetwork().Run();
+    //ConvNetwork().Run();
+    //FlowNetwork().Run();
+    //MnistConvNetwork().Run();
     //MnistNetwork().Run();
     //AutoencoderNetwork::Run();
     //ConvAutoencoderNetwork::Run();
-    GAN().Run();
+    //GAN().Run();
     DeepConvGAN().Run();
 
     return 0;
