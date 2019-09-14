@@ -40,7 +40,7 @@ namespace Neuro
 
     void LoadMnistData(const string& imagesFile, const string& labelsFile, Tensor& input, Tensor& output, bool normalize, bool generateImage = false, int maxImages = -1);
     //void SaveMnistData(const Tensor& input, const Tensor& output, const string& imagesFile, const string& labelsFile);
-
+    void LoadCifar10Data(const string& imagesBatchFile, Tensor& input, Tensor& output, bool normalize, bool generateImage = false, int maxImages = -1);
     void LoadCSVData(const string& filename, int outputsNum, Tensor& inputs, Tensor& outputs, bool outputsOneHotEncoded = false, int maxLines = -1);
 
     void ImageLibInit();

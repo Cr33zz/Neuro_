@@ -230,6 +230,7 @@ namespace Neuro
 
         input = Tensor(Shape(imgWidth, imgHeight, 1, maxImages));
         output = Tensor(Shape(1, outputsNum, 1, maxImages));
+        output.Zero();
 
         uint8_t* pixelOffset = reinterpret_cast<uint8_t*>(imagesBuffer.get() + 16);
         uint8_t* labelOffset = reinterpret_cast<uint8_t*>(labelsBuffer.get() + 8);
@@ -256,6 +257,77 @@ namespace Neuro
         if (image)
         {
             FreeImage_Save(FIF_PNG, image, (imagesFile + ".png").c_str());
+            FreeImage_Unload(image);
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void LoadCifar10Data(const string& imagesBatchFile, Tensor& input, Tensor& output, bool normalize, bool generateImage, int maxImages)
+    {
+        auto ReadInt32 = [](const unique_ptr<char[]>& buffer, size_t offset)
+        {
+            auto ptr = reinterpret_cast<uint32_t*>(buffer.get());
+            auto value = *(ptr + offset);
+            return EndianSwap(value);
+        };
+
+        auto buffer = LoadBinFileContents(imagesBatchFile);
+
+        uint32_t numImages = 10000;
+        uint32_t imgWidth = 32;
+        uint32_t imgHeight = 32;
+        uint32_t outputsNum = 10;
+
+        maxImages = maxImages < 0 ? numImages : min<int>(maxImages, numImages);
+
+        FIBITMAP* image = nullptr;
+        RGBQUAD imageColor;
+        imageColor.rgbRed = imageColor.rgbGreen = imageColor.rgbBlue = 255;
+        uint32_t imageRows = (uint32_t)ceil(sqrt((float)maxImages));
+        uint32_t imageCols = (uint32_t)ceil(sqrt((float)maxImages));
+
+        const uint32_t IMG_WIDTH = imageRows * imgWidth;
+        const uint32_t IMG_HEIGHT = imageCols * imgHeight;
+        if (generateImage)
+        {
+            ImageLibInit();
+            image = FreeImage_Allocate(IMG_WIDTH, IMG_HEIGHT, 24);
+            FreeImage_FillBackground(image, &imageColor);
+        }
+
+        input = Tensor(Shape(imgWidth, imgHeight, 3, maxImages));
+        output = Tensor(Shape(1, outputsNum, 1, maxImages));
+        output.Zero();
+
+        for (uint32_t i = 0; i < (uint32_t)maxImages; ++i)
+        {
+            output(0, (uint32_t)buffer[i * 3073], 0, i) = 1;
+
+            uint8_t* pixelOffset = reinterpret_cast<uint8_t*>(buffer.get() + i * 3073 + 1);
+
+            for (uint32_t h = 0; h < imgWidth; ++h)
+            for (uint32_t w = 0; w < imgHeight; ++w)
+            {
+                uint8_t red = pixelOffset[h * imgWidth + w];
+                uint8_t green = pixelOffset[1024 + h * imgWidth + w];
+                uint8_t blue = pixelOffset[2048 + h * imgWidth + w];
+                input(w, h, 0, i) = normalize ? red / 255.f : red;
+                input(w, h, 1, i) = normalize ? green / 255.f : green;
+                input(w, h, 2, i) = normalize ? blue / 255.f : blue;
+
+                if (image)
+                {
+                    imageColor.rgbRed = red;
+                    imageColor.rgbGreen = green;
+                    imageColor.rgbBlue = blue;
+                    FreeImage_SetPixelColor(image, (i % imageCols) * imgWidth + w, IMG_HEIGHT - ((i / imageCols) * imgHeight + h) - 1, &imageColor);
+                }
+            }
+        }
+
+        if (image)
+        {
+            FreeImage_Save(FIF_PNG, image, (imagesBatchFile + ".png").c_str());
             FreeImage_Unload(image);
         }
     }
