@@ -444,6 +444,41 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    //void TensorOpGpu::Dropout(const Tensor& input, float prob, Tensor& saveMask, Tensor& output)
+    //{
+    //    input.CopyToDevice();
+    //    output.CopyToDevice();
+    //    saveMask.FillWithFunc([&]() { return GlobalRng().NextFloat() < prob ? 0.f : 1.f; });
+    //    saveMask.CopyToDevice();
+
+    //    cudnnTensorDescriptor_t inputOutputDesc; cudnnCreateTensorDescriptor(&inputOutputDesc);
+    //    cudnnDropoutDescriptor_t dropoutDesc; cudnnCreateDropoutDescriptor(&dropoutDesc);
+
+    //    cudnnSetTensor4dDescriptor(inputOutputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
+    //    cudnnSetDropoutDescriptor(dropoutDesc, s_CudnnHandle, prob, saveMask.GetDevicePtr(), saveMask.Length() * sizeof(float), 0);
+
+    //    size_t dropoutReserveSize;
+    //    CUDA_CHECK(cudnnDropoutGetReserveSpaceSize(inputOutputDesc, &dropoutReserveSize));
+    //    output.m_GpuData.UpdateWorkspace(output.m_GpuData.m_DropoutWorkspace, dropoutReserveSize);
+
+    //    CUDA_CHECK(cudnnDropoutForward(
+    //        s_CudnnHandle,
+    //        dropoutDesc,
+    //        inputOutputDesc,
+    //        input.GetDevicePtr(),
+    //        inputOutputDesc,
+    //        output.GetDevicePtr(),
+    //        output.m_GpuData.m_DropoutWorkspace->GetDevicePtr(),
+    //        dropoutReserveSize));
+    //}
+
+    ////////////////////////////////////////////////////////////////////////////
+    //void TensorOpGpu::DropoutGradient(const Tensor& outputGradient, const Tensor& savedMask, Tensor& inputGradient)
+    //{
+
+    //}
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Sigmoid(const Tensor& input, Tensor& output) const
     {
         Activation(CUDNN_ACTIVATION_SIGMOID, input, output, 0);

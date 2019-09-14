@@ -26,6 +26,8 @@ namespace Neuro
         virtual void BatchNormalization(const Tensor& t, const Tensor& gamma, const Tensor& beta, const Tensor& runningMean, const Tensor& runningVar, Tensor& output) const override;
         virtual void BatchNormalizationTrain(const Tensor& t, const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& output) const override;
         virtual void BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const override;
+        /*virtual void Dropout(const Tensor& input, float prob, Tensor& saveMask, Tensor& output);
+        virtual void DropoutGradient(const Tensor& outputGradient, const Tensor& savedMask, Tensor& inputGradient);*/
         virtual void Sigmoid(const Tensor& input, Tensor& output) const override;
         virtual void SigmoidGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const override;
         virtual void Tanh(const Tensor& input, Tensor& output) const override;
