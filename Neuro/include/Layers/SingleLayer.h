@@ -46,6 +46,9 @@ namespace Neuro
 
         virtual void OnClone(const LayerBase& source) override;
 
+        virtual void FeedForwardInternal(bool training) override;
+        virtual void BackPropInternal(vector<Tensor>& outputsGradient) override;
+
         vector<const Tensor*> m_Inputs;
         vector<Shape> m_InputShapes;
         vector<LayerBase*> m_InputLayers;

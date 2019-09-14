@@ -503,6 +503,13 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::BatchNormalization(const Tensor& input, const Tensor& gamma, const Tensor& beta, const Tensor& runningMean, const Tensor& runningVar, Tensor& output) const
     {
+        input.CopyToHost();
+        gamma.CopyToHost();
+        beta.CopyToHost();
+        runningMean.CopyToHost();
+        runningVar.CopyToHost();
+        output.OverrideHost();
+
         Tensor xbar = input.Sub(runningMean);
         xbar.Map([&](float x1, float x2) { return x1 / sqrt(x2 + _EPSILON); }, runningVar, xbar);
         xbar.MulElem(gamma).Add(beta, output);
@@ -511,6 +518,15 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::BatchNormalizationTrain(const Tensor& input, const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& output) const
     {
+        input.CopyToHost();
+        gamma.CopyToHost();
+        beta.CopyToHost();
+        runningMean.CopyToHost();
+        runningVar.CopyToHost();
+        saveMean.CopyToHost();
+        saveInvVariance.CopyToHost();
+        output.OverrideHost();
+
         saveMean = input.Avg(EAxis::Feature);
         Tensor xmu = input.Sub(saveMean);
         Tensor carre = xmu.Map([](float x) { return x * x; });
@@ -527,6 +543,15 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const
     {
+        input.CopyToHost();
+        gamma.CopyToHost();
+        outputGradient.CopyToHost();
+        savedMean.CopyToHost();
+        savedInvVariance.CopyToHost();
+        gammaGradient.OverrideHost();
+        betaGradient.OverrideHost();
+        inputGradient.OverrideHost();
+
         float n = (float)outputGradient.Batch();
 
         Tensor xmu = input.Sub(savedMean);
@@ -536,9 +561,9 @@ namespace Neuro
 
         if (trainable)
         {
-            betaGradient = outputGradient.Sum(EAxis::Feature);
+            outputGradient.Sum(EAxis::Feature, -1, betaGradient);
             Tensor va2 = xmu.MulElem(savedInvVariance);
-            gammaGradient = va2.MulElem(outputGradient).Sum(EAxis::Feature);
+            va2.MulElem(outputGradient).Sum(EAxis::Feature, -1, gammaGradient);
         }
 
         Tensor dva2 = outputGradient.MulElem(gamma);
@@ -555,6 +580,10 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::Dropout(const Tensor& input, float prob, Tensor& saveMask, Tensor& output)
     {
+        input.CopyToHost();
+        saveMask.OverrideHost();
+        output.OverrideHost();
+
         saveMask.FillWithFunc([&]() { return (GlobalRng().NextFloat() < prob ? 0.f : 1.f) / prob; });
         input.MulElem(saveMask, output);
     }
@@ -562,6 +591,10 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::DropoutGradient(const Tensor& outputGradient, const Tensor& savedMask, Tensor& inputGradient)
     {
+        outputGradient.CopyToHost();
+        savedMask.CopyToHost();
+        inputGradient.OverrideHost();
+
         outputGradient.MulElem(savedMask, inputGradient);
     }
 }

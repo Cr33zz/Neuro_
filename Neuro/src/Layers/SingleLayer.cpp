@@ -57,4 +57,20 @@ namespace Neuro
         m_OutputShapes = sourceSingleLayer.m_OutputShapes;
         m_Activation = sourceSingleLayer.m_Activation;
     }
+
+    //////////////////////////////////////////////////////////////////////////
+    void SingleLayer::FeedForwardInternal(bool training)
+    {
+        // default implementation simply copy inputs over to outputs
+        for (auto i = 0; i < m_Inputs.size(); ++i)
+            m_Inputs[i]->CopyTo(m_Outputs[i]);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void SingleLayer::BackPropInternal(vector<Tensor>& outputsGradient)
+    {
+        // default implementation simply copy outputs gradient over to inputs gradient
+        for (auto i = 0; i < outputsGradient.size(); ++i)
+            outputsGradient[i].CopyTo(m_InputsGradient[i]);
+    }
 }

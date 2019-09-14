@@ -19,6 +19,8 @@ namespace Neuro
 		bool operator==(const Shape& other) const;
 		bool operator!=(const Shape& other) const;
 
+        bool EqualsIgnoreBatch(const Shape& other) const;
+
         static Shape From(const vector<int>& dimensions);
         static Shape From(const int* dimensions, int dimNum);
         static Shape From(const Shape& shapeWithoutBatches, int batchSize);

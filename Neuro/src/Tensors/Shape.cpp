@@ -32,6 +32,14 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    bool Shape::EqualsIgnoreBatch(const Shape& other) const
+    {
+        return Dimensions[0] == other.Dimensions[0] &&
+               Dimensions[1] == other.Dimensions[1] &&
+               Dimensions[2] == other.Dimensions[2];
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	Shape Shape::From(const vector<int>& dimensions)
 	{
 		return From(dimensions.data(), (int)dimensions.size());

@@ -19,7 +19,5 @@ namespace Neuro
         Reshape() {}
 
         virtual LayerBase* GetCloneInstance() const override;
-        virtual void FeedForwardInternal(bool training) override;
-        virtual void BackPropInternal(vector<Tensor>& outputsGradient) override;
     };
 }

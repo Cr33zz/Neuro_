@@ -316,17 +316,17 @@ namespace Neuro
             m_LogFile = new ofstream(outFilename + ".log");
 
         ChartGenerator* chartGen = nullptr;
-        if (trackFlags != ETrack::Nothing)
+        if (trackFlags != Nothing)
             chartGen = new ChartGenerator(outFilename, Name()/* + "\nloss=" + [{string.Join(", ", Losses.Select(x => x.GetType().Name))}] optimizer={Optimizer} batch_size={trainBatchSize}\nseed={(Seed > 0 ? Seed.ToString() : "None")}"*/, "Epoch");
 
-        if (trackFlags & ETrack::TrainError)
-            chartGen->AddSeries((int)ETrack::TrainError, "Error on train data\n(left Y axis)", 2/*Color.DarkRed*/);
-        if (trackFlags & ETrack::TestError)
-            chartGen->AddSeries((int)ETrack::TestError, "Error on test data\n(left Y axis)", 2/*Color.IndianRed*/);
-        if (trackFlags & ETrack::TrainAccuracy)
-            chartGen->AddSeries((int)ETrack::TrainAccuracy, "Accuracy on train data\n(right Y axis)", 2/*Color.DarkBlue*/, true);
-        if (trackFlags & ETrack::TestAccuracy)
-            chartGen->AddSeries((int)ETrack::TestAccuracy, "Accuracy on test\n(right Y axis)", 2/*Color.CornflowerBlue*/, true);
+        if (trackFlags & TrainError)
+            chartGen->AddSeries((int)TrainError, "Error on train data\n(left Y axis)", 2/*Color.DarkRed*/);
+        if (trackFlags & TestError)
+            chartGen->AddSeries((int)TestError, "Error on test data\n(left Y axis)", 2/*Color.IndianRed*/);
+        if (trackFlags & TrainAccuracy)
+            chartGen->AddSeries((int)TrainAccuracy, "Accuracy on train data\n(right Y axis)", 2/*Color.DarkBlue*/, true);
+        if (trackFlags & TestAccuracy)
+            chartGen->AddSeries((int)TestAccuracy, "Accuracy on test\n(right Y axis)", 2/*Color.CornflowerBlue*/, true);
 
         if (m_AccuracyFuncs.size() == 0)
         {
@@ -334,7 +334,7 @@ namespace Neuro
             {
                 m_AccuracyFuncs.push_back(nullptr);
 
-                if ((trackFlags & ETrack::TrainAccuracy) || (trackFlags & ETrack::TestAccuracy))
+                if ((trackFlags & TrainAccuracy) || (trackFlags & TestAccuracy))
                 {
                     if (ModelOutputLayers()[i]->OutputShape().Length == 1)
                         m_AccuracyFuncs[i] = AccBinaryClassificationEquality;
@@ -424,8 +424,8 @@ namespace Neuro
 
             if (chartGen)
             {
-                chartGen->AddData((float)e, trainError, (int)ETrack::TrainError);
-                chartGen->AddData((float)e, trainAcc, (int)ETrack::TrainAccuracy);
+                chartGen->AddData((float)e, trainError, (int)TrainError);
+                chartGen->AddData((float)e, trainAcc, (int)TrainAccuracy);
             }
 
             stringstream summary;
@@ -433,9 +433,9 @@ namespace Neuro
 
             if (verbose > 0)
             {
-                if (trackFlags & ETrack::TrainError)
+                if (trackFlags & TrainError)
                     summary << " - loss: " << trainError;
-                if (trackFlags & ETrack::TrainAccuracy)
+                if (trackFlags & TrainAccuracy)
                     summary << " - acc: " << trainAcc;
             }
 
@@ -475,9 +475,9 @@ namespace Neuro
 
                 if (verbose > 0)
                 {
-                    if (trackFlags & ETrack::TestError)
+                    if (trackFlags & TestError)
                         summary << " - val_loss: " << validationError;
-                    if (trackFlags & ETrack::TestAccuracy)
+                    if (trackFlags & TestAccuracy)
                         summary << " - val_acc: " << validationAcc;
                 }
 
@@ -507,6 +507,13 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::TrainStep(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, float* trainError, int* trainHits)
     {
+        assert(InputShapes().size() == inputs.size());
+        for (auto i = 0; i < inputs.size(); ++i)
+            assert(InputShapes()[i].EqualsIgnoreBatch(inputs[i]->GetShape()));
+        assert(OutputShapes().size() == outputs.size());
+        for (auto i = 0; i < outputs.size(); ++i)
+            assert(OutputShapes()[i].EqualsIgnoreBatch(outputs[i]->GetShape()));
+
         ++g_DebugStep;
 
         FeedForward(inputs, true);

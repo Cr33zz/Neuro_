@@ -1,6 +1,6 @@
 #include "GAN.h"
 
-#define TEST_DISCRIMINATOR_TRAINING
+//#define TEST_DISCRIMINATOR_TRAINING
 
 //////////////////////////////////////////////////////////////////////////
 void GAN::Run()
@@ -26,12 +26,12 @@ void GAN::Run()
     Tensor images, labels;
     LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", images, labels, false, false, -1);
     images.Map([](float x) { return (x - 127.5f) / 127.5f; }, images);
-    images.Reshape(Shape(1, 784, 1, -1));
+    images.Reshape(Shape::From(discriminator->InputShape(), images.Batch()));
 
     const uint32_t BATCH_SIZE = 64;
 
 #ifdef TEST_DISCRIMINATOR_TRAINING
-    const uint32_t BATCHES_NUM = 3;
+    const uint32_t BATCHES_NUM = 9;
     const uint32_t EPOCHS = 10;
 #else
     const uint32_t BATCHES_NUM = images.Batch() / BATCH_SIZE;
@@ -63,7 +63,7 @@ void GAN::Run()
             // generate fake images from noise
             Tensor genImages = generator->Predict(noise)[0];
 #           endif       
-            //generatedImages.Map([](float x) { return x * 127.5f + 127.5f; }).Reshaped(Shape(28, 28, 1, -1)).SaveAsImage("generated_images.png", false);
+            //genImages.Map([](float x) { return x * 127.5f + 127.5f; }).Reshaped(Shape(28, 28, 1, -1)).SaveAsImage("generated_images.png", false);
             // grab random batch of real images
             Tensor realImages = images.GetRandomBatches(BATCH_SIZE);
 

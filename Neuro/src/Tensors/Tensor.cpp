@@ -1219,38 +1219,8 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-	std::string Tensor::ToString() const
+	string Tensor::ToString() const
 	{
-		/*string s = "";
-		/*for (uint32_t n = 0; n < Batch(); ++n)
-		{
-			if (Batch() > 1)
-				s += "{\n  ";
-
-			for (uint32_t d = 0; d < Depth(); ++d)
-			{
-				if (Depth() > 1)
-					s += "{\n    ";
-
-				for (uint32_t h = 0; h < Height(); ++h)
-				{
-					s += "{ ";
-					for (uint32_t w = 0; w < Width(); ++w)
-					{
-						s += Get(w, h, d, n) + (w == Width() - 1 ? "" : ", ");
-					}
-					s += " }" + (h == Height() - 1 ? "\n  " : ",\n    ");
-				}
-
-				if (Depth() > 1)
-					s += "}" + (d == Depth() - 1 ? "\n" : ",\n  ");
-			}
-
-			if (Batch() > 1)
-				s += "}" + (n < Batch() - 1 ? "\n" : "");
-		}
-		return s;*/
-
         return TensorFormatter::ToString(*this);
 	}
 

@@ -43,26 +43,4 @@ namespace Neuro
     {
         return new Reshape();
     }
-
-    //////////////////////////////////////////////////////////////////////////
-    /*void Reshape::OnLink(LayerBase* layer, bool input)
-    {
-        __super::OnLink(layer, input);
-
-        if (input)
-            m_OutputShapes[0] = Shape(1, m_InputShapes[0].Length);
-    }*/
-
-    //////////////////////////////////////////////////////////////////////////
-    void Reshape::FeedForwardInternal(bool training)
-    {
-        // output is already of proper shape thanks to LayerBase.FeedForward
-        m_Inputs[0]->CopyTo(m_Outputs[0]);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void Reshape::BackPropInternal(vector<Tensor>& outputsGradient)
-    {
-        outputsGradient[0].CopyTo(m_InputsGradient[0]);
-    }
 }
