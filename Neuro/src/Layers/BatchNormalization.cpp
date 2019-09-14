@@ -66,17 +66,24 @@ namespace Neuro
         __super::OnInit();
 
         m_Gamma = Tensor(Shape(m_OutputShapes[0].Width(), m_OutputShapes[0].Height(), m_OutputShapes[0].Depth()), Name() + "/gamma");
+        m_Gamma.FillWithValue(1);
         m_Beta = Tensor(m_Gamma.GetShape(), Name() + "/beta");
-        m_RunningMean = Tensor(m_Gamma.GetShape());
-        m_RunningVar = Tensor(m_Gamma.GetShape());
+        m_Beta.Zero();
 
         m_GammaGrad = Tensor(m_Gamma.GetShape(), Name() + "/gamma_grad");
+        m_GammaGrad.Zero();
         m_BetaGrad = Tensor(m_Beta.GetShape(), Name() + "/beta_grad");
+        m_BetaGrad.Zero();
 
-        m_Gamma.FillWithValue(1);
-        m_Beta.FillWithValue(0);
+        m_RunningMean = Tensor(m_Gamma.GetShape());
         m_RunningMean.FillWithValue(0);
+        m_RunningVar = Tensor(m_Gamma.GetShape());
         m_RunningVar.FillWithValue(1);
+
+        m_Mean = Tensor(m_Gamma.GetShape());
+        m_Mean.Zero();
+        m_Variance = Tensor(m_Gamma.GetShape());
+        m_Variance.FillWithValue(1);
     }
 
     //////////////////////////////////////////////////////////////////////////

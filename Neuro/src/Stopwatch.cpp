@@ -67,4 +67,35 @@ namespace Neuro
 
         return chrono::duration_cast<std::chrono::microseconds>(chrono::high_resolution_clock::now() - m_StartTimestamp).count();
     }
+
+    //////////////////////////////////////////////////////////////////////////
+    AutoStopwatch::AutoStopwatch(EAutoStopwatchMode mode)
+    {
+        m_Mode = mode;
+        m_Timer.Start();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    string AutoStopwatch::ToString() const
+    {
+        __int64 duration = 0;
+        string unit = "";
+        switch (m_Mode)
+        {
+        case Milliseconds:
+            duration = m_Timer.ElapsedMilliseconds();
+            unit = "ms";
+            break;
+        case Microseconds:
+            duration = m_Timer.ElapsedMicroseconds();
+            unit = "us";
+            break;
+        case Seconds:
+            duration = m_Timer.ElapsedSeconds();
+            unit = "s";
+            break;
+        }
+
+        return to_string(duration) + unit;
+    }
 }

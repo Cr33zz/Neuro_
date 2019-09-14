@@ -42,3 +42,5 @@
 
 #include "Tensors/Shape.h"
 #include "Tensors/Tensor.h"
+
+#include "TestTools.h"

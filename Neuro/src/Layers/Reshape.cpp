@@ -15,6 +15,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    Reshape::Reshape(const Shape& shape, const string& name)
+        : Reshape(__FUNCTION__, shape, name)
+    {
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     Reshape::Reshape(const string& constructorName, LayerBase* inputLayer, const Shape& shape, const string& name)
         : SingleLayer(constructorName, inputLayer, shape, nullptr, name)
     {
@@ -37,6 +43,15 @@ namespace Neuro
     {
         return new Reshape();
     }
+
+    //////////////////////////////////////////////////////////////////////////
+    /*void Reshape::OnLink(LayerBase* layer, bool input)
+    {
+        __super::OnLink(layer, input);
+
+        if (input)
+            m_OutputShapes[0] = Shape(1, m_InputShapes[0].Length);
+    }*/
 
     //////////////////////////////////////////////////////////////////////////
     void Reshape::FeedForwardInternal(bool training)

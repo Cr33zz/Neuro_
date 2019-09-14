@@ -68,18 +68,10 @@ namespace Neuro
     {
         if (this != &t)
         {
-            if (IsOnDevice() && t.IsOnDevice())
-            {
-                assert(m_Shape == t.m_Shape);
-                t.GetDeviceVar().CopyTo(GetDevicePtr());
-            }
-            else
-            {
-                t.CopyToHost();
-                m_GpuData.Release();
-                OverrideHost();
-                m_Values = t.m_Values;
-            }
+            t.CopyToHost();
+            m_GpuData.Release();
+            OverrideHost();
+            m_Values = t.m_Values;
             m_Name = t.m_Name;
             m_Shape = t.m_Shape;
             m_Op = t.m_Op;

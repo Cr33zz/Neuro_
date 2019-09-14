@@ -122,8 +122,8 @@ namespace Neuro
         }
 
 #       ifdef LOG_OUTPUTS
-        for (int i = 0; i < (int)m_Inputs.size(); ++i)
-            m_Inputs[i]->DebugDumpValues(Replace(Name() + "_input_" + to_string(i) + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
+        for (auto i = 0; i < inputs.size(); ++i)
+            inputs[i]->DebugDumpValues(Replace(Name() + "_input_" + to_string(i) + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
 #       endif
 
         m_FeedForwardTimer.Start();
@@ -131,8 +131,8 @@ namespace Neuro
         m_FeedForwardTimer.Stop();
 
 #       ifdef LOG_OUTPUTS
-        for (size_t o = 0; o < outputs.size(); ++o)
-            outputs[o].DebugDumpValues(Replace(outputs[o].Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
+        for (auto o = 0; o < outputs.size(); ++o)
+            outputs[o].DebugDumpValues(Replace(Name() + "_output_" + to_string(o) + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
 #       endif
 
         if (Activation())
@@ -144,7 +144,7 @@ namespace Neuro
                 m_ActivationTimer.Stop();
 
 #               ifdef LOG_OUTPUTS
-                outputs[o].DebugDumpValues(Replace(outputs[o].Name() + "_activation_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
+                outputs[o].DebugDumpValues(Replace(Name() + "_output_" + to_string(o) + "_activation_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
 #               endif
             }
         }
@@ -203,7 +203,7 @@ namespace Neuro
                     Activation()->Derivative(outputs[o], outputsGradient[o], outputsGradient[o]);
                     m_ActivationBackPropTimer.Stop();
 #                   ifdef LOG_OUTPUTS
-                    outputsGradient[o].DebugDumpValues(Replace(Name() + "_activation" + to_string(o) + "_grad_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
+                    outputsGradient[o].DebugDumpValues(Replace(Name() + "_activation" + to_string(o) + "_grad_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
 #                   endif
                 }
             }
@@ -212,8 +212,8 @@ namespace Neuro
             BackPropInternal(outputsGradient);
             m_BackPropTimer.Stop();
 #           ifdef LOG_OUTPUTS
-            for (int i = 0; i < (int)m_InputShapes.size(); ++i)
-                inputsGrad[i].DebugDumpValues(Replace(inputsGrad[i].Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
+            for (auto i = 0; i < inputShapes.size(); ++i)
+                inputsGrad[i].DebugDumpValues(Replace(inputsGrad[i].Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
 #           endif
         }
 

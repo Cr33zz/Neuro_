@@ -92,36 +92,12 @@ namespace Neuro
         t2.CopyToDevice();
         output.CopyToDevice();
 
-        int m = t1.Height();
-        int n = t2.Width();
-        int k = t1.Width();
-
-        float alpha = 1, beta = 0;
-
-        for (uint32_t b = 0; b < output.Batch(); ++b)
-        {
-            uint32_t t1B = min(b, t1.Batch() - 1);
-            uint32_t t2B = min(b, t2.Batch() - 1);
-
-            for (uint32_t d = 0; d < t1.Depth(); ++d)
-            {
-                CUDA_CHECK(cublasSgemm_v2(
-                    s_CublasHandle,
-                    transposeT2 ? CUBLAS_OP_T : CUBLAS_OP_N,
-                    transposeT1 ? CUBLAS_OP_T : CUBLAS_OP_N,
-                    n,
-                    m,
-                    k,  // trick to convert row major to column major
-                    &alpha,
-                    CudaDeviceVariable<float>(t2.GetDeviceVar(), d * t2.GetShape().Dim0Dim1 + t2B * t2.BatchLength()).GetDevicePtr(),
-                    n,
-                    CudaDeviceVariable<float>(t1.GetDeviceVar(), d * t1.GetShape().Dim0Dim1 + t1B * t1.BatchLength()).GetDevicePtr(),
-                    k,
-                    &beta,
-                    CudaDeviceVariable<float>(output.GetDeviceVar(), d * output.GetShape().Dim0Dim1 + b * output.BatchLength()).GetDevicePtr(),
-                    n));
-            }
-        }
+        if (t1.Depth() == t2.Depth() && t1.Batch() == t2.Batch())
+            MulStridedBatched(transposeT1, transposeT2, t1, t2, output);
+        else if (t1.Depth() * output.Batch() > 48)
+            MulBatched(transposeT1, transposeT2, t1, t2, output);
+        else
+            MulGeneric(transposeT1, transposeT2, t1, t2, output);
     }
 
     void TensorOpGpu::Div(const Tensor& input, float v, Tensor& output) const
@@ -714,6 +690,129 @@ namespace Neuro
             &beta,
             inputGradientDesc,
             inputGradient.GetDevicePtr()));
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::MulGeneric(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
+    {
+        int m = t1.Height(), n = t2.Width(), k = t1.Width();
+        float alpha = 1, beta = 0;
+
+        for (uint32_t b = 0; b < output.Batch(); ++b)
+        {
+            uint32_t t1B = min(b, t1.Batch() - 1);
+            uint32_t t2B = min(b, t2.Batch() - 1);
+
+            for (uint32_t d = 0; d < t1.Depth(); ++d)
+            {
+                CUDA_CHECK(cublasSgemm_v2(
+                    s_CublasHandle,
+                    transposeT2 ? CUBLAS_OP_T : CUBLAS_OP_N,
+                    transposeT1 ? CUBLAS_OP_T : CUBLAS_OP_N,
+                    n,
+                    m,
+                    k,  // trick to convert row major to column major
+                    &alpha,
+                    CudaDeviceVariable<float>(t2.GetDeviceVar(), d * t2.GetShape().Dim0Dim1 + t2B * t2.BatchLength()).GetDevicePtr(),
+                    n,
+                    CudaDeviceVariable<float>(t1.GetDeviceVar(), d * t1.GetShape().Dim0Dim1 + t1B * t1.BatchLength()).GetDevicePtr(),
+                    k,
+                    &beta,
+                    CudaDeviceVariable<float>(output.GetDeviceVar(), d * output.GetShape().Dim0Dim1 + b * output.BatchLength()).GetDevicePtr(),
+                    n));
+            }
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::MulBatched(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
+    {
+        int m = t1.Height(), n = t2.Width(), k = t1.Width();
+
+        size_t batches = output.Batch() * t1.Depth();
+        vector<float> alphaArray(batches);
+        fill(alphaArray.begin(), alphaArray.end(), 1.f);
+        vector<float> betaArray(batches);
+        fill(betaArray.begin(), betaArray.end(), 0.f);
+        vector<float*> t1List(batches);
+        vector<float*> t2List(batches);
+        vector<float*> outputList(batches);
+
+        for (uint32_t b = 0; b < output.Batch(); ++b)
+        {
+            uint32_t t1B = min(b, t1.Batch() - 1);
+            uint32_t t2B = min(b, t2.Batch() - 1);
+
+            for (uint32_t d = 0; d < t1.Depth(); ++d)
+            {
+                uint32_t idx = b * t1.Depth() + d;
+                t1List[idx] = CudaDeviceVariable<float>(t1.GetDeviceVar(), d * t1.GetShape().Dim0Dim1 + t1B * t1.BatchLength()).GetDevicePtr();
+                t2List[idx] = CudaDeviceVariable<float>(t2.GetDeviceVar(), d * t2.GetShape().Dim0Dim1 + t2B * t2.BatchLength()).GetDevicePtr();
+                outputList[idx] = CudaDeviceVariable<float>(output.GetDeviceVar(), d * output.GetShape().Dim0Dim1 + b * output.BatchLength()).GetDevicePtr();
+            }
+        }
+
+        float** devT1List = nullptr, **devT2List = nullptr, **devOutputList = nullptr;
+        cudaMalloc(&devT1List, batches * sizeof(float*));
+        cudaMalloc(&devT2List, batches * sizeof(float*));
+        cudaMalloc(&devOutputList, batches * sizeof(float*));
+
+        cudaMemcpy(devT1List, &t1List[0], batches * sizeof(float*), cudaMemcpyHostToDevice);
+        cudaMemcpy(devT2List, &t2List[0], batches * sizeof(float*), cudaMemcpyHostToDevice);
+        cudaMemcpy(devOutputList, &outputList[0], batches * sizeof(float*), cudaMemcpyHostToDevice);
+
+        CUDA_CHECK(cublasSgemmBatched(
+            s_CublasHandle,
+            transposeT2 ? CUBLAS_OP_T : CUBLAS_OP_N,
+            transposeT1 ? CUBLAS_OP_T : CUBLAS_OP_N,
+            n,
+            m,
+            k,  // trick to convert row major to column major
+            &alphaArray[0],
+            devT2List,
+            n,
+            devT1List,
+            k,
+            &betaArray[0],
+            devOutputList,
+            n,
+            (int)batches));
+
+        cudaFree(devT1List);
+        cudaFree(devT2List);
+        cudaFree(devOutputList);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::MulStridedBatched(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
+    {
+        int m = t1.Height(), n = t2.Width(), k = t1.Width();
+
+        size_t batches = output.Depth() * output.Batch();
+        vector<float> alphaArray(batches);
+        fill(alphaArray.begin(), alphaArray.end(), 1.f);
+        vector<float> betaArray(batches);
+        fill(betaArray.begin(), betaArray.end(), 0.f);
+
+        CUDA_CHECK(cublasSgemmStridedBatched(
+            s_CublasHandle,
+            transposeT2 ? CUBLAS_OP_T : CUBLAS_OP_N,
+            transposeT1 ? CUBLAS_OP_T : CUBLAS_OP_N,
+            n,
+            m,
+            k,  // trick to convert row major to column major
+            &alphaArray[0],
+            t2.GetDevicePtr(),
+            n,
+            t2.GetShape().Dim0Dim1,
+            t1.GetDevicePtr(),
+            k,
+            t1.GetShape().Dim0Dim1,
+            &betaArray[0],
+            output.GetDevicePtr(),
+            n,
+            output.GetShape().Dim0Dim1,
+            (int)batches));
     }
 
     //////////////////////////////////////////////////////////////////////////

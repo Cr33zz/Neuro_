@@ -10,14 +10,16 @@ using namespace Neuro;
 class MnistNetwork
 {
 public:
-    static void Run()
+    void Run()
     {
         Tensor::SetDefaultOpMode(EOpMode::GPU);
 
         auto model = new Sequential("mnist", 1337);
         model->AddLayer(new Dense(784, 64, new ReLU()));
+        //model->AddLayer(new BatchNormalization());
         model->AddLayer(new Dropout(model->LastLayer(), 0.2f));
         model->AddLayer(new Dense(model->LastLayer(), 64, new ReLU()));
+        //model->AddLayer(new BatchNormalization());
         model->AddLayer(new Dropout(model->LastLayer(), 0.2f));
         model->AddLayer(new Dense(model->LastLayer(), 10, new Softmax()));
 
@@ -32,7 +34,7 @@ public:
         LoadMnistData("data/t10k-images.idx3-ubyte", "data/t10k-labels.idx1-ubyte", validationInput, validationOutput, true, false, 1000);
         validationInput.Reshape(Shape(1, -1, 1, validationInput.Batch()));
 
-        model->Fit(input, output, 128, 10, &validationInput, &validationOutput, 2, ETrack::All);
+        model->Fit(input, output, 128, 30, &validationInput, &validationOutput, 2, ETrack::All);
 
         cout << model->TrainSummary();
 

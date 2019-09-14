@@ -130,10 +130,27 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2, 0.0001f));
         }
 
-        TEST_METHOD(Mult2_CompareWithCpuResult)
+        TEST_METHOD(Mult_SameNC_CompareWithCpuResult)
         {
-            Tensor t1(Shape(500, 300, 1)); t1.FillWithRand(10);
-            Tensor t2(Shape(1, 500, 1, 20)); t2.FillWithRand(11);
+            Tensor t1(Shape(82, 40, 3, 5)); t1.FillWithRand();
+            Tensor t2(Shape(40, 82, 3, 5)); t2.FillWithRand();
+
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            NEURO_PROFILE("CPU", Tensor r = t1.Mul(t2);)
+
+            Tensor::SetForcedOpMode(EOpMode::GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = t1.Mul(t2);)
+
+            r.DebugDumpValues("r.log");
+            r2.DebugDumpValues("r2.log");
+
+            Assert::IsTrue(r.Equals(r2, 0.0001f));
+        }
+
+        TEST_METHOD(Mult_BigNC_CompareWithCpuResult)
+        {
+            Tensor t1(Shape(82, 40, 30, 5)); t1.FillWithRand();
+            Tensor t2(Shape(40, 82, 30)); t2.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
             NEURO_PROFILE("CPU", Tensor r = t1.Mul(t2);)
@@ -426,10 +443,10 @@ namespace NeuroTests
         TEST_METHOD(BatchNormalization_CompareWithCpuResult)
         {
             Tensor input(Shape(2, 2, 3, 3)); input.FillWithRand();
-            Tensor gamma(Shape(2, 2, 3, 1)); gamma.FillWithRand();
-            Tensor beta(Shape(2, 2, 3, 1)); beta.FillWithRand();
-            Tensor runningMean(Shape(2, 2, 3, 1)); runningMean.FillWithRand();
-            Tensor runningVariance(Shape(2, 2, 3, 1)); runningVariance.FillWithRand(-1, 0, 1);
+            Tensor gamma(Shape(2, 2, 3, 1)); gamma.FillWithValue(1);//gamma.FillWithRand();
+            Tensor beta(Shape(2, 2, 3, 1)); beta.FillWithValue(0);//beta.FillWithRand();
+            Tensor runningMean(Shape(2, 2, 3, 1)); runningMean.Zero();//runningMean.FillWithRand();
+            Tensor runningVariance(Shape(2, 2, 3, 1)); runningVariance.FillWithValue(1);// runningVariance.FillWithRand(-1, 0, 1);
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor result(input.GetShape());

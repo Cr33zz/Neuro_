@@ -46,6 +46,10 @@ namespace Neuro
         void Activation(const cudnnActivationMode_t& activationMode, const Tensor& input, Tensor& output, float coeff) const;
         void ActivationGradient(const cudnnActivationMode_t& activationMode, const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient, float coeff) const;
 
+        void MulGeneric(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const;
+        void MulBatched(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const;
+        void MulStridedBatched(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const;
+
         static cudnnPoolingMode_t GetCudnnPoolType(EPoolingMode type);
         static void GetKernelRunParams(int count, dim3& blocks, dim3& threads);
         static int GetBlocksNum(int count);

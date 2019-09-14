@@ -55,6 +55,7 @@ namespace Neuro
         virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable = true) override;
 
         virtual void SetTrainable(bool trainable) override;
+        void ForceLearningPhase(bool force) { m_ForceLearningPhase = force; }
 
         string Summary() const;
         string TrainSummary() const;
@@ -91,6 +92,7 @@ namespace Neuro
         vector<LossBase*> m_LossFuncs;
         OptimizerBase* m_Optimizer = nullptr;
         vector<accuracy_func_t> m_AccuracyFuncs;
+        bool m_ForceLearningPhase = false;
 
         ofstream* m_LogFile;
         int m_ChartSaveInterval = 20;

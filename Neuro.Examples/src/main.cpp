@@ -6,14 +6,23 @@
 #include "MnistConvNetwork.h"
 #include "MnistNetwork.h"
 #include "GAN.h"
+#include "DeepConvGAN.h"
 
 int main()
 {
-    /*Tqdm progress(10);
-    for (uint32_t i = 0; i < 10; ++i, progress.NextStep())
+    const uint32_t BATCH_SIZE = 64;
+    Tensor t1(Shape(500, 300, 1, BATCH_SIZE)); t1.FillWithRand(10);
+    Tensor t2(Shape(1, 500, 1, BATCH_SIZE)); t2.FillWithRand(11);
+
+    Tensor::SetForcedOpMode(GPU);
+    for (int i = 0; i < 10; ++i)
     {
-        cin.get();
-    }*/
+        AutoStopwatch p(Microseconds);
+        t1.Mul(t2);
+        cout << p.ToString() << endl;
+    }
+    
+
 
     // tensor image-related operations
     /*Tensor t(Shape(50, 50, 1));
@@ -33,10 +42,11 @@ int main()
     //ConvNetwork::Run();
     //FlowNetwork::Run();
     //MnistConvNetwork::Run();
-    //MnistNetwork::Run();
+    //MnistNetwork().Run();
     //AutoencoderNetwork::Run();
     //ConvAutoencoderNetwork::Run();
-    GAN::Run();
+    GAN().Run();
+    DeepConvGAN().Run();
 
     return 0;
 }

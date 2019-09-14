@@ -134,14 +134,14 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     const vector<Tensor>& ModelBase::Predict(const tensor_ptr_vec_t& inputs)
     {
-        FeedForward(inputs, false);
+        FeedForward(inputs, m_ForceLearningPhase);
         return Outputs();
     }
 
     //////////////////////////////////////////////////////////////////////////
     const vector<Tensor>& ModelBase::Predict(const Tensor& input)
     {
-        FeedForward({ &input }, false);
+        FeedForward({ &input }, m_ForceLearningPhase);
         return Outputs();
     }
 
@@ -184,7 +184,7 @@ namespace Neuro
         for (auto layer : Layers())
         {
             totalParams += layer->ParamsNum();
-            ss << left << setw(29) << (layer->Name() + "(" + layer->ClassName() + ")");
+            ss << left << setw(29) << (layer->Name() + "(" + layer->ClassName() + ")").substr(0, 28);
             ss << setw(26) << layer->OutputShape().ToString();
             ss << setw(13) << layer->ParamsNum() << "\n";
             if (layer->InputLayers().size() > 1)
@@ -211,7 +211,7 @@ namespace Neuro
 
         for (auto layer : Layers())
         {
-            ss << left << setw(29) << (layer->Name() + "(" + layer->ClassName() + ")");
+            ss << left << setw(29) << (layer->Name() + "(" + layer->ClassName() + ")").substr(0, 28);
             ss << setw(12) << layer->FeedForwardTime() * 0.001f;
             ss << setw(12) << layer->BackPropTime() * 0.001f;
             ss << setw(12) << layer->ActivationTime() * 0.001f;
@@ -520,7 +520,7 @@ namespace Neuro
             m_LossFuncs[i]->Compute(*outputs[i], modelOutputs[i], outputsGrad[i]);
 
 #           ifdef LOG_OUTPUTS
-            outputsGrad[i].DebugDumpValues(Replace(string("output") + to_string(i) + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
+            outputsGrad[i].DebugDumpValues(Replace(Name() + "_output_" + to_string(i) + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
 #           endif
 
             if (trainError)
@@ -532,7 +532,7 @@ namespace Neuro
             m_LossFuncs[i]->Derivative(*outputs[i], modelOutputs[i], outputsGrad[i]);
 
 #           ifdef LOG_OUTPUTS
-            outputsGrad[i].DebugDumpValues(Replace(string("output") + to_string(i) + "_grad_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
+            outputsGrad[i].DebugDumpValues(Replace(Name() + "_output_" + to_string(i) + "_grad_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
 #           endif
         }
 
@@ -543,7 +543,7 @@ namespace Neuro
 
 #       ifdef LOG_OUTPUTS
         for (auto paramAndGrad : paramsAndGrads)
-            paramAndGrad.Gradients->DebugDumpValues(Replace(paramAndGrad.Gradients->Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "__"));
+            paramAndGrad.Gradients->DebugDumpValues(Replace(paramAndGrad.Gradients->Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
 #       endif
 
         m_Optimizer->Step(paramsAndGrads, inputs[0]->Batch());
