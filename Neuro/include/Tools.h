@@ -40,7 +40,8 @@ namespace Neuro
 
     void LoadMnistData(const string& imagesFile, const string& labelsFile, Tensor& input, Tensor& output, bool normalize, bool generateImage = false, int maxImages = -1);
     //void SaveMnistData(const Tensor& input, const Tensor& output, const string& imagesFile, const string& labelsFile);
-    void LoadCifar10Data(const string& imagesBatchFile, Tensor& input, Tensor& output, bool normalize, bool generateImage = false, int maxImages = -1);
+    void LoadCifar10Data(const string& imagesFile, Tensor& input, Tensor& output, bool normalize, bool generateImage = false, int maxImages = -1);
+    void SaveCifar10Data(const string& imagesFile, const Tensor& input, const Tensor& output);
     void LoadCSVData(const string& filename, int outputsNum, Tensor& inputs, Tensor& outputs, bool outputsOneHotEncoded = false, int maxLines = -1);
 
     void ImageLibInit();
@@ -49,7 +50,10 @@ namespace Neuro
     class Tqdm
     {
     public:
-        Tqdm(uint32_t maxIterations);
+        Tqdm(uint32_t maxIterations, size_t barLen = 30);
+        void ShowElapsed(bool show) { m_ShowElapsed = show; }
+        void SetExtraString(const string& str) { m_ExtraString = str; }
+
         void NextStep(uint32_t iterations = 1);
         string Str() const { return m_Stream.str(); }
         __int64 ElapsedMilliseconds() const { return m_Timer.ElapsedMilliseconds(); }
@@ -57,8 +61,11 @@ namespace Neuro
     private:
         int m_Iteration = -1;
         uint32_t m_MaxIterations;
+        size_t m_BarLength;
         Stopwatch m_Timer;
         stringstream m_Stream;
+        bool m_ShowElapsed = true;
+        string m_ExtraString;
     };
 
     //////////////////////////////////////////////////////////////////////////

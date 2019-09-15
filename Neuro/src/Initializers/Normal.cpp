@@ -8,7 +8,7 @@ namespace Neuro
 	float Normal::Value = 0;
 
 	//////////////////////////////////////////////////////////////////////////
-	Normal::Normal(float mean /*= 0*/, float variance /*= 1*/, float scale /*= 1*/)
+	Normal::Normal(float mean, float variance, float scale)
 	{
 		Mean = mean;
 		Variance = variance;

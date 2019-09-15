@@ -65,6 +65,21 @@ namespace NeuroTests
             TestTrain(1, 0);
         }
 
+        TEST_METHOD(Train_Stride2_Pad1)
+        {
+            TestTrain(2, 1);
+        }
+
+        TEST_METHOD(Train_Stride2_Pad2)
+        {
+            TestTrain(2, 2);
+        }
+
+        TEST_METHOD(Train_Stride2_Pad0)
+        {
+            TestTrain(2, 0);
+        }
+
         TEST_METHOD(Train_Stride1_Pad1_Batch2)
         {
             TestTrain(1, 1, 2);

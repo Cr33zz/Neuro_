@@ -1142,7 +1142,7 @@ namespace Neuro
     void Tensor::Conv2DTransposedKernelsGradient(const Tensor& input, const Tensor& gradient, uint32_t stride, uint32_t padding, Tensor& kernelsGradient) const
     {
         kernelsGradient.Zero();
-        Op()->Conv2DKernelsGradient(input, gradient, stride, padding, padding, kernelsGradient);
+        Op()->Conv2DKernelsGradient(gradient, input, stride, padding, padding, kernelsGradient);
     }
 
 	//////////////////////////////////////////////////////////////////////////

@@ -103,7 +103,7 @@ namespace Neuro
 
         if (m_Trainable)
         {
-            outputsGradient[0].Conv2DTransposedKernelsGradient(outputsGradient[0], *m_Inputs[0], m_Stride, m_Padding, m_KernelsGradient);
+            outputsGradient[0].Conv2DTransposedKernelsGradient(*m_Inputs[0], outputsGradient[0], m_Stride, m_Padding, m_KernelsGradient);
             if (m_UseBias)
                 m_BiasGradient.Add(outputsGradient[0].Sum(EAxis::Feature));
         }

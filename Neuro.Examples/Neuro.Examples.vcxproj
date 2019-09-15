@@ -137,12 +137,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\CifarGAN.cpp" />
     <ClCompile Include="src\DeepConvGAN.cpp" />
     <ClCompile Include="src\GAN.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AutoencoderNetwork.h" />
+    <ClInclude Include="include\CifarGAN.h" />
     <ClInclude Include="include\ConvAutoencoderNetwork.h" />
     <ClInclude Include="include\ConvNetwork.h" />
     <ClInclude Include="include\DeepConvGAN.h" />

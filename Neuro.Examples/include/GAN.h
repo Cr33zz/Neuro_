@@ -14,9 +14,14 @@ class GAN
 {
 public:
     void Run();
+    void RunDiscriminatorTrainTest();
 
 protected:
+    virtual void LoadImages(Tensor& images);
     virtual ModelBase* CreateGenerator(uint32_t inputsNum);
     virtual ModelBase* CreateDiscriminator();
-    virtual string Name() const { return "gan"; }
+    virtual string Name() const { return "mnist_vanilla_gan"; }
+
+private:
+    Shape m_ImageShape;
 };

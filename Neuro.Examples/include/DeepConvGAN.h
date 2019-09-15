@@ -15,5 +15,5 @@ class DeepConvGAN : public GAN
 protected:
     virtual ModelBase* CreateGenerator(uint32_t inputsNum) override;
     virtual ModelBase* CreateDiscriminator() override;
-    virtual string Name() const override { return "dcgan"; }
+    virtual string Name() const override { return "mnist_dc_gan"; }
 };

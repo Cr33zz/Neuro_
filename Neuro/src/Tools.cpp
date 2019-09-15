@@ -176,7 +176,7 @@ namespace Neuro
                (x << 24);
     }
 
-    unique_ptr<char[]> LoadBinFileContents(const string& file)
+    unique_ptr<char[]> LoadBinFileContents(const string& file, size_t* length = nullptr)
     {
         ifstream stream(file, ios::in | ios::binary | ios::ate);
         assert(stream);
@@ -185,6 +185,8 @@ namespace Neuro
         stream.seekg(0, std::ios::beg);
         stream.read(buffer.get(), size);
         stream.close();
+        if (length)
+            *length = size;
         return buffer;
     }
 
@@ -262,7 +264,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void LoadCifar10Data(const string& imagesBatchFile, Tensor& input, Tensor& output, bool normalize, bool generateImage, int maxImages)
+    void LoadCifar10Data(const string& imagesFile, Tensor& input, Tensor& output, bool normalize, bool generateImage, int maxImages)
     {
         auto ReadInt32 = [](const unique_ptr<char[]>& buffer, size_t offset)
         {
@@ -271,9 +273,10 @@ namespace Neuro
             return EndianSwap(value);
         };
 
-        auto buffer = LoadBinFileContents(imagesBatchFile);
+        size_t fileLen = 0;
+        auto buffer = LoadBinFileContents(imagesFile, &fileLen);
 
-        uint32_t numImages = 10000;
+        uint32_t numImages = (uint32_t)fileLen / 3073;
         uint32_t imgWidth = 32;
         uint32_t imgHeight = 32;
         uint32_t outputsNum = 10;
@@ -327,9 +330,34 @@ namespace Neuro
 
         if (image)
         {
-            FreeImage_Save(FIF_PNG, image, (imagesBatchFile + ".png").c_str());
+            FreeImage_Save(FIF_PNG, image, (imagesFile + ".png").c_str());
             FreeImage_Unload(image);
         }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void SaveCifar10Data(const string& imagesFile, const Tensor& input, const Tensor& output)
+    {
+        ofstream fsImages(imagesFile, ios::binary);
+
+        uint32_t imgWidth = 32;
+        uint32_t imgHeight = 32;
+
+        for (uint32_t i = 0; i < input.Batch(); ++i)
+        {
+            char l = (char)output.ArgMax(Sample, i)(0);
+            fsImages.write(&l, 1);
+
+            for (uint32_t d = 0; d < 3; ++d)
+            for (uint32_t h = 0; h < imgWidth; ++h)
+            for (uint32_t w = 0; w < imgHeight; ++w)
+            {
+                char color = (char)input(w, h, d, i);
+                fsImages.write(&color, 1);                
+            }
+        }
+
+        fsImages.close();
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -427,8 +455,8 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tqdm::Tqdm(uint32_t maxIterations)
-        : m_MaxIterations(maxIterations)
+    Tqdm::Tqdm(uint32_t maxIterations, size_t barLength)
+        : m_MaxIterations(maxIterations), m_BarLength(barLength)
     {
         m_Timer.Start();
         NextStep();
@@ -437,7 +465,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tqdm::NextStep(uint32_t iterations)
     {        
-        const int BAR_LENGTH = 30;
         const char BLANK_SYMBOL = (char)176;
         const char FULL_SYMBOL = (char)219;
         const char ACTIVE_SYMBOL = (char)176;
@@ -452,13 +479,13 @@ namespace Neuro
         m_Stream.str("");
         m_Stream << right << setw(4) << (to_string((int)pct) + "%") << '[';
 
-        float step = m_MaxIterations / (float)BAR_LENGTH;
-        int currStep = max(min((int)ceil(m_Iteration / step), BAR_LENGTH), 1);
+        float step = m_MaxIterations / (float)m_BarLength;
+        size_t currStep = max<size_t>(min((size_t)ceil(m_Iteration / step), m_BarLength), 1);
 
-        for (int i = 0; i < currStep - 1; ++i)
+        for (size_t i = 0; i < currStep - 1; ++i)
             m_Stream << FULL_SYMBOL;
         m_Stream << ((m_Iteration == m_MaxIterations) ? FULL_SYMBOL : ACTIVE_SYMBOL);
-        for (int i = 0; i < BAR_LENGTH - currStep; ++i)
+        for (size_t i = 0; i < m_BarLength - currStep; ++i)
             m_Stream << BLANK_SYMBOL;
 
         m_Stream << "] " << right << setw(to_string(m_MaxIterations).length()) << m_Iteration << "/" << m_MaxIterations;
@@ -467,7 +494,9 @@ namespace Neuro
         {
             float averageTimePerStep = m_Timer.ElapsedMilliseconds() / (float)m_Iteration;
             m_Stream << " - eta: " << fixed << setprecision(2) << averageTimePerStep * (m_MaxIterations - m_Iteration) * 0.001f << "s";
-            m_Stream << " - elap: " << m_Timer.ElapsedMilliseconds() * 0.001f << "s";
+            if (m_ShowElapsed)
+                m_Stream << " - elap: " << m_Timer.ElapsedMilliseconds() * 0.001f << "s";
+            m_Stream << m_ExtraString;
         }
 
         cout << m_Stream.str();

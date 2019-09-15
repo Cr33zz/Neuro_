@@ -38,8 +38,8 @@ namespace Neuro
         // Training method, when batch size is -1 the whole training set is used for single gradient descent step (in other words, batch size equals to training set size)
         void Fit(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, int batchSize = -1, uint32_t epochs = 1, const tensor_ptr_vec_t* validInputs = nullptr, const tensor_ptr_vec_t* validOutputs = nullptr, uint32_t verbose = 1, int trackFlags = ETrack::TrainError | ETrack::TestAccuracy, bool shuffle = true);
 
-        float TrainOnBatch(const Tensor& input, const Tensor& output);
-        float TrainOnBatch(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs);
+        tuple<float, float> TrainOnBatch(const Tensor& input, const Tensor& output);
+        tuple<float, float> TrainOnBatch(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs);
 
         const vector<Tensor>& Predict(const tensor_ptr_vec_t& inputs);
         const vector<Tensor>& Predict(const Tensor& input);
@@ -81,7 +81,7 @@ namespace Neuro
 
     private:
         // This is vectorized gradient descent
-        void TrainStep(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, float* trainError = nullptr, int* trainHits = nullptr);
+        void TrainStep(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, float* trainError = nullptr, float* trainAcc = nullptr);
 
         // Build a single tensor with multiple batches for each input
         tensor_ptr_vec_t GenerateBatch(const tensor_ptr_vec_t& inputs, const vector<uint32_t>& batchIndices);

@@ -149,10 +149,14 @@ namespace Neuro
     void ModelBase::Optimize(OptimizerBase* optimizer, LossBase* loss)
     {
         m_Optimizer = optimizer;
-        m_LossFuncs.resize(OutputLayersCount());
-        m_LossFuncs[0] = loss;
-        for (int i = 1; i < (int)m_LossFuncs.size(); ++i)
-            m_LossFuncs[i] = loss->Clone();
+        uint32_t outputsCount = OutputLayersCount();
+        m_AccuracyFuncs.resize(outputsCount);
+        m_LossFuncs.resize(outputsCount);
+        for (uint32_t i = 0; i < outputsCount; ++i)
+        {
+            m_AccuracyFuncs[i] = ModelOutputLayers()[i]->OutputShape().Length == 1 ? AccBinaryClassificationEquality : AccCategoricalClassificationEquality;
+            m_LossFuncs[i] = i == 0 ? loss : loss->Clone();
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -161,14 +165,18 @@ namespace Neuro
         m_Optimizer = optimizer;
 
 #ifdef VALIDATION_ENABLED
-        //if (lossDict.size() != Model->GetOutputLayersCount()) throw new Exception($"Mismatched number of loss functions ({lossDict.Count}) and output layers ({Model->GetOutputLayersCount()})!");
+        //if () throw new Exception($"Mismatched number of loss functions ({lossDict.Count}) and output layers ({Model->GetOutputLayersCount()})!");
 #endif
 
-        m_LossFuncs.resize(OutputLayersCount());
-        uint32_t i = 0;
-        for (auto outLayer : ModelOutputLayers())
+        uint32_t outputsCount = OutputLayersCount();
+        assert(lossDict.size() == outputsCount);
+        m_AccuracyFuncs.resize(outputsCount);
+        m_LossFuncs.resize(outputsCount);
+        for (uint32_t i = 0; i < outputsCount; ++i)
         {
-            m_LossFuncs[i++] = lossDict[outLayer->Name()];
+            auto outLayer = ModelOutputLayers()[i];
+            m_AccuracyFuncs[i] = outLayer->OutputShape().Length == 1 ? AccBinaryClassificationEquality : AccCategoricalClassificationEquality;
+            m_LossFuncs[i] = lossDict[outLayer->Name()];
         }
     }
 
@@ -328,22 +336,6 @@ namespace Neuro
         if (trackFlags & TestAccuracy)
             chartGen->AddSeries((int)TestAccuracy, "Accuracy on test\n(right Y axis)", 2/*Color.CornflowerBlue*/, true);
 
-        if (m_AccuracyFuncs.size() == 0)
-        {
-            for (uint32_t i = 0; i < (int)outputs.size(); ++i)
-            {
-                m_AccuracyFuncs.push_back(nullptr);
-
-                if ((trackFlags & TrainAccuracy) || (trackFlags & TestAccuracy))
-                {
-                    if (ModelOutputLayers()[i]->OutputShape().Length == 1)
-                        m_AccuracyFuncs[i] = AccBinaryClassificationEquality;
-                    else
-                        m_AccuracyFuncs[i] = AccCategoricalClassificationEquality;
-                }
-            }
-        }
-
         vector<uint32_t> indices(trainSamplesCount);
         iota(indices.begin(), indices.end(), 0);
 
@@ -388,14 +380,15 @@ namespace Neuro
                 }
             }
 
-            float trainTotalError = 0;
-            int trainHits = 0;
+            float trainTotalLoss = 0;
+            float trainTotalAcc = 0;
 
             Tqdm progress(trainSamplesCount);
             for (uint32_t b = 0; b < trainBatchesNum; ++b)
             {
                 uint32_t samplesInBatch = inputs[0]->Batch();
 
+                float loss, acc;
                 if (trainSamplesCount > 1 && trainBatchSize < trainSamplesCount)
                 {
                     auto inputsBatch = GenerateBatch(inputs, trainBatchesIndices[b]);
@@ -403,13 +396,16 @@ namespace Neuro
 
                     samplesInBatch = inputsBatch[0]->Batch();
 
-                    TrainStep(inputsBatch, outputsBatch, &trainTotalError, &trainHits);
+                    TrainStep(inputsBatch, outputsBatch, &loss, (trackFlags & TrainAccuracy) ? &acc: nullptr);
 
                     DeleteContainer(inputsBatch);
                     DeleteContainer(outputsBatch);
                 }
                 else
-                    TrainStep(inputs, outputs, &trainTotalError, &trainHits);
+                    TrainStep(inputs, outputs, &loss, &acc);
+
+                trainTotalLoss += loss;
+                trainTotalAcc += acc;
 
                 if (verbose == 2)
                     progress.NextStep(samplesInBatch);
@@ -418,13 +414,13 @@ namespace Neuro
             if (verbose == 2)
                 LogLine(progress.Str(), false);
 
-            float trainError = trainTotalError / trainSamplesCount / outputs.size();
-            float trainAcc = (float)trainHits / trainSamplesCount / outputs.size();
-            m_LastTrainError = trainError;
+            float trainLoss = trainTotalLoss / trainBatchesNum;
+            float trainAcc = (float)trainTotalAcc / trainBatchesNum;
+            m_LastTrainError = trainLoss;
 
             if (chartGen)
             {
-                chartGen->AddData((float)e, trainError, (int)TrainError);
+                chartGen->AddData((float)e, trainLoss, (int)TrainError);
                 chartGen->AddData((float)e, trainAcc, (int)TrainAccuracy);
             }
 
@@ -434,14 +430,14 @@ namespace Neuro
             if (verbose > 0)
             {
                 if (trackFlags & TrainError)
-                    summary << " - loss: " << trainError;
+                    summary << " - loss: " << trainLoss;
                 if (trackFlags & TrainAccuracy)
                     summary << " - acc: " << trainAcc;
             }
 
             if (validInputs && validOutputs)
             {
-                float validationTotalError = 0;
+                float validationTotalLoss = 0;
                 float validationHits = 0;
 
                 auto& modelOutputs = Outputs();
@@ -456,8 +452,9 @@ namespace Neuro
                         out.push_back(Tensor(modelOutputs[i].GetShape()));
                         m_LossFuncs[i]->Compute(*validOutputsBatches[b][i], modelOutputs[i], out[i]);
 
-                        validationTotalError += out[i].Sum(EAxis::Global)(0) / modelOutputs[i].BatchLength();
-                        validationHits += m_AccuracyFuncs[i] ? m_AccuracyFuncs[i](*validOutputsBatches[b][i], modelOutputs[i]) : 0;
+                        validationTotalLoss += out[i].Sum(EAxis::Global)(0) / modelOutputs[i].BatchLength();
+                        if (trackFlags & TestAccuracy)
+                            validationHits += m_AccuracyFuncs[i](*validOutputsBatches[b][i], modelOutputs[i]);
                     }
 
                     if (verbose == 2)
@@ -470,13 +467,13 @@ namespace Neuro
                     }
                 }
 
-                float validationError = validationTotalError / validationSamplesCount / outputs.size();
+                float validationLoss = validationTotalLoss / validationSamplesCount / outputs.size();
                 float validationAcc = (float)validationHits / validationSamplesCount / outputs.size();
 
                 if (verbose > 0)
                 {
                     if (trackFlags & TestError)
-                        summary << " - val_loss: " << validationError;
+                        summary << " - val_loss: " << validationLoss;
                     if (trackFlags & TestAccuracy)
                         summary << " - val_acc: " << validationAcc;
                 }
@@ -505,7 +502,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::TrainStep(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, float* trainError, int* trainHits)
+    void ModelBase::TrainStep(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, float* loss, float* acc)
     {
         assert(InputShapes().size() == inputs.size());
         for (auto i = 0; i < inputs.size(); ++i)
@@ -520,6 +517,8 @@ namespace Neuro
         
         auto& modelOutputs = Outputs();
         vector<Tensor> outputsGrad;
+        float totalLoss = 0;
+        int hits = 0;
 
         for (size_t i = 0; i < modelOutputs.size(); ++i)
         {
@@ -530,11 +529,11 @@ namespace Neuro
             outputsGrad[i].DebugDumpValues(Replace(Name() + "_output_" + to_string(i) + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
 #           endif
 
-            if (trainError)
-                *trainError += outputsGrad[i].Sum(EAxis::Global)(0) / modelOutputs[i].BatchLength();
+            if (loss)
+                totalLoss += outputsGrad[i].Sum(EAxis::Global)(0) / modelOutputs[i].BatchLength();
 
-            if (trainHits)
-                *trainHits += m_AccuracyFuncs[i] ? m_AccuracyFuncs[i](*outputs[i], modelOutputs[i]) : 0;
+            if (acc)
+                hits += m_AccuracyFuncs[i](*outputs[i], modelOutputs[i]);
 
             m_LossFuncs[i]->Derivative(*outputs[i], modelOutputs[i], outputsGrad[i]);
 
@@ -542,6 +541,12 @@ namespace Neuro
             outputsGrad[i].DebugDumpValues(Replace(Name() + "_output_" + to_string(i) + "_grad_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
 #           endif
         }
+
+        if (loss)
+            *loss = totalLoss / (inputs[0]->Batch() * outputs.size());
+
+        if (acc)
+            *acc = (float)hits / (modelOutputs[0].Batch() * modelOutputs.size());
 
         BackProp(outputsGrad);
 
@@ -557,17 +562,17 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    float ModelBase::TrainOnBatch(const Tensor& input, const Tensor& output)
+    tuple<float,float> ModelBase::TrainOnBatch(const Tensor& input, const Tensor& output)
     {
         return TrainOnBatch({ &input }, { &output });
     }
 
     //////////////////////////////////////////////////////////////////////////
-    float ModelBase::TrainOnBatch(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs)
+    tuple<float, float> ModelBase::TrainOnBatch(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs)
     {
-        float totalError = 0;
-        TrainStep(inputs, outputs, &totalError);
-        return totalError / inputs[0]->Batch() / outputs.size();
+        float loss, acc;
+        TrainStep(inputs, outputs, &loss, &acc);
+        return make_tuple(loss, acc);
     }
 
     //////////////////////////////////////////////////////////////////////////

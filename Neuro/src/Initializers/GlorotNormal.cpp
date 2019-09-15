@@ -7,7 +7,7 @@
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	GlorotNormal::GlorotNormal(float gain /*= 1*/)
+	GlorotNormal::GlorotNormal(float gain)
 	{
 		Gain = gain;
 	}

@@ -18,6 +18,9 @@
     <ClCompile Include="src\DeepConvGAN.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\CifarGAN.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\IrisNetwork.h">
@@ -45,6 +48,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\ConvAutoencoderNetwork.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CifarGAN.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
