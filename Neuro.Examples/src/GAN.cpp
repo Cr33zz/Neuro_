@@ -108,11 +108,12 @@ void GAN::RunDiscriminatorTrainTest()
         Tensor realImages = images.GetRandomBatches(BATCH_SIZE);
 
         auto realTrainData = dModel->TrainOnBatch(realImages, real);
-        auto fakeTrainData = dModel->TrainOnBatch(fakeImages, fake);
+        //auto fakeTrainData = dModel->TrainOnBatch(fakeImages, fake);
 
-        float dLoss = (get<0>(realTrainData) + get<0>(fakeTrainData)) * 0.5f;
+        float dLoss = 0;// ;
 
-        cout << ">" << e << setprecision(4) << fixed << " loss=" << dLoss << " real=" << round(get<1>(realTrainData)*100) << "% fake=" << round(get<1>(fakeTrainData)*100) << "%" << endl;
+        //cout << ">" << e << setprecision(4) << fixed << " loss=" << (get<0>(realTrainData) + get<0>(fakeTrainData)) * 0.5f << " real=" << round(get<1>(realTrainData)*100) << "% fake=" << round(get<1>(fakeTrainData)*100) << "%" << endl;
+        cout << ">" << e << setprecision(4) << fixed << " loss=" << get<0>(realTrainData) << " real=" << round(get<1>(realTrainData) * 100) << "%" << endl;
     }
 
     cin.get();

@@ -27,12 +27,12 @@ ModelBase* DeepConvGAN::CreateDiscriminator()
     /*model->AddLayer(new Conv2D(Shape(28, 28, 1), 3, 64, 2, Tensor::GetPadding(Same, 3)));
     model->AddLayer(new Activation(new LeakyReLU(0.2f)));*/
     //model->AddLayer(new Conv2D(3, 128, 2, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)));
-    model->AddLayer(new Conv2D(3, 128, 2, Tensor::GetPadding(Same, 3)));
-    model->AddLayer(new Activation(new LeakyReLU(0.2f)));
-    model->AddLayer(new Conv2D(3, 128, 2, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)));
     /*model->AddLayer(new Conv2D(3, 128, 2, Tensor::GetPadding(Same, 3)));
     model->AddLayer(new Activation(new LeakyReLU(0.2f)));*/
-    model->AddLayer(new Conv2D(3, 256, 1, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)));
+    //model->AddLayer(new Conv2D(3, 128, 2, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)));
+    /*model->AddLayer(new Conv2D(3, 128, 2, Tensor::GetPadding(Same, 3)));
+    model->AddLayer(new Activation(new LeakyReLU(0.2f)));*/
+    //model->AddLayer(new Conv2D(3, 256, 1, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)));
     //model->AddLayer(new Conv2D(3, 256, 1, Tensor::GetPadding(Same, 3)));
     //model->AddLayer(new Activation(new LeakyReLU(0.2f)));
     model->AddLayer(new Dropout(0.25f));
