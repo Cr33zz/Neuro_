@@ -10,16 +10,15 @@ void GAN::Run()
     cout << "Example: " << Name() << endl;
 
     auto gModel = CreateGenerator(100);
-    cout << "Generator" << endl << gModel->Summary();
+    //cout << "Generator" << endl << gModel->Summary();
     auto dModel = CreateDiscriminator();
-    cout << "Discriminator" << endl << dModel->Summary();
+    //cout << "Discriminator" << endl << dModel->Summary();
 
     auto ganModel = new Sequential(Name());
     ganModel->AddLayer(gModel);
     ganModel->AddLayer(dModel);
     ganModel->Optimize(new Adam(0.0002f, 0.5f), new BinaryCrossEntropy());
-    
-    cout << ganModel->Summary();
+    //cout << "GAN" << endl << ganModel->Summary();
 
     Tensor images;
     LoadImages(images);
@@ -46,7 +45,7 @@ void GAN::Run()
         float totalDiscriminatorRealLoss = 0.f;
         float totalDiscriminatorFakeLoss = 0.f;
 
-        Tqdm progress(BATCHES_PER_EPOCH, 20);
+        Tqdm progress(BATCHES_PER_EPOCH, 0);
         progress.ShowElapsed(false);
         for (uint32_t i = 0; i < BATCHES_PER_EPOCH; ++i, progress.NextStep())
         {
@@ -68,11 +67,11 @@ void GAN::Run()
             // perform step of training generator to generate more real images (the more discriminator is confident that a particular image is fake the more generator will learn)
             dModel->SetTrainable(false);
             totalGanLoss += get<0>(ganModel->TrainOnBatch(noise, real));
-        }
 
-        stringstream extString;
-        extString << setprecision(3) << " - d_real_loss: " << totalDiscriminatorRealLoss / BATCHES_PER_EPOCH << " - d_fake_loss: " << totalDiscriminatorFakeLoss / BATCHES_PER_EPOCH << " - gan_loss: " << totalGanLoss / BATCHES_PER_EPOCH << endl;
-        progress.SetExtraString(extString.str());
+            stringstream extString;
+            extString << setprecision(3) << fixed << " - d_real_l: " << totalDiscriminatorRealLoss / BATCHES_PER_EPOCH << " - d_fake_l: " << totalDiscriminatorFakeLoss / BATCHES_PER_EPOCH << " - gan_l: " << totalGanLoss / BATCHES_PER_EPOCH;
+            progress.SetExtraString(extString.str());
+        }
 
         if (e == 1 || e % 2 == 0)
             gModel->Output().Map([](float x) { return x * 127.5f + 127.5f; }).Reshaped(Shape(m_ImageShape.Width(), m_ImageShape.Height(), m_ImageShape.Depth(), -1)).SaveAsImage(Name() + "_" + to_string(e) + ".png", false);
@@ -108,12 +107,9 @@ void GAN::RunDiscriminatorTrainTest()
         Tensor realImages = images.GetRandomBatches(BATCH_SIZE);
 
         auto realTrainData = dModel->TrainOnBatch(realImages, real);
-        //auto fakeTrainData = dModel->TrainOnBatch(fakeImages, fake);
+        auto fakeTrainData = dModel->TrainOnBatch(fakeImages, fake);
 
-        float dLoss = 0;// ;
-
-        //cout << ">" << e << setprecision(4) << fixed << " loss=" << (get<0>(realTrainData) + get<0>(fakeTrainData)) * 0.5f << " real=" << round(get<1>(realTrainData)*100) << "% fake=" << round(get<1>(fakeTrainData)*100) << "%" << endl;
-        cout << ">" << e << setprecision(4) << fixed << " loss=" << get<0>(realTrainData) << " real=" << round(get<1>(realTrainData) * 100) << "%" << endl;
+        cout << ">" << e << setprecision(4) << fixed << " loss=" << (get<0>(realTrainData) + get<0>(fakeTrainData)) * 0.5f << " real=" << round(get<1>(realTrainData)*100) << "% fake=" << round(get<1>(fakeTrainData)*100) << "%" << endl;
     }
 
     cin.get();

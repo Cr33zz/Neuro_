@@ -19,29 +19,9 @@ int main()
     //AutoencoderNetwork::Run();
     //ConvAutoencoderNetwork::Run();
     //GAN().RunDiscriminatorTrainTest();
-    DeepConvGAN().RunDiscriminatorTrainTest();
+    //DeepConvGAN().RunDiscriminatorTrainTest();
+    DeepConvGAN().Run();
     //CifarGAN().RunDiscriminatorTrainTest();
-
-    GlobalRngSeed(101);
-    Shape inputShape(4, 4, 3, 1);
-    uint32_t stride = 1, padding = 0;
-
-    auto model = new Sequential("convolution_test");
-    //model->AddLayer(new Conv2D(inputShape, 3, 3, stride, padding, new LeakyReLU(0.2f)));
-    model->AddLayer(new Conv2D(inputShape, 3, 3, stride, padding));
-    model->AddLayer(new Activation(new LeakyReLU(0.2f)));
-
-    Tensor randomKernels(Shape(3, 3, 3, 3));
-    randomKernels.FillWithRand();
-
-    Tensor input(inputShape);
-    input.FillWithRand();
-    Tensor output = input.Conv2D(randomKernels, stride, padding);
-
-    model->Optimize(new SGD(0.05f), new MeanSquareError());
-    model->Fit(input, output, -1, 5, nullptr, nullptr, 2, TrainError);
-
-    cin.get();
 
     /*Tensor images1, labels1, images2, labels2, images3, labels3, images4, labels4, images5, labels5;
     LoadCifar10Data("data/data_batch_1.bin", images1, labels1, false, true, -1);

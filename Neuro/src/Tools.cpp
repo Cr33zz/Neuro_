@@ -477,18 +477,26 @@ namespace Neuro
             cout << "\b \b";
 
         m_Stream.str("");
-        m_Stream << right << setw(4) << (to_string((int)pct) + "%") << '[';
 
-        float step = m_MaxIterations / (float)m_BarLength;
-        size_t currStep = max<size_t>(min((size_t)ceil(m_Iteration / step), m_BarLength), 1);
+        m_Stream << right << setw(4) << (to_string((int)pct) + "%");
 
-        for (size_t i = 0; i < currStep - 1; ++i)
-            m_Stream << FULL_SYMBOL;
-        m_Stream << ((m_Iteration == m_MaxIterations) ? FULL_SYMBOL : ACTIVE_SYMBOL);
-        for (size_t i = 0; i < m_BarLength - currStep; ++i)
-            m_Stream << BLANK_SYMBOL;
+        if (m_BarLength > 0)
+        {
+            m_Stream << '[';
 
-        m_Stream << "] " << right << setw(to_string(m_MaxIterations).length()) << m_Iteration << "/" << m_MaxIterations;
+            float step = m_MaxIterations / (float)m_BarLength;
+            size_t currStep = max<size_t>(min((size_t)ceil(m_Iteration / step), m_BarLength), 1);
+
+            for (size_t i = 0; i < currStep - 1; ++i)
+                m_Stream << FULL_SYMBOL;
+            m_Stream << ((m_Iteration == m_MaxIterations) ? FULL_SYMBOL : ACTIVE_SYMBOL);
+            for (size_t i = 0; i < m_BarLength - currStep; ++i)
+                m_Stream << BLANK_SYMBOL;
+
+            m_Stream << ']';
+        }
+
+        m_Stream << ' ' << right << setw(to_string(m_MaxIterations).length()) << m_Iteration << "/" << m_MaxIterations;
 
         if (m_Iteration > 0)
         {

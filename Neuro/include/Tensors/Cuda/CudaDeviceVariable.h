@@ -65,7 +65,7 @@ namespace Neuro
 
         void CopyTo(void* destDevPtr) const
         {
-            CUDA_CHECK(cudaMemcpy(m_DevPtr, destDevPtr, GetSizeInBytes(), cudaMemcpyDeviceToDevice));
+            CUDA_CHECK(cudaMemcpy(destDevPtr, m_DevPtr, GetSizeInBytes(), cudaMemcpyDeviceToDevice));
         }
 
         void ZeroOnDevice() const
