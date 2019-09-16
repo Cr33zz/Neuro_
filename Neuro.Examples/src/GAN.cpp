@@ -44,7 +44,7 @@ void GAN::Run()
         float totalGanLoss = 0.f;
         
         Tqdm progress(BATCHES_PER_EPOCH, 0);
-        progress.ShowElapsed(false);
+        progress.ShowEta(false).ShowElapsed(false).ShowPercent(false);
         for (uint32_t i = 0; i < BATCHES_PER_EPOCH; ++i, progress.NextStep())
         {
             noiseHalf.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
@@ -67,7 +67,7 @@ void GAN::Run()
             float ganLoss = get<0>(ganModel->TrainOnBatch(noise, real));
 
             stringstream extString;
-            extString << setprecision(3) << fixed << " - real_l: " << dRealLoss << " - fake_l: " << dFakeLoss << " - gan_l: " << ganLoss;
+            extString << setprecision(4) << fixed << " - real_loss: " << dRealLoss << " - fake_loss: " << dFakeLoss << " - gan_loss: " << ganLoss;
             progress.SetExtraString(extString.str());
 
             if (i % 50 == 0)

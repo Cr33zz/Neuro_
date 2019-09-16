@@ -43,6 +43,11 @@ namespace Neuro
         if (onlyTrainable && !m_Trainable)
             return;
 
+        if (!onlyTrainable)
+        {
+            paramsAndGrads.push_back(ParametersAndGradients(&m_RunningMean, nullptr));
+            paramsAndGrads.push_back(ParametersAndGradients(&m_RunningVar, nullptr));
+        }
         paramsAndGrads.push_back(ParametersAndGradients(&m_Gamma, &m_GammaGrad));
         paramsAndGrads.push_back(ParametersAndGradients(&m_Beta, &m_BetaGrad));
     }
@@ -80,10 +85,10 @@ namespace Neuro
         m_RunningVar = Tensor(m_Gamma.GetShape());
         m_RunningVar.FillWithValue(1);
 
-        m_Mean = Tensor(m_Gamma.GetShape());
-        m_Mean.Zero();
-        m_Variance = Tensor(m_Gamma.GetShape());
-        m_Variance.FillWithValue(1);
+        m_SaveMean = Tensor(m_Gamma.GetShape());
+        m_SaveMean.Zero();
+        m_SaveVariance = Tensor(m_Gamma.GetShape());
+        m_SaveVariance.FillWithValue(1);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -99,7 +104,7 @@ namespace Neuro
     void BatchNormalization::FeedForwardInternal(bool training)
     {
         if (training)
-            m_Inputs[0]->BatchNormalizationTrain(m_Gamma, m_Beta, m_Momentum, m_RunningMean, m_RunningVar, m_Mean, m_Variance, m_Outputs[0]);
+            m_Inputs[0]->BatchNormalizationTrain(m_Gamma, m_Beta, m_Momentum, m_RunningMean, m_RunningVar, m_SaveMean, m_SaveVariance, m_Outputs[0]);
         else
             m_Inputs[0]->BatchNormalization(m_Gamma, m_Beta, m_RunningMean, m_RunningVar, m_Outputs[0]);
     }
@@ -107,6 +112,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void BatchNormalization::BackPropInternal(vector<Tensor>& outputsGradient)
     {
-        outputsGradient[0].BatchNormalizationGradient(*m_Inputs[0], m_Gamma, outputsGradient[0], m_Mean, m_Variance, m_GammaGrad, m_BetaGrad, m_Trainable, m_InputsGradient[0]);
+        outputsGradient[0].BatchNormalizationGradient(*m_Inputs[0], m_Gamma, outputsGradient[0], m_SaveMean, m_SaveVariance, m_GammaGrad, m_BetaGrad, m_Trainable, m_InputsGradient[0]);
     }
 }

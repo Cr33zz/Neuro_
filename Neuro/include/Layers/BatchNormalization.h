@@ -29,17 +29,19 @@ namespace Neuro
         virtual void BackPropInternal(vector<Tensor>& outputsGradient) override;
 
     private:
-        Tensor m_Mean;
-        Tensor m_Variance;
-        
         Tensor m_Gamma;
         Tensor m_Beta;
-
         Tensor m_GammaGrad;
         Tensor m_BetaGrad;
-        
+
         Tensor m_RunningMean;
         Tensor m_RunningVar;
+
         float m_Momentum = 0.9f;
+
+        // Used as cache between forward and backward steps
+        Tensor m_SaveMean;
+        // Used as cache between forward and backward steps
+        Tensor m_SaveVariance;
     };
 }

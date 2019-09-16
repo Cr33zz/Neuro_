@@ -17,8 +17,8 @@ int main()
     //MnistConvNetwork().Run();
     //MnistNetwork().Run();
     //AutoencoderNetwork::Run();
-    //ConvAutoencoderNetwork::Run();
-    //GAN().RunDiscriminatorTrainTest();
+    ConvAutoencoderNetwork::Run();
+    GAN().Run();
     //DeepConvGAN().RunDiscriminatorTrainTest();
     DeepConvGAN().Run();
     //CifarGAN().RunDiscriminatorTrainTest();

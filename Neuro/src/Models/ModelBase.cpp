@@ -514,7 +514,7 @@ namespace Neuro
         ++g_DebugStep;
 
         FeedForward(inputs, true);
-        
+
         auto& modelOutputs = Outputs();
         vector<Tensor> outputsGrad;
         float totalLoss = 0;
@@ -554,8 +554,14 @@ namespace Neuro
         GetParametersAndGradients(paramsAndGrads);
 
 #       ifdef LOG_OUTPUTS
-        for (auto paramAndGrad : paramsAndGrads)
-            paramAndGrad.Gradients->DebugDumpValues(Replace(paramAndGrad.Gradients->Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
+        vector<ParametersAndGradients> allParamsAndGrads;
+        GetParametersAndGradients(allParamsAndGrads, false);
+        for (auto paramAndGrad : allParamsAndGrads)
+        {
+            paramAndGrad.Parameters->DebugDumpValues(Replace(paramAndGrad.Parameters->Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
+            if (paramAndGrad.Gradients)
+                paramAndGrad.Gradients->DebugDumpValues(Replace(paramAndGrad.Gradients->Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
+        }
 #       endif
 
         m_Optimizer->Step(paramsAndGrads, inputs[0]->Batch());

@@ -473,12 +473,16 @@ namespace Neuro
 
         float pct = m_Iteration / (float)m_MaxIterations * 100;
 
-        for (uint32_t i = 0; i < m_Stream.str().length(); ++i)
-            cout << "\b \b";
+        if (!m_SeparateLinesEnabled)
+        {
+            for (uint32_t i = 0; i < m_Stream.str().length(); ++i)
+                cout << "\b \b";
+        }
 
         m_Stream.str("");
 
-        m_Stream << right << setw(4) << (to_string((int)pct) + "%");
+        if (m_ShowPercent)
+            m_Stream << right << setw(4) << (to_string((int)pct) + "%");
 
         if (m_BarLength > 0)
         {
@@ -500,10 +504,15 @@ namespace Neuro
 
         if (m_Iteration > 0)
         {
-            float averageTimePerStep = m_Timer.ElapsedMilliseconds() / (float)m_Iteration;
-            m_Stream << " - eta: " << fixed << setprecision(2) << averageTimePerStep * (m_MaxIterations - m_Iteration) * 0.001f << "s";
+            if (m_ShowEta && m_Iteration < (int)m_MaxIterations)
+            {
+                float averageTimePerStep = m_Timer.ElapsedMilliseconds() / (float)m_Iteration;
+                m_Stream << " - eta: " << fixed << setprecision(2) << averageTimePerStep * (m_MaxIterations - m_Iteration) * 0.001f << "s";
+            }
+
             if (m_ShowElapsed)
                 m_Stream << " - elap: " << m_Timer.ElapsedMilliseconds() * 0.001f << "s";
+
             m_Stream << m_ExtraString;
         }
 
@@ -514,5 +523,7 @@ namespace Neuro
             m_Timer.Stop();
             cout << endl;
         }
+        else if (m_SeparateLinesEnabled)
+            cout << endl;
     }
 }
