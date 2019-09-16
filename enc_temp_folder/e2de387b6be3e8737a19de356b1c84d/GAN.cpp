@@ -67,7 +67,7 @@ void GAN::Run()
             float ganLoss = get<0>(ganModel->TrainOnBatch(noise, real));
 
             stringstream extString;
-            extString << setprecision(3) << fixed << " - real_l: " << dRealLoss << " - fake_l: " << dFakeLoss << " - gan_l: " << ganLoss;
+            extString << setprecision(3) << fixed << " - dr_loss: " << dRealLoss << " - df_loss: " << dFakeLoss << " - gan_l: " << ganLoss;
             progress.SetExtraString(extString.str());
 
             if (i % 50 == 0)
