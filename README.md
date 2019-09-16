@@ -95,3 +95,8 @@ for (uint32_t e = 1; e <= EPOCHS; ++e)
 Training data required to run examples can be downloaded via this link
 https://www.dropbox.com/s/kti8255njbx7wqy/neuro_examples_data.zip  
 Among others it contains MNIST, CIFAR-10 data sets.
+## Prerequisites
+Currently CUDA is required to compile the library. For GPU computation CUDA 10.1 and CudNN 7.6.1.34 are required. Both can be downloaded from NVidia website:  
+https://developer.nvidia.com/cuda-downloads  
+https://developer.nvidia.com/cudnn  
+Also please make sure your graphics card drivers are up to date.
