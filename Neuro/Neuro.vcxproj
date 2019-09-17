@@ -169,6 +169,7 @@
     <ClCompile Include="src\Initializers\Constant.cpp" />
     <ClCompile Include="src\Initializers\GlorotNormal.cpp" />
     <ClCompile Include="src\Initializers\GlorotUniform.cpp" />
+    <ClCompile Include="src\Initializers\InitializerBase.cpp" />
     <ClCompile Include="src\Initializers\Normal.cpp" />
     <ClCompile Include="src\Initializers\Uniform.cpp" />
     <ClCompile Include="src\Initializers\Zeros.cpp" />

@@ -320,6 +320,9 @@
     <ClCompile Include="src\Layers\SingleLayer.cpp">
       <Filter>src\Layers</Filter>
     </ClCompile>
+    <ClCompile Include="src\Initializers\InitializerBase.cpp">
+      <Filter>src\Initializers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\Tensors\Cuda\CudaKernels.cu">
