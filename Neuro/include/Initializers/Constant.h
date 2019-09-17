@@ -7,11 +7,11 @@ namespace Neuro
     class Constant : public InitializerBase
     {
 	public:
-        Constant(float value = 1);
+        Constant(float value = 1.f);
 
-        virtual void Init(Tensor& t, int fanIn, int fanOut) override;
+        virtual void Init(Tensor& t) override;
 
 	private:
-        float Value;
+        float m_Value;
 	};
 }

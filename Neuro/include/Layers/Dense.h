@@ -50,7 +50,7 @@ namespace Neuro
         InitializerBase* m_WeightsInitializer = new GlorotUniform();
         InitializerBase* m_BiasInitializer = new Zeros();
 
-        Tensor _igGradTemp1;
+        Tensor _iGradTemp1;
         Tensor _wGradTemp1;
         Tensor _wGradTemp2;
         Tensor _wGradTemp3;

@@ -4,14 +4,14 @@
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	Constant::Constant(float value /*= 1*/)
+	Constant::Constant(float value)
 	{
-		Value = value;
+		m_Value = value;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Constant::Init(Tensor& t, int fanIn, int fanOut)
+	void Constant::Init(Tensor& t)
 	{
-        t.FillWithValue(Value);
+        t.FillWithValue(m_Value);
 	}
 }

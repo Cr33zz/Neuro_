@@ -4,7 +4,7 @@
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	void Zeros::Init(Tensor& t, int fanIn, int fanOut)
+	void Zeros::Init(Tensor& t)
 	{
 		t.Zero();
 	}

@@ -64,9 +64,9 @@ namespace Neuro
 		m_BiasGrad = Tensor(m_Bias.GetShape(), Name() + "/bias_grad");
         m_BiasGrad.Zero();
 
-		m_WeightsInitializer->Init(m_Weights, InputShape().Length, OutputShape().Length);
+		m_WeightsInitializer->Init(m_Weights);
 		if (m_UseBias)
-			m_BiasInitializer->Init(m_Bias, InputShape().Length, OutputShape().Length);
+			m_BiasInitializer->Init(m_Bias);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -86,9 +86,9 @@ namespace Neuro
 		// each input is responsible for the output error proportionally to weights it is multiplied by
         if (USE_TEMPS)
         {
-            _igGradTemp1.Resize(Shape(m_Weights.Height(), m_Weights.Width(), 1, 1));
-            m_Weights.Transpose(_igGradTemp1);
-            _igGradTemp1.Mul(outputsGradient[0], m_InputsGradient[0]);
+            _iGradTemp1.Resize(Shape(m_Weights.Height(), m_Weights.Width(), 1, 1));
+            m_Weights.Transpose(_iGradTemp1);
+            _iGradTemp1.Mul(outputsGradient[0], m_InputsGradient[0]);
         }
         else
             m_Weights.Transposed().Mul(outputsGradient[0], m_InputsGradient[0]);

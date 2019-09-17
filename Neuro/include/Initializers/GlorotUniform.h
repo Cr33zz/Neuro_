@@ -1,19 +1,14 @@
 ﻿#pragma once
 
-#include "Initializers/InitializerBase.h"
+#include "Initializers/VarianceScaling.h"
 
 namespace Neuro
 {
-    class GlorotUniform : public InitializerBase
+    // Glorot uniform initializer, also called Xavier uniform initializer.
+    // It draws samples from a uniform distribution within[-limit, limit] where `limit` is `sqrt(6 / (fan_in + fan_out))
+    class GlorotUniform : public VarianceScaling
     {
 	public:
-        GlorotUniform(float gain = 1);
-
-        static float NextSingle(int fanIn, int fanOut, float gain);
-
-		virtual void Init(Tensor& t, int fanIn, int fanOut) override;
-
-	private:
-        float Gain;
+        GlorotUniform() : VarianceScaling(1.f, FanAvg, UniformDistribution) {}
 	};
 }

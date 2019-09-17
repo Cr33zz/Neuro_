@@ -7,8 +7,8 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	Uniform::Uniform(float min, float max)
 	{
-		Min = min;
-		Max = max;
+		m_Min = min;
+		m_Max = max;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -18,8 +18,8 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Uniform::Init(Tensor& t, int fanIn, int fanOut)
+	void Uniform::Init(Tensor& t)
 	{
-        t.FillWithFunc([&]() { return NextSingle(Min, Max); });
+        t.FillWithFunc([&]() { return NextSingle(m_Min, m_Max); });
 	}
 }

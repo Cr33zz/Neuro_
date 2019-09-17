@@ -11,10 +11,11 @@ namespace Neuro
 
         static float NextSingle(float min, float max);
 
-		virtual void Init(Tensor& t, int fanIn, int fanOut) override;
+    protected:
+        virtual void Init(Tensor& t) override;
 
 	private:
-        float Min;
-        float Max;
+        float m_Min;
+        float m_Max;
 	};
 }
