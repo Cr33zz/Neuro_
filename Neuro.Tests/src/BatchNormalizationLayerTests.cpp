@@ -58,7 +58,7 @@ namespace NeuroTests
             Tensor runningVar = input.Sub(runningMean).Map([](float x) { return x * x; }).Avg(EAxis::Feature);
             
             Tensor output(inputShape);
-            input.BatchNormalization(gamma, beta, runningMean, runningVar, output);
+            input.BatchNormalization(gamma, beta, 0.001f, runningMean, runningVar, output);
 
             model->Optimize(new SGD(0.02f), new MeanSquareError());
             model->Fit(input, output, -1, 200, nullptr, nullptr, 1, ETrack::TrainError);

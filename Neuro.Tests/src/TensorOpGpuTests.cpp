@@ -450,11 +450,11 @@ namespace NeuroTests
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor result(input.GetShape());
-            NEURO_PROFILE("CPU", input.BatchNormalization(gamma, beta, runningMean, runningVariance, result);)
+            NEURO_PROFILE("CPU", input.BatchNormalization(gamma, beta, 0.001f, runningMean, runningVariance, result);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor result2(input.GetShape());
-            NEURO_PROFILE("GPU", input.BatchNormalization(gamma, beta, runningMean, runningVariance, result2);)
+            NEURO_PROFILE("GPU", input.BatchNormalization(gamma, beta, 0.001f, runningMean, runningVariance, result2);)
 
             Assert::IsTrue(result.Equals(result2));
         }
@@ -472,13 +472,13 @@ namespace NeuroTests
             Tensor result(input.GetShape());
             Tensor saveMean(Shape(2, 2, 3, 1));
             Tensor saveInvVariance(Shape(2, 2, 3, 1));
-            NEURO_PROFILE("CPU", input.BatchNormalizationTrain(gamma, beta, momentum, runningMean, runningVariance, saveMean, saveInvVariance, result);)
+            NEURO_PROFILE("CPU", input.BatchNormalizationTrain(gamma, beta, momentum, 0.001f, runningMean, runningVariance, saveMean, saveInvVariance, result);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor result2(input.GetShape());
             Tensor saveMean2(Shape(2, 2, 3, 1));
             Tensor saveInvVariance2(Shape(2, 2, 3, 1));
-            NEURO_PROFILE("GPU", input.BatchNormalizationTrain(gamma, beta, momentum, runningMean, runningVariance, saveMean2, saveInvVariance2, result2);)
+            NEURO_PROFILE("GPU", input.BatchNormalizationTrain(gamma, beta, momentum, 0.001f, runningMean, runningVariance, saveMean2, saveInvVariance2, result2);)
 
             Assert::IsTrue(saveMean.Equals(saveMean2));
             Assert::IsTrue(saveInvVariance.Equals(saveInvVariance2, 0.0001f)); // precision difference between CUDA and CPU
@@ -499,21 +499,21 @@ namespace NeuroTests
             Tensor result(input.GetShape());
             Tensor saveMean(Shape(2, 2, 3, 1));
             Tensor saveInvVariance(Shape(2, 2, 3, 1));
-            input.BatchNormalizationTrain(gamma, beta, momentum, runningMean, runningVariance, saveMean, saveInvVariance, result);
+            input.BatchNormalizationTrain(gamma, beta, momentum, 0.001f, runningMean, runningVariance, saveMean, saveInvVariance, result);
             Tensor gammaGradient(Shape(2, 2, 3, 1));
             Tensor betaGradient(Shape(2, 2, 3, 1));
             Tensor inputGradient(Shape(2, 2, 3, 3));
-            NEURO_PROFILE("CPU", input.BatchNormalizationGradient(input, gamma, outputGradient, saveMean, saveInvVariance, gammaGradient, betaGradient, true, inputGradient);)
+            NEURO_PROFILE("CPU", input.BatchNormalizationGradient(input, gamma, 0.001f, outputGradient, saveMean, saveInvVariance, gammaGradient, betaGradient, true, inputGradient);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor result2(input.GetShape());
             Tensor saveMean2(Shape(2, 2, 3, 1));
             Tensor saveInvVariance2(Shape(2, 2, 3, 1));
-            input.BatchNormalizationTrain(gamma, beta, momentum, runningMean, runningVariance, saveMean2, saveInvVariance2, result2);
+            input.BatchNormalizationTrain(gamma, beta, momentum, 0.001f, runningMean, runningVariance, saveMean2, saveInvVariance2, result2);
             Tensor gammaGradient2(Shape(2, 2, 3, 1));
             Tensor betaGradient2(Shape(2, 2, 3, 1));
             Tensor inputGradient2(Shape(2, 2, 3, 3));
-            NEURO_PROFILE("GPU", input.BatchNormalizationGradient(input, gamma, outputGradient, saveMean2, saveInvVariance2, gammaGradient2, betaGradient2, true, inputGradient2);)
+            NEURO_PROFILE("GPU", input.BatchNormalizationGradient(input, gamma, 0.001f, outputGradient, saveMean2, saveInvVariance2, gammaGradient2, betaGradient2, true, inputGradient2);)
 
             Assert::IsTrue(inputGradient.Equals(inputGradient2, 0.0001f));
             Assert::IsTrue(gammaGradient.Equals(gammaGradient2, 0.0001f)); // precision difference between CUDA and CPU

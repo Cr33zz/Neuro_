@@ -1189,21 +1189,21 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::BatchNormalization(const Tensor& gamma, const Tensor& beta, const Tensor& runningMean, const Tensor& runningVar, Tensor& result) const
+    void Tensor::BatchNormalization(const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor& runningMean, const Tensor& runningVar, Tensor& result) const
     {
-        Op()->BatchNormalization(*this, gamma, beta, runningMean, runningVar, result);
+        Op()->BatchNormalization(*this, gamma, beta, epsilon, runningMean, runningVar, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::BatchNormalizationTrain(const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const
+    void Tensor::BatchNormalizationTrain(const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const
     {
-        Op()->BatchNormalizationTrain(*this, gamma, beta, momentum, runningMean, runningVar, saveMean, saveInvVariance, result);
+        Op()->BatchNormalizationTrain(*this, gamma, beta, momentum, epsilon, runningMean, runningVar, saveMean, saveInvVariance, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const
+    void Tensor::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, float epsilon, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const
     {
-        Op()->BatchNormalizationGradient(input, gamma, outputGradient, savedMean, savedInvVariance, gammaGradient, betaGradient, trainable, inputGradient);
+        Op()->BatchNormalizationGradient(input, gamma, epsilon, outputGradient, savedMean, savedInvVariance, gammaGradient, betaGradient, trainable, inputGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -330,7 +330,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::BatchNormalization(const Tensor& input, const Tensor& gamma, const Tensor& beta, const Tensor& runningMean, const Tensor& runningVar, Tensor& output) const
+    void TensorOpGpu::BatchNormalization(const Tensor& input, const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor& runningMean, const Tensor& runningVar, Tensor& output) const
     {
         input.CopyToDevice();
         gamma.CopyToDevice();
@@ -360,11 +360,11 @@ namespace Neuro
             beta.GetDevicePtr(),
             runningMean.GetDevicePtr(),
             runningVar.GetDevicePtr(),
-            _EPSILON));
+            epsilon));
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::BatchNormalizationTrain(const Tensor& input, const Tensor& gamma, const Tensor& beta, float momentum, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& output) const
+    void TensorOpGpu::BatchNormalizationTrain(const Tensor& input, const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& output) const
     {
         input.CopyToDevice();
         gamma.CopyToDevice();
@@ -397,13 +397,13 @@ namespace Neuro
             momentum,
             runningMean.GetDevicePtr(),
             runningVar.GetDevicePtr(),
-            _EPSILON,
+            epsilon,
             saveMean.GetDevicePtr(),
             saveInvVariance.GetDevicePtr()));
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const
+    void TensorOpGpu::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, float epsilon, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const
     {
         input.CopyToDevice();
         gamma.CopyToDevice();
@@ -438,7 +438,7 @@ namespace Neuro
             gamma.GetDevicePtr(),
             gammaGradient.GetDevicePtr(),
             betaGradient.GetDevicePtr(),
-            _EPSILON,
+            epsilon,
             savedMean.GetDevicePtr(),
             savedInvVariance.GetDevicePtr()));
     }

@@ -29,12 +29,14 @@ namespace Neuro
         auto& targetBatchNorm = static_cast<BatchNormalization&>(target);
         m_Gamma.CopyTo(targetBatchNorm.m_Gamma, tau);
         m_Beta.CopyTo(targetBatchNorm.m_Beta, tau);
+        m_RunningMean.CopyTo(targetBatchNorm.m_RunningMean, tau);
+        m_RunningVar.CopyTo(targetBatchNorm.m_RunningVar, tau);
     }
 
     //////////////////////////////////////////////////////////////////////////
     uint32_t BatchNormalization::ParamsNum() const
     {
-        return m_Gamma.Length() + m_Beta.Length();
+        return InputShape().Length * 4;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -80,9 +82,9 @@ namespace Neuro
         m_BetaGrad = Tensor(m_Beta.GetShape(), Name() + "/beta_grad");
         m_BetaGrad.Zero();
 
-        m_RunningMean = Tensor(m_Gamma.GetShape());
+        m_RunningMean = Tensor(m_Gamma.GetShape(), Name() + "/running_mean");
         m_RunningMean.FillWithValue(0);
-        m_RunningVar = Tensor(m_Gamma.GetShape());
+        m_RunningVar = Tensor(m_Gamma.GetShape(), Name() + "/running_var");
         m_RunningVar.FillWithValue(1);
 
         m_SaveMean = Tensor(m_Gamma.GetShape());
@@ -104,14 +106,14 @@ namespace Neuro
     void BatchNormalization::FeedForwardInternal(bool training)
     {
         if (training)
-            m_Inputs[0]->BatchNormalizationTrain(m_Gamma, m_Beta, m_Momentum, m_RunningMean, m_RunningVar, m_SaveMean, m_SaveVariance, m_Outputs[0]);
+            m_Inputs[0]->BatchNormalizationTrain(m_Gamma, m_Beta, m_Momentum, m_Epsilon, m_RunningMean, m_RunningVar, m_SaveMean, m_SaveVariance, m_Outputs[0]);
         else
-            m_Inputs[0]->BatchNormalization(m_Gamma, m_Beta, m_RunningMean, m_RunningVar, m_Outputs[0]);
+            m_Inputs[0]->BatchNormalization(m_Gamma, m_Beta, m_Epsilon, m_RunningMean, m_RunningVar, m_Outputs[0]);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void BatchNormalization::BackPropInternal(vector<Tensor>& outputsGradient)
     {
-        outputsGradient[0].BatchNormalizationGradient(*m_Inputs[0], m_Gamma, outputsGradient[0], m_SaveMean, m_SaveVariance, m_GammaGrad, m_BetaGrad, m_Trainable, m_InputsGradient[0]);
+        outputsGradient[0].BatchNormalizationGradient(*m_Inputs[0], m_Gamma, m_Epsilon, outputsGradient[0], m_SaveMean, m_SaveVariance, m_GammaGrad, m_BetaGrad, m_Trainable, m_InputsGradient[0]);
     }
 }

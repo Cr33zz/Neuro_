@@ -331,3 +331,6 @@ ASALocalRun/
 
 # Images
 *.png
+
+# Training data
+data/

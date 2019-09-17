@@ -38,6 +38,7 @@ namespace Neuro
         Tensor m_RunningVar;
 
         float m_Momentum = 0.9f;
+        float m_Epsilon = 0.001f;
 
         // Used as cache between forward and backward steps
         Tensor m_SaveMean;
