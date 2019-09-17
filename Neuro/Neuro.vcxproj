@@ -119,9 +119,14 @@
     <ClInclude Include="include\Initializers\Constant.h" />
     <ClInclude Include="include\Initializers\GlorotNormal.h" />
     <ClInclude Include="include\Initializers\GlorotUniform.h" />
+    <ClInclude Include="include\Initializers\HeNormal.h" />
+    <ClInclude Include="include\Initializers\HeUniform.h" />
     <ClInclude Include="include\Initializers\InitializerBase.h" />
+    <ClInclude Include="include\Initializers\LeCunNormal.h" />
+    <ClInclude Include="include\Initializers\LeCunUniform.h" />
     <ClInclude Include="include\Initializers\Normal.h" />
     <ClInclude Include="include\Initializers\Uniform.h" />
+    <ClInclude Include="include\Initializers\VarianceScaling.h" />
     <ClInclude Include="include\Initializers\Zeros.h" />
     <ClInclude Include="include\Layers\Activation.h" />
     <ClInclude Include="include\Layers\BatchNormalization.h" />
@@ -167,11 +172,9 @@
     <ClCompile Include="src\Activations.cpp" />
     <ClCompile Include="src\ChartGenerator.cpp" />
     <ClCompile Include="src\Initializers\Constant.cpp" />
-    <ClCompile Include="src\Initializers\GlorotNormal.cpp" />
-    <ClCompile Include="src\Initializers\GlorotUniform.cpp" />
-    <ClCompile Include="src\Initializers\InitializerBase.cpp" />
     <ClCompile Include="src\Initializers\Normal.cpp" />
     <ClCompile Include="src\Initializers\Uniform.cpp" />
+    <ClCompile Include="src\Initializers\VarianceScaling.cpp" />
     <ClCompile Include="src\Initializers\Zeros.cpp" />
     <ClCompile Include="src\Layers\Activation.cpp" />
     <ClCompile Include="src\Layers\BatchNormalization.cpp" />

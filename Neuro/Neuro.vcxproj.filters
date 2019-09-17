@@ -192,6 +192,21 @@
     <ClInclude Include="include\Layers\SingleLayer.h">
       <Filter>include\Layers</Filter>
     </ClInclude>
+    <ClInclude Include="include\Initializers\VarianceScaling.h">
+      <Filter>include\Initializers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Initializers\HeNormal.h">
+      <Filter>include\Initializers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Initializers\LeCunNormal.h">
+      <Filter>include\Initializers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Initializers\LeCunUniform.h">
+      <Filter>include\Initializers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Initializers\HeUniform.h">
+      <Filter>include\Initializers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -257,12 +272,6 @@
     <ClCompile Include="src\Initializers\Constant.cpp">
       <Filter>src\Initializers</Filter>
     </ClCompile>
-    <ClCompile Include="src\Initializers\GlorotNormal.cpp">
-      <Filter>src\Initializers</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Initializers\GlorotUniform.cpp">
-      <Filter>src\Initializers</Filter>
-    </ClCompile>
     <ClCompile Include="src\Initializers\Normal.cpp">
       <Filter>src\Initializers</Filter>
     </ClCompile>
@@ -320,7 +329,7 @@
     <ClCompile Include="src\Layers\SingleLayer.cpp">
       <Filter>src\Layers</Filter>
     </ClCompile>
-    <ClCompile Include="src\Initializers\InitializerBase.cpp">
+    <ClCompile Include="src\Initializers\VarianceScaling.cpp">
       <Filter>src\Initializers</Filter>
     </ClCompile>
   </ItemGroup>
