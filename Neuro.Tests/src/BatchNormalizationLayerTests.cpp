@@ -54,8 +54,8 @@ namespace NeuroTests
             gamma.FillWithRand();
             Tensor beta(Shape::From(inputShape, 1));
             beta.FillWithRand();
-            Tensor runningMean = input.Avg(EAxis::Feature);
-            Tensor runningVar = input.Sub(runningMean).Map([](float x) { return x * x; }).Avg(EAxis::Feature);
+            Tensor runningMean = input.Avg(EAxis::Batch);
+            Tensor runningVar = input.Sub(runningMean).Map([](float x) { return x * x; }).Avg(EAxis::Batch);
             
             Tensor output(inputShape);
             input.BatchNormalization(gamma, beta, 0.001f, runningMean, runningVar, output);

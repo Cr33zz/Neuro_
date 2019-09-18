@@ -96,10 +96,10 @@ namespace NeuroTests
             Tensor t(Shape(20, 30, 40, 50)); t.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            NEURO_PROFILE("CPU", Tensor r = t.Sum(EAxis::Feature);)
+            NEURO_PROFILE("CPU", Tensor r = t.Sum(EAxis::Batch);)
 
             Tensor::SetForcedOpMode(EOpMode::MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Sum(EAxis::Feature);)
+            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Sum(EAxis::Batch);)
 
             Assert::IsTrue(r.Equals(r2));
         }

@@ -11,7 +11,7 @@ namespace Neuro
         virtual void Mul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const override;
         virtual void MulElem(const Tensor& t1, const Tensor& t2, Tensor& output) const override;
         virtual void Div(const Tensor& input, float v, Tensor& output) const override;
-        virtual void Sum(const Tensor& input, EAxis axis, int batch, Tensor& output) const override;
+        virtual void Sum(const Tensor& input, EAxis axis, Tensor& output) const override;
         virtual void Transpose(const Tensor& input, Tensor& output) const override;
         virtual void Conv2D(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, Tensor& output) const override;
         virtual void Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, Tensor& inputGradient) const override;

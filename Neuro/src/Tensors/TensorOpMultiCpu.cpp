@@ -101,40 +101,41 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Sum(const Tensor& input, EAxis axis, int batch, Tensor& output) const
+    void TensorOpMultiCpu::Sum(const Tensor& input, EAxis axis, Tensor& output) const
     {
-        output.Zero();
-        input.CopyToHost();
-        output.OverrideHost();
+        return __super::Sum(input, axis, output);
+        //output.Zero();
+        //input.CopyToHost();
+        //output.OverrideHost();
 
-        auto& inputValues = input.GetValues();
-        auto& outputValues = output.GetValues();
+        //auto& inputValues = input.GetValues();
+        //auto& outputValues = output.GetValues();
 
-        if (axis == EAxis::Sample)
-        {
-            uint32_t batchMin = batch < 0 ? 0 : batch;
-            uint32_t batchMax = batch < 0 ? input.Batch() : (batch + 1);
-            uint32_t batchLen = input.BatchLength();
+        //if (axis == EAxis::Sample)
+        //{
+        //    uint32_t batchMin = batch < 0 ? 0 : batch;
+        //    uint32_t batchMax = batch < 0 ? input.Batch() : (batch + 1);
+        //    uint32_t batchLen = input.BatchLength();
 
-            parallel_for(batchMin, batchMax, [&](uint32_t n) {
-            for (uint32_t i = 0, idx = n * batchLen; i < batchLen; ++i, ++idx)
-                outputValues[n - batchMin] += inputValues[idx];
-            });
-        }
-        else if (axis == EAxis::Feature)
-        {
-            uint32_t batchLen = input.BatchLength();
+        //    parallel_for(batchMin, batchMax, [&](uint32_t n) {
+        //    for (uint32_t i = 0, idx = n * batchLen; i < batchLen; ++i, ++idx)
+        //        outputValues[n - batchMin] += inputValues[idx];
+        //    });
+        //}
+        //else if (axis == EAxis::Batch)
+        //{
+        //    uint32_t batchLen = input.BatchLength();
 
-            parallel_for((uint32_t)0, input.BatchLength(), [&](uint32_t f) {
-            for (uint32_t n = 0; n < input.Batch(); ++n)
-                outputValues[f] += inputValues[f + n * input.BatchLength()];
-            });
-        }
-        else //if (axis == EAxis::Global)
-        {
-            for (uint32_t i = 0; i < input.Length(); ++i)
-                outputValues[0] += inputValues[i];
-        }
+        //    parallel_for((uint32_t)0, input.BatchLength(), [&](uint32_t f) {
+        //    for (uint32_t n = 0; n < input.Batch(); ++n)
+        //        outputValues[f] += inputValues[f + n * input.BatchLength()];
+        //    });
+        //}
+        //else //if (axis == EAxis::Global)
+        //{
+        //    for (uint32_t i = 0; i < input.Length(); ++i)
+        //        outputValues[0] += inputValues[i];
+        //}
     }
 
     //////////////////////////////////////////////////////////////////////////

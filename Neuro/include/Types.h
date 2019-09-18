@@ -39,6 +39,12 @@ namespace Neuro
         Avg
     };
 
+    enum EBatchNormMode
+    {
+        PerActivation, // separate mean,variance,etc values for each CHW (should be used after non-convolution-like operation)
+        Spatial, // separate mean,variance,etc values for each C (should be used after convolution-like operation)
+    };
+
     enum ENormMode
     {
         L1,
@@ -47,9 +53,13 @@ namespace Neuro
 
     enum EAxis
     {
-        Global, // across whole tensor
-        Sample, // across single batch
-        Feature, // across batches
+        Global = -1, // reduces width, height, depth and batch dimensions to size 1, equivalent to axis None
+        Width = 0, // reduces width dimension to size 1, equivalent to axis(0)
+        Height = 1, // reduces height dimension to size 1, equivalent to axis(1)
+        Depth = 2, // reduces depth dimension to size 1, equivalent to axis(2)
+        Batch = 3, // reduces batch dimension to size 1, equivalent to axis(3)
+        WidthHeightDepth, // reduces width, height and depth dimensions to size 1, equivalent to axis (0, 1, 2)
+        WidthHeightBatch, // reduces width, height and batch dimensions to size 1, equivalent to axis (0, 1, 3)
     };
 
     enum ETrack

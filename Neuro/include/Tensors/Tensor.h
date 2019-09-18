@@ -81,11 +81,14 @@ namespace Neuro
         void Div(float v, Tensor& result) const;
         Tensor Div(float v) const;
         void Add(float alpha, float beta, const Tensor& t, Tensor& result) const;
-        void Add(const Tensor& t, Tensor& result) const;
+        void Add(const Tensor& t, Tensor& result) const;        
         Tensor Add(const Tensor& t) const;
         Tensor Add(float alpha, float beta, const Tensor& t) const;
         void Add(float v, Tensor& result) const;
         Tensor Add(float v) const;
+        // Adds bias value to each HW. Number of bias values must match depth of the input tensor.
+        void AddBias(const Tensor& bias, Tensor& result) const;
+        Tensor AddBias(const Tensor& bias) const;
         void Sub(const Tensor& t, Tensor& result) const;
         Tensor Sub(const Tensor& t) const;
         void Sub(float v, Tensor& result) const;
@@ -101,14 +104,14 @@ namespace Neuro
 		void Map(const function<float(float, float)>&, const Tensor& other, Tensor& result) const;
 		Tensor Map(const function<float(float, float)>& func, const Tensor& other) const;
 
-        Tensor Sum(EAxis axis, int batch = -1) const;
-        void Sum(EAxis axis, int batch, Tensor& output) const;
-		Tensor Avg(EAxis axis, int batch = -1) const;
-        Tensor Max(EAxis axis, int batch = -1, Tensor* maxIndex = nullptr) const;
-        Tensor Min(EAxis axis, int batch = -1, Tensor* minIndex = nullptr) const;
+        Tensor Sum(EAxis axis) const;
+        void Sum(EAxis axis, Tensor& output) const;
+		Tensor Avg(EAxis axis) const;
+        Tensor Max(EAxis axis, Tensor* maxIndex = nullptr) const;
+        Tensor Min(EAxis axis, Tensor* minIndex = nullptr) const;
         // For Feature axis it will be batch index, for Sample axis it will be flat element index within a batch
-        Tensor ArgMax(EAxis axis, int batch = -1) const;
-        Tensor ArgMin(EAxis axis, int batch = -1) const;
+        Tensor ArgMax(EAxis axis) const;
+        Tensor ArgMin(EAxis axis) const;
         
         static Tensor MergeIntoBatch(const vector<Tensor>& tensors);
         // In case number of tensors is smaller than forcedDepth, first tensor will be repeated to account for missing tensors

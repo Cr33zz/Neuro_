@@ -225,10 +225,10 @@ namespace NeuroTests
             Tensor t(Shape(8, 9, 3, 3)); t.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            NEURO_PROFILE("CPU", Tensor r = t.Sum(EAxis::Feature);)
+            NEURO_PROFILE("CPU", Tensor r = t.Sum(EAxis::Batch);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
-            NEURO_PROFILE("GPU", Tensor r2 = t.Sum(EAxis::Feature);)
+            NEURO_PROFILE("GPU", Tensor r2 = t.Sum(EAxis::Batch);)
 
             Assert::IsTrue(r.Equals(r2));
         }

@@ -44,8 +44,10 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	int AccCategoricalClassificationEquality(const Tensor& target, const Tensor& output)
 	{
-        Tensor targetArgMax = target.ArgMax(EAxis::Sample);
-        Tensor outputArgMax = output.ArgMax(EAxis::Sample);
+        Tensor targetArgMax = target.ArgMax(EAxis::WidthHeightDepth);
+        targetArgMax.Reshape(Shape(target.Batch()));
+        Tensor outputArgMax = output.ArgMax(EAxis::WidthHeightDepth);
+        outputArgMax.Reshape(Shape(output.Batch()));
 
 		int hits = 0;
 		for (uint32_t i = 0; i < targetArgMax.Length(); ++i)
@@ -343,9 +345,12 @@ namespace Neuro
         uint32_t imgWidth = 32;
         uint32_t imgHeight = 32;
 
+        auto labels = output.ArgMax(WidthHeightDepth);
+        labels.Reshape(Shape(output.Batch()));
+
         for (uint32_t i = 0; i < input.Batch(); ++i)
         {
-            char l = (char)output.ArgMax(Sample, i)(0);
+            char l = (char)labels(i);
             fsImages.write(&l, 1);
 
             for (uint32_t d = 0; d < 3; ++d)

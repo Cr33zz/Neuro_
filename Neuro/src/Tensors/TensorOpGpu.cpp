@@ -330,7 +330,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::BatchNormalization(const Tensor& input, const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor& runningMean, const Tensor& runningVar, Tensor& output) const
+    void TensorOpGpu::BatchNormalization(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor& runningMean, const Tensor& runningVar, Tensor& output) const
     {
         input.CopyToDevice();
         gamma.CopyToDevice();
@@ -348,7 +348,7 @@ namespace Neuro
         float alpha = 1, _beta = 0;
         CUDA_CHECK(cudnnBatchNormalizationForwardInference(
             s_CudnnHandle,
-            CUDNN_BATCHNORM_PER_ACTIVATION,
+            GetCudnnBatchNormMode(mode),
             &alpha,
             &_beta,
             inputOutputDesc,
@@ -364,7 +364,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::BatchNormalizationTrain(const Tensor& input, const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& output) const
+    void TensorOpGpu::BatchNormalizationTrain(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& output) const
     {
         input.CopyToDevice();
         gamma.CopyToDevice();
@@ -384,7 +384,7 @@ namespace Neuro
         float alpha = 1, _beta = 0;
         CUDA_CHECK(cudnnBatchNormalizationForwardTraining(
             s_CudnnHandle,
-            CUDNN_BATCHNORM_PER_ACTIVATION,
+            GetCudnnBatchNormMode(mode),
             &alpha,
             &_beta,
             inputOutputDesc,
@@ -403,7 +403,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, float epsilon, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const
+    void TensorOpGpu::BatchNormalizationGradient(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, float epsilon, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const
     {
         input.CopyToDevice();
         gamma.CopyToDevice();
@@ -423,7 +423,7 @@ namespace Neuro
         float alpha = 1.f, beta = 0.f, paramsGradAlpha = (trainable ? 1.f : 0.f), paramsGradBeta = 0.f;
         CUDA_CHECK(cudnnBatchNormalizationBackward(
             s_CudnnHandle,
-            CUDNN_BATCHNORM_PER_ACTIVATION,
+            GetCudnnBatchNormMode(mode),
             &alpha,
             &beta,
             &paramsGradAlpha,
@@ -609,10 +609,10 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Sum(const Tensor& input, EAxis axis, int batch, Tensor& output) const
+    void TensorOpGpu::Sum(const Tensor& input, EAxis axis, Tensor& output) const
     {
-        if (axis != EAxis::Feature)
-            return __super::Sum(input, axis, batch, output);
+        if (axis != EAxis::Batch)
+            return __super::Sum(input, axis, output);
 
         output.Zero();
         input.CopyToDevice();
@@ -851,11 +851,19 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    cudnnPoolingMode_t TensorOpGpu::GetCudnnPoolType(EPoolingMode type)
+    cudnnPoolingMode_t TensorOpGpu::GetCudnnPoolType(EPoolingMode mode)
     {
-        if (type == EPoolingMode::Max)
+        if (mode == EPoolingMode::Max)
             return CUDNN_POOLING_MAX;
         return CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    cudnnBatchNormMode_t TensorOpGpu::GetCudnnBatchNormMode(EBatchNormMode mode)
+    {
+        if (mode == PerActivation)
+            return CUDNN_BATCHNORM_PER_ACTIVATION;
+        return CUDNN_BATCHNORM_SPATIAL;
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -102,22 +102,22 @@ namespace Neuro
                 _wGradTemp2.Resize(Shape::From(m_WeightsGrad.GetShape(), m_Inputs[0]->Batch()));
                 outputsGradient[0].Mul(_wGradTemp1, _wGradTemp2);
                 _wGradTemp3.Resize(m_WeightsGrad.GetShape());
-                _wGradTemp2.Sum(EAxis::Feature, -1, _wGradTemp3);
+                _wGradTemp2.Sum(EAxis::Batch, _wGradTemp3);
                 m_WeightsGrad.Add(_wGradTemp3, m_WeightsGrad);
             }
             else
-                m_WeightsGrad.Add(outputsGradient[0].Mul(m_Inputs[0]->Transposed()).Sum(EAxis::Feature), m_WeightsGrad);
+                m_WeightsGrad.Add(outputsGradient[0].Mul(m_Inputs[0]->Transposed()).Sum(EAxis::Batch), m_WeightsGrad);
 
             if (m_UseBias)
             {
                 if (USE_TEMPS)
                 {
                     _bGradTemp1.Resize(m_BiasGrad.GetShape());
-                    outputsGradient[0].Sum(EAxis::Feature, -1, _bGradTemp1);
+                    outputsGradient[0].Sum(EAxis::Batch, _bGradTemp1);
                     m_BiasGrad.Add(_bGradTemp1, m_BiasGrad);
                 }
                 else
-                    m_BiasGrad.Add(outputsGradient[0].Sum(EAxis::Feature), m_BiasGrad);
+                    m_BiasGrad.Add(outputsGradient[0].Sum(EAxis::Batch), m_BiasGrad);
             }
         }
 	}

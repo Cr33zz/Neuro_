@@ -404,7 +404,7 @@ namespace NeuroTests
                                 6, -1,  3,  4,
                                 2,  1, 16,  5 }, Shape(2, 2, 1, 3));
 
-            auto result = t.Normalized(EAxis::Feature, ENormMode::L1);
+            auto result = t.Normalized(EAxis::Batch, ENormMode::L1);
             Tensor correct({ -0.71428571f,  0.33333333f, 0.20833333f, 0.3571f,
                               0.21428571f, -0.33333333f, 0.125f,      0.2857f,
                               0.07142857f,  0.33333333f, 0.66666667f, 0.3571f }, t.GetShape());
@@ -421,7 +421,7 @@ namespace NeuroTests
                                 6, -1,  3,  4,
                                 2,  1, 16,  5 }, Shape(2, 2, 1, 3));
 
-            auto result = t.Normalized(EAxis::Feature, ENormMode::L2);
+            auto result = t.Normalized(EAxis::Batch, ENormMode::L2);
             Tensor correct({ -0.9534f, 0.5773f, 0.2936f, 0.6154f,
                               0.2860f, -0.5773f, 0.1761f, 0.4923f,
                               0.0953f, 0.5773f, 0.9395f, 0.6154f }, t.GetShape());
@@ -489,7 +489,7 @@ namespace NeuroTests
                                 6, -1,  3,  4,
                                 2,  1, 16,  5 }, Shape(2, 2, 1, 3));
 
-            auto result = t.NormalizedMinMax(EAxis::Feature);
+            auto result = t.NormalizedMinMax(EAxis::Batch);
             Tensor correct({ 0, 1, 0.1538f, 1,
                              1, 0, 0, 0,
                              0.8461f, 1, 1, 1 }, t.GetShape());
@@ -563,7 +563,7 @@ namespace NeuroTests
             auto t = Tensor({ -20,  1,  5,  5,
                                 6, -1,  3,  4 }, Shape(2, 2, 1, 2));
 
-            auto result = t.Sum(EAxis::Feature);
+            auto result = t.Sum(EAxis::Batch);
             Tensor correct({ -14, 0, 8, 9 }, Shape(2,2));
 
             for (uint32_t i = 0; i < result.GetShape().Length; ++i)
@@ -619,7 +619,7 @@ namespace NeuroTests
             auto t = Tensor({ -20,  1,  5,  5,
                                 6, -1,  3,  4 }, Shape(2, 2, 1, 2));
 
-            auto result = t.Avg(EAxis::Feature);
+            auto result = t.Avg(EAxis::Batch);
             Tensor correct({ -7, 0, 4, 4.5f }, Shape(2, 2));
 
             for (uint32_t i = 0; i < result.GetShape().Length; ++i)
@@ -683,7 +683,7 @@ namespace NeuroTests
                                 2,  1, 16,  5,
                                 3,  1, 10, 11 }, Shape(2, 2, 1, 4));
 
-            Tensor result = t.Max(EAxis::Feature);
+            Tensor result = t.Max(EAxis::Batch);
             Tensor correct({ 6, 1, 16, 11 }, Shape(2, 2));
 
             Assert::IsTrue(result.Equals(correct));
@@ -743,7 +743,7 @@ namespace NeuroTests
                                 2,  1, 16,  5, 
                                 3,  1, 10, 11 }, Shape(2, 2, 1, 4));
 
-            Tensor result = t.ArgMax(EAxis::Feature);
+            Tensor result = t.ArgMax(EAxis::Batch);
             Tensor correct({ 1, 0, 2, 3 }, Shape(2, 2));
 
             Assert::IsTrue(result.Equals(correct));
@@ -803,7 +803,7 @@ namespace NeuroTests
                                 2,  1, 16,  5,
                                 3,  1, 10, 11 }, Shape(2, 2, 1, 4));
 
-            Tensor result = t.Min(EAxis::Feature);
+            Tensor result = t.Min(EAxis::Batch);
             Tensor correct({ -20, -1, 3, 4 }, Shape(2, 2));
 
             Assert::IsTrue(result.Equals(correct));
@@ -863,7 +863,7 @@ namespace NeuroTests
                                 2,  1, 16,  5,
                                 3,  1, 10, 11 }, Shape(2, 2, 1, 4));
 
-            Tensor result = t.ArgMin(EAxis::Feature);
+            Tensor result = t.ArgMin(EAxis::Batch);
             Tensor correct({ 0, 1, 1, 1 }, Shape(2, 2));
 
             Assert::IsTrue(result.Equals(correct));
