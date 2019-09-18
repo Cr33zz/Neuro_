@@ -231,6 +231,19 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
+    vector<Tensor*> LayerBase::GetParams()
+    {
+        vector<Tensor*> params;
+
+        vector<ParametersAndGradients> paramsAndGrads;
+        GetParametersAndGradients(paramsAndGrads, false);
+        for (auto i = 0; i < paramsAndGrads.size(); ++i)
+            params.push_back(paramsAndGrads[i].Parameters);
+
+        return params;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     bool LayerBase::CanStopBackProp() const
     {
         if (m_Trainable)

@@ -45,13 +45,13 @@ namespace Neuro
         if (onlyTrainable && !m_Trainable)
             return;
 
+        paramsAndGrads.push_back(ParametersAndGradients(&m_Gamma, &m_GammaGrad));
+        paramsAndGrads.push_back(ParametersAndGradients(&m_Beta, &m_BetaGrad));
         if (!onlyTrainable)
         {
             paramsAndGrads.push_back(ParametersAndGradients(&m_RunningMean, nullptr));
             paramsAndGrads.push_back(ParametersAndGradients(&m_RunningVar, nullptr));
         }
-        paramsAndGrads.push_back(ParametersAndGradients(&m_Gamma, &m_GammaGrad));
-        paramsAndGrads.push_back(ParametersAndGradients(&m_Beta, &m_BetaGrad));
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -68,6 +68,8 @@ namespace Neuro
         int ActivationTime() const { return (int)m_ActivationTimer.ElapsedMilliseconds(); }
         int ActivationBackPropTime() const { return (int)m_ActivationBackPropTimer.ElapsedMilliseconds(); }
 
+        vector<Tensor*> GetParams();
+
 	protected:
         // The concept of layer is that it is a 'block box' that supports forward and backward propagation.
         // Feed forward: input Tensor -> |logic| -> output Tensor
