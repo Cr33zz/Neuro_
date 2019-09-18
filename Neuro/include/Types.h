@@ -53,13 +53,13 @@ namespace Neuro
 
     enum EAxis
     {
-        Global = -1, // reduces width, height, depth and batch dimensions to size 1, equivalent to axis None
-        Width = 0, // reduces width dimension to size 1, equivalent to axis(0)
-        Height = 1, // reduces height dimension to size 1, equivalent to axis(1)
-        Depth = 2, // reduces depth dimension to size 1, equivalent to axis(2)
-        Batch = 3, // reduces batch dimension to size 1, equivalent to axis(3)
-        WidthHeightDepth, // reduces width, height and depth dimensions to size 1, equivalent to axis (0, 1, 2)
-        WidthHeightBatch, // reduces width, height and batch dimensions to size 1, equivalent to axis (0, 1, 3)
+        GlobalAxis = -1, // reduces width, height, depth and batch dimensions to size 1, equivalent to axis None
+        WidthAxis = 0, // reduces width dimension to size 1, equivalent to axis(0)
+        HeightAxis = 1, // reduces height dimension to size 1, equivalent to axis(1)
+        DepthAxis = 2, // reduces depth dimension to size 1, equivalent to axis(2)
+        BatchAxis = 3, // reduces batch dimension to size 1, equivalent to axis(3)
+        WHDAxis, // reduces width, height and depth dimensions to size 1, equivalent to axis (0, 1, 2)
+        WHBAxis, // reduces width, height and batch dimensions to size 1, equivalent to axis (0, 1, 3)
     };
 
     enum ETrack

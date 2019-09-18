@@ -16,20 +16,31 @@ namespace Neuro
 		t2.CopyToHost();
 		output.OverrideHost();
 
-        auto& t1Values = t1.GetValues();
-        auto& t2Values = t2.GetValues();
-        auto& outputValues = output.GetValues();
+        for (uint32_t n = 0; n < max(t1.Batch(), t2.Batch()); ++n)
+        {
+            uint32_t t1N = min(n, t1.Batch() - 1);
+            uint32_t t2N = min(n, t2.Batch() - 1);
 
-		if (t2.Batch() == t1.Batch())
-		{
-			for (uint32_t i = 0; i < (int)t1Values.size(); ++i)
-				outputValues[i] = alpha * t1Values[i] + beta * t2Values[i];
-			return;
-		}
+            for (uint32_t d = 0; d < max(t1.Depth(), t2.Depth()); ++d)
+            {
+                uint32_t t1D = min(d, t1.Depth() - 1);
+                uint32_t t2D = min(d, t2.Depth() - 1);
 
-		for (uint32_t n = 0; n < t1.Batch(); ++n)
-		for (uint32_t i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
-			outputValues[idx] = alpha * t1Values[idx] + beta * t2Values[i];
+                for (uint32_t h = 0; h < max(t1.Height(), t2.Height()); ++h)
+                {
+                    uint32_t t1H = min(h, t1.Height() - 1);
+                    uint32_t t2H = min(h, t2.Height() - 1);
+
+                    for (uint32_t w = 0; w < max(t1.Width(), t2.Width()); ++w)
+                    {
+                        uint32_t t1W = min(w, t1.Width() - 1);
+                        uint32_t t2W = min(w, t2.Width() - 1);
+
+                        output(w, h, d, n) = alpha * t1(t1W, t1H, t1D, t1N) + beta * t2(t2W, t2H, t2D, t2N);
+                    }
+                }
+            }
+        }
 	}
 
     //////////////////////////////////////////////////////////////////////////
@@ -118,76 +129,42 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    template <int W, int H, int D, int N>
+    void SumTemplate(const Tensor& input, Tensor& output)
+    {
+        auto& inputValues = input.GetValues();
+        auto& outputValues = output.GetValues();
+        auto& outputShape = output.GetShape();
+
+        size_t i = 0;
+        for (uint32_t n = 0; n < input.Batch(); ++n)
+        for (uint32_t d = 0; d < input.Depth(); ++d)
+        for (uint32_t h = 0; h < input.Height(); ++h)
+        for (uint32_t w = 0; w < input.Width(); ++w, ++i)
+            outputValues[outputShape.GetIndex(w * (1 - W), h * (1 - H), d * (1 - D), n * (1 - N))] += inputValues[i];
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::Sum(const Tensor& input, EAxis axis, Tensor& output) const
     {
         output.Zero();
         input.CopyToHost();
         output.OverrideHost();
 
-        auto& inputValues = input.GetValues();
-        auto& inputShape = input.GetShape();
-        auto& outputValues = output.GetValues();
-        auto& outputShape = output.GetShape();
-
-        if (axis == EAxis::Global)
-        {
-            for (size_t i = 0; i < inputValues.size(); ++i)
-                outputValues[0] += inputValues[i];
-        }
-        else if (axis == EAxis::Width)
-        {
-            int i = 0;
-            for (uint32_t n = 0; n < input.Batch(); ++n)
-            for (uint32_t d = 0; d < input.Depth(); ++d)
-            for (uint32_t h = 0; h < input.Height(); ++h)
-            for (uint32_t w = 0; w < input.Width(); ++w)
-                outputValues[outputShape.GetIndex(0u, h, d, n)] += inputValues[i++];
-        }
-        else if (axis == EAxis::Height)
-        {
-            int i = 0;
-            for (uint32_t n = 0; n < input.Batch(); ++n)
-            for (uint32_t d = 0; d < input.Depth(); ++d)
-            for (uint32_t h = 0; h < input.Height(); ++h)
-            for (uint32_t w = 0; w < input.Width(); ++w)
-                outputValues[outputShape.GetIndex(w, 0u, d, n)] += inputValues[i++];
-        }
-        else if (axis == EAxis::Depth)
-        {
-            int i = 0;
-            for (uint32_t n = 0; n < input.Batch(); ++n)
-            for (uint32_t d = 0; d < input.Depth(); ++d)
-            for (uint32_t h = 0; h < input.Height(); ++h)
-            for (uint32_t w = 0; w < input.Width(); ++w)
-                outputValues[outputShape.GetIndex(w, h, 0u, n)] += inputValues[i++];
-        }
-        else if (axis == EAxis::Batch)
-        {
-            int i = 0;
-            for (uint32_t n = 0; n < input.Batch(); ++n)
-            for (uint32_t d = 0; d < input.Depth(); ++d)
-            for (uint32_t h = 0; h < input.Height(); ++h)
-            for (uint32_t w = 0; w < input.Width(); ++w)
-                outputValues[outputShape.GetIndex(w, h, d, 0u)] += inputValues[i++];
-        }
-        else if (axis == EAxis::WidthHeightDepth)
-        {
-            int i = 0;
-            for (uint32_t n = 0; n < input.Batch(); ++n)
-            for (uint32_t d = 0; d < input.Depth(); ++d)
-            for (uint32_t h = 0; h < input.Height(); ++h)
-            for (uint32_t w = 0; w < input.Width(); ++w)
-                outputValues[outputShape.GetIndex(0u, 0u, 0u, n)] += inputValues[i++];
-        }
-        else if (axis == EAxis::WidthHeightBatch)
-        {
-            int i = 0;
-            for (uint32_t n = 0; n < input.Batch(); ++n)
-            for (uint32_t d = 0; d < input.Depth(); ++d)
-            for (uint32_t h = 0; h < input.Height(); ++h)
-            for (uint32_t w = 0; w < input.Width(); ++w)
-                outputValues[outputShape.GetIndex(0u, 0u, d, 0u)] += inputValues[i++];
-        }
+        if (axis == EAxis::GlobalAxis)
+            return SumTemplate<1, 1, 1, 1>(input, output);
+        if (axis == EAxis::WidthAxis)
+            return SumTemplate<1, 0, 0, 0>(input, output);
+        else if (axis == EAxis::HeightAxis)
+            return SumTemplate<0, 1, 0, 0>(input, output);
+        else if (axis == EAxis::DepthAxis)
+            return SumTemplate<0, 0, 1, 0>(input, output);
+        else if (axis == EAxis::BatchAxis)
+            return SumTemplate<0, 0, 0, 1>(input, output);
+        else if (axis == EAxis::WHDAxis)
+            return SumTemplate<1, 1, 1, 0>(input, output);
+        else if (axis == EAxis::WHBAxis)
+            return SumTemplate<1, 1, 0, 1>(input, output);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -305,13 +282,13 @@ namespace Neuro
 		input.CopyToHost();
         output.OverrideHost();
 
-		Tensor shifted = input.Sub(input.Max(EAxis::Global)(0));
+		Tensor shifted = input.Sub(input.Max(EAxis::GlobalAxis)(0));
         Tensor exps = shifted.Map([&](float x) { return (float)exp(x); });
 
         auto& expsValues = exps.GetValues();
         auto& outputValues = output.GetValues();
 
-        Tensor sum = exps.Sum(EAxis::WidthHeightDepth);
+        Tensor sum = exps.Sum(EAxis::WHDAxis);
         sum.Reshape(Shape(sum.Batch()));
 
 		for (uint32_t n = 0; n < input.Batch(); ++n)
@@ -566,12 +543,9 @@ namespace Neuro
         runningVar.CopyToHost();
         output.OverrideHost();
 
-        if (mode == PerActivation)
-        {
-            Tensor xbar = input.Sub(runningMean);
-            xbar.Map([&](float x1, float x2) { return x1 / sqrt(x2 + epsilon); }, runningVar, xbar);
-            xbar.MulElem(gamma).Add(beta, output);
-        }
+        Tensor xbar = input.Sub(runningMean);
+        xbar.Map([&](float x1, float x2) { return x1 / sqrt(x2 + epsilon); }, runningVar, xbar);
+        xbar.MulElem(gamma).Add(beta, output);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -586,20 +560,18 @@ namespace Neuro
         saveInvVariance.CopyToHost();
         output.OverrideHost();
 
-        if (mode == PerActivation)
-        {
-            saveMean = input.Avg(EAxis::Batch);
-            Tensor xmu = input.Sub(saveMean);
-            Tensor carre = xmu.Map([](float x) { return x * x; });
-            Tensor variance = carre.Avg(EAxis::Batch);
-            Tensor sqrtvar = variance.Map([](float x) { return sqrt(x); });
-            saveInvVariance = sqrtvar.Map([](float x) { return 1.f / x; });
-            Tensor va2 = xmu.MulElem(saveInvVariance);
-            va2.MulElem(gamma).Add(beta, output);
+        EAxis axis = mode == PerActivation ? BatchAxis : WHBAxis;
 
-            runningMean.Map([&](float x1, float x2) { return momentum * x1 + (1.f - momentum) * x2; }, saveMean, runningMean);
-            runningVar.Map([&](float x1, float x2) { return momentum * x1 + (1.f - momentum) * x2; }, variance, runningVar);
-        }
+        saveMean = input.Avg(axis);
+        Tensor xmu = input.Sub(saveMean);
+        Tensor variance = xmu.Map([](float x) { return x * x; }).Avg(axis);
+        Tensor sqrtvar = variance.Map([](float x) { return sqrt(x); });
+        saveInvVariance = sqrtvar.Map([](float x) { return 1.f / x; });
+        Tensor va2 = xmu.MulElem(saveInvVariance);
+        va2.MulElem(gamma).Add(beta, output);
+
+        runningMean.Map([&](float x1, float x2) { return momentum * x1 + (1.f - momentum) * x2; }, saveMean, runningMean);
+        runningVar.Map([&](float x1, float x2) { return momentum * x1 + (1.f - momentum) * x2; }, variance, runningVar);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -614,32 +586,31 @@ namespace Neuro
         betaGradient.OverrideHost();
         inputGradient.OverrideHost();
 
-        if (mode == PerActivation)
+        EAxis axis = mode == PerActivation ? BatchAxis : WHBAxis;
+
+        float n = (float)outputGradient.Batch();
+
+        Tensor xmu = input.Sub(savedMean);
+        Tensor carre = xmu.Map([](float x) { return x * x; });
+        Tensor variance = carre.Avg(axis);
+        Tensor sqrtvar = variance.Map([](float x) { return sqrt(x); });
+
+        if (trainable)
         {
-            float n = (float)outputGradient.Batch();
-
-            Tensor xmu = input.Sub(savedMean);
-            Tensor carre = xmu.Map([](float x) { return x * x; });
-            Tensor variance = carre.Avg(EAxis::Batch);
-            Tensor sqrtvar = variance.Map([](float x) { return sqrt(x); });
-
-            if (trainable)
-            {
-                outputGradient.Sum(EAxis::Batch, betaGradient);
-                Tensor va2 = xmu.MulElem(savedInvVariance);
-                va2.MulElem(outputGradient).Sum(EAxis::Batch, gammaGradient);
-            }
-
-            Tensor dva2 = outputGradient.MulElem(gamma);
-            Tensor dxmu = dva2.MulElem(savedInvVariance);
-            Tensor dinvvar = xmu.MulElem(dva2).Sum(EAxis::Batch);
-            Tensor dsqrtvar = dinvvar.Map([&](float x1, float x2) { return -1.f / (x2*x2) * x1; }, sqrtvar);
-            Tensor dvar = dsqrtvar.Map([&](float x1, float x2) { return 0.5f * pow(x2 + epsilon, -0.5f) * x1; }, variance);
-            Tensor dcarre = Tensor(carre.GetShape()).FillWithValue(1).MulElem(dvar).Mul(1.f / n);
-            dxmu.Add(xmu.MulElem(dcarre).Mul(2), dxmu);
-            Tensor dmu = dxmu.Sum(EAxis::Batch).Negated();
-            dxmu.Add(Tensor(dxmu.GetShape()).FillWithValue(1).MulElem(dmu).Mul(1.f / n), inputGradient);
+            outputGradient.Sum(axis, betaGradient);
+            Tensor va2 = xmu.MulElem(savedInvVariance);
+            va2.MulElem(outputGradient).Sum(axis, gammaGradient);
         }
+
+        Tensor dva2 = outputGradient.MulElem(gamma);
+        Tensor dxmu = dva2.MulElem(savedInvVariance);
+        Tensor dinvvar = xmu.MulElem(dva2).Sum(axis);
+        Tensor dsqrtvar = dinvvar.Map([&](float x1, float x2) { return -1.f / (x2*x2) * x1; }, sqrtvar);
+        Tensor dvar = dsqrtvar.Map([&](float x1, float x2) { return 0.5f * pow(x2 + epsilon, -0.5f) * x1; }, variance);
+        Tensor dcarre = Tensor(carre.GetShape()).FillWithValue(1).MulElem(dvar).Mul(1.f / n);
+        dxmu.Add(xmu.MulElem(dcarre).Mul(2), dxmu);
+        Tensor dmu = dxmu.Sum(axis).Negated();
+        dxmu.Add(Tensor(dxmu.GetShape()).FillWithValue(1).MulElem(dmu).Mul(1.f / n), inputGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////

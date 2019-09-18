@@ -611,7 +611,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Sum(const Tensor& input, EAxis axis, Tensor& output) const
     {
-        if (axis != EAxis::Batch)
+        if (axis != EAxis::BatchAxis)
             return __super::Sum(input, axis, output);
 
         output.Zero();

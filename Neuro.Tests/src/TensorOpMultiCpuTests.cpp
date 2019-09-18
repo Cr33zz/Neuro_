@@ -83,10 +83,10 @@ namespace NeuroTests
             Tensor t(Shape(20, 30, 40, 50)); t.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            NEURO_PROFILE("CPU", Tensor r = t.Sum(EAxis::Sample);)
+            NEURO_PROFILE("CPU", Tensor r = t.Sum(WHDAxis);)
 
             Tensor::SetForcedOpMode(EOpMode::MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Sum(EAxis::Sample);)
+            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Sum(WHDAxis);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -96,10 +96,10 @@ namespace NeuroTests
             Tensor t(Shape(20, 30, 40, 50)); t.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            NEURO_PROFILE("CPU", Tensor r = t.Sum(EAxis::Batch);)
+            NEURO_PROFILE("CPU", Tensor r = t.Sum(BatchAxis);)
 
             Tensor::SetForcedOpMode(EOpMode::MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Sum(EAxis::Batch);)
+            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Sum(BatchAxis);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -109,10 +109,10 @@ namespace NeuroTests
             Tensor t(Shape(20, 30, 40, 50)); t.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
-            NEURO_PROFILE("CPU", Tensor r = t.Sum(EAxis::Global);)
+            NEURO_PROFILE("CPU", Tensor r = t.Sum(GlobalAxis);)
 
             Tensor::SetForcedOpMode(EOpMode::MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Sum(EAxis::Global);)
+            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Sum(GlobalAxis);)
 
             Assert::IsTrue(r.Equals(r2));
         }

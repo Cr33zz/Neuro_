@@ -452,7 +452,7 @@ namespace Neuro
                         out.push_back(Tensor(modelOutputs[i].GetShape()));
                         m_LossFuncs[i]->Compute(*validOutputsBatches[b][i], modelOutputs[i], out[i]);
 
-                        validationTotalLoss += out[i].Sum(EAxis::Global)(0) / modelOutputs[i].BatchLength();
+                        validationTotalLoss += out[i].Sum(EAxis::GlobalAxis)(0) / modelOutputs[i].BatchLength();
                         if (trackFlags & TestAccuracy)
                             validationHits += m_AccuracyFuncs[i](*validOutputsBatches[b][i], modelOutputs[i]);
                     }
@@ -530,7 +530,7 @@ namespace Neuro
 #           endif
 
             if (loss)
-                totalLoss += outputsGrad[i].Sum(EAxis::Global)(0) / modelOutputs[i].BatchLength();
+                totalLoss += outputsGrad[i].Sum(EAxis::GlobalAxis)(0) / modelOutputs[i].BatchLength();
 
             if (acc)
                 hits += m_AccuracyFuncs[i](*outputs[i], modelOutputs[i]);

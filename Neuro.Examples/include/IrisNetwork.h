@@ -32,7 +32,7 @@ public:
         Tensor inputs;
         Tensor outputs;
         LoadCSVData("data/iris_data.csv", 3, inputs, outputs, true);
-        inputs = inputs.Normalized(Feature);
+        inputs = inputs.Normalized(BatchAxis);
 
         model.Fit(inputs, outputs, 40, 20, nullptr, nullptr, 2, TrainError|TrainAccuracy);
 
