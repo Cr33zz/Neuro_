@@ -609,7 +609,7 @@ namespace Neuro
         if (axis == EAxis::WHDAxis)
             return sum.Mul(1.f / (Width() * Height() * Depth()));
         if (axis == EAxis::WHBAxis)
-            return sum.Mul(1.f / (Width() * Height() * Batch()));
+            return sum.Div((float)(Width() * Height() * Batch()));
 
         assert(false);
         return Tensor();

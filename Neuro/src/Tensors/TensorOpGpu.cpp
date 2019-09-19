@@ -42,6 +42,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const
     {
+        if (!t1.SameDimensionsExceptBatches(t2))
+            return __super::Add(alpha, t1, beta, t2, output); // broadcasting not supported on GPU yet
+
         t1.CopyToDevice();
         t2.CopyToDevice();
         output.CopyToDevice();

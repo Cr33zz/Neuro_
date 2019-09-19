@@ -549,9 +549,9 @@ namespace Neuro
         runningVar.CopyToHost();
         output.OverrideHost();
 
-        Tensor xbar = input.Sub(runningMean);
-        xbar.Map([&](float x1, float x2) { return x1 / sqrt(x2 + epsilon); }, runningVar, xbar);
-        xbar.MulElem(gamma).Add(beta, output);
+        Tensor xmu = input.Sub(runningMean);
+        Tensor xhat = xmu.MulElem(runningVar.Map([&](float x) { return 1.f / sqrt(x + epsilon); }));
+        xhat.MulElem(gamma).Add(beta, output);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -571,13 +571,16 @@ namespace Neuro
         saveMean = input.Avg(axis);
         Tensor xmu = input.Sub(saveMean);
         Tensor variance = xmu.Map([](float x) { return x * x; }).Avg(axis);
-        Tensor sqrtvar = variance.Map([&](float x) { return sqrt(x + epsilon); });
-        saveInvVariance = sqrtvar.Map([](float x) { return 1.f / x; });
-        Tensor va2 = xmu.MulElem(saveInvVariance);
-        va2.MulElem(gamma).Add(beta, output);
+        Tensor varianceSqrt = variance.Map([&](float x) { return sqrt(x + epsilon); });
+        saveInvVariance = varianceSqrt.Map([](float x) { return 1.f / x; });
+        Tensor xhat = xmu.MulElem(saveInvVariance);
+        xhat.MulElem(gamma).Add(beta, output);
 
-        runningMean.Map([&](float x1, float x2) { return momentum * x1 + (1.f - momentum) * x2; }, saveMean, runningMean);
-        runningVar.Map([&](float x1, float x2) { return momentum * x1 + (1.f - momentum) * x2; }, variance, runningVar);
+        runningMean.Add(1 - momentum, momentum, saveMean, runningMean);
+
+        float m = (float)(mode == PerActivation ? input.Batch() : (input.Width() * input.Height() * input.Batch()));
+        Tensor tempVar = variance.Mul(m / (m - 1)); // according to the original BN paper
+        runningVar.Add(1 - momentum, momentum, tempVar, runningVar);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -594,11 +597,24 @@ namespace Neuro
 
         EAxis axis = mode == PerActivation ? BatchAxis : WHBAxis;
 
+        /*float m = (float)(mode == PerActivation ? input.Batch() : (input.Width() * input.Height() * input.Batch()));
+
+        Tensor dxhat = outputGradient.MulElem(gamma);
+        Tensor xmu = input.Sub(savedMean);
+        Tensor dvar = dxhat.MulElem(xmu).Sum(axis).MulElem(savedInvVariance.Map([](float x) { return -0.5f * (x * x * x); }));
+        Tensor dmu =
+*/
+
+
+
+
+
+
+
         float n = (float)(mode == PerActivation ? outputGradient.Batch() : (outputGradient.Width() * outputGradient.Height() * outputGradient.Batch()));
 
         Tensor xmu = input.Sub(savedMean);
-        Tensor carre = xmu.Map([](float x) { return x * x; });
-        Tensor variance = carre.Avg(axis);
+        Tensor variance = xmu.Map([](float x) { return x * x; }).Avg(axis);
         Tensor sqrtvar = variance.Map([](float x) { return sqrt(x); });
 
         if (trainable)
@@ -613,7 +629,7 @@ namespace Neuro
         Tensor dinvvar = xmu.MulElem(dva2).Sum(axis);
         Tensor dsqrtvar = dinvvar.Map([&](float x1, float x2) { return -1.f / (x2*x2) * x1; }, sqrtvar);
         Tensor dvar = dsqrtvar.Map([&](float x1, float x2) { return 0.5f * pow(x2 + epsilon, -0.5f) * x1; }, variance);
-        Tensor dcarre = Tensor(carre.GetShape()).FillWithValue(1).MulElem(dvar).Mul(1.f / n);
+        Tensor dcarre = Tensor(input.GetShape()).FillWithValue(1).MulElem(dvar).Mul(1.f / n);
         dxmu.Add(xmu.MulElem(dcarre).Mul(2), dxmu);
         Tensor dmu = dxmu.Sum(axis).Negated();
         dxmu.Add(Tensor(dxmu.GetShape()).FillWithValue(1).MulElem(dmu).Mul(1.f / n), inputGradient);
