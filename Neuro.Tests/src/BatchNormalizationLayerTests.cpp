@@ -57,7 +57,7 @@ namespace NeuroTests
 
         TEST_METHOD(Train_Spatial_Batch2)
         {
-            TestTrain(3, 2);
+            TestTrain(7, 2);
         }
 
         TEST_METHOD(Train_PerActivation_Batch5)
@@ -67,13 +67,13 @@ namespace NeuroTests
 
         TEST_METHOD(Train_Spatial_Batch5)
         {
-            TestTrain(3, 5);
+            TestTrain(7, 5);
         }
 
         void TestTrain(int depth = 1, int batch = 1)
         {
             GlobalRngSeed(101);
-            Shape inputShape(1, 5, depth, batch);
+            Shape inputShape(3, 5, depth, batch);
 
             auto model = new Sequential("batch_norm_test");
             model->AddLayer(new BatchNormalization(inputShape));
@@ -93,17 +93,18 @@ namespace NeuroTests
             Tensor output(inputShape);
             input.BatchNormalization(gamma, beta, 0.001f, runningMean, runningVar, output);
 
-            model->Optimize(new SGD(0.02f), new MeanSquareError());
+            model->Optimize(new Adam(0.02f), new MeanSquareError());
             model->Fit(input, output, -1, 200, nullptr, nullptr, 1, ETrack::TrainError);
 
             auto& predictedOutput = model->Predict(input)[0];
 
+            Logger::WriteMessage((string("Loss:") + to_string(model->LastTrainError())).c_str());
             Assert::IsTrue(model->LastTrainError() < 0.001f);
         }
 
         LayerBase* CreateLayer(uint32_t d)
         {
-            auto layer = new BatchNormalization(Shape(1, 5, d));
+            auto layer = new BatchNormalization(Shape(3, 5, d));
             layer->Init();
             return layer;
         }

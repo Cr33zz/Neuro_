@@ -571,7 +571,7 @@ namespace Neuro
         saveMean = input.Avg(axis);
         Tensor xmu = input.Sub(saveMean);
         Tensor variance = xmu.Map([](float x) { return x * x; }).Avg(axis);
-        Tensor sqrtvar = variance.Map([](float x) { return sqrt(x); });
+        Tensor sqrtvar = variance.Map([&](float x) { return sqrt(x + epsilon); });
         saveInvVariance = sqrtvar.Map([](float x) { return 1.f / x; });
         Tensor va2 = xmu.MulElem(saveInvVariance);
         va2.MulElem(gamma).Add(beta, output);
@@ -594,7 +594,7 @@ namespace Neuro
 
         EAxis axis = mode == PerActivation ? BatchAxis : WHBAxis;
 
-        float n = (float)outputGradient.Batch();
+        float n = (float)(mode == PerActivation ? outputGradient.Batch() : (outputGradient.Width() * outputGradient.Height() * outputGradient.Batch()));
 
         Tensor xmu = input.Sub(savedMean);
         Tensor carre = xmu.Map([](float x) { return x * x; });
