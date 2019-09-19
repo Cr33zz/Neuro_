@@ -44,22 +44,6 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::AddBias(const Tensor& input, const Tensor& bias, Tensor& output) const
-    {
-        input.CopyToHost();
-        bias.CopyToHost();
-        output.OverrideHost();
-
-        auto& inputValues = input.GetValues();
-        auto& biasValues = bias.GetValues();
-        auto& outputValues = output.GetValues();
-        auto& inputShape = input.GetShape();
-
-        for (size_t i = 0; i < inputValues.size(); ++i)
-            outputValues[i] = inputValues[i] + biasValues[(i / inputShape.Dim0Dim1) % input.Depth()];
-    }
-
-    //////////////////////////////////////////////////////////////////////////
 	void TensorOpCpu::Sub(const Tensor& t1, const Tensor& t2, Tensor& output) const
 	{
 		Add(1, t1, -1, t2, output);
@@ -95,24 +79,35 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void TensorOpCpu::MulElem(const Tensor& t1, const Tensor& t2, Tensor& output) const
 	{
-		t1.CopyToHost();
-		t2.CopyToHost();
-		output.OverrideHost();
+        t1.CopyToHost();
+        t2.CopyToHost();
+        output.OverrideHost();
 
-        auto& t1Values = t1.GetValues();
-        auto& t2Values = t2.GetValues();
-        auto& outputValues = output.GetValues();
-
-        if (t2.Batch() == t1.Batch())
+        for (uint32_t n = 0; n < max(t1.Batch(), t2.Batch()); ++n)
         {
-            for (uint32_t i = 0; i < (int)t1Values.size(); ++i)
-                outputValues[i] = t1Values[i] * t2Values[i];
-            return;
-        }
+            uint32_t t1N = n % t1.Batch();
+            uint32_t t2N = n % t2.Batch();
 
-        for (uint32_t n = 0; n < t1.Batch(); ++n)
-        for (uint32_t i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
-            outputValues[idx] = t1Values[idx] * t2Values[i];
+            for (uint32_t d = 0; d < max(t1.Depth(), t2.Depth()); ++d)
+            {
+                uint32_t t1D = d % t1.Depth();
+                uint32_t t2D = d % t2.Depth();
+
+                for (uint32_t h = 0; h < max(t1.Height(), t2.Height()); ++h)
+                {
+                    uint32_t t1H = h % t1.Height();
+                    uint32_t t2H = h % t2.Height();
+
+                    for (uint32_t w = 0; w < max(t1.Width(), t2.Width()); ++w)
+                    {
+                        uint32_t t1W = w % t1.Width();
+                        uint32_t t2W = w % t2.Width();
+
+                        output(w, h, d, n) = t1(t1W, t1H, t1D, t1N) * t2(t2W, t2H, t2D, t2N);
+                    }
+                }
+            }
+        }
 	}
 
     //////////////////////////////////////////////////////////////////////////
@@ -196,24 +191,35 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void TensorOpCpu::Map(const function<float(float, float)>& func, const Tensor& t1, const Tensor& t2, Tensor& output) const
 	{
-		t1.CopyToHost();
+        t1.CopyToHost();
         t2.CopyToHost();
         output.OverrideHost();
 
-        auto& t1Values = t1.GetValues();
-        auto& t2Values = t2.GetValues();
-        auto& outputValues = output.GetValues();
-
-        if (t2.Batch() == t1.Batch())
+        for (uint32_t n = 0; n < max(t1.Batch(), t2.Batch()); ++n)
         {
-            for (uint32_t i = 0; i < (uint32_t)t1Values.size(); ++i)
-                outputValues[i] = func(t1Values[i], t2Values[i]);
-            return;
-        }
+            uint32_t t1N = n % t1.Batch();
+            uint32_t t2N = n % t2.Batch();
 
-        for (uint32_t n = 0; n < t1.Batch(); ++n)
-        for (uint32_t i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
-            outputValues[idx] = func(t1Values[idx], t2Values[i]);
+            for (uint32_t d = 0; d < max(t1.Depth(), t2.Depth()); ++d)
+            {
+                uint32_t t1D = d % t1.Depth();
+                uint32_t t2D = d % t2.Depth();
+
+                for (uint32_t h = 0; h < max(t1.Height(), t2.Height()); ++h)
+                {
+                    uint32_t t1H = h % t1.Height();
+                    uint32_t t2H = h % t2.Height();
+
+                    for (uint32_t w = 0; w < max(t1.Width(), t2.Width()); ++w)
+                    {
+                        uint32_t t1W = w % t1.Width();
+                        uint32_t t2W = w % t2.Width();
+
+                        output(w, h, d, n) = func(t1(t1W, t1H, t1D, t1N), t2(t2W, t2H, t2D, t2N));
+                    }
+                }
+            }
+        }
 	}
 
     //////////////////////////////////////////////////////////////////////////

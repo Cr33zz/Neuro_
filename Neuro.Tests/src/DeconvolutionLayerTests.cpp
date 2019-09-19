@@ -110,8 +110,8 @@ namespace NeuroTests
             input.FillWithRand();
             Tensor output = input.Conv2DTransposed(randomKernels, 3, stride, padding);
 
-            model->Optimize(new SGD(0.04f), new MeanSquareError());
-            model->Fit(input, output, -1, 200, nullptr, nullptr, 1, ETrack::TrainError);
+            model->Optimize(new Adam(0.02f), new MeanSquareError());
+            model->Fit(input, output, -1, 200, nullptr, nullptr, 1, TrainError);
 
             auto& predictedOutput = model->Predict(input)[0];
 

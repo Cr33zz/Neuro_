@@ -10,7 +10,6 @@ namespace Neuro
 		virtual ~TensorOpCpu() {}
 
         virtual void Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const;
-        virtual void AddBias(const Tensor& input, const Tensor& bias, Tensor& output) const;
         virtual void Sub(const Tensor& t1, const Tensor& t2, Tensor& output) const;
         virtual void Mul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const;
 		virtual void MulElem(const Tensor& t1, const Tensor& t2, Tensor& output) const;

@@ -86,9 +86,6 @@ namespace Neuro
         Tensor Add(float alpha, float beta, const Tensor& t) const;
         void Add(float v, Tensor& result) const;
         Tensor Add(float v) const;
-        // Adds bias value to each HW. Number of bias values must match depth of the input tensor.
-        void AddBias(const Tensor& bias, Tensor& result) const;
-        Tensor AddBias(const Tensor& bias) const;
         void Sub(const Tensor& t, Tensor& result) const;
         Tensor Sub(const Tensor& t) const;
         void Sub(float v, Tensor& result) const;

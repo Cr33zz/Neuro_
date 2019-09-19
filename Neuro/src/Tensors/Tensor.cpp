@@ -339,8 +339,6 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::MulElem(const Tensor& t, Tensor& result) const
 	{
-		assert(SameDimensionsExceptBatches(t));
-
 		Op()->MulElem(*this, t, result);
 	}
 
@@ -414,9 +412,6 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Add(float alpha, float beta, const Tensor& t, Tensor& result) const
 	{
-        /*assert(SameDimensionsExceptBatches(t));
-        assert(t.Batch() == result.Batch() || t.Batch() == 1);*/
-
 		Op()->Add(alpha, *this, beta, t, result);
 	}
 
@@ -459,27 +454,8 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::AddBias(const Tensor& bias, Tensor& result) const
-    {
-        assert(bias.Width() == Depth());
-
-        Op()->AddBias(*this, bias, result);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    Tensor Tensor::AddBias(const Tensor& bias) const
-    {
-        Tensor result(m_Shape);
-        AddBias(bias, result);
-        return result;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
 	void Tensor::Sub(const Tensor& t, Tensor& result) const
 	{
-		/*assert(SameDimensionsExceptBatches(t));
-		assert(t.Batch() == result.Batch() || t.Batch() == 1);*/
-
 		Op()->Sub(*this, t, result);
 	}
 

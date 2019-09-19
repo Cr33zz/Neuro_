@@ -440,13 +440,74 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
-        TEST_METHOD(BatchNormalization_CompareWithCpuResult)
+        TEST_METHOD(BatchNormalizationGradient_PerActivation_CompareWithCpuResult)
         {
-            Tensor input(Shape(2, 2, 3, 3)); input.FillWithRand();
-            Tensor gamma(Shape(2, 2, 3, 1)); gamma.FillWithValue(1);//gamma.FillWithRand();
-            Tensor beta(Shape(2, 2, 3, 1)); beta.FillWithValue(0);//beta.FillWithRand();
-            Tensor runningMean(Shape(2, 2, 3, 1)); runningMean.Zero();//runningMean.FillWithRand();
-            Tensor runningVariance(Shape(2, 2, 3, 1)); runningVariance.FillWithValue(1);// runningVariance.FillWithRand(-1, 0, 1);
+            Tensor input(Shape(1, 2, 1, 3)); input.FillWithRand(5);
+            Tensor gamma(Shape(1, 2, 1, 1)); gamma.FillWithRand(6);
+            Tensor beta(Shape(1, 2, 1, 1)); beta.FillWithRand(7);
+            float momentum = 0.9f;
+            Tensor runningMean(Shape(1, 2, 1, 1)); runningMean.FillWithRand(10);
+            Tensor runningVariance(Shape(1, 2, 1, 1)); runningVariance.FillWithRand(11, 0, 1);
+            Tensor outputGradient(input.GetShape()); outputGradient.FillWithRand();
+
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            Tensor result(input.GetShape());
+            Tensor saveMean(runningMean.GetShape());
+            Tensor saveInvVariance(runningVariance.GetShape());
+            input.BatchNormalizationTrain(gamma, beta, momentum, 0.001f, runningMean, runningVariance, saveMean, saveInvVariance, result);
+            Tensor gammaGradient(gamma.GetShape());
+            Tensor betaGradient(beta.GetShape());
+            Tensor inputGradient(input.GetShape());
+            NEURO_PROFILE("CPU", input.BatchNormalizationGradient(input, gamma, 0.001f, outputGradient, saveMean, saveInvVariance, gammaGradient, betaGradient, true, inputGradient);)
+
+            Tensor::SetForcedOpMode(EOpMode::GPU);
+            Tensor result2(input.GetShape());
+            Tensor saveMean2(runningMean.GetShape());
+            Tensor saveInvVariance2(runningVariance.GetShape());
+            input.BatchNormalizationTrain(gamma, beta, momentum, 0.001f, runningMean, runningVariance, saveMean2, saveInvVariance2, result2);
+            Tensor gammaGradient2(gamma.GetShape());
+            Tensor betaGradient2(beta.GetShape());
+            Tensor inputGradient2(input.GetShape());
+            NEURO_PROFILE("GPU", input.BatchNormalizationGradient(input, gamma, 0.001f, outputGradient, saveMean2, saveInvVariance2, gammaGradient2, betaGradient2, true, inputGradient2);)
+
+            Assert::IsTrue(inputGradient.Equals(inputGradient2, 0.01f));
+            Assert::IsTrue(gammaGradient.Equals(gammaGradient2, 0.01f)); // precision difference between CUDA and CPU
+            Assert::IsTrue(betaGradient.Equals(betaGradient2));
+        }
+
+        TEST_METHOD(BatchNormalizationTrain_PerActivation_CompareWithCpuResult)
+        {
+            Tensor input(Shape(1, 2, 1, 3)); input.FillWithRand(5);
+            Tensor gamma(Shape(1, 2, 1, 1)); gamma.FillWithRand(6);
+            Tensor beta(gamma.GetShape()); beta.FillWithRand(7);
+            float momentum = 0.9f;
+            Tensor runningMean(gamma.GetShape()); runningMean.FillWithRand(10);
+            Tensor runningVariance(gamma.GetShape()); runningVariance.FillWithRand(11, 0, 1);
+
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            Tensor result(input.GetShape());
+            Tensor saveMean(runningMean.GetShape());
+            Tensor saveInvVariance(runningVariance.GetShape());
+            NEURO_PROFILE("CPU", input.BatchNormalizationTrain(gamma, beta, momentum, 0.001f, runningMean, runningVariance, saveMean, saveInvVariance, result);)
+
+            Tensor::SetForcedOpMode(EOpMode::GPU);
+            Tensor result2(input.GetShape());
+            Tensor saveMean2(runningMean.GetShape());
+            Tensor saveInvVariance2(runningVariance.GetShape());
+            NEURO_PROFILE("GPU", input.BatchNormalizationTrain(gamma, beta, momentum, 0.001f, runningMean, runningVariance, saveMean2, saveInvVariance2, result2);)
+
+            Assert::IsTrue(saveMean.Equals(saveMean2, 0.01f));
+            Assert::IsTrue(saveInvVariance.Equals(saveInvVariance2, 0.01f)); // precision difference between CUDA and CPU
+            Assert::IsTrue(result.Equals(result2, 0.01f));
+        }
+
+        TEST_METHOD(BatchNormalization_PerActivation_CompareWithCpuResult)
+        {
+            Tensor input(Shape(1, 2, 1, 3)); input.FillWithRand();
+            Tensor gamma(Shape(1, 2, 1, 1)); gamma.FillWithValue(1);//gamma.FillWithRand();
+            Tensor beta(gamma.GetShape()); beta.FillWithValue(0);//beta.FillWithRand();
+            Tensor runningMean(gamma.GetShape()); runningMean.Zero();//runningMean.FillWithRand();
+            Tensor runningVariance(gamma.GetShape()); runningVariance.FillWithValue(1);// runningVariance.FillWithRand(-1, 0, 1);
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor result(input.GetShape());
@@ -459,65 +520,84 @@ namespace NeuroTests
             Assert::IsTrue(result.Equals(result2));
         }
 
-        TEST_METHOD(BatchNormalizationTrain_CompareWithCpuResult)
+        TEST_METHOD(BatchNormalizationGradient_Spatial_CompareWithCpuResult)
         {
             Tensor input(Shape(2, 2, 3, 3)); input.FillWithRand(5);
-            Tensor gamma(Shape(2, 2, 3, 1)); gamma.FillWithRand(6);
-            Tensor beta(Shape(2, 2, 3, 1)); beta.FillWithRand(7);
+            Tensor gamma(Shape(1, 1, 3, 1)); gamma.FillWithRand(6);
+            Tensor beta(gamma.GetShape()); beta.FillWithRand(7);
             float momentum = 0.9f;
-            Tensor runningMean(Shape(2, 2, 3, 1)); runningMean.FillWithRand(10);
-            Tensor runningVariance(Shape(2, 2, 3, 1)); runningVariance.FillWithRand(11, 0, 1);                        
-
-            Tensor::SetForcedOpMode(EOpMode::CPU);
-            Tensor result(input.GetShape());
-            Tensor saveMean(Shape(2, 2, 3, 1));
-            Tensor saveInvVariance(Shape(2, 2, 3, 1));
-            NEURO_PROFILE("CPU", input.BatchNormalizationTrain(gamma, beta, momentum, 0.001f, runningMean, runningVariance, saveMean, saveInvVariance, result);)
-
-            Tensor::SetForcedOpMode(EOpMode::GPU);
-            Tensor result2(input.GetShape());
-            Tensor saveMean2(Shape(2, 2, 3, 1));
-            Tensor saveInvVariance2(Shape(2, 2, 3, 1));
-            NEURO_PROFILE("GPU", input.BatchNormalizationTrain(gamma, beta, momentum, 0.001f, runningMean, runningVariance, saveMean2, saveInvVariance2, result2);)
-
-            Assert::IsTrue(saveMean.Equals(saveMean2));
-            Assert::IsTrue(saveInvVariance.Equals(saveInvVariance2, 0.0001f)); // precision difference between CUDA and CPU
-            Assert::IsTrue(result.Equals(result2));
-        }
-
-        TEST_METHOD(BatchNormalizationGradient_CompareWithCpuResult)
-        {
-            Tensor input(Shape(2, 2, 3, 3)); input.FillWithRand(5);
-            Tensor gamma(Shape(2, 2, 3, 1)); gamma.FillWithRand(6);
-            Tensor beta(Shape(2, 2, 3, 1)); beta.FillWithRand(7);
-            float momentum = 0.9f;
-            Tensor runningMean(Shape(2, 2, 3, 1)); runningMean.FillWithRand(10);
-            Tensor runningVariance(Shape(2, 2, 3, 1)); runningVariance.FillWithRand(11, 0, 1);
+            Tensor runningMean(gamma.GetShape()); runningMean.FillWithRand(10);
+            Tensor runningVariance(gamma.GetShape()); runningVariance.FillWithRand(11, 0, 1);
             Tensor outputGradient(input.GetShape()); outputGradient.FillWithRand();
 
             Tensor::SetForcedOpMode(EOpMode::CPU);
             Tensor result(input.GetShape());
-            Tensor saveMean(Shape(2, 2, 3, 1));
-            Tensor saveInvVariance(Shape(2, 2, 3, 1));
+            Tensor saveMean(runningMean.GetShape());
+            Tensor saveInvVariance(runningVariance.GetShape());
             input.BatchNormalizationTrain(gamma, beta, momentum, 0.001f, runningMean, runningVariance, saveMean, saveInvVariance, result);
-            Tensor gammaGradient(Shape(2, 2, 3, 1));
-            Tensor betaGradient(Shape(2, 2, 3, 1));
-            Tensor inputGradient(Shape(2, 2, 3, 3));
+            Tensor gammaGradient(gamma.GetShape());
+            Tensor betaGradient(beta.GetShape());
+            Tensor inputGradient(input.GetShape());
             NEURO_PROFILE("CPU", input.BatchNormalizationGradient(input, gamma, 0.001f, outputGradient, saveMean, saveInvVariance, gammaGradient, betaGradient, true, inputGradient);)
 
             Tensor::SetForcedOpMode(EOpMode::GPU);
             Tensor result2(input.GetShape());
-            Tensor saveMean2(Shape(2, 2, 3, 1));
-            Tensor saveInvVariance2(Shape(2, 2, 3, 1));
+            Tensor saveMean2(runningMean.GetShape());
+            Tensor saveInvVariance2(runningVariance.GetShape());
             input.BatchNormalizationTrain(gamma, beta, momentum, 0.001f, runningMean, runningVariance, saveMean2, saveInvVariance2, result2);
-            Tensor gammaGradient2(Shape(2, 2, 3, 1));
-            Tensor betaGradient2(Shape(2, 2, 3, 1));
-            Tensor inputGradient2(Shape(2, 2, 3, 3));
+            Tensor gammaGradient2(gamma.GetShape());
+            Tensor betaGradient2(beta.GetShape());
+            Tensor inputGradient2(input.GetShape());
             NEURO_PROFILE("GPU", input.BatchNormalizationGradient(input, gamma, 0.001f, outputGradient, saveMean2, saveInvVariance2, gammaGradient2, betaGradient2, true, inputGradient2);)
 
-            Assert::IsTrue(inputGradient.Equals(inputGradient2, 0.0001f));
-            Assert::IsTrue(gammaGradient.Equals(gammaGradient2, 0.0001f)); // precision difference between CUDA and CPU
+            Assert::IsTrue(inputGradient.Equals(inputGradient2, 0.01f));
+            Assert::IsTrue(gammaGradient.Equals(gammaGradient2, 0.01f)); // precision difference between CUDA and CPU
             Assert::IsTrue(betaGradient.Equals(betaGradient2));
+        }
+
+        TEST_METHOD(BatchNormalization_Spatial_CompareWithCpuResult)
+        {
+            Tensor input(Shape(2, 2, 3, 3)); input.FillWithRand();
+            Tensor gamma(Shape(1, 1, 3, 1)); gamma.FillWithValue(1);//gamma.FillWithRand();
+            Tensor beta(gamma.GetShape()); beta.FillWithValue(0);//beta.FillWithRand();
+            Tensor runningMean(gamma.GetShape()); runningMean.Zero();//runningMean.FillWithRand();
+            Tensor runningVariance(gamma.GetShape()); runningVariance.FillWithValue(1);// runningVariance.FillWithRand(-1, 0, 1);
+
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            Tensor result(input.GetShape());
+            NEURO_PROFILE("CPU", input.BatchNormalization(gamma, beta, 0.001f, runningMean, runningVariance, result);)
+
+            Tensor::SetForcedOpMode(EOpMode::GPU);
+            Tensor result2(input.GetShape());
+            NEURO_PROFILE("GPU", input.BatchNormalization(gamma, beta, 0.001f, runningMean, runningVariance, result2);)
+
+            Assert::IsTrue(result.Equals(result2));
+        }
+
+        TEST_METHOD(BatchNormalizationTrain_Spatial_CompareWithCpuResult)
+        {
+            Tensor input(Shape(2, 2, 3, 3)); input.FillWithRand(5);
+            Tensor gamma(Shape(1, 1, 3, 1)); gamma.FillWithRand(6);
+            Tensor beta(gamma.GetShape()); beta.FillWithRand(7);
+            float momentum = 0.9f;
+            Tensor runningMean(gamma.GetShape()); runningMean.FillWithRand(10);
+            Tensor runningVariance(gamma.GetShape()); runningVariance.FillWithRand(11, 0, 1);
+
+            Tensor::SetForcedOpMode(EOpMode::CPU);
+            Tensor result(input.GetShape());
+            Tensor saveMean(runningMean.GetShape());
+            Tensor saveInvVariance(runningVariance.GetShape());
+            NEURO_PROFILE("CPU", input.BatchNormalizationTrain(gamma, beta, momentum, 0.001f, runningMean, runningVariance, saveMean, saveInvVariance, result);)
+
+            Tensor::SetForcedOpMode(EOpMode::GPU);
+            Tensor result2(input.GetShape());
+            Tensor saveMean2(runningMean.GetShape());
+            Tensor saveInvVariance2(runningVariance.GetShape());
+            NEURO_PROFILE("GPU", input.BatchNormalizationTrain(gamma, beta, momentum, 0.001f, runningMean, runningVariance, saveMean2, saveInvVariance2, result2);)
+
+            Assert::IsTrue(saveMean.Equals(saveMean2, 0.01f));
+            Assert::IsTrue(saveInvVariance.Equals(saveInvVariance2, 0.01f)); // precision difference between CUDA and CPU
+            Assert::IsTrue(result.Equals(result2, 0.01f));
         }
     };
 }

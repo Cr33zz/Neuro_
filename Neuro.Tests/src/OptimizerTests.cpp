@@ -13,6 +13,12 @@ namespace NeuroTests
             TestOptimizer(new SGD());
         }
 
+        TEST_METHOD(SGD_Optimize_GPU)
+        {
+            Tensor::SetForcedOpMode(GPU);
+            TestOptimizer(new SGD());
+        }
+
         TEST_METHOD(Adam_Optimize)
         {
             TestOptimizer(new Adam());

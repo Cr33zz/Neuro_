@@ -47,7 +47,7 @@ namespace Neuro
         __super::OnInit();
 
         m_Kernels = Tensor(Shape(m_FilterSize, m_FilterSize, m_OutputDepth, InputShape().Depth()), Name() + "/kernels");
-        m_Bias = Tensor(Shape(OutputShape().Width(), OutputShape().Height(), m_OutputDepth), Name() + "/bias");
+        m_Bias = Tensor(Shape(1, 1, m_OutputDepth), Name() + "/bias");
         m_KernelsGradient = Tensor(m_Kernels.GetShape(), Name() + "/kernels_grad");
         m_KernelsGradient.Zero();
         m_BiasGradient = Tensor(m_Bias.GetShape(), Name() + "/bias_grad");
@@ -105,7 +105,7 @@ namespace Neuro
         {
             outputsGradient[0].Conv2DTransposedKernelsGradient(*m_Inputs[0], outputsGradient[0], m_Stride, m_Padding, m_KernelsGradient);
             if (m_UseBias)
-                m_BiasGradient.Add(outputsGradient[0].Sum(EAxis::WHBAxis));
+                m_BiasGradient.Add(outputsGradient[0].Sum(EAxis::WHBAxis), m_BiasGradient);
         }
     }
 
