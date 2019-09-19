@@ -470,11 +470,13 @@ namespace NeuroTests
             Tensor inputGradient2(input.GetShape());
             NEURO_PROFILE("GPU", input.BatchNormalizationGradient(input, gamma, 0.001f, outputGradient, saveMean2, saveInvVariance2, gammaGradient2, betaGradient2, true, inputGradient2);)
 
-            Assert::IsTrue(gammaGradient.Equals(gammaGradient2, 0.01f)); // precision difference between CUDA and CPU
+            Assert::IsTrue(gammaGradient.Equals(gammaGradient2, 0.001f)); // precision difference between CUDA and CPU
             Logger::WriteMessage("Gamma grad passed.");
             Assert::IsTrue(betaGradient.Equals(betaGradient2));
             Logger::WriteMessage("Beta grad passed.");
-            Assert::IsTrue(inputGradient.Equals(inputGradient2, 0.01f));
+            inputGradient.DebugDumpValues("ig.log");
+            inputGradient2.DebugDumpValues("ig2.log");
+            Assert::IsTrue(inputGradient.Equals(inputGradient2, 0.001f));
             Logger::WriteMessage("Input grad passed.");
         }
 
@@ -499,9 +501,9 @@ namespace NeuroTests
             Tensor saveInvVariance2(runningVariance.GetShape());
             NEURO_PROFILE("GPU", input.BatchNormalizationTrain(gamma, beta, momentum, 0.001f, runningMean, runningVariance, saveMean2, saveInvVariance2, result2);)
 
-            Assert::IsTrue(saveMean.Equals(saveMean2, 0.01f));
-            Assert::IsTrue(saveInvVariance.Equals(saveInvVariance2, 0.01f)); // precision difference between CUDA and CPU
-            Assert::IsTrue(result.Equals(result2, 0.01f));
+            Assert::IsTrue(saveMean.Equals(saveMean2, 0.001f));
+            Assert::IsTrue(saveInvVariance.Equals(saveInvVariance2, 0.001f)); // precision difference between CUDA and CPU
+            Assert::IsTrue(result.Equals(result2, 0.001f));
         }
 
         TEST_METHOD(BatchNormalization_PerActivation_CompareWithCpuResult)
@@ -553,11 +555,11 @@ namespace NeuroTests
             Tensor inputGradient2(input.GetShape());
             NEURO_PROFILE("GPU", input.BatchNormalizationGradient(input, gamma, 0.001f, outputGradient, saveMean2, saveInvVariance2, gammaGradient2, betaGradient2, true, inputGradient2);)
 
-            Assert::IsTrue(gammaGradient.Equals(gammaGradient2, 0.01f)); // precision difference between CUDA and CPU
+            Assert::IsTrue(gammaGradient.Equals(gammaGradient2, 0.001f)); // precision difference between CUDA and CPU
             Logger::WriteMessage("Gamma grad passed.");
             Assert::IsTrue(betaGradient.Equals(betaGradient2));
             Logger::WriteMessage("Beta grad passed.");
-            Assert::IsTrue(inputGradient.Equals(inputGradient2, 0.01f));
+            Assert::IsTrue(inputGradient.Equals(inputGradient2, 0.001f));
             Logger::WriteMessage("Input grad passed.");
         }
 
@@ -601,9 +603,9 @@ namespace NeuroTests
             Tensor saveInvVariance2(runningVariance.GetShape());
             NEURO_PROFILE("GPU", input.BatchNormalizationTrain(gamma, beta, momentum, 0.001f, runningMean, runningVariance, saveMean2, saveInvVariance2, result2);)
 
-            Assert::IsTrue(saveMean.Equals(saveMean2, 0.01f));
-            Assert::IsTrue(saveInvVariance.Equals(saveInvVariance2, 0.01f)); // precision difference between CUDA and CPU
-            Assert::IsTrue(result.Equals(result2, 0.01f));
+            Assert::IsTrue(saveMean.Equals(saveMean2, 0.001f));
+            Assert::IsTrue(saveInvVariance.Equals(saveInvVariance2, 0.001f)); // precision difference between CUDA and CPU
+            Assert::IsTrue(result.Equals(result2, 0.001f));
         }
     };
 }
