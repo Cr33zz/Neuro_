@@ -31,6 +31,70 @@ namespace NeuroTests
                 Assert::AreEqual((double)result.GetFlat(i), (double)t1.GetFlat(i) + t2.GetFlat(i % t2.GetShape().Length), 1e-5);
         }
 
+        TEST_METHOD(Add_BroadcastWidth)
+        {
+            auto t1 = Tensor({ 1, 2, 3, 4, 5, 6,
+                              7, 8, 9, 10, 11, 12,
+                              13, 14, 15, 16, 17, 18,
+                              19, 20 ,21, 22, 23, 24 }, Shape(3, 2, 2, 2));
+            auto t2 = Tensor({ 1, 2}, Shape(2, 1, 1, 1));
+            auto correct = Tensor({ 2, 4, 4, 5, 7, 7,
+                                    8, 10, 10, 11, 13, 13,
+                                    14, 16, 16, 17, 19, 19,
+                                    20, 22 ,22, 23, 25, 25 }, Shape(3, 2, 2, 2));
+            
+            auto result = t1.Add(t2);
+            Assert::IsTrue(result.Equals(correct));
+        }
+
+        TEST_METHOD(Add_BroadcastHeight)
+        {
+            auto t1 = Tensor({ 1, 2, 3, 4, 5, 6,
+                              7, 8, 9, 10, 11, 12,
+                              13, 14, 15, 16, 17, 18,
+                              19, 20 ,21, 22, 23, 24 }, Shape(3, 2, 2, 2));
+            auto t2 = Tensor({ 1, 2 }, Shape(1, 2, 1, 1));
+            auto correct = Tensor({ 2, 3, 4, 6, 7, 8,
+                                    8, 9, 10, 12, 13, 14,
+                                    14, 15, 16, 18, 19, 20,
+                                    20, 21 ,22, 24, 25, 26 }, Shape(3, 2, 2, 2));
+
+            auto result = t1.Add(t2);
+            Assert::IsTrue(result.Equals(correct));
+        }
+
+        TEST_METHOD(Add_BroadcastDepth)
+        {
+            auto t1 = Tensor({ 1, 2, 3, 4, 5, 6,
+                              7, 8, 9, 10, 11, 12,
+                              13, 14, 15, 16, 17, 18,
+                              19, 20 ,21, 22, 23, 24 }, Shape(3, 2, 2, 2));
+            auto t2 = Tensor({ 1, 2 }, Shape(1, 1, 2, 1));
+            auto correct = Tensor({ 2, 3, 4, 5, 6, 7,
+                                    9, 10, 11, 12, 13, 14,
+                                    14, 15, 16, 17, 18, 19,
+                                    21 ,22, 23, 24, 25, 26 }, Shape(3, 2, 2, 2));
+
+            auto result = t1.Add(t2);
+            Assert::IsTrue(result.Equals(correct));
+        }
+
+        TEST_METHOD(Add_BroadcastBatch)
+        {
+            auto t1 = Tensor({ 1, 2, 3, 4, 5, 6,
+                              7, 8, 9, 10, 11, 12,
+                              13, 14, 15, 16, 17, 18,
+                              19, 20 ,21, 22, 23, 24 }, Shape(3, 2, 2, 2));
+            auto t2 = Tensor({ 1, 2 }, Shape(1, 1, 1, 2));
+            auto correct = Tensor({ 2, 3, 4, 5, 6, 7,
+                                    8, 9, 10, 11, 12, 13,
+                                    15, 16, 17, 18, 19, 20,
+                                    21 ,22, 23, 24, 25, 26 }, Shape(3, 2, 2, 2));
+
+            auto result = t1.Add(t2);
+            Assert::IsTrue(result.Equals(correct));
+        }
+
         TEST_METHOD(Add_Scalar)
         {
             auto t = Tensor(Shape(2, 3, 4, 5)); t.FillWithRange(1);
