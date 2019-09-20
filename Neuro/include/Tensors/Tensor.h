@@ -103,7 +103,8 @@ namespace Neuro
 
         Tensor Sum(EAxis axis) const;
         void Sum(EAxis axis, Tensor& output) const;
-		Tensor Avg(EAxis axis) const;
+		Tensor Mean(EAxis axis) const;
+        void Mean(EAxis axis, Tensor& output) const;
         Tensor Max(EAxis axis, Tensor* maxIndex = nullptr) const;
         Tensor Min(EAxis axis, Tensor* minIndex = nullptr) const;
         // For Feature axis it will be batch index, for Sample axis it will be flat element index within a batch
@@ -302,4 +303,19 @@ namespace Neuro
 
         friend class TensorOpGpu;
 	};
+
+    Tensor operator*(const Tensor& t1, const Tensor& t2);
+    Tensor operator*(const Tensor& t, float v);
+    Tensor operator/(const Tensor& t, float v);
+    Tensor operator/(float v, const Tensor& t);
+    Tensor operator+(const Tensor& t1, const Tensor& t2);
+    Tensor operator+(const Tensor& t, float v);
+    Tensor operator-(const Tensor& t1, const Tensor& t2);
+    Tensor operator-(const Tensor& t, float v);
+    Tensor operator-(const Tensor& t);
+    Tensor pow(const Tensor& t, float p);
+    Tensor sqr(const Tensor& t);
+    Tensor sqrt(const Tensor& t);
+    Tensor sum(const Tensor& t, EAxis axis);
+    Tensor mean(const Tensor& t, EAxis axis);
 }

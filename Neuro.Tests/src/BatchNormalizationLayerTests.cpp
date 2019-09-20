@@ -55,9 +55,9 @@ namespace NeuroTests
             TestTrain(1, 2);
         }
 
-        TEST_METHOD(Train_Spatial_Batch2)
+        TEST_METHOD(Train_Spatial_Batch1)
         {
-            TestTrain(7, 2);
+            TestTrain(7, 1);
         }
 
         TEST_METHOD(Train_PerActivation_Batch5)
@@ -87,8 +87,8 @@ namespace NeuroTests
 
             EAxis axis = depth == 1 ? BatchAxis : WHBAxis;
 
-            Tensor runningMean = input.Avg(axis);
-            Tensor runningVar = input.Sub(runningMean).Map([](float x) { return x * x; }).Avg(axis);
+            Tensor runningMean = input.Mean(axis);
+            Tensor runningVar = input.Sub(runningMean).Map([](float x) { return x * x; }).Mean(axis);
             
             Tensor output(inputShape);
             input.BatchNormalization(gamma, beta, 0.001f, runningMean, runningVar, output);
@@ -99,7 +99,7 @@ namespace NeuroTests
             auto& predictedOutput = model->Predict(input)[0];
 
             Logger::WriteMessage((string("Loss:") + to_string(model->LastTrainError())).c_str());
-            Assert::IsTrue(model->LastTrainError() < 0.001f);
+            Assert::IsTrue(model->LastTrainError() < 0.003f);
         }
 
         LayerBase* CreateLayer(uint32_t d)

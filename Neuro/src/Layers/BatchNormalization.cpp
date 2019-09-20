@@ -72,24 +72,28 @@ namespace Neuro
     {
         __super::OnInit();
 
-        m_Gamma = Tensor(Shape(m_OutputShapes[0].Width(), m_OutputShapes[0].Height(), m_OutputShapes[0].Depth()), Name() + "/gamma");
+        Shape paramsShape = Shape(InputShape().Width(), InputShape().Height(), InputShape().Depth(), 1); // PerActivation
+        if (InputShape().Depth() > 1) 
+            paramsShape = Shape(1, 1, InputShape().Depth(), 1); // Spatial
+
+        m_Gamma = Tensor(paramsShape, Name() + "/gamma");
         m_Gamma.FillWithValue(1);
-        m_Beta = Tensor(m_Gamma.GetShape(), Name() + "/beta");
+        m_Beta = Tensor(paramsShape, Name() + "/beta");
         m_Beta.Zero();
 
-        m_GammaGrad = Tensor(m_Gamma.GetShape(), Name() + "/gamma_grad");
+        m_GammaGrad = Tensor(paramsShape, Name() + "/gamma_grad");
         m_GammaGrad.Zero();
-        m_BetaGrad = Tensor(m_Beta.GetShape(), Name() + "/beta_grad");
+        m_BetaGrad = Tensor(paramsShape, Name() + "/beta_grad");
         m_BetaGrad.Zero();
 
-        m_RunningMean = Tensor(m_Gamma.GetShape(), Name() + "/running_mean");
+        m_RunningMean = Tensor(paramsShape, Name() + "/running_mean");
         m_RunningMean.FillWithValue(0);
-        m_RunningVar = Tensor(m_Gamma.GetShape(), Name() + "/running_var");
+        m_RunningVar = Tensor(paramsShape, Name() + "/running_var");
         m_RunningVar.FillWithValue(1);
 
-        m_SaveMean = Tensor(m_Gamma.GetShape());
+        m_SaveMean = Tensor(paramsShape);
         m_SaveMean.Zero();
-        m_SaveVariance = Tensor(m_Gamma.GetShape());
+        m_SaveVariance = Tensor(paramsShape);
         m_SaveVariance.FillWithValue(1);
     }
 
