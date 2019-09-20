@@ -36,7 +36,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     uint32_t BatchNormalization::ParamsNum() const
     {
-        return InputShape().Length * 4;
+        return (InputShape().Depth() > 1 ? InputShape().Depth() : InputShape().Length) * 4;
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -14,7 +14,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
     LayerBase::LayerBase(const string& constructorName, const string& name)
 	{
-        m_ClassName = ToLower(constructorName.substr(constructorName.find_last_of("::") + 1));
+        m_ClassName = constructorName.substr(constructorName.find_last_of("::") + 1);
         m_Name = name.empty() ? GenerateName() : name;
 	}
 
@@ -266,8 +266,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
 	string LayerBase::GenerateName() const
 	{
+        string classNameLower = ToLower(m_ClassName);
         stringstream ss;
-		ss << m_ClassName << "_" << (++s_LayersCountPerType[m_ClassName]);
+		ss << classNameLower << "_" << (++s_LayersCountPerType[classNameLower]);
 		return ss.str();
 	}
 }

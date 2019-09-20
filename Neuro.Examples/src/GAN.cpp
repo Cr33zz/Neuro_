@@ -10,7 +10,7 @@ void GAN::Run()
     cout << "Example: " << Name() << endl;
 
     auto gModel = CreateGenerator(100);
-    //cout << "Generator" << endl << gModel->Summary();
+    cout << "Generator" << endl << gModel->Summary();
     auto dModel = CreateDiscriminator();
     //cout << "Discriminator" << endl << dModel->Summary();
 
@@ -29,6 +29,8 @@ void GAN::Run()
     const uint32_t BATCH_SIZE = 128;
     const uint32_t BATCHES_PER_EPOCH = images.Batch() / BATCH_SIZE;
     const uint32_t EPOCHS = 100;
+
+    Tensor testNoise(Shape::From(gModel->InputShape(), 100)); testNoise.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
     
     Tensor noise(Shape::From(gModel->InputShape(), BATCH_SIZE));
     Tensor real(Shape::From(dModel->OutputShape(), BATCH_SIZE)); real.FillWithValue(1.f);
@@ -44,16 +46,18 @@ void GAN::Run()
         float totalGanLoss = 0.f;
         
         Tqdm progress(BATCHES_PER_EPOCH, 0);
-        progress.ShowEta(false).ShowElapsed(false).ShowPercent(false);
+        progress.ShowEta(true).ShowElapsed(false).ShowPercent(false);
         for (uint32_t i = 0; i < BATCHES_PER_EPOCH; ++i, progress.NextStep())
         {
             noiseHalf.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
             
-            //generator->ForceLearningPhase(true); // without it batch normalization will not normalize in the first pass
+            //gModel->ForceLearningPhase(true); // without it batch normalization will not normalize in the first pass
             // generate fake images from noise
             Tensor fakeImages = gModel->Predict(noiseHalf)[0];
             // grab random batch of real images
             Tensor realImages = images.GetRandomBatches(BATCH_SIZE / 2);
+
+            fakeImages.Map([](float x) { return (0.5f * x + 0.5f) * 255.f; }).Reshaped(Shape(m_ImageShape.Width(), m_ImageShape.Height(), m_ImageShape.Depth(), -1)).SaveAsImage(Name() + "_e" + to_string(e) + "_b" + to_string(i) + ".png", false);
 
             // perform step of training discriminator to distinguish fake from real images
             dModel->SetTrainable(true);
@@ -71,11 +75,8 @@ void GAN::Run()
             progress.SetExtraString(extString.str());
 
             if (i % 50 == 0)
-                gModel->Output().Map([](float x) { return x * 127.5f + 127.5f; }).Reshaped(Shape(m_ImageShape.Width(), m_ImageShape.Height(), m_ImageShape.Depth(), -1)).SaveAsImage(Name() + "_e" + to_string(e) + "_b" + to_string(i) + ".png", false);
+                gModel->Predict(testNoise)[0].Map([](float x) { return x * 127.5f + 127.5f; }).Reshaped(Shape(m_ImageShape.Width(), m_ImageShape.Height(), m_ImageShape.Depth(), -1)).SaveAsImage(Name() + "_e" + to_string(e) + "_b" + to_string(i) + ".png", false);
         }
-
-        /*if (e == 1 || e % 2 == 0)
-            gModel->Output().Map([](float x) { return x * 127.5f + 127.5f; }).Reshaped(Shape(m_ImageShape.Width(), m_ImageShape.Height(), m_ImageShape.Depth(), -1)).SaveAsImage(Name() + "_" + to_string(e) + ".png", false);*/
     }
 
     cin.get();
@@ -86,18 +87,18 @@ void GAN::RunDiscriminatorTrainTest()
 {
     Tensor::SetDefaultOpMode(GPU);
 
-    GlobalRngSeed(1337);
+    //GlobalRngSeed(1337);
 
     auto dModel = CreateDiscriminator();
+    cout << dModel->Summary();
 
     Tensor images;
     LoadImages(images);
-    images.Map([](float x) { return (x - 127.5f) / 127.5f; }, images);
+    images.Map([](float x) { return x / 127.5f - 1.f; }, images);
     images.Reshape(Shape::From(dModel->InputShape(), images.Batch()));
 
-    const uint32_t BATCH_SIZE = 64;
+    const uint32_t BATCH_SIZE = 32;
     const uint32_t EPOCHS = 25;
-    const uint32_t BATCHES_PER_EPOCH = images.Batch() / BATCH_SIZE;
 
     Tensor real(Shape::From(dModel->OutputShape(), BATCH_SIZE)); real.FillWithValue(1.f);
     Tensor fake(Shape::From(dModel->OutputShape(), BATCH_SIZE)); fake.FillWithValue(0.f);

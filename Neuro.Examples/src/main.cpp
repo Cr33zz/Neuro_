@@ -17,11 +17,42 @@ int main()
     //MnistConvNetwork().Run();
     //MnistNetwork().Run();
     //AutoencoderNetwork::Run();
-    ConvAutoencoderNetwork::Run();
-    GAN().Run();
-    //DeepConvGAN().RunDiscriminatorTrainTest();
+    //ConvAutoencoderNetwork::Run();
+    //GAN().Run();
     DeepConvGAN().Run();
-    //CifarGAN().RunDiscriminatorTrainTest();
+    //CifarGAN().Run();
+
+    //Tensor::SetDefaultOpMode(EOpMode::MultiCPU);
+    //int inputsNum = 100;
+
+    //auto model = new Sequential("generator");
+    //model->AddLayer(new Dense(inputsNum, 128 * 7 * 7, new ReLU())); //0
+    //model->AddLayer(new Reshape(Shape(7, 7, 128))); //1
+    //model->AddLayer(new UpSampling2D(2)); //2
+    //model->AddLayer(new Conv2D(3, 128, 1, Tensor::GetPadding(Same, 3))); //3
+    //model->AddLayer((new BatchNormalization())->SetMomentum(0.8f)); //4
+    //model->AddLayer(new Activation(new ReLU())); //5
+    //model->AddLayer(new UpSampling2D(2)); //6
+    //model->AddLayer(new Conv2D(3, 64, 1, Tensor::GetPadding(Same, 3))); //7
+    //model->AddLayer((new BatchNormalization())->SetMomentum(0.8f)); //8
+    //model->AddLayer(new Activation(new ReLU())); //9
+    //model->AddLayer(new Conv2D(3, 1, 1, Tensor::GetPadding(Same, 3), new Tanh())); //10
+
+    //Tensor noise(model->InputShape());
+    //noise.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
+
+    //noise.DebugDumpValues("__noise.log");
+
+    //Tensor fakeImages = model->Predict(noise)[0];
+
+    //int i = 0;
+    //for (auto param : model->Layer(10)->GetParams())
+    //    param->DebugDumpValues(string("__weights") + to_string(i++) + ".log");
+
+    //fakeImages.DebugDumpValues("__fakeImg.log");
+    //fakeImages.Map([](float x) { return (0.5f * x + 0.5f) * 255.f; }).Reshaped(Shape(28, 28, 1, -1)).SaveAsImage("__fakeImg.png", false);
+
+    cin.get();
 
     /*Tensor images1, labels1, images2, labels2, images3, labels3, images4, labels4, images5, labels5;
     LoadCifar10Data("data/data_batch_1.bin", images1, labels1, false, true, -1);

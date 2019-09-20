@@ -6,24 +6,24 @@ namespace Neuro
 {
 
 	//////////////////////////////////////////////////////////////////////////
-	void CategoricalCrossEntropy::Compute(const Tensor& targetOutput, const Tensor& output, Tensor& result) const
-	{
-		Tensor clippedOutput = output.Clipped(_EPSILON, 1 - _EPSILON);
-		targetOutput.Map([&](float yTrue, float y) { return -yTrue * (float)log(y); }, clippedOutput, result);
-	}
+	//void CategoricalCrossEntropy::Compute(const Tensor& targetOutput, const Tensor& output, Tensor& result) const
+	//{
+	//	Tensor clippedOutput = output.Clipped(_EPSILON, 1 - _EPSILON);
+	//	targetOutput.Map([&](float yTrue, float y) { return -yTrue * log(y); }, clippedOutput, result);
+	//}
 
-	//////////////////////////////////////////////////////////////////////////
-	void CategoricalCrossEntropy::Derivative(const Tensor& targetOutput, const Tensor& output, Tensor& result) const
-	{
-		Tensor clippedOutput = output.Clipped(_EPSILON, 1 - _EPSILON);
-		targetOutput.Map([&](float yTrue, float y) { return -yTrue / y; }, clippedOutput, result);
-	}
+	////////////////////////////////////////////////////////////////////////////
+	//void CategoricalCrossEntropy::Derivative(const Tensor& targetOutput, const Tensor& output, Tensor& result) const
+	//{
+	//	Tensor clippedOutput = output.Clipped(_EPSILON, 1 - _EPSILON);
+	//	targetOutput.Map([&](float yTrue, float y) { return -yTrue / y; }, clippedOutput, result);
+	//}
 
 	//////////////////////////////////////////////////////////////////////////
 	void BinaryCrossEntropy::Compute(const Tensor& targetOutput, const Tensor& output, Tensor& result) const
 	{
 		Tensor clippedOutput = output.Clipped(_EPSILON, 1 - _EPSILON);
-		targetOutput.Map([&](float yTrue, float y) { return -yTrue * (float)log(y) - (1 - yTrue) * (float)log(1 - y); }, clippedOutput, result);
+		targetOutput.Map([&](float yTrue, float y) { return -(yTrue * log(y) + (1 - yTrue) * log(1 - y)); }, clippedOutput, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
