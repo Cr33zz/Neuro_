@@ -25,10 +25,10 @@ ModelBase* DeepConvGAN::CreateDiscriminator()
     model->AddLayer(new Dropout(0.25f));
     model->AddLayer(new Conv2D(3, 64, 2, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)));
     model->AddLayer(new Dropout(0.25f));
-    //model->AddLayer((new BatchNormalization())->SetMomentum(0.8f));
+    model->AddLayer((new BatchNormalization())->SetMomentum(0.8f));
     model->AddLayer(new Conv2D(3, 128, 2, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)));
     model->AddLayer(new Dropout(0.25f));
-    //model->AddLayer((new BatchNormalization())->SetMomentum(0.8f));
+    model->AddLayer((new BatchNormalization())->SetMomentum(0.8f));
     model->AddLayer(new Conv2D(3, 256, 1, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)));
     model->AddLayer(new Dropout(0.25f));
     model->AddLayer(new Flatten());
