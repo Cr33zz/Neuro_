@@ -13,23 +13,30 @@ namespace Neuro
         t2.CopyToHost();
         output.OverrideHost();
 
-        auto& t1Values = t1.GetValues();
-        auto& t2Values = t2.GetValues();
-        auto& outputValues = output.GetValues();
-
-        if (t2.Batch() == t1.Batch())
+        parallel_for((uint32_t)0, max(t1.Batch(), t2.Batch()), [&](uint32_t n)
         {
-            parallel_for((uint32_t)0, (uint32_t)t1Values.size(), [&](uint32_t i)
+            uint32_t t1N = n % t1.Batch();
+            uint32_t t2N = n % t2.Batch();
+
+            parallel_for((uint32_t)0, max(t1.Depth(), t2.Depth()), [&](uint32_t d)
             {
-                outputValues[i] = alpha * t1Values[i] + beta * t2Values[i];
-            });
-            return;
-        }
+                uint32_t t1D = d % t1.Depth();
+                uint32_t t2D = d % t2.Depth();
 
-        parallel_for((uint32_t)0, t1.Batch(), [&](uint32_t n)
-        {
-            for (uint32_t i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
-                outputValues[idx] = alpha * t1Values[idx] + beta * t2Values[i];
+                parallel_for((uint32_t)0, max(t1.Height(), t2.Height()), [&](uint32_t h)
+                {
+                    uint32_t t1H = h % t1.Height();
+                    uint32_t t2H = h % t2.Height();
+
+                    parallel_for((uint32_t)0, max(t1.Width(), t2.Width()), [&](uint32_t w)
+                    {
+                        uint32_t t1W = w % t1.Width();
+                        uint32_t t2W = w % t2.Width();
+
+                        output(w, h, d, n) = alpha * t1(t1W, t1H, t1D, t1N) + beta * t2(t2W, t2H, t2D, t2N);
+                    });
+                });
+            });
         });
     }
 
@@ -65,23 +72,30 @@ namespace Neuro
         t2.CopyToHost();
         output.OverrideHost();
 
-        auto& t1Values = t1.GetValues();
-        auto& t2Values = t2.GetValues();
-        auto& outputValues = output.GetValues();
-
-        if (t2.Batch() == t1.Batch())
+        parallel_for((uint32_t)0, max(t1.Batch(), t2.Batch()), [&](uint32_t n)
         {
-            parallel_for((uint32_t)0, (uint32_t)t1Values.size(), [&](uint32_t i)
+            uint32_t t1N = n % t1.Batch();
+            uint32_t t2N = n % t2.Batch();
+
+            parallel_for((uint32_t)0, max(t1.Depth(), t2.Depth()), [&](uint32_t d)
             {
-                outputValues[i] = t1Values[i] * t2Values[i];
-            });
-            return;
-        }
+                uint32_t t1D = d % t1.Depth();
+                uint32_t t2D = d % t2.Depth();
 
-        parallel_for((uint32_t)0, t1.Batch(), [&](uint32_t n)
-        {
-            for (uint32_t i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
-                outputValues[idx] = t1Values[idx] * t2Values[i];
+                parallel_for((uint32_t)0, max(t1.Height(), t2.Height()), [&](uint32_t h)
+                {
+                    uint32_t t1H = h % t1.Height();
+                    uint32_t t2H = h % t2.Height();
+
+                    parallel_for((uint32_t)0, max(t1.Width(), t2.Width()), [&](uint32_t w)
+                    {
+                        uint32_t t1W = w % t1.Width();
+                        uint32_t t2W = w % t2.Width();
+
+                        output(w, h, d, n) = t1(t1W, t1H, t1D, t1N) * t2(t2W, t2H, t2D, t2N);
+                    });
+                });
+            });
         });
     }
 
@@ -380,23 +394,30 @@ namespace Neuro
         t2.CopyToHost();
         output.OverrideHost();
 
-        auto& t1Values = t1.GetValues();
-        auto& t2Values = t2.GetValues();
-        auto& outputValues = output.GetValues();
-
-        if (t2.Batch() == t1.Batch())
+        parallel_for((uint32_t)0, max(t1.Batch(), t2.Batch()), [&](uint32_t n)
         {
-            parallel_for((uint32_t)0, (uint32_t)t1Values.size(), [&](uint32_t i)
+            uint32_t t1N = n % t1.Batch();
+            uint32_t t2N = n % t2.Batch();
+
+            parallel_for((uint32_t)0, max(t1.Depth(), t2.Depth()), [&](uint32_t d)
             {
-                outputValues[i] = func(t1Values[i], t2Values[i]);
-            });
-            return;
-        }
+                uint32_t t1D = d % t1.Depth();
+                uint32_t t2D = d % t2.Depth();
 
-        parallel_for((uint32_t)0, t1.Batch(), [&](uint32_t n)
-        {
-            for (uint32_t i = 0, idx = n * t1.BatchLength(); i < t1.BatchLength(); ++i, ++idx)
-                outputValues[idx] = func(t1Values[idx], t2Values[i]);
+                parallel_for((uint32_t)0, max(t1.Height(), t2.Height()), [&](uint32_t h)
+                {
+                    uint32_t t1H = h % t1.Height();
+                    uint32_t t2H = h % t2.Height();
+
+                    parallel_for((uint32_t)0, max(t1.Width(), t2.Width()), [&](uint32_t w)
+                    {
+                        uint32_t t1W = w % t1.Width();
+                        uint32_t t2W = w % t2.Width();
+
+                        output(w, h, d, n) = func(t1(t1W, t1H, t1D, t1N), t2(t2W, t2H, t2D, t2N));
+                    });
+                });
+            });
         });
     }
 }

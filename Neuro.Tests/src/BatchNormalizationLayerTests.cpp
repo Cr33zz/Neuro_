@@ -55,9 +55,9 @@ namespace NeuroTests
             TestTrain(1, 2);
         }
 
-        TEST_METHOD(Train_Spatial_Batch2)
+        TEST_METHOD(Train_Spatial_Batch1)
         {
-            TestTrain(7, 2);
+            TestTrain(7, 1);
         }
 
         TEST_METHOD(Train_PerActivation_Batch5)
@@ -99,7 +99,7 @@ namespace NeuroTests
             auto& predictedOutput = model->Predict(input)[0];
 
             Logger::WriteMessage((string("Loss:") + to_string(model->LastTrainError())).c_str());
-            Assert::IsTrue(model->LastTrainError() < 0.001f);
+            Assert::IsTrue(model->LastTrainError() < 0.003f);
         }
 
         LayerBase* CreateLayer(uint32_t d)
