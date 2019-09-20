@@ -304,6 +304,53 @@ namespace Neuro
         friend class TensorOpGpu;
 	};
 
+    //////////////////////////////////////////////////////////////////////////
+    _inline float Tensor::GetFlat(uint32_t i) const
+    {
+        CopyToHost();
+        return m_Values[i];
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    _inline float& Tensor::Get(uint32_t w, uint32_t h, uint32_t d, uint32_t n)
+    {
+        CopyToHost();
+        return m_Values[m_Shape.GetIndex(w, h, d, n)];
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    _inline float Tensor::Get(uint32_t w, uint32_t h, uint32_t d, uint32_t n) const
+    {
+        CopyToHost();
+        return m_Values[m_Shape.GetIndex(w, h, d, n)];
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    _inline float& Tensor::operator()(uint32_t w, uint32_t h, uint32_t d, uint32_t n)
+    {
+        return Get(w, h, d, n);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    _inline float Tensor::operator()(uint32_t w, uint32_t h, uint32_t d, uint32_t n) const
+    {
+        return Get(w, h, d, n);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    _inline void Tensor::SetFlat(float value, uint32_t i)
+    {
+        CopyToHost();
+        m_Values[i] = value;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    _inline void Tensor::Set(float value, uint32_t w, uint32_t h, uint32_t d, uint32_t n)
+    {
+        CopyToHost();
+        m_Values[m_Shape.GetIndex(w, h, d, n)] = value;
+    }
+
     Tensor operator*(const Tensor& t1, const Tensor& t2);
     Tensor operator*(const Tensor& t, float v);
     Tensor operator/(const Tensor& t, float v);

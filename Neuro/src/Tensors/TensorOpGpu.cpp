@@ -42,12 +42,36 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const
     {
-        if (!t1.SameDimensionsExceptBatches(t2))
-            return __super::Add(alpha, t1, beta, t2, output); // broadcasting not supported on GPU yet
-
         t1.CopyToDevice();
         t2.CopyToDevice();
         output.CopyToDevice();
+
+        if (!t1.SameDimensionsExceptBatches(t2))
+        {
+            dim3 blocks, threads;
+            GetKernelRunParams(output.Length(), blocks, threads);
+
+            return CudaKernels::AddBroadcast(
+                blocks, 
+                threads, 
+                alpha, 
+                t1.GetDevicePtr(),
+                t1.Width(),
+                t1.Height(),
+                t1.Depth(),
+                t1.Batch(),
+                beta,
+                t2.GetDevicePtr(),
+                t2.Width(),
+                t2.Height(),
+                t2.Depth(),
+                t2.Batch(),
+                output.GetDevicePtr(),
+                output.Width(),
+                output.Height(),
+                output.Depth(),
+                output.Batch());
+        }
 
         if (t2.Batch() == t1.Batch())
         {

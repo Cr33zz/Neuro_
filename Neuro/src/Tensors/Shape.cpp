@@ -92,31 +92,6 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-    uint32_t Shape::GetIndex(int w, int h, int d, int n) const
-	{
-        assert(w >= -(int)Width() && w < (int)Width());
-		assert(h >= -(int)Height() && h < (int)Height());
-		assert(d >= -(int)Depth() && d < (int)Depth());
-		assert(n >= -(int)Batch() && n < (int)Batch());
-
-		return Dim0Dim1Dim2 * (n >= 0 ? n : (n + Dimensions[3])) + 
-               Dim0Dim1 * (d >= 0 ? d : (d + Dimensions[2])) + 
-               Dim0 * (h >= 0 ? h : (h + Dimensions[1])) + 
-               (w >= 0 ? w : (w + Dimensions[0]));
-	}
-
-    //////////////////////////////////////////////////////////////////////////
-    uint32_t Shape::GetIndex(uint32_t w, uint32_t h, uint32_t d, uint32_t n) const
-	{
-		assert(w < Width());
-		assert(h < Height());
-		assert(d < Depth());
-		assert(n < Batch());
-
-		return Dim0Dim1Dim2 * n + Dim0Dim1 * d + Dim0 * h + w;
-	}
-
-    //////////////////////////////////////////////////////////////////////////
     uint32_t Shape::GetIndex(const vector<uint32_t>& indices) const
     {
         size_t indicesCount = indices.size();

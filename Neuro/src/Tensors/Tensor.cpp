@@ -1368,39 +1368,6 @@ namespace Neuro
         stream.read(&m_Name[0], nameLen);
     }
 
-    //////////////////////////////////////////////////////////////////////////
-	float Tensor::GetFlat(uint32_t i) const
-	{
-		CopyToHost();
-		return m_Values[i];
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	float& Tensor::Get(uint32_t w, uint32_t h, uint32_t d, uint32_t n)
-	{
-		CopyToHost();
-		return m_Values[m_Shape.GetIndex(w, h, d, n)];
-	}
-
-    //////////////////////////////////////////////////////////////////////////
-    float Tensor::Get(uint32_t w, uint32_t h, uint32_t d, uint32_t n) const
-    {
-        CopyToHost();
-        return m_Values[m_Shape.GetIndex(w, h, d, n)];
-    }
-
-	//////////////////////////////////////////////////////////////////////////
-	float& Tensor::operator()(uint32_t w, uint32_t h, uint32_t d, uint32_t n)
-	{
-		return Get(w, h, d, n);
-	}
-
-    //////////////////////////////////////////////////////////////////////////
-    float Tensor::operator()(uint32_t w, uint32_t h, uint32_t d, uint32_t n) const
-    {
-        return Get(w, h, d, n);
-    }
-
 	//////////////////////////////////////////////////////////////////////////
 	float Tensor::TryGet(float def, int w, int h, int d, int n) const
 	{
@@ -1408,20 +1375,6 @@ namespace Neuro
 			return def;
 
 		return Get(w, h, d, n);
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	void Tensor::SetFlat(float value, uint32_t i)
-	{
-		CopyToHost();
-		m_Values[i] = value;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Set(float value, uint32_t w, uint32_t h, uint32_t d, uint32_t n)
-	{
-		CopyToHost();
-		m_Values[m_Shape.GetIndex(w, h, d, n)] = value;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
