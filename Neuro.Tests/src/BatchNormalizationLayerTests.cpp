@@ -87,8 +87,8 @@ namespace NeuroTests
 
             EAxis axis = depth == 1 ? BatchAxis : WHBAxis;
 
-            Tensor runningMean = input.Avg(axis);
-            Tensor runningVar = input.Sub(runningMean).Map([](float x) { return x * x; }).Avg(axis);
+            Tensor runningMean = input.Mean(axis);
+            Tensor runningVar = input.Sub(runningMean).Map([](float x) { return x * x; }).Mean(axis);
             
             Tensor output(inputShape);
             input.BatchNormalization(gamma, beta, 0.001f, runningMean, runningVar, output);

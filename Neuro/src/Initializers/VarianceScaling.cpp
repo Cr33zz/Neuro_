@@ -32,12 +32,12 @@ namespace Neuro
 
         if (m_Distribution == NormalDistribution)
         {
-            float stddev = sqrt(scale) / 0.87962566103423978f;
+            float stddev = ::sqrt(scale) / 0.87962566103423978f;
             t.FillWithFunc([&]() { return Normal::NextTruncatedSingle(0.f, stddev); });
         }
         else
         {
-            float limit = sqrt(3.f * scale);
+            float limit = ::sqrt(3.f * scale);
             t.FillWithFunc([&]() { return Uniform::NextSingle(-limit, limit); });
         }
     }
@@ -69,8 +69,8 @@ namespace Neuro
             for (uint32_t i = 0; i < shape.NDim; ++i)
                 product *= (float)shape.Dimensions[i];
 
-            fanIn = sqrt(product);
-            fanOut = sqrt(product);
+            fanIn = ::sqrt(product);
+            fanOut = ::sqrt(product);
         }
 
         return make_pair(fanIn, fanOut);

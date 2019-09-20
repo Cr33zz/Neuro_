@@ -220,8 +220,8 @@ namespace Neuro
         FIBITMAP* image = nullptr;
         RGBQUAD imageColor;
         imageColor.rgbRed = imageColor.rgbGreen = imageColor.rgbBlue = 255;
-        uint32_t imageRows = (uint32_t)ceil(sqrt((float)maxImages));
-        uint32_t imageCols = (uint32_t)ceil(sqrt((float)maxImages));
+        uint32_t imageRows = (uint32_t)ceil(::sqrt((float)maxImages));
+        uint32_t imageCols = (uint32_t)ceil(::sqrt((float)maxImages));
 
         const uint32_t IMG_WIDTH = imageRows * imgWidth;
         const uint32_t IMG_HEIGHT = imageCols * imgHeight;
@@ -288,8 +288,8 @@ namespace Neuro
         FIBITMAP* image = nullptr;
         RGBQUAD imageColor;
         imageColor.rgbRed = imageColor.rgbGreen = imageColor.rgbBlue = 255;
-        uint32_t imageRows = (uint32_t)ceil(sqrt((float)maxImages));
-        uint32_t imageCols = (uint32_t)ceil(sqrt((float)maxImages));
+        uint32_t imageRows = (uint32_t)ceil(::sqrt((float)maxImages));
+        uint32_t imageCols = (uint32_t)ceil(::sqrt((float)maxImages));
 
         const uint32_t IMG_WIDTH = imageRows * imgWidth;
         const uint32_t IMG_HEIGHT = imageCols * imgHeight;

@@ -689,7 +689,7 @@ namespace NeuroTests
             auto t = Tensor({ -20,  1,  5,  5,
                                 6, -1,  3,  4 }, Shape(2, 2, 1, 2));
 
-            auto result = t.Avg(WHDAxis);
+            auto result = t.Mean(WHDAxis);
             Tensor correct({ -2.25f, 3 }, Shape(2));
 
             for (uint32_t i = 0; i < result.GetShape().Length; ++i)
@@ -703,7 +703,7 @@ namespace NeuroTests
             auto t = Tensor({ -20,  1,  5,  5,
                                 6, -1,  3,  4 }, Shape(2, 2, 1, 2));
 
-            auto result = t.Avg(BatchAxis);
+            auto result = t.Mean(BatchAxis);
             Tensor correct({ -7, 0, 4, 4.5f }, Shape(2, 2));
 
             for (uint32_t i = 0; i < result.GetShape().Length; ++i)
@@ -717,7 +717,7 @@ namespace NeuroTests
             auto t = Tensor({ -20,  1,  5,  5,
                                 6, -1,  3,  4 }, Shape(2, 2, 1, 2));
 
-            auto result = t.Avg(GlobalAxis);
+            auto result = t.Mean(GlobalAxis);
             Tensor correct({ 0.375f }, Shape(1));
 
             for (uint32_t i = 0; i < result.GetShape().Length; ++i)

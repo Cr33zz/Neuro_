@@ -331,7 +331,7 @@ namespace Neuro
         // vGrad = beta2 * vGrad + (1 - beta2) * sqr(gradient)
         vGrad.Map([&](float v, float g) { return v * beta2 + (1 - beta2) * g * g; }, gradient, vGrad);
         // parameter = parameter - mGrad / (sqrt(vGrad) + epsilon) * lr
-        parameter.Sub(mGrad.Div(vGrad.Map([&](float x) { return (float)sqrt(x) + epsilon; })).Mul(lr), parameter);
+        parameter.Sub(mGrad.Div(vGrad.Map([&](float x) { return (float)::sqrt(x) + epsilon; })).Mul(lr), parameter);
 
         gradient.Zero();
     }
@@ -549,9 +549,9 @@ namespace Neuro
         runningVar.CopyToHost();
         output.OverrideHost();
 
-        Tensor xmu = input.Sub(runningMean);
-        Tensor xhat = xmu.MulElem(runningVar.Map([&](float x) { return 1.f / sqrt(x + epsilon); }));
-        xhat.MulElem(gamma).Add(beta, output);
+        Tensor xMu = input - runningMean;
+        Tensor xNorm = xMu * (1.f / sqrt(runningVar + epsilon));
+        xNorm.MulElem(gamma).Add(beta, output);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -568,18 +568,18 @@ namespace Neuro
 
         EAxis axis = mode == PerActivation ? BatchAxis : WHBAxis;
 
-        saveMean = input.Avg(axis);
-        Tensor xmu = input.Sub(saveMean);
-        Tensor variance = xmu.Map([](float x) { return x * x; }).Avg(axis);
-        Tensor varianceSqrt = variance.Map([&](float x) { return sqrt(x + epsilon); });
-        saveInvVariance = varianceSqrt.Map([](float x) { return 1.f / x; });
-        Tensor xhat = xmu.MulElem(saveInvVariance);
-        xhat.MulElem(gamma).Add(beta, output);
+        input.Mean(axis, saveMean);
+        Tensor xMu = input - saveMean;
+        Tensor var = mean(sqr(xMu), axis);
+        Tensor varSqrt = sqrt(var + epsilon);
+        varSqrt.Map([](float x) { return 1.f / x; }, saveInvVariance);
+        Tensor xNorm = xMu * saveInvVariance;
+        xNorm.MulElem(gamma).Add(beta, output);
 
         runningMean.Add(1 - momentum, momentum, saveMean, runningMean);
 
         float m = (float)(mode == PerActivation ? input.Batch() : (input.Width() * input.Height() * input.Batch()));
-        Tensor tempVar = variance.Mul(m / (m - 1)); // according to the original BN paper
+        Tensor tempVar = var * m / (m - 1); // according to the original BN paper
         runningVar.Add(1 - momentum, momentum, tempVar, runningVar);
     }
 
@@ -597,42 +597,17 @@ namespace Neuro
 
         EAxis axis = mode == PerActivation ? BatchAxis : WHBAxis;
 
-        /*float m = (float)(mode == PerActivation ? input.Batch() : (input.Width() * input.Height() * input.Batch()));
+        float m = (float)(mode == PerActivation ? input.Batch() : (input.Width() * input.Height() * input.Batch()));
 
-        Tensor dxhat = outputGradient.MulElem(gamma);
-        Tensor xmu = input.Sub(savedMean);
-        Tensor dvar = dxhat.MulElem(xmu).Sum(axis).MulElem(savedInvVariance.Map([](float x) { return -0.5f * (x * x * x); }));
-        Tensor dmu =
-*/
+        Tensor xMu = input - savedMean;
+        Tensor xNorm = xMu * savedInvVariance;
+        Tensor dxNorm = outputGradient * gamma;
+        Tensor dVar = sum(dxNorm * xMu, axis) * -.5f * pow(savedInvVariance, 3);
+        Tensor dMu = sum(dxNorm * -savedInvVariance, axis) + dVar * mean(xMu * -2.f, axis);
 
-
-
-
-
-
-
-        float n = (float)(mode == PerActivation ? outputGradient.Batch() : (outputGradient.Width() * outputGradient.Height() * outputGradient.Batch()));
-
-        Tensor xmu = input.Sub(savedMean);
-        Tensor variance = xmu.Map([](float x) { return x * x; }).Avg(axis);
-        Tensor sqrtvar = variance.Map([](float x) { return sqrt(x); });
-
-        if (trainable)
-        {
-            outputGradient.Sum(axis, betaGradient);
-            Tensor va2 = xmu.MulElem(savedInvVariance);
-            va2.MulElem(outputGradient).Sum(axis, gammaGradient);
-        }
-
-        Tensor dva2 = outputGradient.MulElem(gamma);
-        Tensor dxmu = dva2.MulElem(savedInvVariance);
-        Tensor dinvvar = xmu.MulElem(dva2).Sum(axis);
-        Tensor dsqrtvar = dinvvar.Map([&](float x1, float x2) { return -1.f / (x2*x2) * x1; }, sqrtvar);
-        Tensor dvar = dsqrtvar.Map([&](float x1, float x2) { return 0.5f * pow(x2 + epsilon, -0.5f) * x1; }, variance);
-        Tensor dcarre = Tensor(input.GetShape()).FillWithValue(1).MulElem(dvar).Mul(1.f / n);
-        dxmu.Add(xmu.MulElem(dcarre).Mul(2), dxmu);
-        Tensor dmu = dxmu.Sum(axis).Negated();
-        dxmu.Add(Tensor(dxmu.GetShape()).FillWithValue(1).MulElem(dmu).Mul(1.f / n), inputGradient);
+        inputGradient = (dxNorm * savedInvVariance) + (dVar * xMu * 2.f / m) + (dMu / m);
+        gammaGradient = sum(outputGradient * xNorm, axis);
+        betaGradient = sum(outputGradient, axis);
     }
 
     //////////////////////////////////////////////////////////////////////////

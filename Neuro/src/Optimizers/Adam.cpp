@@ -31,7 +31,7 @@ namespace Neuro
 			}
 		}
 
-        float learningRate = m_LearningRate * (float)sqrt(1.0 - pow(m_Beta2, m_Iteration)) / (1.0f - (float)pow(m_Beta1, m_Iteration));
+        float learningRate = m_LearningRate * (float)::sqrt(1.0 - ::pow(m_Beta2, m_Iteration)) / (1.0f - (float)::pow(m_Beta1, m_Iteration));
 
 		for (auto i = 0; i < paramsAndGrads.size(); ++i)
 		{

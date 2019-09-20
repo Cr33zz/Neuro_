@@ -146,8 +146,8 @@ namespace Neuro
 
         const uint32_t TENSOR_WIDTH = Width();
         const uint32_t TENSOR_HEIGHT = Height();
-        const uint32_t IMG_ROWS = (uint32_t)ceil(sqrt((float)Batch()));
-        const uint32_t IMG_COLS = (uint32_t)ceil(sqrt((float)Batch()));
+        const uint32_t IMG_ROWS = (uint32_t)ceil(::sqrt((float)Batch()));
+        const uint32_t IMG_COLS = (uint32_t)ceil(::sqrt((float)Batch()));
         const uint32_t IMG_WIDTH = IMG_ROWS * TENSOR_WIDTH;
         const uint32_t IMG_HEIGHT = IMG_COLS * TENSOR_HEIGHT;
         const bool GRAYSCALE = (Depth() == 1);
@@ -346,7 +346,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::MulElem(const Tensor& t) const
 	{
-		Tensor result(m_Shape);
+        Tensor result(Shape(max(Width(), t.Width()), max(Height(), t.Height()), max(Depth(), t.Depth()), max(Batch(), t.Batch())));
 		MulElem(t, result);
 		return result;
 	}
@@ -394,11 +394,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Div(float v, Tensor& result) const
 	{
-		CopyToHost();
-		result.OverrideHost();
-
-		for (uint32_t i = 0; i < m_Values.size(); ++i)
-			result.m_Values[i] = m_Values[i] / v;
+        Mul(1 / v, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -549,7 +545,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::Map(const function<float(float, float)>& func, const Tensor& other) const
 	{
-		Tensor result(m_Shape);
+		Tensor result(Shape(max(Width(), other.Width()), max(Height(), other.Height()), max(Depth(), other.Depth()), max(Batch(), other.Batch())));
 		Map(func, other, result);
 		return result;
 	}
@@ -592,28 +588,56 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor Tensor::Avg(EAxis axis) const
-	{
-		Tensor sum = Sum(axis);
+    template <int W, int H, int D, int N>
+    Tensor MeanTemplate(const Tensor& input, EAxis axis)
+    {
+        Tensor mean(Shape(W ? 1 : input.Width(), H ? 1 : input.Height(), D ? 1 : input.Depth(), N ? 1 : input.Batch()));
+        input.Mean(axis, mean);
+        return mean;
+    }
 
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::Mean(EAxis axis) const
+	{
         if (axis == EAxis::GlobalAxis)
-            return sum.Mul(1.f / Length());
+            return MeanTemplate<1, 1, 1, 1>(*this, axis);
         if (axis == EAxis::WidthAxis)
-            return sum.Mul(1.f / Width());
+            return MeanTemplate<1, 0, 0, 0>(*this, axis);
         if (axis == EAxis::HeightAxis)
-            return sum.Mul(1.f / Height());
+            return MeanTemplate<0, 1, 0, 0>(*this, axis);
         if (axis == EAxis::DepthAxis)
-            return sum.Mul(1.f / Depth());
+            return MeanTemplate<0, 0, 1, 0>(*this, axis);
         if (axis == EAxis::BatchAxis)
-            return sum.Mul(1.f / Batch());
+            return MeanTemplate<0, 0, 0, 1>(*this, axis);
         if (axis == EAxis::WHDAxis)
-            return sum.Mul(1.f / (Width() * Height() * Depth()));
+            return MeanTemplate<1, 1, 1, 0>(*this, axis);
         if (axis == EAxis::WHBAxis)
-            return sum.Div((float)(Width() * Height() * Batch()));
+            return MeanTemplate<1, 1, 0, 1>(*this, axis);
 
         assert(false);
         return Tensor();
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Mean(EAxis axis, Tensor& output) const
+    {
+        Sum(axis, output);
+
+        if (axis == EAxis::GlobalAxis)
+            output.Div((float)Length(), output);
+        if (axis == EAxis::WidthAxis)
+            output.Div((float)Width(), output);
+        if (axis == EAxis::HeightAxis)
+            output.Div((float)Height(), output);
+        if (axis == EAxis::DepthAxis)
+            output.Div((float)Depth(), output);
+        if (axis == EAxis::BatchAxis)
+            output.Div((float)Batch(), output);
+        if (axis == EAxis::WHDAxis)
+            output.Div((float)(Width() * Height() * Depth()), output);
+        if (axis == EAxis::WHBAxis)
+            output.Div((float)(Width() * Height() * Batch()), output);
+    }
 
 	//////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::MergeIntoBatch(const vector<Tensor>& tensors)
@@ -838,7 +862,7 @@ namespace Neuro
                 if (normMode == ENormMode::L2)
                 {
                     for (uint32_t i = 0; i < norm.Length(); ++i)
-                        norm.m_Values[i] = sqrt(norm.m_Values[i]);
+                        norm.m_Values[i] = ::sqrt(norm.m_Values[i]);
                 }
             }
 
@@ -865,7 +889,7 @@ namespace Neuro
                 if (normMode == ENormMode::L2)
                 {
                     for (uint32_t i = 0; i < norm.Length(); ++i)
-                        norm.m_Values[i] = sqrt(norm.m_Values[i]);
+                        norm.m_Values[i] = ::sqrt(norm.m_Values[i]);
                 }
             }
 
@@ -970,7 +994,7 @@ namespace Neuro
             }
 
             float n = (float)Batch();
-            Tensor xmean = Avg(EAxis::BatchAxis);
+            Tensor xmean = Mean(EAxis::BatchAxis);
             Tensor xmu = Sub(xmean);
             Tensor variance = xmu.Map([](float x) { return x * x; }).Sum(EAxis::BatchAxis).Mul(1.f / n);
             Tensor invVar = variance.Map([](float x) { return 1.f / x; });
@@ -1865,5 +1889,89 @@ namespace Neuro
 
         if (!workspace)
             workspace = new CudaDeviceVariable<char>(size);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor operator*(const Tensor& t1, const Tensor& t2)
+    {
+        return t1.MulElem(t2);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor operator*(const Tensor& t, float v)
+    {
+        return t.Mul(v);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor operator/(const Tensor& t, float v)
+    {
+        return t.Div(v);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor operator/(float v, const Tensor& t)
+    {
+        return t.Map([&](float x) { return v / x; });
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor operator+(const Tensor& t1, const Tensor& t2)
+    {
+        return t1.Add(t2);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor operator+(const Tensor& t1, float v)
+    {
+        return t1.Add(v);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor operator-(const Tensor& t1, const Tensor& t2)
+    {
+        return t1.Sub(t2);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor operator-(const Tensor& t, float v)
+    {
+        return t.Sub(v);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor operator-(const Tensor& t)
+    {
+        return t.Negated();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor pow(const Tensor& t, float p)
+    {
+        return t.Map([&](float x) { return ::pow(x, p); });
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor sqr(const Tensor& t)
+    {
+        return t.Map([&](float x) { return x * x; });
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor sqrt(const Tensor& t)
+    {
+        return t.Map([](float x) { return ::sqrt(x); });
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor sum(const Tensor& t, EAxis axis)
+    {
+        return t.Sum(axis);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor mean(const Tensor& t, EAxis axis)
+    {
+        return t.Mean(axis);
     }
 }

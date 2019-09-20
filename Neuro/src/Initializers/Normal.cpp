@@ -37,7 +37,7 @@ namespace Neuro
 		while (r2 >= 1.0 || r2 == 0.0);
 
 		//Polar method, a more efficient version of the Box-Muller approach.
-		float f = (float)sqrt(-2 * log(r2) / r2);
+		float f = (float)::sqrt(-2 * log(r2) / r2);
 
 		m_HasValue = true;
 		m_Value = f * x1;
