@@ -46,7 +46,7 @@ public:
         iota(samplesIds.begin(), samplesIds.end(), 0);
         Tensor samples(Shape(1, 784, 1, (uint32_t)samplesIds.size()));
         input.GetBatches(samplesIds, samples);
-        Tensor decodedSamples = model.Predict(samples)[0];
+        Tensor decodedSamples = *model.Predict(samples)[0];
         samples.Reshape(Shape(28, 28, 1, -1));
         samples.SaveAsImage("original.png", true);
         decodedSamples.Reshape(Shape(28, 28, 1, -1));

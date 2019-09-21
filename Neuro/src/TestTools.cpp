@@ -26,9 +26,10 @@ namespace Neuro
 		auto inputs = GenerateInputsForLayer(layer, batchSize);
 
         GlobalRngSeed(101);
-		auto& output = layer->FeedForward(inputs, true);
-        vector<Tensor> outputGradient = { Tensor(output.GetShape()) };
-		outputGradient[0].FillWithValue(1);
+		auto& output = *layer->FeedForward(inputs, true)[0];
+        vector<Tensor> tmpOutputGrad = { Tensor(output.GetShape()) };
+        tensor_ptr_vec_t outputGradient = { &tmpOutputGrad[0] };
+		outputGradient[0]->FillWithValue(1);
 
 		layer->BackProp(outputGradient);
 
@@ -45,10 +46,10 @@ namespace Neuro
 
 				input.SetFlat(oldValue - DERIVATIVE_EPSILON, i);
                 GlobalRngSeed(101);
-				auto output1 = layer->FeedForward(inputs, true);
+				auto output1 = *layer->FeedForward(inputs, true)[0];
 				input.SetFlat(oldValue + DERIVATIVE_EPSILON, i);
                 GlobalRngSeed(101);
-				auto output2 = layer->FeedForward(inputs, true);
+				auto output2 = *layer->FeedForward(inputs, true)[0];
 
 				input.SetFlat(oldValue, i);
 
@@ -62,7 +63,7 @@ namespace Neuro
 					approxGradient += approxGrad[j];
 				}
 
-				if (abs(approxGradient - layer->InputsGradient()[n].GetFlat(i)) > 0.02f)
+				if (abs(approxGradient - layer->InputsGradient()[n]->GetFlat(i)) > 0.02f)
 				{
 					//Assert::Fail(string("Input gradient validation failed at element ") + to_string(i) + " of input " + to_string(n) + ", expected " + to_string(approxGradient) + " actual " + to_string(layer->InputsGradient[n].GetFlat(i)) + "!");
 					return false;
@@ -79,9 +80,10 @@ namespace Neuro
         Tensor::SetDefaultOpMode(EOpMode::CPU);
         auto inputs = GenerateInputsForLayer(layer, batchSize);
 
-        auto& output = layer->FeedForward(inputs, true);
-        vector<Tensor> outputGradient = { Tensor(output.GetShape()) };
-        outputGradient[0].FillWithValue(1);
+        auto& output = *layer->FeedForward(inputs, true)[0];
+        vector<Tensor> tmpOutputGrad = { Tensor(output.GetShape()) };
+        tensor_ptr_vec_t outputGradient = { &tmpOutputGrad[0] };
+        outputGradient[0]->FillWithValue(1);
 
         layer->BackProp(outputGradient);
 
@@ -102,9 +104,9 @@ namespace Neuro
 
 			float oldValue = parameters->GetFlat(i);
 			parameters->SetFlat(oldValue + DERIVATIVE_EPSILON, i);
-			auto output1 = Tensor(layer->FeedForward(inputs, true));
+			auto output1 = *layer->FeedForward(inputs, true)[0];
 			parameters->SetFlat(oldValue - DERIVATIVE_EPSILON, i);
-			auto output2 = Tensor(layer->FeedForward(inputs, true));
+			auto output2 = *layer->FeedForward(inputs, true)[0];
 
 			parameters->SetFlat(oldValue, i);
 
@@ -129,9 +131,9 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Neuro::tensor_ptr_vec_t TestTools::GenerateInputsForLayer(const LayerBase* layer, int batchSize)
+    const_tensor_ptr_vec_t TestTools::GenerateInputsForLayer(const LayerBase* layer, int batchSize)
 	{
-		tensor_ptr_vec_t inputs(layer->InputShapes().size());
+        const_tensor_ptr_vec_t inputs(layer->InputShapes().size());
 
 		for (uint32_t i = 0; i < (int)inputs.size(); ++i)
 		{

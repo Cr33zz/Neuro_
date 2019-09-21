@@ -39,68 +39,41 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Sequential::OnLink(LayerBase* layer, bool input)
     {
-        __super::OnLink(layer, input);
-
         if (input)
-            m_Layers.front()->OnLink(layer, true);
+            m_Layers.front()->OnLink(layer, input);
         else
-            m_Layers.back()->OnLink(layer, false);
+            m_Layers.back()->OnLink(layer, input);
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	void Sequential::FeedForwardInternal(bool training)
+    const tensor_ptr_vec_t& Sequential::FeedForward(const const_tensor_ptr_vec_t& inputs, bool training)
 	{
-		assert(Inputs().size() == 1);
+        Init();
+		assert(inputs.size() == 1);
 
 		for (size_t i = 0; i < m_Layers.size(); ++i)
-			m_Layers[i]->FeedForward(i == 0 ? Inputs()[0] : &(m_Layers[i - 1]->Output()), training);
+			m_Layers[i]->FeedForward(i == 0 ? inputs[0] : m_Layers[i - 1]->Output(), training);
+
+        return m_Layers.back()->Outputs();
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-    void Sequential::BackPropInternal(vector<Tensor>& outputsGradient)
+    const tensor_ptr_vec_t& Sequential::BackProp(const tensor_ptr_vec_t& outputsGradient)
 	{
 		assert(outputsGradient.size() == 1);
 
-        vector<Tensor>* lastOutputsGradient = &outputsGradient;
+        const tensor_ptr_vec_t* lastOutputsGradient = &outputsGradient;
 		for (int i = (int)m_Layers.size() - 1; i >= 0; --i)
 			lastOutputsGradient = &m_Layers[i]->BackProp(*lastOutputsGradient);
+
+        return m_Layers[0]->InputsGradient();
 	}
 
     //////////////////////////////////////////////////////////////////////////
-	const vector<LayerBase*>& Sequential::ModelOutputLayers() const
-	{
-		return m_ModelOutputLayers;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-    uint32_t Sequential::OutputLayersCount() const
-	{
-		return 1;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	const vector<LayerBase*>& Sequential::Layers() const
-	{
-		return m_Layers;
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	LayerBase* Sequential::Layer(int i)
-	{
-		return m_Layers[i];
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	LayerBase* Sequential::LastLayer() const
-	{
-		return m_Layers.back();
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	int Sequential::LayersCount() const
-	{
-		return (int)m_Layers.size();
-	}
+    int Sequential::InputOffset(const LayerBase* inputLayer) const
+    {
+        return m_Layers[0]->InputOffset(inputLayer);
+    }
 
 	//////////////////////////////////////////////////////////////////////////
 	void Sequential::AddLayer(LayerBase* layer)
@@ -108,8 +81,14 @@ namespace Neuro
         assert(!m_Layers.empty() || layer->HasInputShape()); // first added layer must have input shape specified
         assert(!layer->InputLayer() || layer->InputLayer() == m_Layers.back()); // if layer being added has input layer it must be the last one in the sequence
 
+        if (m_Layers.empty())
+        {
+            m_ModelInputLayers.resize(1);
+            m_ModelInputLayers[0] = layer;
+        }
+
         if (!m_Layers.empty() && !layer->InputLayer())
-            layer->Link(m_Layers.back());
+            layer->LinkInput(m_Layers.back());
 		
         m_ModelOutputLayers.resize(1);
         m_ModelOutputLayers[0] = layer;

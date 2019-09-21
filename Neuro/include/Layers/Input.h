@@ -15,7 +15,5 @@ namespace Neuro
         Input();
 
 		virtual LayerBase* GetCloneInstance() const override;
-		virtual void FeedForwardInternal(bool training) override;
-		virtual void BackPropInternal(vector<Tensor>& outputsGradient) override;
 	};
 }

@@ -2,7 +2,6 @@
 
 #include "Types.h"
 #include "Activations.h"
-#include "Data.h"
 #include "Loss.h"
 #include "Random.h"
 #include "Tools.h"

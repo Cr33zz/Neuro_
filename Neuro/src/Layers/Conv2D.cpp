@@ -63,7 +63,7 @@ namespace Neuro
         __super::OnLink(layer, input);
 
         if (input)
-            m_OutputShapes[0] = Tensor::GetConvOutputShape(layer->OutputShape(), m_FiltersNum, m_FilterSize, m_FilterSize, m_Stride, m_Padding, m_Padding);
+            m_OutputsShapes[0] = Tensor::GetConvOutputShape(layer->OutputShape(), m_FiltersNum, m_FilterSize, m_FilterSize, m_Stride, m_Padding, m_Padding);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -89,21 +89,21 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Conv2D::FeedForwardInternal(bool training)
 	{
-		m_Inputs[0]->Conv2D(m_Kernels, m_Stride, m_Padding, m_Outputs[0]);
+		m_Inputs[0]->Conv2D(m_Kernels, m_Stride, m_Padding, *m_Outputs[0]);
 		if (m_UseBias)
-			m_Outputs[0].Add(m_Bias, m_Outputs[0]);
+			m_Outputs[0]->Add(m_Bias, *m_Outputs[0]);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Conv2D::BackPropInternal(vector<Tensor>& outputsGradient)
+	void Conv2D::BackPropInternal(const tensor_ptr_vec_t& outputsGradient)
 	{
-		outputsGradient[0].Conv2DInputsGradient(outputsGradient[0], m_Kernels, m_Stride, m_Padding, m_InputsGradient[0]);
+		outputsGradient[0]->Conv2DInputsGradient(*outputsGradient[0], m_Kernels, m_Stride, m_Padding, *m_InputsGradient[0]);
 
         if (m_Trainable)
         {
-            outputsGradient[0].Conv2DKernelsGradient(*m_Inputs[0], outputsGradient[0], m_Stride, m_Padding, m_KernelsGradient);
+            outputsGradient[0]->Conv2DKernelsGradient(*m_Inputs[0], *outputsGradient[0], m_Stride, m_Padding, m_KernelsGradient);
             if (m_UseBias)
-                m_BiasGradient.Add(outputsGradient[0].Sum(EAxis::WHBAxis), m_BiasGradient);
+                m_BiasGradient.Add(outputsGradient[0]->Sum(EAxis::WHBAxis), m_BiasGradient);
         }
 	}
 

@@ -1039,7 +1039,7 @@ namespace NeuroTests
 
             auto t1 = new Tensor(Shape(2, 2, 1, 2)); t1->FillWithRange();
             auto t2 = new Tensor(Shape(2, 2, 1, 2)); t2->FillWithRange(8);
-            tensor_ptr_vec_t inputs = {t1, t2};
+            const_tensor_ptr_vec_t inputs = { t1, t2 };
             
             int outputLen = 0;
             for (auto input : inputs)
@@ -1062,11 +1062,11 @@ namespace NeuroTests
 
             auto t1 = Tensor(Shape(2, 2, 1, 2));
             auto t2 = Tensor(Shape(2, 2, 1, 2));
-            vector<Tensor> inputs = { t1, t2 };
+            tensor_ptr_vec_t inputs = { &t1, &t2 };
 
             int outputLen = 0;
             for (auto input : inputs)
-                outputLen += input.BatchLength();
+                outputLen += input->BatchLength();
 
             auto concated = Tensor({ 0, 1, 2, 3, 8, 9, 10, 11, 4, 5, 6, 7, 12, 13, 14, 15 }, Shape(1, outputLen, 1, 2));
 
@@ -1077,7 +1077,7 @@ namespace NeuroTests
             vector<Tensor> correctInputs = { correct1, correct2 };
 
             for (uint32_t i = 0; i < inputs.size(); ++i)
-                Assert::IsTrue(inputs[i].Equals(correctInputs[i]));
+                Assert::IsTrue(inputs[i]->Equals(correctInputs[i]));
         }
 
         TEST_METHOD(ToNCHW)

@@ -26,9 +26,9 @@ namespace Neuro
 
         virtual LayerBase* GetCloneInstance() const override;
         virtual void OnClone(const LayerBase& source) override;
-        virtual void OnLink(const vector<LayerBase*>& layers, bool input) override;
+        virtual void OnLink(LayerBase* layers, bool input) override;
         virtual void FeedForwardInternal(bool training) override;
-        virtual void BackPropInternal(vector<Tensor>& outputsGradient) override;
+        virtual void BackPropInternal(const tensor_ptr_vec_t& outputsGradient) override;
 
     private:
         Mode m_MergeMode;

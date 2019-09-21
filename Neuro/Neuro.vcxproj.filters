@@ -63,9 +63,6 @@
     <ClInclude Include="include\Activations.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\Data.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\Loss.h">
       <Filter>include</Filter>
     </ClInclude>

@@ -72,13 +72,13 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Dense::FeedForwardInternal(bool training)
 	{
-		m_Weights.Mul(*m_Inputs[0], m_Outputs[0]);
+		m_Weights.Mul(*m_Inputs[0], *m_Outputs[0]);
 		if (m_UseBias)
-			m_Outputs[0].Add(m_Bias, m_Outputs[0]);
+			m_Outputs[0]->Add(m_Bias, *m_Outputs[0]);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Dense::BackPropInternal(vector<Tensor>& outputsGradient)
+	void Dense::BackPropInternal(const tensor_ptr_vec_t& outputsGradient)
 	{
         const bool USE_TEMPS = true;
 
@@ -88,10 +88,10 @@ namespace Neuro
         {
             _iGradTemp1.Resize(Shape(m_Weights.Height(), m_Weights.Width(), 1, 1));
             m_Weights.Transpose(_iGradTemp1);
-            _iGradTemp1.Mul(outputsGradient[0], m_InputsGradient[0]);
+            _iGradTemp1.Mul(*outputsGradient[0], *m_InputsGradient[0]);
         }
         else
-            m_Weights.Transposed().Mul(outputsGradient[0], m_InputsGradient[0]);
+            m_Weights.Transposed().Mul(*outputsGradient[0], *m_InputsGradient[0]);
 
         if (m_Trainable)
         {
@@ -100,24 +100,24 @@ namespace Neuro
                 _wGradTemp1.Resize(Shape(m_Inputs[0]->Height(), m_Inputs[0]->Width(), 1, m_Inputs[0]->Batch()));
                 m_Inputs[0]->Transpose(_wGradTemp1);
                 _wGradTemp2.Resize(Shape::From(m_WeightsGrad.GetShape(), m_Inputs[0]->Batch()));
-                outputsGradient[0].Mul(_wGradTemp1, _wGradTemp2);
+                outputsGradient[0]->Mul(_wGradTemp1, _wGradTemp2);
                 _wGradTemp3.Resize(m_WeightsGrad.GetShape());
-                _wGradTemp2.Sum(EAxis::BatchAxis, _wGradTemp3);
+                _wGradTemp2.Sum(BatchAxis, _wGradTemp3);
                 m_WeightsGrad.Add(_wGradTemp3, m_WeightsGrad);
             }
             else
-                m_WeightsGrad.Add(outputsGradient[0].Mul(m_Inputs[0]->Transposed()).Sum(EAxis::BatchAxis), m_WeightsGrad);
+                m_WeightsGrad.Add(outputsGradient[0]->Mul(m_Inputs[0]->Transposed()).Sum(BatchAxis), m_WeightsGrad);
 
             if (m_UseBias)
             {
                 if (USE_TEMPS)
                 {
                     _bGradTemp1.Resize(m_BiasGrad.GetShape());
-                    outputsGradient[0].Sum(EAxis::BatchAxis, _bGradTemp1);
+                    outputsGradient[0]->Sum(BatchAxis, _bGradTemp1);
                     m_BiasGrad.Add(_bGradTemp1, m_BiasGrad);
                 }
                 else
-                    m_BiasGrad.Add(outputsGradient[0].Sum(EAxis::BatchAxis), m_BiasGrad);
+                    m_BiasGrad.Add(outputsGradient[0]->Sum(BatchAxis), m_BiasGrad);
             }
         }
 	}

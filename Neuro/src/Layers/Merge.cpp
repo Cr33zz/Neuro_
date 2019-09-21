@@ -39,12 +39,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Merge::OnLink(const vector<LayerBase*>& layers, bool input)
+    void Merge::OnLink(LayerBase* layer, bool input)
     {
-        __super::OnLink(layers, input);
+        __super::OnLink(layer, input);
 
         if (input)
-            m_OutputShapes[0] = m_InputShapes[0];
+            m_OutputsShapes[0] = m_InputsShapes[0];
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -53,34 +53,34 @@ namespace Neuro
         switch (m_MergeMode)
         {
         case Mode::Avg:
-            Tensor::MergeAvg(m_Inputs, m_Outputs[0]);
+            Tensor::MergeAvg(m_Inputs, *m_Outputs[0]);
             break;
         case Mode::Max:
-            Tensor::MergeMax(m_Inputs, m_Outputs[0]);
+            Tensor::MergeMax(m_Inputs, *m_Outputs[0]);
             break;
         case Mode::Min:
-            Tensor::MergeMin(m_Inputs, m_Outputs[0]);
+            Tensor::MergeMin(m_Inputs, *m_Outputs[0]);
             break;
         case Mode::Sum:
-            Tensor::MergeSum(m_Inputs, m_Outputs[0]);
+            Tensor::MergeSum(m_Inputs, *m_Outputs[0]);
             break;
         }
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Merge::BackPropInternal(vector<Tensor>& outputsGradient)
+    void Merge::BackPropInternal(const tensor_ptr_vec_t& outputsGradient)
     {
         switch (m_MergeMode)
         {
         case Mode::Avg:
-            Tensor::MergeAvgGradient(m_Outputs[0], m_Inputs, outputsGradient[0], m_InputsGradient);
+            Tensor::MergeAvgGradient(*m_Outputs[0], m_Inputs, *outputsGradient[0], m_InputsGradient);
             break;
         case Mode::Max:
         case Mode::Min:
-            Tensor::MergeMinMaxGradient(m_Outputs[0], m_Inputs, outputsGradient[0], m_InputsGradient);
+            Tensor::MergeMinMaxGradient(*m_Outputs[0], m_Inputs, *outputsGradient[0], m_InputsGradient);
             break;
         case Mode::Sum:
-            Tensor::MergeSumGradient(m_Outputs[0], m_Inputs, outputsGradient[0], m_InputsGradient);
+            Tensor::MergeSumGradient(*m_Outputs[0], m_Inputs, *outputsGradient[0], m_InputsGradient);
             break;
         }
     }

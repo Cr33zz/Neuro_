@@ -101,7 +101,7 @@ namespace NeuroTests
             model->Optimize(new SGD(0.02f), new MeanSquareError());
             model->Fit(inputs, outputs, batchSize, epochs, nullptr, nullptr, 0, ETrack::Nothing);
 
-            Assert::IsTrue(outputs.Equals(model->Predict(inputs)[0], 0.02f));
+            Assert::IsTrue(outputs.Equals(*model->Predict(inputs)[0], 0.02f));
         }
 
         TEST_METHOD(Flow_1Input_2Outputs_SimpleSplit)
@@ -114,14 +114,14 @@ namespace NeuroTests
 
             model->Optimize(new SGD(0.05f), new MeanSquareError());
 
-            tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)) };
-            tensor_ptr_vec_t outputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
+            const_tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)) };
+            const_tensor_ptr_vec_t outputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
 
             model->Fit(inputs, outputs, 1, 100, nullptr, 0, ETrack::Nothing, false);
 
             auto prediction = model->Predict(inputs);
-            Assert::IsTrue(prediction[0].Equals(*outputs[0], 0.01f));
-            Assert::IsTrue(prediction[1].Equals(*outputs[1], 0.01f));
+            Assert::IsTrue(prediction[0]->Equals(*outputs[0], 0.01f));
+            Assert::IsTrue(prediction[1]->Equals(*outputs[1], 0.01f));
         }
 
         TEST_METHOD(Flow_2Inputs_1Output_SimpleConcat)
@@ -134,13 +134,13 @@ namespace NeuroTests
 
             model->Optimize(new SGD(0.05f), new MeanSquareError());
 
-            tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
-            tensor_ptr_vec_t outputs = { new Tensor({ 1, 2, 1, 2 }, Shape(1, 4)) };
+            const_tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
+            const_tensor_ptr_vec_t outputs = { new Tensor({ 1, 2, 1, 2 }, Shape(1, 4)) };
 
             model->Fit(inputs, outputs, 1, 100, nullptr, nullptr, 0, ETrack::Nothing, false);
 
             auto prediction = model->Predict(inputs);
-            Assert::IsTrue(prediction[0].Equals(*outputs[0], 0.01f));
+            Assert::IsTrue(prediction[0]->Equals(*outputs[0], 0.01f));
         }
 
         TEST_METHOD(Flow_2Inputs_1Output_AvgMerge)
@@ -153,13 +153,13 @@ namespace NeuroTests
 
             model->Optimize(new SGD(0.05f), new MeanSquareError());
 
-            tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
-            tensor_ptr_vec_t outputs = { new Tensor({ 2, 4 }, Shape(1, 2)) };
+            const_tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
+            const_tensor_ptr_vec_t outputs = { new Tensor({ 2, 4 }, Shape(1, 2)) };
 
             model->Fit(inputs, outputs, 1, 100, nullptr, nullptr, 0, ETrack::Nothing, false);
 
             auto prediction = model->Predict(inputs);
-            Assert::IsTrue(prediction[0].Equals(*outputs[0], 0.01f));
+            Assert::IsTrue(prediction[0]->Equals(*outputs[0], 0.01f));
         }
 
         TEST_METHOD(Flow_2Inputs_1Output_MinMerge)
@@ -172,13 +172,35 @@ namespace NeuroTests
 
             model->Optimize(new SGD(0.05f), new MeanSquareError());
 
-            tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
-            tensor_ptr_vec_t outputs = { new Tensor({ 2, 4 }, Shape(1, 2)) };
+            const_tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)), new Tensor({ 1, 2 }, Shape(1, 2)) };
+            const_tensor_ptr_vec_t outputs = { new Tensor({ 2, 4 }, Shape(1, 2)) };
 
             model->Fit(inputs, outputs, 1, 100, nullptr, nullptr, 0, ETrack::Nothing, false);
 
             auto prediction = model->Predict(inputs);
-            Assert::IsTrue(prediction[0].Equals(*outputs[0], 0.01f));
+            Assert::IsTrue(prediction[0]->Equals(*outputs[0], 0.01f));
+        }
+
+        TEST_METHOD(Flow_Embedded_In_Sequence)
+        {
+            auto model = new Sequential();
+            model->AddLayer(new Dense(5, 7, new Sigmoid()));
+
+            auto flowIn = new Input(Shape(1, 7));
+            auto flowOut = new Dense(flowIn, 3, new Sigmoid());
+
+            model->AddLayer(new Flow({ flowIn }, { flowOut }));
+            model->AddLayer(new Dense(1, new Sigmoid()));
+
+            model->Optimize(new SGD(0.05f), new MeanSquareError());
+
+            const_tensor_ptr_vec_t inputs = { new Tensor({ 0.9f, 0.5f, 0.2f, -1.f, -0.1f }, Shape(1, 5)) };
+            const_tensor_ptr_vec_t outputs = { new Tensor({ 0.3f }, Shape(1, 1)) };
+
+            model->Fit(inputs, outputs, 1, 100, nullptr, nullptr, 0, ETrack::Nothing, false);
+
+            auto prediction = model->Predict(inputs);
+            Assert::IsTrue(prediction[0]->Equals(*outputs[0], 0.01f));
         }
 
         static Tensor MatMult(const Tensor& input, const Tensor& expectedParams)

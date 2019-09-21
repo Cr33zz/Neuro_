@@ -103,21 +103,21 @@ namespace Neuro
         __super::OnLink(layer, input);
 
         if (input)
-            m_OutputShapes[0] = m_InputShapes[0];
+            m_OutputsShapes[0] = m_InputsShapes[0];
     }
 
     //////////////////////////////////////////////////////////////////////////
     void BatchNormalization::FeedForwardInternal(bool training)
     {
         if (training)
-            m_Inputs[0]->BatchNormalizationTrain(m_Gamma, m_Beta, m_Momentum, m_Epsilon, m_RunningMean, m_RunningVar, m_SaveMean, m_SaveVariance, m_Outputs[0]);
+            m_Inputs[0]->BatchNormalizationTrain(m_Gamma, m_Beta, m_Momentum, m_Epsilon, m_RunningMean, m_RunningVar, m_SaveMean, m_SaveVariance, *m_Outputs[0]);
         else
-            m_Inputs[0]->BatchNormalization(m_Gamma, m_Beta, m_Epsilon, m_RunningMean, m_RunningVar, m_Outputs[0]);
+            m_Inputs[0]->BatchNormalization(m_Gamma, m_Beta, m_Epsilon, m_RunningMean, m_RunningVar, *m_Outputs[0]);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void BatchNormalization::BackPropInternal(vector<Tensor>& outputsGradient)
+    void BatchNormalization::BackPropInternal(const tensor_ptr_vec_t& outputsGradient)
     {
-        outputsGradient[0].BatchNormalizationGradient(*m_Inputs[0], m_Gamma, m_Epsilon, outputsGradient[0], m_SaveMean, m_SaveVariance, m_GammaGrad, m_BetaGrad, m_Trainable, m_InputsGradient[0]);
+        outputsGradient[0]->BatchNormalizationGradient(*m_Inputs[0], m_Gamma, m_Epsilon, *outputsGradient[0], m_SaveMean, m_SaveVariance, m_GammaGrad, m_BetaGrad, m_Trainable, *m_InputsGradient[0]);
     }
 }

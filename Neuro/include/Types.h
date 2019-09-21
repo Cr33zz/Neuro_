@@ -10,7 +10,8 @@ namespace Neuro
 
 	class Tensor;
 
-    typedef vector<const Tensor*> tensor_ptr_vec_t;	
+    typedef vector<const Tensor*> const_tensor_ptr_vec_t;
+    typedef vector<Tensor*> tensor_ptr_vec_t;
 	typedef int(*accuracy_func_t)(const Tensor& targetOutput, const Tensor& output);
 
     enum EOpMode

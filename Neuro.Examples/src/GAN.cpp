@@ -53,7 +53,7 @@ void GAN::Run()
             
             //gModel->ForceLearningPhase(true); // without it batch normalization will not normalize in the first pass
             // generate fake images from noise
-            Tensor fakeImages = gModel->Predict(noiseHalf)[0];
+            Tensor fakeImages = *gModel->Predict(noiseHalf)[0];
             // grab random batch of real images
             Tensor realImages = images.GetRandomBatches(BATCH_SIZE / 2);
 
@@ -75,7 +75,7 @@ void GAN::Run()
             progress.SetExtraString(extString.str());
 
             if (i % 50 == 0)
-                gModel->Predict(testNoise)[0].Map([](float x) { return x * 127.5f + 127.5f; }).Reshaped(Shape(m_ImageShape.Width(), m_ImageShape.Height(), m_ImageShape.Depth(), -1)).SaveAsImage(Name() + "_e" + to_string(e) + "_b" + to_string(i) + ".png", false);
+                gModel->Predict(testNoise)[0]->Map([](float x) { return x * 127.5f + 127.5f; }).Reshaped(Shape(m_ImageShape.Width(), m_ImageShape.Height(), m_ImageShape.Depth(), -1)).SaveAsImage(Name() + "_e" + to_string(e) + "_b" + to_string(i) + ".png", false);
         }
     }
 

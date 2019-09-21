@@ -13,10 +13,13 @@ namespace Neuro
 	{
         m_ModelInputLayers = inputLayers;
 		m_ModelOutputLayers = outputLayers;
+
+        for (auto modelOutputLayer : m_ModelOutputLayers)
+            m_OutputsShapes.insert(m_OutputsShapes.end(), modelOutputLayer->OutputShapes().begin(), modelOutputLayer->OutputShapes().end());
         
         vector<LayerBase*> visited;
-        for (auto inputLayer : m_ModelInputLayers)
-            ProcessLayer(inputLayer, visited);
+        for (auto modelInputLayer : m_ModelInputLayers)
+            ProcessLayer(modelInputLayer, visited);
 
         m_ReversedOrder.resize(m_Order.size());
         reverse_copy(m_Order.begin(), m_Order.end(), m_ReversedOrder.begin());
@@ -27,6 +30,8 @@ namespace Neuro
     {
         for (auto layer : m_Order)
             delete layer;
+        for (auto inputGrad : m_InputsGradient)
+            delete inputGrad;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -60,10 +65,12 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Flow::FeedForwardInternal(bool training)
+    const tensor_ptr_vec_t& Flow::FeedForward(const const_tensor_ptr_vec_t& inputs, bool training)
 	{
+        Init();
+
 		for (size_t i = 0; i < m_ModelInputLayers.size(); ++i)
-			m_ModelInputLayers[i]->FeedForward(Inputs()[i], training);
+			m_ModelInputLayers[i]->FeedForward(inputs[i], training);
 
 		for (auto layer : m_Order)
 		{
@@ -73,63 +80,90 @@ namespace Neuro
 			if (layerInputLayers.size() == 0)
 				continue;
 
-			tensor_ptr_vec_t ins(layerInputLayers.size());
-			for (size_t i = 0; i < layerInputLayers.size(); ++i)
-				ins[i] = &(layerInputLayers[i]->Outputs()[0]);
+            const_tensor_ptr_vec_t currInputs;
+            for (size_t i = 0; i < layerInputLayers.size(); ++i)
+            {
+                auto& inputLayerOutputs = layerInputLayers[i]->Outputs();
+                currInputs.insert(currInputs.end(), inputLayerOutputs.begin(), inputLayerOutputs.end());
+            }
 
-			layer->FeedForward(ins, training);
+			layer->FeedForward(currInputs, training);
 		}
+
+        return m_Outputs;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Flow::BackPropInternal(vector<Tensor>& outputsGradient)
+    const tensor_ptr_vec_t& Flow::BackProp(const tensor_ptr_vec_t& outputsGradient)
 	{
+        size_t lastOutputGradIdx = 0;
         for (uint32_t i = 0; i < (int)m_ModelOutputLayers.size(); ++i)
         {
-            vector<Tensor> grads = { outputsGradient[i] };
-            m_ModelOutputLayers[i]->BackProp(grads);
+            size_t layerOutsNum = m_ModelOutputLayers[i]->Outputs().size();
+            tensor_ptr_vec_t outGrad;
+            outGrad.insert(outGrad.end(), outputsGradient.begin() + lastOutputGradIdx, outputsGradient.begin() + lastOutputGradIdx + layerOutsNum);
+            m_ModelOutputLayers[i]->BackProp(outGrad);
+            lastOutputGradIdx += layerOutsNum;
         }
 
 		for (auto layer : m_ReversedOrder)
 		{
-            auto& layerOutputLayers = layer->OutputLayers();
-
-			// layers with no input layers have are already been fed forward
-			if (layerOutputLayers.size() == 0)
+            // output layers were already processed
+			if (find(m_ModelOutputLayers.begin(), m_ModelOutputLayers.end(), layer) != m_ModelOutputLayers.end())
 				continue;
 
-			Tensor avgInputGradient(layer->OutputShapes()[0]);
+            size_t layerOutsNum = layer->Outputs().size();
+            auto& layerOutsShapes = layer->OutputShapes();
+
+            // we need to average gradient for layers whose output was used by multiple layers. 
+            // keep in mind that layer may have multiple outputs so we need to average gradient for each output separately
+			vector<Tensor> tmpAvgOutputGradient(layerOutsNum);
+            tensor_ptr_vec_t avgOutputGradient(layerOutsNum);
+            for (size_t o = 0; o < tmpAvgOutputGradient.size(); ++o)
+            {
+                tmpAvgOutputGradient[o].Resize(layerOutsShapes[o]);
+                tmpAvgOutputGradient[o].Zero();
+                avgOutputGradient[o] = &tmpAvgOutputGradient[o];
+            }
+
+            auto& layerOutputLayers = layer->OutputLayers();
+
 			for (size_t i = 0; i < layerOutputLayers.size(); ++i)
 			{
-                auto& otherInputLayers = layerOutputLayers[i]->InputLayers();
+                auto outputLayer = layerOutputLayers[i];
+                auto outputLayerInputGrad = outputLayer->InputsGradient();
+                int offset = outputLayer->InputOffset(layer);
 
-				// we need to find this layer index in output layer's inputs to grab proper delta (it could be cached)
-				for (size_t j = 0; j < otherInputLayers.size(); ++j)
-				{
-					if (otherInputLayers[j] == layer)
-					{
-						avgInputGradient.Add(layerOutputLayers[i]->InputsGradient()[j], avgInputGradient);
-						break;
-					}
-				}
+                for (size_t o = 0; o < tmpAvgOutputGradient.size(); ++o)
+                    tmpAvgOutputGradient[o].Add(*outputLayerInputGrad[offset + o], tmpAvgOutputGradient[o]);
 			}
 
-            avgInputGradient.Div((float)layerOutputLayers.size(), avgInputGradient);
-            vector<Tensor> avgGrads = { avgInputGradient };
-            layer->BackProp(avgGrads);
+            // average
+            for (size_t o = 0; o < tmpAvgOutputGradient.size(); ++o)
+                tmpAvgOutputGradient[o].Div((float)layerOutputLayers.size(), tmpAvgOutputGradient[o]);
+
+            layer->BackProp(avgOutputGradient);
 		}
-	}
 
-	//////////////////////////////////////////////////////////////////////////
-	const vector<LayerBase*>& Flow::ModelOutputLayers() const
-	{
-		return m_ModelOutputLayers;
-	}
+        // there is no point calculating inputs gradient if this layer in not linked to any previous layer;
+        // additionally, unlinked model can have different input shapes for each internal input layer
+        if (HasInputLayers())
+        {
+            auto& inputShapes = InputShapes();
+            for (auto i = 0; i < m_InputsGradient.size(); ++i)
+                m_InputsGradient[i]->Resize(Shape::From(inputShapes[i], outputsGradient[0]->Batch()));
 
-	//////////////////////////////////////////////////////////////////////////
-	uint32_t Flow::OutputLayersCount() const
-	{
-		return (uint32_t)m_ModelOutputLayers.size();
+            for (auto modelInputLayer : m_ModelInputLayers)
+            {
+                for (auto i = 0; i < m_InputsGradient.size(); ++i)
+                    m_InputsGradient[i]->Add(*modelInputLayer->InputsGradient()[i], *m_InputsGradient[i]);
+            }
+
+            for (auto i = 0; i < m_InputsGradient.size(); ++i)
+                m_InputsGradient[i]->Div((float)m_ModelInputLayers.size(), *m_InputsGradient[i]);
+        }
+
+        return m_InputsGradient;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -142,47 +176,85 @@ namespace Neuro
 		// clone is not a frequently used functionality so I'm not too concerned about its performance
 
 		// make clones first and store then in dictionary
-		map<string, LayerBase*> clones;
+		//map<string, LayerBase*> clones;
 
-		for (auto layer : sourceFlow.m_Order)
-		{
-			auto clone = layer->Clone();
-			clones[clone->Name()] = clone;
-		}
+		//for (auto layer : sourceFlow.m_Order)
+		//{
+		//	auto clone = layer->Clone();
+		//	clones[clone->Name()] = clone;
+		//}
 
-		// then connect them in the same manner as in original network and clone order
-		for (auto layer : sourceFlow.m_Order)
-		{
-			auto layerClone = clones[layer->Name()];
-			for (auto inLayer : layer->InputLayers())
-			{
-				auto inLayerClone = clones[inLayer->Name()];
-				layerClone->InputLayers().push_back(inLayerClone);
-				inLayerClone->OutputLayers().push_back(layerClone);
-			}
+		//// then connect them in the same manner as in original network and clone order
+		//for (auto layer : sourceFlow.m_Order)
+		//{
+		//	auto layerClone = clones[layer->Name()];
+		//	for (auto inLayer : layer->InputLayers())
+		//	{
+		//		auto inLayerClone = clones[inLayer->Name()];
+		//		layerClone->InputLayers().push_back(inLayerClone);
+		//		inLayerClone->OutputLayers().push_back(layerClone);
+		//	}
 
-			m_Order.push_back(layerClone);
-		}
+		//	m_Order.push_back(layerClone);
+		//}
 
-		m_ReversedOrder.resize(m_Order.size());
-		reverse_copy(m_Order.begin(), m_Order.end(), m_ReversedOrder.begin());
+		//m_ReversedOrder.resize(m_Order.size());
+		//reverse_copy(m_Order.begin(), m_Order.end(), m_ReversedOrder.begin());
 
-        for (auto layer : sourceFlow.m_ModelInputLayers)
-		{
-			auto layerClone = clones[layer->Name()];
-            m_ModelInputLayers.push_back(layerClone);
-		}
+  //      for (auto layer : sourceFlow.m_ModelInputLayers)
+		//{
+		//	auto layerClone = clones[layer->Name()];
+  //          m_ModelInputLayers.push_back(layerClone);
+		//}
 
-        for (auto layer : sourceFlow.m_ModelOutputLayers)
-		{
-			auto layerClone = clones[layer->Name()];
-            m_ModelOutputLayers.push_back(layerClone);
-		}
+  //      for (auto layer : sourceFlow.m_ModelOutputLayers)
+		//{
+		//	auto layerClone = clones[layer->Name()];
+  //          m_ModelOutputLayers.push_back(layerClone);
+		//}
 	}
 
-	//////////////////////////////////////////////////////////////////////////
-	const vector<LayerBase*>& Flow::Layers() const
-	{
-		return m_Order;
-	}
+    //////////////////////////////////////////////////////////////////////////
+    void Flow::OnInit()
+    {
+        __super::OnInit();
+
+        for (auto i = 0; i < m_ModelInputLayers[0]->InputShapes().size(); ++i)
+            m_InputsGradient.push_back(new Tensor(Name() + "/input_" + to_string(i) + "_grad"));
+
+        for (auto modelOutputLayer : m_ModelOutputLayers)
+            m_Outputs.insert(m_Outputs.end(), modelOutputLayer->Outputs().begin(), modelOutputLayer->Outputs().end());
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    int Flow::InputOffset(const LayerBase* inputLayer) const
+    {
+        int offset = 0;
+        
+        for (auto modelInputLayer : m_ModelInputLayers)
+        {
+            int localOffset = modelInputLayer->InputOffset(inputLayer);
+            if (localOffset >= 0)
+                return offset + localOffset;
+
+            offset -= localOffset; // InputOffset will return total number of inputs as negative value
+        }
+        
+        return -offset;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Flow::OnLink(LayerBase* layer, bool input)
+    {
+        if (input)
+        {
+            for (auto modelInputLayer : m_ModelInputLayers)
+                modelInputLayer->OnLink(layer, input);
+        }
+        else
+        {
+            for (auto modelOutputLayer : m_ModelOutputLayers)
+                modelOutputLayer->OnLink(layer, input);
+        }
+    }
 }

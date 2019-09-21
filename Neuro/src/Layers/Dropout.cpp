@@ -33,7 +33,7 @@ namespace Neuro
         __super::OnLink(layer, input);
 
         if (input)
-            m_OutputShapes[0] = m_InputShapes[0];
+            m_OutputsShapes[0] = m_InputsShapes[0];
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -44,17 +44,17 @@ namespace Neuro
             if (m_Mask.GetShape() != m_Inputs[0]->GetShape())
                 m_Mask = Tensor(m_Inputs[0]->GetShape());
 
-            m_Inputs[0]->Dropout(m_Prob, m_Mask, m_Outputs[0]);
+            m_Inputs[0]->Dropout(m_Prob, m_Mask, *m_Outputs[0]);
         }
         else
         {
-            m_Inputs[0]->CopyTo(m_Outputs[0]);
+            m_Inputs[0]->CopyTo(*m_Outputs[0]);
         }
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Dropout::BackPropInternal(vector<Tensor>& outputsGradient)
+    void Dropout::BackPropInternal(const tensor_ptr_vec_t& outputsGradient)
     {
-        outputsGradient[0].DropoutGradient(outputsGradient[0], m_Mask, m_InputsGradient[0]);
+        outputsGradient[0]->DropoutGradient(*outputsGradient[0], m_Mask, *m_InputsGradient[0]);
     }
 }

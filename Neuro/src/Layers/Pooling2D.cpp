@@ -73,19 +73,19 @@ namespace Neuro
         __super::OnLink(layer, input);
 
         if (input)
-            m_OutputShapes[0] = Tensor::GetPooling2DOutputShape(layer->OutputShape(), m_FilterSize, m_FilterSize, m_Stride, m_Padding, m_Padding);
+            m_OutputsShapes[0] = Tensor::GetPooling2DOutputShape(layer->OutputShape(), m_FilterSize, m_FilterSize, m_Stride, m_Padding, m_Padding);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Pooling2D::FeedForwardInternal(bool training)
     {
-        m_Inputs[0]->Pool2D(m_FilterSize, m_Stride, m_Mode, m_Padding, m_Outputs[0]);
+        m_Inputs[0]->Pool2D(m_FilterSize, m_Stride, m_Mode, m_Padding, *m_Outputs[0]);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Pooling2D::BackPropInternal(vector<Tensor>& outputsGradient)
+    void Pooling2D::BackPropInternal(const tensor_ptr_vec_t& outputsGradient)
     {
-        m_Inputs[0]->Pool2DGradient(m_Outputs[0], *m_Inputs[0], outputsGradient[0], m_FilterSize, m_Stride, m_Mode, m_Padding, m_InputsGradient[0]);
+        m_Inputs[0]->Pool2DGradient(*m_Outputs[0], *m_Inputs[0], *outputsGradient[0], m_FilterSize, m_Stride, m_Mode, m_Padding, *m_InputsGradient[0]);
     }
 
     //////////////////////////////////////////////////////////////////////////

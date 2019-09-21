@@ -34,57 +34,30 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void LayerBase::OnLink(LayerBase* layer, bool input)
+    void LayerBase::LinkInput(LayerBase* inputLayer)
     {
-        if (input)
-        {
-            InputShapes() = layer->OutputShapes();
-            InputLayers().resize(1);
-            InputLayers()[0] = layer;
-        }
-        else
-        {
-            OutputLayers().push_back(layer);
-        }
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void LayerBase::OnLink(const vector<LayerBase*>& layers, bool input)
-    {
-        if (input)
-        {
-            auto& inputShapes = InputShapes();
-
-            inputShapes.clear();
-            for (auto inLayer : layers)
-                inputShapes.push_back(inLayer->OutputShape());
-            InputLayers() = layers;
-        }
-        else
-            assert(false);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void LayerBase::Link(LayerBase* inputLayer)
-    {
-        assert(!HasInputLayers());
-
-        auto& inputShapes = InputShapes();
-        auto& otherOutputShapes = inputLayer->OutputShapes();
-
-        // check if we only need to latch outputs to inputs
-        if (!inputShapes.empty() && inputShapes.size() == otherOutputShapes.size())
-        {
-            for (size_t i = 0; i < inputShapes.size(); ++i)
-                assert(inputShapes[i] == otherOutputShapes[i]);
-        }
-
         OnLink(inputLayer, true);
         inputLayer->OnLink(this, false);
     }
 
+    ////////////////////////////////////////////////////////////////////////////
+    //void LayerBase::OnLink(const vector<LayerBase*>& layers, bool input)
+    //{
+    //    if (input)
+    //    {
+    //        auto& inputShapes = InputShapes();
+
+    //        inputShapes.clear();
+    //        for (auto inLayer : layers)
+    //            inputShapes.push_back(inLayer->OutputShape());
+    //        InputLayers() = layers;
+    //    }
+    //    else
+    //        assert(false);
+    //}
+
     //////////////////////////////////////////////////////////////////////////
-    void LayerBase::Link(const vector<LayerBase*>& inputLayers)
+    /*void LayerBase::Link(const vector<LayerBase*>& inputLayers)
     {
         assert(!HasInputLayers());
 
@@ -98,7 +71,7 @@ namespace Neuro
             assert(inLayer->OutputShapes().size() == 1);
             inLayer->OnLink(this, false);            
         }
-    }
+    }*/
 
     //////////////////////////////////////////////////////////////////////////
 	void LayerBase::CopyParametersTo(LayerBase& target, float tau) const
@@ -107,117 +80,11 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-    void LayerBase::ExecuteFeedForward(bool training)
-    {
-        auto& outputShapes = OutputShapes();
-        auto& outputs = Outputs();
-        auto& inputs = Inputs();
-
-        for (size_t o = 0; o < outputs.size(); ++o)
-        {
-            Shape outShape(outputShapes[o].Width(), outputShapes[o].Height(), outputShapes[o].Depth(), inputs[0]->Batch());
-            // shape comparison is required for cases when last batch has different size
-            if (outputs[o].GetShape() != outShape)
-                outputs[o] = Tensor(outShape, Name() + "/output_" + to_string(o));
-        }
-
-#       ifdef LOG_OUTPUTS
-        for (auto i = 0; i < inputs.size(); ++i)
-            inputs[i]->DebugDumpValues(Replace(Name() + "_input_" + to_string(i) + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
-#       endif
-
-        m_FeedForwardTimer.Start();
-        FeedForwardInternal(training);
-        m_FeedForwardTimer.Stop();
-
-#       ifdef LOG_OUTPUTS
-        for (auto o = 0; o < outputs.size(); ++o)
-            outputs[o].DebugDumpValues(Replace(Name() + "_output_" + to_string(o) + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
-#       endif
-
-        if (Activation())
-        {
-            for (size_t o = 0; o < outputs.size(); ++o)
-            {
-                m_ActivationTimer.Start();
-                Activation()->Compute(outputs[o], outputs[o]);
-                m_ActivationTimer.Stop();
-
-#               ifdef LOG_OUTPUTS
-                outputs[o].DebugDumpValues(Replace(Name() + "_output_" + to_string(o) + "_activation_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
-#               endif
-            }
-        }
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-    const Tensor& LayerBase::FeedForward(const Tensor* input, bool training)
+    const tensor_ptr_vec_t& LayerBase::FeedForward(const Tensor* input, bool training)
 	{
-		if (!Initialized)
-			Init();
-
-        auto& inputs = Inputs();
-
-        inputs.resize(1);
-        inputs[0] = input;
-		ExecuteFeedForward(training);
-		return Outputs()[0];
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	const Tensor& LayerBase::FeedForward(const tensor_ptr_vec_t& inputs, bool training)
-	{
-		if (!Initialized)
-			Init();
-
-        Inputs() = inputs;
-		ExecuteFeedForward(training);
-		return Outputs()[0];
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-    vector<Tensor>& LayerBase::BackProp(vector<Tensor>& outputsGradient)
-	{
-        auto& inputsGrad = InputsGradient();
-        auto& inputShapes = InputShapes();
-        auto& outputs = Outputs();
-
-        inputsGrad.resize(inputShapes.size());
-
-        if (!CanStopBackProp())
-        {
-            for (auto i = 0; i < inputShapes.size(); ++i)
-            {
-                auto& inputShape = inputShapes[i];
-                Shape deltaShape(inputShape.Width(), inputShape.Height(), inputShape.Depth(), outputsGradient[0].Batch());
-                if (inputsGrad[i].GetShape() != deltaShape)
-                    inputsGrad[i] = Tensor(deltaShape, Name() + "/input_" + to_string(i) + "_grad");
-            }
-
-            // apply derivative of our activation function to the errors computed by previous layer
-            if (Activation())
-            {
-                for (size_t o = 0; o < outputsGradient.size(); ++o)
-                {
-                    m_ActivationBackPropTimer.Start();
-                    Activation()->Derivative(outputs[o], outputsGradient[o], outputsGradient[o]);
-                    m_ActivationBackPropTimer.Stop();
-#                   ifdef LOG_OUTPUTS
-                    outputsGradient[o].DebugDumpValues(Replace(Name() + "_activation" + to_string(o) + "_grad_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
-#                   endif
-                }
-            }
-
-            m_BackPropTimer.Start();
-            BackPropInternal(outputsGradient);
-            m_BackPropTimer.Stop();
-#           ifdef LOG_OUTPUTS
-            for (auto i = 0; i < inputShapes.size(); ++i)
-                inputsGrad[i].DebugDumpValues(Replace(inputsGrad[i].Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
-#           endif
-        }
-
-		return inputsGrad;
+        const_tensor_ptr_vec_t inputs;
+        inputs.push_back(input);
+        return FeedForward(inputs, training);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -234,7 +101,6 @@ namespace Neuro
     vector<Tensor*> LayerBase::GetParams()
     {
         vector<Tensor*> params;
-
         vector<ParametersAndGradients> paramsAndGrads;
         GetParametersAndGradients(paramsAndGrads, false);
         for (auto i = 0; i < paramsAndGrads.size(); ++i)

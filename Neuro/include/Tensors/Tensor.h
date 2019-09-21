@@ -115,17 +115,17 @@ namespace Neuro
         // In case number of tensors is smaller than forcedDepth, first tensor will be repeated to account for missing tensors
         static Tensor MergeIntoDepth(const vector<Tensor>& tensors, uint32_t forcedDepth = 0);
 
-		static void Concat(EAxis axis, const tensor_ptr_vec_t& inputs, Tensor& result);
+        static void Concat(EAxis axis, const const_tensor_ptr_vec_t& inputs, Tensor& result);
         // This is reverse Concat operation
-        void Split(EAxis axis, vector<Tensor>& outputs) const;
+        void Split(EAxis axis, tensor_ptr_vec_t& outputs) const;
 
-        static void MergeMin(const tensor_ptr_vec_t& inputs, Tensor& result);
-        static void MergeMax(const tensor_ptr_vec_t& inputs, Tensor& result);
-        static void MergeSum(const tensor_ptr_vec_t& inputs, Tensor& result);
-        static void MergeAvg(const tensor_ptr_vec_t& inputs, Tensor& result);
-        static void MergeMinMaxGradient(const Tensor& output, const tensor_ptr_vec_t& inputs, const Tensor& outputGradient, vector<Tensor>& results);
-        static void MergeSumGradient(const Tensor& output, const tensor_ptr_vec_t& inputs, const Tensor& outputGradient, vector<Tensor>& results);
-        static void MergeAvgGradient(const Tensor& output, const tensor_ptr_vec_t& inputs, const Tensor& outputGradient, vector<Tensor>& results);
+        static void MergeMin(const const_tensor_ptr_vec_t& inputs, Tensor& result);
+        static void MergeMax(const const_tensor_ptr_vec_t& inputs, Tensor& result);
+        static void MergeSum(const const_tensor_ptr_vec_t& inputs, Tensor& result);
+        static void MergeAvg(const const_tensor_ptr_vec_t& inputs, Tensor& result);
+        static void MergeMinMaxGradient(const Tensor& output, const const_tensor_ptr_vec_t& inputs, const Tensor& outputGradient, tensor_ptr_vec_t& results);
+        static void MergeSumGradient(const Tensor& output, const const_tensor_ptr_vec_t& inputs, const Tensor& outputGradient, tensor_ptr_vec_t& results);
+        static void MergeAvgGradient(const Tensor& output, const const_tensor_ptr_vec_t& inputs, const Tensor& outputGradient, tensor_ptr_vec_t& results);
         
         Tensor Transposed() const;
         void Transpose(Tensor& result) const;

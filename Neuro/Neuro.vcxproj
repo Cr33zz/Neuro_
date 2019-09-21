@@ -115,7 +115,6 @@
   <ItemGroup>
     <ClInclude Include="include\Activations.h" />
     <ClInclude Include="include\ChartGenerator.h" />
-    <ClInclude Include="include\Data.h" />
     <ClInclude Include="include\Initializers\Constant.h" />
     <ClInclude Include="include\Initializers\GlorotNormal.h" />
     <ClInclude Include="include\Initializers\GlorotUniform.h" />

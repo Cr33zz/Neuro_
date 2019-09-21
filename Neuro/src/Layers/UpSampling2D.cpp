@@ -44,18 +44,18 @@ namespace Neuro
         __super::OnLink(layer, input);
 
         if (input)
-            m_OutputShapes[0] = Shape(InputShape().Width() * m_ScaleFactor, InputShape().Height() * m_ScaleFactor, InputShape().Depth(), InputShape().Batch());
+            m_OutputsShapes[0] = Shape(InputShape().Width() * m_ScaleFactor, InputShape().Height() * m_ScaleFactor, InputShape().Depth(), InputShape().Batch());
     }
 
     //////////////////////////////////////////////////////////////////////////
     void UpSampling2D::FeedForwardInternal(bool training)
     {
-        m_Inputs[0]->UpSample2D(m_ScaleFactor, m_Outputs[0]);
+        m_Inputs[0]->UpSample2D(m_ScaleFactor, *m_Outputs[0]);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void UpSampling2D::BackPropInternal(vector<Tensor>& outputsGradient)
+    void UpSampling2D::BackPropInternal(const tensor_ptr_vec_t& outputsGradient)
     {
-        outputsGradient[0].UpSample2DGradient(outputsGradient[0], m_ScaleFactor, m_InputsGradient[0]);
+        outputsGradient[0]->UpSample2DGradient(*outputsGradient[0], m_ScaleFactor, *m_InputsGradient[0]);
     }
 }

@@ -56,7 +56,7 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void DeleteData(vector<tensor_ptr_vec_t>& data)
+    void DeleteData(vector<const_tensor_ptr_vec_t>& data)
     {
         for (auto& v : data)
             DeleteContainer(v);

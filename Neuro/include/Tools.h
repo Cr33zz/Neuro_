@@ -1,10 +1,11 @@
 ﻿#pragma once
 
 #include <string>
+#include <sstream>
 #include <vector>
 
+#include "Types.h"
 #include "Random.h"
-#include "Data.h"
 #include "Stopwatch.h"
 
 namespace Neuro
@@ -23,7 +24,7 @@ namespace Neuro
     int AccCategoricalClassificationEquality(const Tensor& target, const Tensor& output);
 
 	template<typename C> void DeleteContainer(C& container);
-    void DeleteData(vector<tensor_ptr_vec_t>& data);
+    void DeleteData(vector<const_tensor_ptr_vec_t>& data);
 
     float Clip(float value, float min, float max);
 	int Sign(float value);

@@ -6,7 +6,10 @@ namespace Neuro
     Concatenate::Concatenate(const vector<LayerBase*>& inputLayers, const string& name)
         : SingleLayer(__FUNCTION__, inputLayers, Shape(), nullptr, name)
     {
-        OnLink(inputLayers, true);
+        int totalLen = 0;
+        for (auto input : inputLayers)
+            totalLen += input->OutputShape().Length;
+        m_OutputsShapes[0] = Shape(1, totalLen);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -22,16 +25,16 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Concatenate::OnLink(const vector<LayerBase*>& layers, bool input)
+    void Concatenate::OnLink(LayerBase* layer, bool input)
     {
-        __super::OnLink(layers, input);
+        __super::OnLink(layer, input);
 
         if (input)
         {
             int totalLen = 0;
             for (auto input : InputLayers())
                 totalLen += input->OutputShape().Length;
-            m_OutputShapes[0] = Shape(1, totalLen);
+            m_OutputsShapes[0] = Shape(1, totalLen);
         }
     }
 
@@ -39,12 +42,12 @@ namespace Neuro
     void Concatenate::FeedForwardInternal(bool training)
     {
         // output is already of proper shape thanks to LayerBase.FeedForward
-        Tensor::Concat(EAxis::WHDAxis, m_Inputs, m_Outputs[0]);
+        Tensor::Concat(WHDAxis, m_Inputs, *m_Outputs[0]);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Concatenate::BackPropInternal(vector<Tensor>& outputsGradient)
+    void Concatenate::BackPropInternal(const tensor_ptr_vec_t& outputsGradient)
     {
-        outputsGradient[0].Split(EAxis::WHDAxis, m_InputsGradient);
+        outputsGradient[0]->Split(WHDAxis, m_InputsGradient);
     }
 }

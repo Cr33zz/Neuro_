@@ -11,6 +11,20 @@
 
 int main()
 {
+    {
+        
+    }
+
+    /*{
+        auto in = new Dense(5, 7, new ReLU());
+
+        auto flowIn1 = new Input(Shape(1, 7));
+        auto flowIn2 = new Input(Shape(1, 7));
+
+        model->AddLayer(new Flow({ flowIn1, flowIn2 }, { flowIn1, flowIn2 }));
+        model->AddLayer(new Dense(1));
+    }*/
+
     //IrisNetwork().Run();
     //ConvNetwork().Run();
     //FlowNetwork().Run();

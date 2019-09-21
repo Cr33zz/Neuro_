@@ -686,7 +686,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Concat(EAxis axis, const tensor_ptr_vec_t& inputs, Tensor& result)
+	void Tensor::Concat(EAxis axis, const const_tensor_ptr_vec_t& inputs, Tensor& result)
 	{
         result.OverrideHost();
 
@@ -721,7 +721,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Split(EAxis axis, vector<Tensor>& outputs) const
+	void Tensor::Split(EAxis axis, tensor_ptr_vec_t& outputs) const
 	{
 		CopyToHost();
 
@@ -732,11 +732,11 @@ namespace Neuro
                 uint32_t elementsCopied = 0;
                 for (uint32_t i = 0; i < outputs.size(); ++i)
                 {
-                    outputs[i].OverrideHost();
+                    outputs[i]->OverrideHost();
                     copy(m_Values.begin() + b * BatchLength() + elementsCopied,
-                         m_Values.begin() + b * BatchLength() + elementsCopied + outputs[i].BatchLength(),
-                         outputs[i].m_Values.begin() + b * outputs[i].BatchLength());
-                    elementsCopied += outputs[i].BatchLength();
+                         m_Values.begin() + b * BatchLength() + elementsCopied + outputs[i]->BatchLength(),
+                         outputs[i]->m_Values.begin() + b * outputs[i]->BatchLength());
+                    elementsCopied += outputs[i]->BatchLength();
                 }
             }
         }
@@ -745,7 +745,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::MergeMin(const tensor_ptr_vec_t& inputs, Tensor& result)
+	void Tensor::MergeMin(const const_tensor_ptr_vec_t& inputs, Tensor& result)
 	{
 		inputs[0]->CopyTo(result);
 		for (uint32_t i = 1; i < inputs.size(); ++i)
@@ -754,7 +754,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::MergeMax(const tensor_ptr_vec_t& inputs, Tensor& result)
+	void Tensor::MergeMax(const const_tensor_ptr_vec_t& inputs, Tensor& result)
 	{
 		inputs[0]->CopyTo(result);
 		for (uint32_t i = 1; i < inputs.size(); ++i)
@@ -763,7 +763,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::MergeSum(const tensor_ptr_vec_t& inputs, Tensor& result)
+	void Tensor::MergeSum(const const_tensor_ptr_vec_t& inputs, Tensor& result)
 	{
         result.OverrideHost();
 		result.Zero();
@@ -773,37 +773,37 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::MergeAvg(const tensor_ptr_vec_t& inputs, Tensor& result)
+	void Tensor::MergeAvg(const const_tensor_ptr_vec_t& inputs, Tensor& result)
 	{
 		MergeSum(inputs, result);
 		result.Div((float)inputs.size(), result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::MergeMinMaxGradient(const Tensor& output, const tensor_ptr_vec_t& inputs, const Tensor& outputGradient, vector<Tensor>& results)
+	void Tensor::MergeMinMaxGradient(const Tensor& output, const const_tensor_ptr_vec_t& inputs, const Tensor& outputGradient, tensor_ptr_vec_t& results)
 	{
 		for (uint32_t i = 0; i < inputs.size(); ++i)
 		{
-            results[i].OverrideHost();
-			results[i].Zero();
+            results[i]->OverrideHost();
+			results[i]->Zero();
 			for (uint32_t j = 0; j < output.Length(); ++j)
-				results[i].m_Values[j] = inputs[i]->m_Values[j] == output.m_Values[j] ? outputGradient.m_Values[j] : 0;
+				results[i]->m_Values[j] = inputs[i]->m_Values[j] == output.m_Values[j] ? outputGradient.m_Values[j] : 0;
 		}
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::MergeSumGradient(const Tensor& output, const tensor_ptr_vec_t& inputs, const Tensor& outputGradient, vector<Tensor>& results)
+	void Tensor::MergeSumGradient(const Tensor& output, const const_tensor_ptr_vec_t& inputs, const Tensor& outputGradient, tensor_ptr_vec_t& results)
 	{
 		for (uint32_t i = 0; i < inputs.size(); ++i)
-			outputGradient.CopyTo(results[i]);
+			outputGradient.CopyTo(*results[i]);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::MergeAvgGradient(const Tensor& output, const tensor_ptr_vec_t& inputs, const Tensor& outputGradient, vector<Tensor>& results)
+    void Tensor::MergeAvgGradient(const Tensor& output, const const_tensor_ptr_vec_t& inputs, const Tensor& outputGradient, tensor_ptr_vec_t& results)
 	{
 		MergeSumGradient(output, inputs, outputGradient, results);
 		for (uint32_t i = 0; i < results.size(); ++i)
-			results[i].Div((float)results.size(), results[i]);
+			results[i]->Div((float)results.size(), *results[i]);
 	}
 
     //////////////////////////////////////////////////////////////////////////
