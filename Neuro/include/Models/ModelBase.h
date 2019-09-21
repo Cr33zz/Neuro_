@@ -45,6 +45,7 @@ namespace Neuro
         const vector<Tensor>& Predict(const Tensor& input);
 
         virtual const vector<LayerBase*>& Layers() const = 0;
+        virtual const vector<LayerBase*>& ModelInputLayers() const = 0;
         virtual const vector<LayerBase*>& ModelOutputLayers() const = 0;
         virtual uint32_t OutputLayersCount() const = 0;
 
@@ -94,7 +95,7 @@ namespace Neuro
         vector<accuracy_func_t> m_AccuracyFuncs;
         bool m_ForceLearningPhase = false;
 
-        ofstream* m_LogFile;
+        ofstream* m_LogFile = nullptr;
         int m_ChartSaveInterval = 20;
         int m_Seed;
         float m_LastTrainError;

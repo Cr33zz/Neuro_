@@ -482,7 +482,8 @@ namespace Neuro
                 chartGen?.AddData(e, (float)testHits / validationSamples / outputLayersCount, (int)Track::TestAccuracy);*/
             }
 
-            LogLine(summary.str());
+            if (verbose > 0)
+                LogLine(summary.str());
 
             /*if ((ChartSaveInterval > 0 && (e % ChartSaveInterval == 0)) || e == epochs)
                 chartGen ? .Save();*/
@@ -494,48 +495,51 @@ namespace Neuro
             DeleteContainer(validOutputsBatches[b]);
         }
 
-        if (m_LogFile->is_open())
+        if (m_LogFile && m_LogFile->is_open())
         {
             m_LogFile->close();
             delete m_LogFile;
+            m_LogFile = nullptr;
         }
     }
 
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::TrainStep(const tensor_ptr_vec_t& inputs, const tensor_ptr_vec_t& outputs, float* loss, float* acc)
     {
-        assert(InputShapes().size() == inputs.size());
+        assert(ModelInputLayers().size() == inputs.size());
         for (auto i = 0; i < inputs.size(); ++i)
-            assert(InputShapes()[i].EqualsIgnoreBatch(inputs[i]->GetShape()));
-        assert(OutputShapes().size() == outputs.size());
+            assert(ModelInputLayers()[i]->InputShape().EqualsIgnoreBatch(inputs[i]->GetShape()));
+        assert(ModelOutputLayers().size() == outputs.size());
         for (auto i = 0; i < outputs.size(); ++i)
-            assert(OutputShapes()[i].EqualsIgnoreBatch(outputs[i]->GetShape()));
+            assert(ModelOutputLayers()[i]->OutputShape().EqualsIgnoreBatch(outputs[i]->GetShape()));
 
         ++g_DebugStep;
 
         FeedForward(inputs, true);
 
-        auto& modelOutputs = Outputs();
+        auto& modelOutputLayers = ModelOutputLayers();
         vector<Tensor> outputsGrad;
         float totalLoss = 0;
         int hits = 0;
 
-        for (size_t i = 0; i < modelOutputs.size(); ++i)
+        for (size_t i = 0; i < modelOutputLayers.size(); ++i)
         {
-            outputsGrad.push_back(Tensor(modelOutputs[i].GetShape()));
-            m_LossFuncs[i]->Compute(*outputs[i], modelOutputs[i], outputsGrad[i]);
+            auto& layerOutput = modelOutputLayers[i]->Output();
+
+            outputsGrad.push_back(Tensor(layerOutput.GetShape()));
+            m_LossFuncs[i]->Compute(*outputs[i], layerOutput, outputsGrad[i]);
 
 #           ifdef LOG_OUTPUTS
             outputsGrad[i].DebugDumpValues(Replace(Name() + "_output_" + to_string(i) + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
 #           endif
 
             if (loss)
-                totalLoss += outputsGrad[i].Sum(EAxis::GlobalAxis)(0) / modelOutputs[i].BatchLength();
+                totalLoss += outputsGrad[i].Sum(EAxis::GlobalAxis)(0) / layerOutput.BatchLength();
 
             if (acc)
-                hits += m_AccuracyFuncs[i](*outputs[i], modelOutputs[i]);
+                hits += m_AccuracyFuncs[i](*outputs[i], layerOutput);
 
-            m_LossFuncs[i]->Derivative(*outputs[i], modelOutputs[i], outputsGrad[i]);
+            m_LossFuncs[i]->Derivative(*outputs[i], layerOutput, outputsGrad[i]);
 
 #           ifdef LOG_OUTPUTS
             outputsGrad[i].DebugDumpValues(Replace(Name() + "_output_" + to_string(i) + "_grad_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
@@ -546,7 +550,7 @@ namespace Neuro
             *loss = totalLoss / (inputs[0]->Batch() * outputs.size());
 
         if (acc)
-            *acc = (float)hits / (modelOutputs[0].Batch() * modelOutputs.size());
+            *acc = (float)hits / (inputs[0]->Batch() * outputs.size());
 
         BackProp(outputsGrad);
 
