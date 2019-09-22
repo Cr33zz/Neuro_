@@ -471,57 +471,57 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    //void TensorOpGpu::Dropout(const Tensor& input, float prob, Tensor& saveMask, Tensor& output)
-    //{
-    //    input.CopyToDevice();
-    //    output.CopyToDevice();
+    void TensorOpGpu::Dropout(const Tensor& input, float prob, Tensor& saveMask, Tensor& output)
+    {
+        input.CopyToDevice();
+        output.CopyToDevice();
 
-    //    cudnnTensorDescriptor_t inputOutputDesc; cudnnCreateTensorDescriptor(&inputOutputDesc);
-    //    cudnnDropoutDescriptor_t dropoutDesc; cudnnCreateDropoutDescriptor(&dropoutDesc);
+        cudnnTensorDescriptor_t inputOutputDesc; cudnnCreateTensorDescriptor(&inputOutputDesc);
+        cudnnDropoutDescriptor_t dropoutDesc; cudnnCreateDropoutDescriptor(&dropoutDesc);
 
-    //    cudnnSetTensor4dDescriptor(inputOutputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
-    //    cudnnSetDropoutDescriptor(dropoutDesc, s_CudnnHandle, prob, saveMask.GetDevicePtr(), saveMask.Length() * sizeof(float), 0);
+        cudnnSetTensor4dDescriptor(inputOutputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
+        cudnnSetDropoutDescriptor(dropoutDesc, s_CudnnHandle, prob, saveMask.GetDevicePtr(), saveMask.Length() * sizeof(float), 0);
 
-    //    size_t dropoutReserveSize;
-    //    CUDA_CHECK(cudnnDropoutGetReserveSpaceSize(inputOutputDesc, &dropoutReserveSize));
-    //    output.m_GpuData.UpdateWorkspace(output.m_GpuData.m_DropoutWorkspace, dropoutReserveSize);
+        size_t dropoutReserveSize;
+        CUDA_CHECK(cudnnDropoutGetReserveSpaceSize(inputOutputDesc, &dropoutReserveSize));
+        saveMask.m_GpuData.UpdateWorkspace(saveMask.m_GpuData.m_DropoutWorkspace, dropoutReserveSize);
 
-    //    CUDA_CHECK(cudnnDropoutForward(
-    //        s_CudnnHandle,
-    //        dropoutDesc,
-    //        inputOutputDesc,
-    //        input.GetDevicePtr(),
-    //        inputOutputDesc,
-    //        output.GetDevicePtr(),
-    //        output.m_GpuData.m_DropoutWorkspace->GetDevicePtr(),
-    //        dropoutReserveSize));
-    //}
+        CUDA_CHECK(cudnnDropoutForward(
+            s_CudnnHandle,
+            dropoutDesc,
+            inputOutputDesc,
+            input.GetDevicePtr(),
+            inputOutputDesc,
+            output.GetDevicePtr(),
+            saveMask.m_GpuData.m_DropoutWorkspace->GetDevicePtr(),
+            dropoutReserveSize));
+    }
 
-    //////////////////////////////////////////////////////////////////////////////
-    //void TensorOpGpu::DropoutGradient(const Tensor& outputGradient, const Tensor& savedMask, Tensor& inputGradient)
-    //{
-    //    outputGradient.CopyToDevice();
-    //    inputGradient.CopyToDevice();
+    ////////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::DropoutGradient(const Tensor& outputGradient, const Tensor& savedMask, Tensor& inputGradient)
+    {
+        outputGradient.CopyToDevice();
+        inputGradient.CopyToDevice();
 
-    //    cudnnTensorDescriptor_t inputOutputGradDesc; cudnnCreateTensorDescriptor(&inputOutputGradDesc);
-    //    cudnnDropoutDescriptor_t dropoutDesc; cudnnCreateDropoutDescriptor(&dropoutDesc);
+        cudnnTensorDescriptor_t inputOutputGradDesc; cudnnCreateTensorDescriptor(&inputOutputGradDesc);
+        cudnnDropoutDescriptor_t dropoutDesc; cudnnCreateDropoutDescriptor(&dropoutDesc);
 
-    //    cudnnSetTensor4dDescriptor(inputOutputGradDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, outputGradient.GetShape().Dimensions[3], outputGradient.GetShape().Dimensions[2], outputGradient.GetShape().Dimensions[1], outputGradient.GetShape().Dimensions[0]);
-    //    cudnnSetDropoutDescriptor(dropoutDesc, s_CudnnHandle, 0, nullptr, 0, 0);
+        cudnnSetTensor4dDescriptor(inputOutputGradDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, outputGradient.GetShape().Dimensions[3], outputGradient.GetShape().Dimensions[2], outputGradient.GetShape().Dimensions[1], outputGradient.GetShape().Dimensions[0]);
+        cudnnSetDropoutDescriptor(dropoutDesc, s_CudnnHandle, 0, nullptr, 0, 0);
 
-    //    size_t dropoutReserveSize;
-    //    CUDA_CHECK(cudnnDropoutGetReserveSpaceSize(inputOutputGradDesc, &dropoutReserveSize));
+        size_t dropoutReserveSize;
+        CUDA_CHECK(cudnnDropoutGetReserveSpaceSize(inputOutputGradDesc, &dropoutReserveSize));
 
-    //    CUDA_CHECK(cudnnDropoutBackward(
-    //        s_CudnnHandle,
-    //        dropoutDesc,
-    //        inputOutputGradDesc,
-    //        outputGradient.GetDevicePtr(),
-    //        inputOutputGradDesc,
-    //        inputGradient.GetDevicePtr(),
-    //        output.m_GpuData.m_DropoutWorkspace->GetDevicePtr(),
-    //        dropoutReserveSize));
-    //}
+        CUDA_CHECK(cudnnDropoutBackward(
+            s_CudnnHandle,
+            dropoutDesc,
+            inputOutputGradDesc,
+            outputGradient.GetDevicePtr(),
+            inputOutputGradDesc,
+            inputGradient.GetDevicePtr(),
+            savedMask.m_GpuData.m_DropoutWorkspace->GetDevicePtr(),
+            dropoutReserveSize));
+    }
 
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Sigmoid(const Tensor& input, Tensor& output) const
