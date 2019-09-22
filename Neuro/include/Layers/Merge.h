@@ -7,19 +7,11 @@ namespace Neuro
     class Merge : public SingleLayer
     {
     public:
-        enum Mode
-        {
-            Sum,
-            Avg,
-            Max,
-            Min
-        };
-
-        Merge(const vector<LayerBase*>& inputLayers, Mode mergeMode, const string& name = "");
+        Merge(const vector<LayerBase*>& inputLayers, EMergeMode mergeMode, const string& name = "");
         // Make sure to link this layer to input when using this constructor.
-        Merge(Mode mergeMode, const string& name = "");
+        Merge(EMergeMode mergeMode, const string& name = "");
         // This constructor should only be used for input layer
-        Merge(const Shape& inputsShape, Mode mergeMode, const string& name = "");
+        Merge(const Shape& inputsShape, EMergeMode mergeMode, const string& name = "");
 
     protected:
         Merge() {}
@@ -31,6 +23,6 @@ namespace Neuro
         virtual void BackPropInternal(const tensor_ptr_vec_t& outputsGradient) override;
 
     private:
-        Mode m_MergeMode;
+        EMergeMode m_MergeMode;
     };
 }

@@ -76,7 +76,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
 	void LayerBase::CopyParametersTo(LayerBase& target, float tau) const
 	{
-		assert(InputShapes() == target.InputShapes() && OutputShapes() == target.OutputShapes() && "Cannot copy parameters between incompatible layers.");
+		assert(InputShape() == target.InputShape() && OutputShapes() == target.OutputShapes() && "Cannot copy parameters between incompatible layers.");
 	}
 
 	//////////////////////////////////////////////////////////////////////////

@@ -17,7 +17,7 @@ public:
         auto input1 = new Dense(2, 2, new Sigmoid(), "input_1");
         auto upperStream1 = new Dense(input1, 2, new Linear(), "upperStream_1");
         auto lowerStream1 = new Dense(input1, 2, new Linear(), "lowerStream_1");
-        auto merge = new Merge({upperStream1, lowerStream1}, Merge::Mode::Sum);
+        auto merge = new Merge({upperStream1, lowerStream1}, MergeSum);
         auto model = Flow({ input1 }, { merge }, "flow");
 
         cout << "Example: " << model.Name() << endl;

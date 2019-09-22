@@ -131,13 +131,13 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-    const_tensor_ptr_vec_t TestTools::GenerateInputsForLayer(const LayerBase* layer, int batchSize)
+    const_tensor_ptr_vec_t TestTools::GenerateInputsForLayer(const LayerBase* layer, int batchSize, size_t inputsNum)
 	{
-        const_tensor_ptr_vec_t inputs(layer->InputShapes().size());
+        const_tensor_ptr_vec_t inputs(inputsNum);
 
 		for (uint32_t i = 0; i < (int)inputs.size(); ++i)
 		{
-			auto input = new Tensor(Shape(layer->InputShape().Width(), layer->InputShape().Height(), layer->InputShape().Depth(), batchSize));
+			auto input = new Tensor(Shape::From(layer->InputShape(), batchSize));
 			input->FillWithRand(7 + i);
 			inputs[i] = input;
 		}

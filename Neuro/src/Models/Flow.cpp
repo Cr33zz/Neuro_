@@ -69,8 +69,18 @@ namespace Neuro
 	{
         Init();
 
+        if (m_InputsGradient.size() != inputs.size())
+        {
+            m_InputsGradient.resize(inputs.size());
+            for (auto i = 0; i < inputs.size(); ++i)
+                m_InputsGradient[i] = new Tensor(Name() + "/input_" + to_string(i) + "_grad");
+        }
+
+        for (size_t i = 0; i < inputs.size(); ++i)
+            m_InputsGradient[i]->Resize(inputs[i]->GetShape());
+
 		for (size_t i = 0; i < m_ModelInputLayers.size(); ++i)
-			m_ModelInputLayers[i]->FeedForward(inputs[i], training);
+			m_ModelInputLayers[i]->FeedForward(inputs, training);
 
 		for (auto layer : m_Order)
 		{
@@ -149,9 +159,9 @@ namespace Neuro
         // additionally, unlinked model can have different input shapes for each internal input layer
         if (HasInputLayers())
         {
-            auto& inputShapes = InputShapes();
+            auto& inputShape = InputShape();
             for (auto i = 0; i < m_InputsGradient.size(); ++i)
-                m_InputsGradient[i]->Resize(Shape::From(inputShapes[i], outputsGradient[0]->Batch()));
+                m_InputsGradient[i]->Resize(Shape::From(inputShape, outputsGradient[0]->Batch()));
 
             for (auto modelInputLayer : m_ModelInputLayers)
             {
@@ -218,9 +228,6 @@ namespace Neuro
     void Flow::OnInit()
     {
         __super::OnInit();
-
-        for (auto i = 0; i < m_ModelInputLayers[0]->InputShapes().size(); ++i)
-            m_InputsGradient.push_back(new Tensor(Name() + "/input_" + to_string(i) + "_grad"));
 
         for (auto modelOutputLayer : m_ModelOutputLayers)
             m_Outputs.insert(m_Outputs.end(), modelOutputLayer->Outputs().begin(), modelOutputLayer->Outputs().end());

@@ -14,7 +14,7 @@ namespace Neuro
 		Sequential(const string& name = "", int seed = 0);
         ~Sequential();
 
-        virtual const vector<Shape>& InputShapes() const override { return m_Layers[0]->InputShapes(); }
+        virtual const Shape& InputShape() const override { return m_Layers[0]->InputShape(); }
         virtual const vector<Tensor*>& InputsGradient() override { return m_Layers[0]->InputsGradient(); }
         virtual const tensor_ptr_vec_t& Outputs() const override { return m_Layers.back()->Outputs(); }
         virtual const vector<Shape>& OutputShapes() const override { return m_Layers.back()->OutputShapes(); }

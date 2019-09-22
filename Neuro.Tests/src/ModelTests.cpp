@@ -147,7 +147,7 @@ namespace NeuroTests
         {
             auto input1 = new Dense(2, 2, new Linear(), "input1");
             auto input2 = new Dense(2, 2, new Linear(), "input2");
-            auto avgMerge = new Merge(vector<LayerBase*>{ input1, input2 }, Merge::Mode::Avg, "avg_merge");
+            auto avgMerge = new Merge(vector<LayerBase*>{ input1, input2 }, MergeAvg, "avg_merge");
 
             auto model = new Flow({ input1, input2 }, { avgMerge }, "test");
 
@@ -166,7 +166,7 @@ namespace NeuroTests
         {
             LayerBase* input1 = new Dense(2, 2, new Linear(), "input1");
             LayerBase* input2 = new Dense(2, 2, new Linear(), "input2");
-            LayerBase* merge = new Merge(vector<LayerBase*>{ input1, input2 }, Merge::Mode::Min, "min_merge");
+            LayerBase* merge = new Merge({ input1, input2 }, MergeMin, "min_merge");
 
             auto model = new Flow({ input1, input2 }, { merge }, "test");
 
@@ -181,9 +181,9 @@ namespace NeuroTests
             Assert::IsTrue(prediction[0]->Equals(*outputs[0], 0.01f));
         }
 
-        TEST_METHOD(Flow_Embedded_In_Sequence)
+        TEST_METHOD(Flow_Embedded_In_Sequence_1)
         {
-            auto model = new Sequential();
+            auto model = new Sequential("flow_embedded_in_sequence_1");
             model->AddLayer(new Dense(5, 7, new Sigmoid()));
 
             auto flowIn = new Input(Shape(1, 7));
@@ -192,12 +192,35 @@ namespace NeuroTests
             model->AddLayer(new Flow({ flowIn }, { flowOut }));
             model->AddLayer(new Dense(1, new Sigmoid()));
 
-            model->Optimize(new SGD(0.05f), new MeanSquareError());
+            model->Optimize(new SGD(0.05f), new BinaryCrossEntropy());
+
+            const_tensor_ptr_vec_t inputs = { new Tensor({ 0.9f, 0.5f, 0.2f, -1.f, -0.1f }, Shape(1, 5)) };
+            const_tensor_ptr_vec_t outputs = { new Tensor({ 0.8f }, Shape(1, 1)) };
+
+            model->Fit(inputs, outputs, 1, 200, nullptr, nullptr, 1, ETrack::TrainError, false);
+
+            auto prediction = model->Predict(inputs);
+            Assert::IsTrue(prediction[0]->Equals(*outputs[0], 0.01f));
+        }
+
+        TEST_METHOD(Flow_Embedded_In_Sequence_2)
+        {
+            auto model = new Sequential();
+            model->AddLayer(new Dense(5, 7, new Sigmoid()));
+
+            auto flowIn1 = new Input(Shape(1, 7));
+            auto flowIn2 = new Input(Shape(1, 7));
+            auto flowOut = new Merge({flowIn1, flowIn2}, MergeAvg);
+
+            model->AddLayer(new Flow({ flowIn1, flowIn2 }, { flowOut }));
+            model->AddLayer(new Dense(1, new Sigmoid()));
+
+            model->Optimize(new SGD(0.05f), new BinaryCrossEntropy());
 
             const_tensor_ptr_vec_t inputs = { new Tensor({ 0.9f, 0.5f, 0.2f, -1.f, -0.1f }, Shape(1, 5)) };
             const_tensor_ptr_vec_t outputs = { new Tensor({ 0.3f }, Shape(1, 1)) };
 
-            model->Fit(inputs, outputs, 1, 100, nullptr, nullptr, 0, ETrack::Nothing, false);
+            model->Fit(inputs, outputs, 1, 200, nullptr, nullptr, 0, ETrack::Nothing, false);
 
             auto prediction = model->Predict(inputs);
             Assert::IsTrue(prediction[0]->Equals(*outputs[0], 0.01f));

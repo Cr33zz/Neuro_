@@ -78,7 +78,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Sequential::AddLayer(LayerBase* layer)
 	{
-        assert(!m_Layers.empty() || layer->HasInputShape()); // first added layer must have input shape specified
+        //assert(!m_Layers.empty() || layer->HasInputShape()); // first added layer must have input shape specified
         assert(!layer->InputLayer() || layer->InputLayer() == m_Layers.back()); // if layer being added has input layer it must be the last one in the sequence
 
         if (m_Layers.empty())

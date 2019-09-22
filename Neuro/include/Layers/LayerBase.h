@@ -22,21 +22,21 @@ namespace Neuro
 	public:
         virtual ~LayerBase() {}
 
-        virtual const vector<Shape>& InputShapes() const = 0;
+        virtual const Shape& InputShape() const = 0;
         virtual const vector<Tensor*>& InputsGradient() = 0;
         virtual const tensor_ptr_vec_t& Outputs() const = 0;
         virtual const vector<Shape>& OutputShapes() const = 0;
         virtual const vector<LayerBase*>& InputLayers() const = 0;
         virtual const vector<LayerBase*>& OutputLayers() const = 0;
 
-		const Shape& InputShape() const { return InputShapes()[0]; }
+		//const Shape& InputShape() const { return InputShapes()[0]; }
 		//const Tensor* InputGradient() { return InputsGradient()[0]; }
 		const Tensor* Output() const { return Outputs()[0]; }
 		const Shape& OutputShape() const { return OutputShapes()[0]; }
 		const LayerBase* InputLayer() const { return InputLayers().empty() ? nullptr : InputLayers()[0]; }
         const LayerBase* OutputLayer() const { return OutputLayers().empty() ? nullptr : OutputLayers()[0]; }
 
-        bool HasInputShape() const { return !InputShapes().empty();  }
+        //bool HasInputShape() const { return !InputShapes().empty();  }
         bool HasInputLayers() const { return !InputLayers().empty(); }
 
         // Return offset under which input layer related data can be found in input/inputGradient vectors.

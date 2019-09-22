@@ -40,6 +40,14 @@ namespace Neuro
         Avg
     };
 
+    enum EMergeMode
+    {
+        MergeSum,
+        MergeAvg,
+        MergeMax,
+        MergeMin
+    };
+
     enum EBatchNormMode
     {
         PerActivation, // separate mean,variance,etc values for each CHW (should be used after non-convolution-like operation)

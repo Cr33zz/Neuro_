@@ -37,6 +37,6 @@ namespace Neuro
         __super::OnLink(layer, input);
 
         if (input)
-            m_OutputsShapes[0] = m_InputsShapes[0];
+            m_OutputsShapes[0] = m_InputShape;
     }
 }

@@ -28,14 +28,7 @@ namespace Neuro
     SingleLayer::SingleLayer(const string& constructorName, const Shape& inputShape, const Shape& outputShape, ActivationBase* activation, const string& name)
         : SingleLayer(constructorName, outputShape, activation, name)
     {
-        m_InputsShapes.push_back(inputShape);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    SingleLayer::SingleLayer(const string& constructorName, const vector<Shape>& inputShapes, const Shape& outputShape, ActivationBase* activation, const string& name)
-        : SingleLayer(constructorName, outputShape, activation, name)
-    {
-        m_InputsShapes = inputShapes;
+        m_InputShape = inputShape;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -62,7 +55,7 @@ namespace Neuro
         __super::OnClone(source);
         
         auto& sourceSingleLayer = static_cast<const SingleLayer&>(source);
-        m_InputsShapes = sourceSingleLayer.m_InputsShapes;
+        m_InputShape = sourceSingleLayer.m_InputShape;
         m_OutputsShapes = sourceSingleLayer.m_OutputsShapes;
         m_Activation = sourceSingleLayer.m_Activation;
     }
@@ -72,7 +65,14 @@ namespace Neuro
     {
         if (input)
         {
-            m_InputsShapes.insert(m_InputsShapes.end(), layer->OutputShapes().begin(), layer->OutputShapes().end());
+#           ifdef _DEBUG
+            // all output shapes must match
+            Shape firstShape = layer->OutputShape();
+            for (size_t i = 1; i < layer->OutputShapes().size(); ++i)
+                assert(firstShape == layer->OutputShapes()[i]);
+#           endif
+
+            m_InputShape = layer->OutputShape();
             m_InputLayers.push_back(layer);
         }
         else
@@ -84,14 +84,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void SingleLayer::OnInit()
     {
-        m_Outputs[0] = new Tensor(Name() + "/output_0");
-        m_InputsGradient.resize(m_InputsShapes.size());
-
-        for (auto i = 0; i < m_InputsShapes.size(); ++i)
-        {
-            auto& inputShape = m_InputsShapes[i];
-            m_InputsGradient[i] = new Tensor(Name() + "/input_" + to_string(i) + "_grad");
-        }
+        m_Outputs.resize(m_OutputsShapes.size());
+        for (size_t i = 0; i < m_Outputs.size(); ++i)
+            m_Outputs[i] = new Tensor(m_OutputsShapes[i], Name() + "/output_0");
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -114,9 +109,19 @@ namespace Neuro
         Init();
 
         m_Inputs = inputs;
+
+        if (m_InputsGradient.size() != inputs.size())
+        {
+            m_InputsGradient.resize(inputs.size());
+            for (auto i = 0; i < inputs.size(); ++i)
+                m_InputsGradient[i] = new Tensor(Name() + "/input_" + to_string(i) + "_grad");
+        }
+        for (size_t i = 0; i < inputs.size(); ++i)
+            m_InputsGradient[i]->Resize(inputs[i]->GetShape());
         
         // resize is required for the very first batch and cases where last batch has different size
-        m_Outputs[0]->Resize(Shape::From(m_OutputsShapes[0], m_Inputs[0]->Batch()));
+        for (size_t i = 0; i < m_OutputsShapes.size(); ++i)
+            m_Outputs[i]->Resize(Shape::From(m_OutputsShapes[i], m_Inputs[0]->Batch()));
 
 #       ifdef LOG_OUTPUTS
         for (auto i = 0; i < m_Inputs.size(); ++i)
@@ -128,20 +133,20 @@ namespace Neuro
         m_FeedForwardTimer.Stop();
 
 #       ifdef LOG_OUTPUTS
-        for (auto o = 0; o < m_Outputs.size(); ++o)
-            m_Outputs[o].DebugDumpValues(Replace(Name() + "_output_" + to_string(o) + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
+        for (size_t i = 0; i < m_Outputs.size(); ++i)
+            m_Outputs[i].DebugDumpValues(Replace(Name() + "_output_" + to_string(i) + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
 #       endif
 
         if (m_Activation)
         {
-            for (size_t o = 0; o < m_Outputs.size(); ++o)
+            for (size_t i = 0; i < m_Outputs.size(); ++i)
             {
                 m_ActivationTimer.Start();
-                m_Activation->Compute(*m_Outputs[o], *m_Outputs[o]);
+                m_Activation->Compute(*m_Outputs[i], *m_Outputs[i]);
                 m_ActivationTimer.Stop();
 
 #               ifdef LOG_OUTPUTS
-                m_Outputs[o].DebugDumpValues(Replace(Name() + "_output_" + to_string(o) + "_activation_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
+                m_Outputs[i].DebugDumpValues(Replace(Name() + "_output_" + to_string(i) + "_activation_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
 #               endif
             }
         }
@@ -152,30 +157,29 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     const tensor_ptr_vec_t& SingleLayer::BackProp(const tensor_ptr_vec_t& outputsGradient)
     {
-        assert(outputsGradient.size() == 1);
-
         if (!CanStopBackProp())
         {
-            for (auto i = 0; i < m_InputsShapes.size(); ++i)
-                m_InputsGradient[i]->Resize(Shape::From(m_InputsShapes[i], outputsGradient[0]->Batch()));
-
             // apply derivative of our activation function to the errors computed by previous layer
             if (m_Activation)
             {
-                m_ActivationBackPropTimer.Start();
-                m_Activation->Derivative(*m_Outputs[0], *outputsGradient[0], *outputsGradient[0]);
-                m_ActivationBackPropTimer.Stop();
-#               ifdef LOG_OUTPUTS
-                outputsGradient[0].DebugDumpValues(Replace(Name() + "_activation_0_grad_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
-#               endif
+                for (size_t i = 0; i < m_Outputs.size(); ++i)
+                {
+                    m_ActivationBackPropTimer.Start();
+                    m_Activation->Derivative(*m_Outputs[i], *outputsGradient[i], *outputsGradient[i]);
+                    m_ActivationBackPropTimer.Stop();
+#                   ifdef LOG_OUTPUTS
+                    outputsGradient[i].DebugDumpValues(Replace(Name() + "_activation_" + to_string(i) + "_grad_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
+#                   endif
+                }
             }
 
             m_BackPropTimer.Start();
             BackPropInternal(outputsGradient);
             m_BackPropTimer.Stop();
+
 #           ifdef LOG_OUTPUTS
-            for (auto i = 0; i < m_InputsShapes.size(); ++i)
-                m_InputsGradient[i].DebugDumpValues(Replace(m_InputsGradient[i].Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
+            for (size_t i = 0; i < m_InputShape.size(); ++i)
+                m_InputsGradient[i].DebugDumpValues(Replace(Name() + "_input_" + to_string(i) + "_grad_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
 #           endif
         }
 
