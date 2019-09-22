@@ -37,6 +37,8 @@
 #include "Initializers/GlorotUniform.h"
 #include "Initializers/Normal.h"
 #include "Initializers/Uniform.h"
+#include "Initializers/HeNormal.h"
+#include "Initializers/HeUniform.h"
 #include "Initializers/Zeros.h"
 
 #include "Tensors/Shape.h"

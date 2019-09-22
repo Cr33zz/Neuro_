@@ -151,7 +151,7 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    Dense* Dense::SetWeightsInitializer(InitializerBase* initializer)
+    Dense* Dense::WeightsInitializer(InitializerBase* initializer)
     {
         delete m_WeightsInitializer;
         m_WeightsInitializer = initializer;
@@ -159,7 +159,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Dense* Dense::SetBiasInitializer(InitializerBase* initializer)
+    Dense* Dense::BiasInitializer(InitializerBase* initializer)
     {
         delete m_BiasInitializer;
         m_BiasInitializer = initializer;
@@ -167,7 +167,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Dense* Dense::SetUseBias(bool useBias)
+    Dense* Dense::UseBias(bool useBias)
     {
         m_UseBias = useBias;
         return this;

@@ -24,9 +24,9 @@ namespace Neuro
         Tensor& Kernels() { return m_Kernels; }
         Tensor& Bias() { return m_Bias; }
 
-        Conv2DTranspose* SetKernelInitializer(InitializerBase* initializer);
-        Conv2DTranspose* SetBiasInitializer(InitializerBase* initializer);
-        Conv2DTranspose* SetUseBias(bool useBias);
+        Conv2DTranspose* KernelInitializer(InitializerBase* initializer);
+        Conv2DTranspose* BiasInitializer(InitializerBase* initializer);
+        Conv2DTranspose* UseBias(bool useBias);
 
     protected:
         Conv2DTranspose() {}

@@ -135,7 +135,7 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    Conv2D* Conv2D::SetKernelInitializer(InitializerBase* initializer)
+    Conv2D* Conv2D::KernelInitializer(InitializerBase* initializer)
     {
         delete m_KernelInitializer;
         m_KernelInitializer = initializer;
@@ -143,7 +143,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Conv2D* Conv2D::SetBiasInitializer(InitializerBase* initializer)
+    Conv2D* Conv2D::BiasInitializer(InitializerBase* initializer)
     {
         delete m_BiasInitializer;
         m_BiasInitializer = initializer;
@@ -151,7 +151,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Conv2D* Conv2D::SetUseBias(bool useBias)
+    Conv2D* Conv2D::UseBias(bool useBias)
     {
         m_UseBias = useBias;
         return this;

@@ -25,9 +25,9 @@ namespace Neuro
         Tensor& Weights() { return m_Weights; }
         Tensor& Bias() { return m_Bias; }
 
-        Dense* SetWeightsInitializer(InitializerBase* initializer);
-        Dense* SetBiasInitializer(InitializerBase* initializer);
-        Dense* SetUseBias(bool useBias);
+        Dense* WeightsInitializer(InitializerBase* initializer);
+        Dense* BiasInitializer(InitializerBase* initializer);
+        Dense* UseBias(bool useBias);
 
 	protected:
 		// This constructor exists only for cloning purposes

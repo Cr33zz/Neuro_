@@ -26,7 +26,7 @@ namespace NeuroTests
         ModelBase* CreateFitTestNet()
         {
             auto model = new Sequential("fit_test", 7);
-            model->AddLayer((new Dense(3, 2, new Linear()))->SetWeightsInitializer(new Constant(1))->SetUseBias(false));
+            model->AddLayer((new Dense(3, 2, new Linear()))->WeightsInitializer(new Constant(1))->UseBias(false));
             model->Optimize(new SGD(0.07f), new MeanSquareError());
             return model;
         }
@@ -69,7 +69,7 @@ namespace NeuroTests
         void TestDenseLayer(int inputsNum, int outputsNum, int samples, int batchSize, int epochs)
         {
             auto model = new Sequential("dense_test", 7);
-            model->AddLayer((new Dense(inputsNum, outputsNum, new Linear()))->SetWeightsInitializer(new Constant(1))->SetUseBias(false));
+            model->AddLayer((new Dense(inputsNum, outputsNum, new Linear()))->WeightsInitializer(new Constant(1))->UseBias(false));
 
             auto expectedWeights = Tensor({ 1.1f, 0.1f, -1.3f, 0.2f, -0.9f, 0.7f }, Shape(3, 2));
 

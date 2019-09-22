@@ -11,9 +11,6 @@
 
 int main()
 {
-    //https://keras.io/examples/cifar10_resnet/
-    LayerBase* x = new Input(Shape(1, 5));
-    x = new Dense(7, new ReLU())->LinkInput(x);
     //IrisNetwork().Run();
     //ConvNetwork().Run();
     //FlowNetwork().Run();
@@ -21,9 +18,9 @@ int main()
     //MnistNetwork().Run();
     //AutoencoderNetwork().Run();
     //ConvAutoencoderNetwork().Run();
-    GAN().Run();
+    //GAN().Run();
     //DeepConvGAN().Run();
-    //CifarGAN().Run();
+    CifarGAN().Run();
 
     //Tensor::SetDefaultOpMode(EOpMode::MultiCPU);
     //int inputsNum = 100;
