@@ -18,7 +18,21 @@ namespace Neuro
         m_Name = name.empty() ? GenerateName() : name;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    LayerBase* LayerBase::LinkImpl(const vector<LayerBase*>& inputLayers)
+    {
+        OnLinkInput(inputLayers);
+        for (auto inputLayer : inputLayers)
+        {
+            // linking to model layer is not allowed when there are multiple model output layers;
+            // in that case specific model output layer(s) should be used to link
+            assert(dynamic_cast<ModelBase*>(inputLayer) == nullptr || static_cast<ModelBase*>(inputLayer)->ModelOutputLayers().size() == 1);
+            inputLayer->OnLinkOutput(this);
+        }
+        return this;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	LayerBase* LayerBase::Clone()
 	{
 		Init(); // make sure parameter matrices are created
@@ -34,52 +48,30 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
+    LayerBase* LayerBase::Link(const vector<LayerBase*>& inputLayers)
+    {
+        return LinkImpl(inputLayers);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    LayerBase* LayerBase::operator()(const vector<LayerBase*>& inputLayers)
+    {
+        Link(inputLayers);
+        return this;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    LayerBase* LayerBase::Link(LayerBase* inputLayer)
+    {
+        return Link(vector<LayerBase*>{ inputLayer });
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     LayerBase* LayerBase::operator()(LayerBase* inputLayer)
     {
-        LinkInput(inputLayer);
+        Link(inputLayer);
         return this;
     }
-
-    //////////////////////////////////////////////////////////////////////////
-    LayerBase* LayerBase::LinkInput(LayerBase* inputLayer)
-    {
-        OnLink(inputLayer, true);
-        inputLayer->OnLink(this, false);
-        return this;
-    }
-
-    ////////////////////////////////////////////////////////////////////////////
-    //void LayerBase::OnLink(const vector<LayerBase*>& layers, bool input)
-    //{
-    //    if (input)
-    //    {
-    //        auto& inputShapes = InputShapes();
-
-    //        inputShapes.clear();
-    //        for (auto inLayer : layers)
-    //            inputShapes.push_back(inLayer->OutputShape());
-    //        InputLayers() = layers;
-    //    }
-    //    else
-    //        assert(false);
-    //}
-
-    //////////////////////////////////////////////////////////////////////////
-    /*void LayerBase::Link(const vector<LayerBase*>& inputLayers)
-    {
-        assert(!HasInputLayers());
-
-        InputLayers().insert(InputLayers().end(), inputLayers.begin(), inputLayers.end());
-        InputShapes().clear();
-
-        OnLink(inputLayers, true);
-
-        for (auto inLayer : inputLayers)
-        {
-            assert(inLayer->OutputShapes().size() == 1);
-            inLayer->OnLink(this, false);            
-        }
-    }*/
 
     //////////////////////////////////////////////////////////////////////////
 	void LayerBase::CopyParametersTo(LayerBase& target, float tau) const

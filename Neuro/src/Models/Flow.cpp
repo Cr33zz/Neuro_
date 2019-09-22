@@ -41,6 +41,15 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    LayerBase* Flow::LinkImpl(const vector<LayerBase*>& inputLayers)
+    {
+        OnLinkInput(inputLayers);
+        for (size_t i = 0; i < m_ModelInputLayers.size(); ++i)
+            inputLayers[i]->OnLinkOutput(m_ModelInputLayers[i]);
+        return this;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void Flow::ProcessLayer(LayerBase* layer, vector<LayerBase*>& visited)
 	{
 		bool allInputLayersVisited = true;
@@ -79,8 +88,8 @@ namespace Neuro
         for (size_t i = 0; i < inputs.size(); ++i)
             m_InputsGradient[i]->Resize(inputs[i]->GetShape());
 
-		for (size_t i = 0; i < m_ModelInputLayers.size(); ++i)
-			m_ModelInputLayers[i]->FeedForward(inputs, training);
+        for (size_t i = 0; i < m_ModelInputLayers.size(); ++i)
+            m_ModelInputLayers[i]->FeedForward(inputs[i], training);
 
 		for (auto layer : m_Order)
 		{
@@ -251,17 +260,17 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Flow::OnLink(LayerBase* layer, bool input)
+    void Flow::OnLinkInput(const vector<LayerBase*>& inputLayers)
     {
-        if (input)
-        {
-            for (auto modelInputLayer : m_ModelInputLayers)
-                modelInputLayer->OnLink(layer, input);
-        }
-        else
-        {
-            for (auto modelOutputLayer : m_ModelOutputLayers)
-                modelOutputLayer->OnLink(layer, input);
-        }
+        assert(m_ModelInputLayers.size() == inputLayers.size());
+        for (size_t i = 0; i < m_ModelInputLayers.size(); ++i)
+            m_ModelInputLayers[i]->OnLinkInput({ inputLayers[i] });
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Flow::OnLinkOutput(LayerBase* outputLayer)
+    {
+        assert(m_ModelOutputLayers.size() == 1);
+        m_ModelOutputLayers[0]->OnLinkOutput(outputLayer);
     }
 }

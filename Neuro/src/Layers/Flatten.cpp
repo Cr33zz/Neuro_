@@ -27,11 +27,10 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Flatten::OnLink(LayerBase* layer, bool input)
+    void Flatten::OnLinkInput(const vector<LayerBase*>& inputLayers)
     {
-        __super::OnLink(layer, input);
+        __super::OnLinkInput(inputLayers);
 
-        if (input)
-            m_OutputsShapes[0] = Shape(1, m_InputShape.Length);
+        m_OutputsShapes[0] = Shape(1, m_InputShape.Length);
     }
 }

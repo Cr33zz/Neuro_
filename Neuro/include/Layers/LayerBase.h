@@ -13,6 +13,8 @@ namespace Neuro
 {
 	using namespace std;
 
+    class SingleLayer;
+
     // The concept of layer is that it is a 'block box' that supports forward and backward propagation.
     // Layer can have multiple inputs and outputs. Models are layers and can be combined with each other.
     // I.e. flow model (with single input and output) can be used as part of sequential model and be combined
@@ -21,8 +23,6 @@ namespace Neuro
     {
 	public:
         virtual ~LayerBase() {}
-
-        LayerBase* operator() (LayerBase* inputLayer);
 
         virtual const Shape& InputShape() const = 0;
         virtual const vector<Tensor*>& InputsGradient() = 0;
@@ -47,7 +47,11 @@ namespace Neuro
         // input layer.
         virtual int InputOffset(const LayerBase* inputLayer) const = 0;
         
-        LayerBase* LinkInput(LayerBase* inputLayer);
+        LayerBase* Link(LayerBase* inputLayer);
+        LayerBase* operator() (LayerBase* inputLayer);
+
+        LayerBase* Link(const vector<LayerBase*>& inputLayers);
+        LayerBase* operator() (const vector<LayerBase*>& inputLayers);
 
         // Tau specifies the percentage of copied parameters to be applied on a target network, when less than 1 target's network
         // parameters will be updated as follows: this_parameters * tau + target_parameters * (1 - tau)
@@ -74,15 +78,17 @@ namespace Neuro
         const string& Name() const { return m_Name; }
 
 	protected:
-        
         LayerBase(const string& constructorName, const string& name = "");
 		// This constructor exists only for cloning purposes
         LayerBase() {}
 
+        virtual LayerBase* LinkImpl(const vector<LayerBase*>& inputLayers);
+
         virtual LayerBase* GetCloneInstance() const = 0;
         virtual void OnClone(const LayerBase& source);
         virtual void OnInit() {}
-        virtual void OnLink(LayerBase* layer, bool input) = 0;
+        virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) = 0;
+        virtual void OnLinkOutput(LayerBase* outputLayer) = 0;
         
         bool CanStopBackProp() const;
         

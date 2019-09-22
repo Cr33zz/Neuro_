@@ -28,12 +28,11 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Dropout::OnLink(LayerBase* layer, bool input)
+    void Dropout::OnLinkInput(const vector<LayerBase*>& inputLayers)
     {
-        __super::OnLink(layer, input);
+        __super::OnLinkInput(inputLayers);
 
-        if (input)
-            m_OutputsShapes[0] = m_InputShape;
+        m_OutputsShapes[0] = m_InputShape;
     }
 
     //////////////////////////////////////////////////////////////////////////

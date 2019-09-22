@@ -52,6 +52,9 @@ namespace Neuro
         string Summary() const;
         string TrainSummary() const;
 
+        ModelBase* Link(LayerBase* inputLayer) { return static_cast<ModelBase*>(__super::Link(inputLayer)); }
+        ModelBase* Link(const vector<LayerBase*>& inputLayers) { return static_cast<ModelBase*>(__super::Link(inputLayers)); }
+
         const LayerBase* Layer(const string& name) const;
 
         float LastTrainError() const { return m_LastTrainError; }

@@ -37,12 +37,16 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Sequential::OnLink(LayerBase* layer, bool input)
+    void Sequential::OnLinkInput(const vector<LayerBase*>& inputLayers)
     {
-        if (input)
-            m_Layers.front()->OnLink(layer, input);
-        else
-            m_Layers.back()->OnLink(layer, input);
+        assert(inputLayers.size() == 1);
+        m_Layers.front()->OnLinkInput(inputLayers);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Sequential::OnLinkOutput(LayerBase* outputLayer)
+    {
+        m_Layers.back()->OnLinkOutput(outputLayer);
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -75,7 +79,16 @@ namespace Neuro
         return m_Layers[0]->InputOffset(inputLayer);
     }
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    LayerBase* Sequential::LinkImpl(const vector<LayerBase*>& inputLayers)
+    {
+        assert(inputLayers.size() == 1);
+        OnLinkInput(inputLayers);
+        inputLayers[0]->OnLinkOutput(m_ModelInputLayers[0]);
+        return this;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void Sequential::AddLayer(LayerBase* layer)
 	{
         //assert(!m_Layers.empty() || layer->HasInputShape()); // first added layer must have input shape specified
@@ -88,7 +101,7 @@ namespace Neuro
         }
 
         if (!m_Layers.empty() && !layer->InputLayer())
-            layer->LinkInput(m_Layers.back());
+            layer->Link(m_Layers.back());
 		
         m_ModelOutputLayers.resize(1);
         m_ModelOutputLayers[0] = layer;

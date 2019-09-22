@@ -3,22 +3,22 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Merge::Merge(const vector<LayerBase*>& inputLayers, EMergeMode mergeMode, const string& name)
-        : SingleLayer(__FUNCTION__, inputLayers, inputLayers[0]->OutputShape(), nullptr, name)
+    Merge::Merge(const vector<LayerBase*>& inputLayers, EMergeMode mergeMode, ActivationBase* activation, const string& name)
+        : SingleLayer(__FUNCTION__, inputLayers, inputLayers[0]->OutputShape(), activation, name)
     {
         m_MergeMode = mergeMode;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Merge::Merge(EMergeMode mergeMode, const string& name)
-        : SingleLayer(__FUNCTION__, Shape(), nullptr, name)
+    Merge::Merge(EMergeMode mergeMode, ActivationBase* activation, const string& name)
+        : SingleLayer(__FUNCTION__, Shape(), activation, name)
     {
         m_MergeMode = mergeMode;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Merge::Merge(const Shape& inputsShape, EMergeMode mergeMode, const string& name)
-        : SingleLayer(__FUNCTION__, inputsShape, inputsShape, nullptr, name)
+    Merge::Merge(const Shape& inputsShape, EMergeMode mergeMode, ActivationBase* activation, const string& name)
+        : SingleLayer(__FUNCTION__, inputsShape, inputsShape, activation, name)
     {
         m_MergeMode = mergeMode;
     }
@@ -39,12 +39,11 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Merge::OnLink(LayerBase* layer, bool input)
+    void Merge::OnLinkInput(const vector<LayerBase*>& inputLayers)
     {
-        __super::OnLink(layer, input);
+        __super::OnLinkInput(inputLayers);
 
-        if (input)
-            m_OutputsShapes[0] = m_InputShape;
+        m_OutputsShapes[0] = m_InputShape;
     }
 
     //////////////////////////////////////////////////////////////////////////

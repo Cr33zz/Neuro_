@@ -27,7 +27,7 @@ namespace Neuro
         virtual const vector<LayerBase*>& OutputLayers() const override { return m_ModelOutputLayers[0]->OutputLayers(); }
 
         virtual int InputOffset(const LayerBase* inputLayer) const override;
-        
+
         virtual const tensor_ptr_vec_t& FeedForward(const const_tensor_ptr_vec_t& inputs, bool training) override;
         virtual const tensor_ptr_vec_t& BackProp(const tensor_ptr_vec_t& outputsGradient) override;
 
@@ -36,10 +36,12 @@ namespace Neuro
         virtual const vector<LayerBase*>& Layers() const override { return m_Order; }
 
     protected:
+        virtual LayerBase* LinkImpl(const vector<LayerBase*>& inputLayers) override;
         virtual LayerBase* GetCloneInstance() const override;
         virtual void OnClone(const LayerBase& source) override;
         virtual void OnInit() override;
-        virtual void OnLink(LayerBase* layer, bool input) override;
+        virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) override;
+        virtual void OnLinkOutput(LayerBase* outputLayer) override;
 
 	private:
 		Flow() {}

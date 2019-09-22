@@ -25,17 +25,14 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Concatenate::OnLink(LayerBase* layer, bool input)
+    void Concatenate::OnLinkInput(const vector<LayerBase*>& inputLayers)
     {
-        __super::OnLink(layer, input);
+        __super::OnLinkInput(inputLayers);
 
-        if (input)
-        {
-            int totalLen = 0;
-            for (auto input : InputLayers())
-                totalLen += input->OutputShape().Length;
-            m_OutputsShapes[0] = Shape(1, totalLen);
-        }
+        int totalLen = 0;
+        for (auto input : InputLayers())
+            totalLen += input->OutputShape().Length;
+        m_OutputsShapes[0] = Shape(1, totalLen);
     }
 
     //////////////////////////////////////////////////////////////////////////

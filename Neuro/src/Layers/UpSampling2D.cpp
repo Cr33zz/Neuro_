@@ -17,7 +17,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    UpSampling2D::UpSampling2D(Shape inputShape, uint32_t scaleFactor, const string& name)
+    UpSampling2D::UpSampling2D(const Shape& inputShape, uint32_t scaleFactor, const string& name)
         : SingleLayer(__FUNCTION__, inputShape, Shape(inputShape.Width() * scaleFactor, inputShape.Height() * scaleFactor, inputShape.Depth(), inputShape.Batch()), nullptr, name)
     {
         m_ScaleFactor = scaleFactor;
@@ -39,12 +39,11 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void UpSampling2D::OnLink(LayerBase* layer, bool input)
+    void UpSampling2D::OnLinkInput(const vector<LayerBase*>& inputLayers)
     {
-        __super::OnLink(layer, input);
+        __super::OnLinkInput(inputLayers);
 
-        if (input)
-            m_OutputsShapes[0] = Shape(InputShape().Width() * m_ScaleFactor, InputShape().Height() * m_ScaleFactor, InputShape().Depth(), InputShape().Batch());
+        m_OutputsShapes[0] = Shape(InputShape().Width() * m_ScaleFactor, InputShape().Height() * m_ScaleFactor, InputShape().Depth(), InputShape().Batch());
     }
 
     //////////////////////////////////////////////////////////////////////////

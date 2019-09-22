@@ -13,15 +13,14 @@ namespace Neuro
     SingleLayer::SingleLayer(const string& constructorName, LayerBase* inputLayer, const Shape& outputShape, ActivationBase* activation, const string& name)
         : SingleLayer(constructorName, outputShape, activation, name)
     {
-        LinkInput(inputLayer);
+        Link(inputLayer);
     }
 
     //////////////////////////////////////////////////////////////////////////
     SingleLayer::SingleLayer(const string& constructorName, const vector<LayerBase*>& inputLayers, const Shape& outputShape, ActivationBase* activation, const string& name)
         : SingleLayer(constructorName, outputShape, activation, name)
     {
-        for (auto inputLayer : inputLayers)
-            LinkInput(inputLayer);
+        Link(inputLayers);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -61,24 +60,24 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void SingleLayer::OnLink(LayerBase* layer, bool input)
+    void SingleLayer::OnLinkInput(const vector<LayerBase*>& inputLayers)
     {
-        if (input)
-        {
-#           ifdef _DEBUG
-            // all output shapes must match
-            Shape firstShape = layer->OutputShape();
-            for (size_t i = 1; i < layer->OutputShapes().size(); ++i)
-                assert(firstShape == layer->OutputShapes()[i]);
-#           endif
+        // all output shapes must match
+        Shape firstShape = inputLayers[0]->OutputShape();
+        
+        assert(!m_InputShape.IsValid() || m_InputShape == firstShape);
 
-            m_InputShape = layer->OutputShape();
-            m_InputLayers.push_back(layer);
-        }
-        else
-        {
-            m_OutputLayers.push_back(layer);
-        }
+        for (size_t i = 1; i < inputLayers.size(); ++i)
+            assert(firstShape == inputLayers[i]->OutputShape());
+
+        m_InputShape = firstShape;
+        m_InputLayers.insert(m_InputLayers.end(), inputLayers.begin(), inputLayers.end());
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void SingleLayer::OnLinkOutput(LayerBase* outputLayer)
+    {
+        m_OutputLayers.push_back(outputLayer);
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -35,9 +35,11 @@ namespace Neuro
         void AddLayer(LayerBase* layer);
 
     protected:
+        virtual LayerBase* LinkImpl(const vector<LayerBase*>& inputLayers) override;
         virtual LayerBase* GetCloneInstance() const override;
         virtual void OnClone(const LayerBase& source) override;
-        virtual void OnLink(LayerBase* layer, bool input) override;
+        virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) override;
+        virtual void OnLinkOutput(LayerBase* outputLayer) override;
 
 	private:
         Sequential(int) {}

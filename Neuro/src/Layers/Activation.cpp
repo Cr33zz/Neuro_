@@ -32,11 +32,11 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Activation::OnLink(LayerBase* layer, bool input)
+    void Activation::OnLinkInput(const vector<LayerBase*>& inputLayers)
     {
-        __super::OnLink(layer, input);
+        assert(inputLayers.size() == 1);
+        __super::OnLinkInput(inputLayers);
 
-        if (input)
-            m_OutputsShapes[0] = m_InputShape;
+        m_OutputsShapes[0] = m_InputShape;
     }
 }

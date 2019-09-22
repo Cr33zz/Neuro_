@@ -17,6 +17,6 @@ namespace Neuro
         Activation();
 
         virtual LayerBase* GetCloneInstance() const override;
-        virtual void OnLink(LayerBase* layer, bool input) override;
+        virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) override;
     };
 }

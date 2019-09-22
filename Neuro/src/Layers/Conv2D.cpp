@@ -58,12 +58,11 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Conv2D::OnLink(LayerBase* layer, bool input)
+    void Conv2D::OnLinkInput(const vector<LayerBase*>& inputLayers)
     {
-        __super::OnLink(layer, input);
+        __super::OnLinkInput(inputLayers);
 
-        if (input)
-            m_OutputsShapes[0] = Tensor::GetConvOutputShape(layer->OutputShape(), m_FiltersNum, m_FilterSize, m_FilterSize, m_Stride, m_Padding, m_Padding);
+        m_OutputsShapes[0] = Tensor::GetConvOutputShape(inputLayers[0]->OutputShape(), m_FiltersNum, m_FilterSize, m_FilterSize, m_Stride, m_Padding, m_Padding);
     }
 
     //////////////////////////////////////////////////////////////////////////

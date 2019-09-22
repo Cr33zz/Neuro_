@@ -98,12 +98,11 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void BatchNormalization::OnLink(LayerBase* layer, bool input)
+    void BatchNormalization::OnLinkInput(const vector<LayerBase*>& inputLayers)
     {
-        __super::OnLink(layer, input);
+        __super::OnLinkInput(inputLayers);
 
-        if (input)
-            m_OutputsShapes[0] = m_InputShape;
+        m_OutputsShapes[0] = m_InputShape;
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -21,7 +21,7 @@ namespace Neuro
             NDim = 3;
         else if (height > 1)
             NDim = 2;
-        else
+        else if (width > 0)
             NDim = 1;
 	}
 

@@ -50,7 +50,7 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     Tensor::Tensor(const string& name)
-        : m_Name(name)
+        : m_Name(name), m_Shape(0)
 	{
 		OverrideHost();
         m_Values.resize(m_Shape.Length);

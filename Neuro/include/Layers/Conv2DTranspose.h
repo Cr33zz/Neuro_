@@ -34,7 +34,7 @@ namespace Neuro
         virtual LayerBase* GetCloneInstance() const override;
         virtual void OnClone(const LayerBase& source) override;
         virtual void OnInit() override;
-        virtual void OnLink(LayerBase* layer, bool input) override;
+        virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) override;
         virtual void FeedForwardInternal(bool training) override;
         virtual void BackPropInternal(const tensor_ptr_vec_t& outputsGradient) override;
 

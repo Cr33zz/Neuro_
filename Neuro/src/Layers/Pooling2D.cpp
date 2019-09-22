@@ -68,12 +68,11 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Pooling2D::OnLink(LayerBase* layer, bool input)
+    void Pooling2D::OnLinkInput(const vector<LayerBase*>& inputLayers)
     {
-        __super::OnLink(layer, input);
+        __super::OnLinkInput(inputLayers);
 
-        if (input)
-            m_OutputsShapes[0] = Tensor::GetPooling2DOutputShape(layer->OutputShape(), m_FilterSize, m_FilterSize, m_Stride, m_Padding, m_Padding);
+        m_OutputsShapes[0] = Tensor::GetPooling2DOutputShape(inputLayers[0]->OutputShape(), m_FilterSize, m_FilterSize, m_Stride, m_Padding, m_Padding);
     }
 
     //////////////////////////////////////////////////////////////////////////
