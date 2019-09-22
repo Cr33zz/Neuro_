@@ -22,6 +22,8 @@ namespace Neuro
 	public:
         virtual ~LayerBase() {}
 
+        LayerBase* operator() (LayerBase* inputLayer);
+
         virtual const Shape& InputShape() const = 0;
         virtual const vector<Tensor*>& InputsGradient() = 0;
         virtual const tensor_ptr_vec_t& Outputs() const = 0;
@@ -45,7 +47,7 @@ namespace Neuro
         // input layer.
         virtual int InputOffset(const LayerBase* inputLayer) const = 0;
         
-        void LinkInput(LayerBase* inputLayer);
+        LayerBase* LinkInput(LayerBase* inputLayer);
 
         // Tau specifies the percentage of copied parameters to be applied on a target network, when less than 1 target's network
         // parameters will be updated as follows: this_parameters * tau + target_parameters * (1 - tau)

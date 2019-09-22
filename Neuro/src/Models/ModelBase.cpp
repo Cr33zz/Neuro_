@@ -485,8 +485,8 @@ namespace Neuro
 
         BackProp(outputsGrad);
 
-        vector<ParametersAndGradients> paramsAndGrads;
-        GetParametersAndGradients(paramsAndGrads);
+        m_ParamsAndGrads.clear();
+        GetParametersAndGradients(m_ParamsAndGrads);
 
 #       ifdef LOG_OUTPUTS
         vector<ParametersAndGradients> allParamsAndGrads;
@@ -499,7 +499,7 @@ namespace Neuro
         }
 #       endif
 
-        m_Optimizer->Step(paramsAndGrads, inputs[0]->Batch());
+        m_Optimizer->Step(m_ParamsAndGrads, inputs[0]->Batch());
     }
 
     //////////////////////////////////////////////////////////////////////////

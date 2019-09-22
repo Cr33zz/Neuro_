@@ -34,10 +34,18 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void LayerBase::LinkInput(LayerBase* inputLayer)
+    LayerBase* LayerBase::operator()(LayerBase* inputLayer)
+    {
+        LinkInput(inputLayer);
+        return this;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    LayerBase* LayerBase::LinkInput(LayerBase* inputLayer)
     {
         OnLink(inputLayer, true);
         inputLayer->OnLink(this, false);
+        return this;
     }
 
     ////////////////////////////////////////////////////////////////////////////

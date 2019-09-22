@@ -105,7 +105,7 @@ namespace NeuroTests
 
         LayerBase* CreateLayer(uint32_t padding)
         {
-            auto layer = new Conv2D(Shape(5,5,3), 3, 4, 1, padding);
+            auto layer = new Conv2D(Shape(5,5,3), 4, 3, 1, padding);
             layer->Init();
             layer->Kernels().FillWithRand();
             return layer;

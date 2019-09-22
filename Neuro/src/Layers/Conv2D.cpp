@@ -4,7 +4,7 @@
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	Conv2D::Conv2D(LayerBase* inputLayer, uint32_t filterSize, uint32_t filtersNum, uint32_t stride, uint32_t padding, ActivationBase* activation, const string& name)
+	Conv2D::Conv2D(LayerBase* inputLayer, uint32_t filtersNum, uint32_t filterSize, uint32_t stride, uint32_t padding, ActivationBase* activation, const string& name)
 		: SingleLayer(__FUNCTION__, inputLayer, Tensor::GetConvOutputShape(inputLayer->OutputShape(), filtersNum, filterSize, filterSize, stride, padding, padding), activation, name)
 	{
 		m_FilterSize = filterSize;
@@ -14,7 +14,7 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-    Conv2D::Conv2D(uint32_t filterSize, uint32_t filtersNum, uint32_t stride, uint32_t padding, ActivationBase* activation, const string& name)
+    Conv2D::Conv2D(uint32_t filtersNum, uint32_t filterSize, uint32_t stride, uint32_t padding, ActivationBase* activation, const string& name)
         : SingleLayer(__FUNCTION__, Shape(), activation, name)
     {
         m_FilterSize = filterSize;
@@ -24,7 +24,7 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	Conv2D::Conv2D(const Shape& inputShape, uint32_t filterSize, uint32_t filtersNum, uint32_t stride, uint32_t padding, ActivationBase* activation, const string& name)
+	Conv2D::Conv2D(const Shape& inputShape, uint32_t filtersNum, uint32_t filterSize, uint32_t stride, uint32_t padding, ActivationBase* activation, const string& name)
 		: SingleLayer(__FUNCTION__, inputShape, Tensor::GetConvOutputShape(inputShape, filtersNum, filterSize, filterSize, stride, padding, padding), activation, name)
 	{
 		m_FilterSize = filterSize;

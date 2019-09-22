@@ -18,17 +18,17 @@ public:
         //Based on https://blog.keras.io/building-autoencoders-in-keras.html
 
         auto encoder = new Sequential("encoder");
-        encoder->AddLayer(new Conv2D(Shape(28, 28, 1), 3, 16, 1, 1, new ReLU()));
+        encoder->AddLayer(new Conv2D(Shape(28, 28, 1), 16, 3, 1, 1, new ReLU()));
         encoder->AddLayer(new MaxPooling2D(2, 2));
-        encoder->AddLayer(new Conv2D(3, 8, 1, 1, new ReLU()));
+        encoder->AddLayer(new Conv2D(8, 3, 1, 1, new ReLU()));
         encoder->AddLayer(new MaxPooling2D(2, 2));
         //cout << encoder->Summary();
         auto decoder = new Sequential("decoder");
-        decoder->AddLayer(new Conv2D(Shape(7, 7, 8), 3, 8, 1, 1, new ReLU()));
+        decoder->AddLayer(new Conv2D(Shape(7, 7, 8), 8, 3, 1, 1, new ReLU()));
         decoder->AddLayer(new UpSampling2D(2));
-        decoder->AddLayer(new Conv2D(3, 16, 1, 1, new ReLU()));
+        decoder->AddLayer(new Conv2D(16, 3, 1, 1, new ReLU()));
         decoder->AddLayer(new UpSampling2D(2));
-        decoder->AddLayer(new Conv2D(3, 1, 1, 1, new Sigmoid()));
+        decoder->AddLayer(new Conv2D(1, 3, 1, 1, new Sigmoid()));
         //cout << decoder->Summary();
 
         auto model = Sequential("conv_autoencoder");

@@ -15,9 +15,9 @@ public:
         Tensor::SetDefaultOpMode(GPU);
 
         auto model = Sequential("mnist_conv", 1337);
-        model.AddLayer(new Conv2D(Shape(28, 28, 1), 3, 32, 1, 0, new ReLU()));
+        model.AddLayer(new Conv2D(Shape(28, 28, 1), 32, 3, 1, 0, new ReLU()));
         model.AddLayer(new MaxPooling2D(2, 2));
-        model.AddLayer(new Conv2D(3, 16, 1, 0, new ReLU()));
+        model.AddLayer(new Conv2D(16, 3, 1, 0, new ReLU()));
         model.AddLayer(new MaxPooling2D(2, 2));
         model.AddLayer(new Dropout(0.2f));
         model.AddLayer(new Flatten());

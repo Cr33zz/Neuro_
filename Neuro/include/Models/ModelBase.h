@@ -77,6 +77,8 @@ namespace Neuro
         vector<accuracy_func_t> m_AccuracyFuncs;
         bool m_ForceLearningPhase = false;
 
+        vector<ParametersAndGradients> m_ParamsAndGrads;
+
         ofstream* m_LogFile = nullptr;
         void LogLine(const string& text, bool print = true);
         string FilePrefix() const;

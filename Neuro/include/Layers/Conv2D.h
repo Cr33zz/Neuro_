@@ -9,11 +9,11 @@ namespace Neuro
     class Conv2D : public SingleLayer
     {
 	public:
-        Conv2D(LayerBase* inputLayer, uint32_t filterSize, uint32_t filtersNum, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, const string& name = "");
+        Conv2D(LayerBase* inputLayer, uint32_t filtersNum, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, const string& name = "");
         // Make sure to link this layer to input when using this constructor.
-        Conv2D(uint32_t filterSize, uint32_t filtersNum, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, const string& name = "");
+        Conv2D(uint32_t filtersNum, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, const string& name = "");
         // This constructor should only be used for input layer
-        Conv2D(const Shape& inputShape, uint32_t filterSize, uint32_t filtersNum, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, const string& name = "");
+        Conv2D(const Shape& inputShape, uint32_t filtersNum, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, const string& name = "");
 		~Conv2D();
 
 		virtual void CopyParametersTo(LayerBase& target, float tau) const override;

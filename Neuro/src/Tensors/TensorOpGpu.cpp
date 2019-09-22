@@ -475,8 +475,6 @@ namespace Neuro
     //{
     //    input.CopyToDevice();
     //    output.CopyToDevice();
-    //    saveMask.FillWithFunc([&]() { return GlobalRng().NextFloat() < prob ? 0.f : 1.f; });
-    //    saveMask.CopyToDevice();
 
     //    cudnnTensorDescriptor_t inputOutputDesc; cudnnCreateTensorDescriptor(&inputOutputDesc);
     //    cudnnDropoutDescriptor_t dropoutDesc; cudnnCreateDropoutDescriptor(&dropoutDesc);
@@ -499,10 +497,30 @@ namespace Neuro
     //        dropoutReserveSize));
     //}
 
-    ////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////
     //void TensorOpGpu::DropoutGradient(const Tensor& outputGradient, const Tensor& savedMask, Tensor& inputGradient)
     //{
+    //    outputGradient.CopyToDevice();
+    //    inputGradient.CopyToDevice();
 
+    //    cudnnTensorDescriptor_t inputOutputGradDesc; cudnnCreateTensorDescriptor(&inputOutputGradDesc);
+    //    cudnnDropoutDescriptor_t dropoutDesc; cudnnCreateDropoutDescriptor(&dropoutDesc);
+
+    //    cudnnSetTensor4dDescriptor(inputOutputGradDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, outputGradient.GetShape().Dimensions[3], outputGradient.GetShape().Dimensions[2], outputGradient.GetShape().Dimensions[1], outputGradient.GetShape().Dimensions[0]);
+    //    cudnnSetDropoutDescriptor(dropoutDesc, s_CudnnHandle, 0, nullptr, 0, 0);
+
+    //    size_t dropoutReserveSize;
+    //    CUDA_CHECK(cudnnDropoutGetReserveSpaceSize(inputOutputGradDesc, &dropoutReserveSize));
+
+    //    CUDA_CHECK(cudnnDropoutBackward(
+    //        s_CudnnHandle,
+    //        dropoutDesc,
+    //        inputOutputGradDesc,
+    //        outputGradient.GetDevicePtr(),
+    //        inputOutputGradDesc,
+    //        inputGradient.GetDevicePtr(),
+    //        output.m_GpuData.m_DropoutWorkspace->GetDevicePtr(),
+    //        dropoutReserveSize));
     //}
 
     //////////////////////////////////////////////////////////////////////////

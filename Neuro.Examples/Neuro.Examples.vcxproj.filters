@@ -53,5 +53,8 @@
     <ClInclude Include="include\CifarGAN.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\CifarResNet.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -11,29 +11,18 @@
 
 int main()
 {
-    {
-        
-    }
-
-    /*{
-        auto in = new Dense(5, 7, new ReLU());
-
-        auto flowIn1 = new Input(Shape(1, 7));
-        auto flowIn2 = new Input(Shape(1, 7));
-
-        model->AddLayer(new Flow({ flowIn1, flowIn2 }, { flowIn1, flowIn2 }));
-        model->AddLayer(new Dense(1));
-    }*/
-
+    //https://keras.io/examples/cifar10_resnet/
+    LayerBase* x = new Input(Shape(1, 5));
+    x = new Dense(7, new ReLU())->LinkInput(x);
     //IrisNetwork().Run();
     //ConvNetwork().Run();
     //FlowNetwork().Run();
     //MnistConvNetwork().Run();
     //MnistNetwork().Run();
-    //AutoencoderNetwork::Run();
-    //ConvAutoencoderNetwork::Run();
-    //GAN().Run();
-    DeepConvGAN().Run();
+    //AutoencoderNetwork().Run();
+    //ConvAutoencoderNetwork().Run();
+    GAN().Run();
+    //DeepConvGAN().Run();
     //CifarGAN().Run();
 
     //Tensor::SetDefaultOpMode(EOpMode::MultiCPU);
@@ -43,14 +32,14 @@ int main()
     //model->AddLayer(new Dense(inputsNum, 128 * 7 * 7, new ReLU())); //0
     //model->AddLayer(new Reshape(Shape(7, 7, 128))); //1
     //model->AddLayer(new UpSampling2D(2)); //2
-    //model->AddLayer(new Conv2D(3, 128, 1, Tensor::GetPadding(Same, 3))); //3
+    //model->AddLayer(new Conv2D(128, 3, 1, Tensor::GetPadding(Same, 3))); //3
     //model->AddLayer((new BatchNormalization())->SetMomentum(0.8f)); //4
     //model->AddLayer(new Activation(new ReLU())); //5
     //model->AddLayer(new UpSampling2D(2)); //6
-    //model->AddLayer(new Conv2D(3, 64, 1, Tensor::GetPadding(Same, 3))); //7
+    //model->AddLayer(new Conv2D(64, 3, 1, Tensor::GetPadding(Same, 3))); //7
     //model->AddLayer((new BatchNormalization())->SetMomentum(0.8f)); //8
     //model->AddLayer(new Activation(new ReLU())); //9
-    //model->AddLayer(new Conv2D(3, 1, 1, Tensor::GetPadding(Same, 3), new Tanh())); //10
+    //model->AddLayer(new Conv2D(1, 3, 1, Tensor::GetPadding(Same, 3), new Tanh())); //10
 
     //Tensor noise(model->InputShape());
     //noise.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
@@ -85,10 +74,10 @@ int main()
     images.Map([](float x) { return (x - 127.5f) / 127.5f; }, images);
 
     auto dModel = new Sequential("discriminator");
-    dModel->AddLayer(new Conv2D(Shape(32, 32, 3), 3, 64, 2, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)));
-    dModel->AddLayer(new Conv2D(3, 128, 2, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)));
-    dModel->AddLayer(new Conv2D(3, 128, 2, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)));
-    dModel->AddLayer(new Conv2D(3, 256, 1, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)));
+    dModel->AddLayer(new Conv2D(Shape(32, 32, 3), 64, 3, 2, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)));
+    dModel->AddLayer(new Conv2D(128, 3, 2, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)));
+    dModel->AddLayer(new Conv2D(128, 3, 2, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)));
+    dModel->AddLayer(new Conv2D(256, 3, 1, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)));
     dModel->AddLayer(new Flatten());
     dModel->AddLayer(new Dropout(0.4f));
     dModel->AddLayer(new Dense(1, new Sigmoid()));
@@ -97,9 +86,9 @@ int main()
     auto gModel = new Sequential("generator");
     gModel->AddLayer(new Dense(100, 256*4*4, new LeakyReLU(0.2f)));
     gModel->AddLayer(new Reshape(Shape(4, 4, 256)));
-    gModel->AddLayer(new Conv2DTranspose(4, 128, 2, 1, new LeakyReLU(0.2f)));
-    gModel->AddLayer(new Conv2DTranspose(4, 128, 2, 1, new LeakyReLU(0.2f)));
-    gModel->AddLayer(new Conv2DTranspose(4, 128, 2, 1, new LeakyReLU(0.2f)));
+    gModel->AddLayer(new Conv2DTranspose(128, 4, 2, 1, new LeakyReLU(0.2f)));
+    gModel->AddLayer(new Conv2DTranspose(128, 4, 2, 1, new LeakyReLU(0.2f)));
+    gModel->AddLayer(new Conv2DTranspose(128, 4, 2, 1, new LeakyReLU(0.2f)));
     gModel->AddLayer(new Conv2D(3, 3, 1, Tensor::GetPadding(Same, 3), new Tanh()));
     cout << gModel->Summary();
 

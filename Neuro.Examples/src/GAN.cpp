@@ -57,7 +57,7 @@ void GAN::Run()
             // grab random batch of real images
             Tensor realImages = images.GetRandomBatches(BATCH_SIZE / 2);
 
-            fakeImages.Map([](float x) { return (0.5f * x + 0.5f) * 255.f; }).Reshaped(Shape(m_ImageShape.Width(), m_ImageShape.Height(), m_ImageShape.Depth(), -1)).SaveAsImage(Name() + "_e" + to_string(e) + "_b" + to_string(i) + ".png", false);
+            //fakeImages.Map([](float x) { return (0.5f * x + 0.5f) * 255.f; }).Reshaped(Shape(m_ImageShape.Width(), m_ImageShape.Height(), m_ImageShape.Depth(), -1)).SaveAsImage(Name() + "_e" + to_string(e) + "_b" + to_string(i) + ".png", false);
 
             // perform step of training discriminator to distinguish fake from real images
             dModel->SetTrainable(true);

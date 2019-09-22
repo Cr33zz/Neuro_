@@ -10,11 +10,11 @@ namespace Neuro
     class Conv2DTranspose : public SingleLayer
     {
     public:
-        Conv2DTranspose(LayerBase* inputLayer, uint32_t filterSize, uint32_t outputDepth, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, const string& name = "");
+        Conv2DTranspose(LayerBase* inputLayer, uint32_t outputDepth, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, const string& name = "");
         // Make sure to link this layer to input when using this constructor.
-        Conv2DTranspose(uint32_t filterSize, uint32_t outputDepth, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, const string& name = "");
+        Conv2DTranspose(uint32_t outputDepth, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, const string& name = "");
         // This constructor should only be used for input layer
-        Conv2DTranspose(const Shape& inputShape, uint32_t filterSize, uint32_t outputDepth, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, const string& name = "");
+        Conv2DTranspose(const Shape& inputShape, uint32_t outputDepth, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, const string& name = "");
         ~Conv2DTranspose();
 
         virtual void CopyParametersTo(LayerBase& target, float tau) const override;
