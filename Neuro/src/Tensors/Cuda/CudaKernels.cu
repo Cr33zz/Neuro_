@@ -123,6 +123,130 @@ __global__ void addBroadcast(float alpha, const float* __restrict t1, int t1Widt
     output[i] = alpha * t1[getIndex(t1W, t1H, t1D, t1N, t1Dim0, t1Dim0Dim1, t1Dim0Dim1Dim2)] + beta * t2[getIndex(t2W, t2H, t2D, t2N, t2Dim0, t2Dim0Dim1, t2Dim0Dim1Dim2)];
 }
 
+template<int W, int H, int D, int N>
+__global__ void sumTemplate(const float* __restrict input, float* __restrict output, int width, int height, int depth, int batch, const size_t tpb)
+{
+    if (W)
+    {
+        size_t bidx = blockIdx.x;
+        size_t tidx = threadIdx.x;
+        size_t limit;
+        size_t base;
+        float res = 0;
+
+        if (!H && !D && !N)
+        {
+            // Case 1 - sums in X-direction
+            // each threadblock is responsible for a separate row sum
+            limit = width;
+            base = bidx * width;
+            while (tidx < limit)
+            {
+                res += input[base + tidx];
+                tidx += blockDim.x;
+            }
+        }
+        // block-stride loop
+        //else if (H && !D && !N) {
+        //    // Case 4 - sums in X-Y plane
+        //    // each threadblock will be responsible for an X-Y plane
+        //    limit = width * height;
+        //    base = bidx * width*height;
+        //    while (tidx < limit) {
+        //        res += input[base + tidx];
+        //        tidx += blockDim.x;
+        //    }
+        //}
+        // block-stride loop
+        //else if (!H && D && !N) {
+        //    // Case 5 - sums in X-Z plane
+        //    // each threadblock will be responsible for an X-Z plane
+        //    for (int i = 0; i < depth; i++) {
+        //        tidx = threadIdx.x;
+        //        limit = width;
+        //        base = (bidx*width) + (i*width*height);
+        //        while (tidx < limit) {
+        //            res += input[base + tidx];
+        //            tidx += blockDim.x;
+        //        }
+        //    }
+        //} // block-stride loop
+        else assert(0); // not implemented! - the remaining case here is all 3 axes selected
+#ifndef USE_WS
+        __shared__ float sm[tpb];
+        sm[tidx] = res;
+        __syncthreads();
+        // parallel reduction
+        for (int i = blockDim.x >> 1; i > warpSize; i >>= 1)
+        {
+            if (tidx < i)
+                sm[tidx] += sm[tidx + i];
+            __syncthreads();
+        }
+        for (int i = (blockDim.x == warpSize) ? warpSize >> 1 : warpSize; i > 0; i >>= 1)
+        {
+            if (tidx < i)
+                sm[tidx] += sm[tidx + i];
+            if (tidx < warpSize)
+                __syncwarp();
+        }
+        if (!tidx)
+            output[bidx] = sm[0];
+#else
+        res = blockReduceSum(res);
+        if (!tidx) output[bidx] = res;
+#endif
+    }
+    else if (!W && H && !D && !N)
+    {
+        // Case 2 - sums in Y-direction
+        // each thread is responsible for a separate Y-column sum
+        size_t idx = threadIdx.x + blockDim.x * blockIdx.x;
+        if (idx < width * depth * batch)
+        {
+            size_t tidx = idx % width + (idx / width) * (width * depth * batch);
+            float tsum = 0;
+            for (size_t i = 0; i < height; ++i)
+            {
+                tsum += input[tidx];
+                tidx += width;
+            }
+            output[idx] = tsum;
+        }
+    }
+    //else if (!W && H && D && !N) {
+    //    // Case 6 - sums in Y-Z plane
+    //    // each thread is responsible for a separate Y-Z plane sum (probably not optimal)
+    //    size_t idx = threadIdx.x + blockDim.x*blockIdx.x;
+    //    if (idx < (width)) {
+    //        size_t tidx = idx;
+    //        T tsum = 0;
+    //        for (size_t i = 0; i < height*depth; i++) {
+    //            tsum += input[tidx];
+    //            tidx += width;
+    //        }
+    //        output[idx] = tsum;
+    //    }
+    //}
+    else if (!W && !H && D && !N) {
+        // Case 3 - sums in Z-direction
+        // each thread is responsible for a separate Z-column sum
+        size_t idx = threadIdx.x + blockDim.x * blockIdx.x;
+        if (idx < width * height * depth)
+        {
+            size_t tidx = idx;
+            float tsum = 0;
+            for (size_t i = 0; i < depth; i++)
+            {
+                tsum += input[tidx];
+                tidx += width * height;
+            }
+            output[idx] = tsum;
+        }
+    }
+    else assert(0); // not implemented! - the remaining case here is no axes selected
+}
+
 __global__ void adamStep(int inputLen, float* __restrict parameterDev, float* __restrict gradientDev, float* __restrict mGradDev, float* __restrict vGradDev, float batchSize, float lr, float beta1, float beta2, float epsilon)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
