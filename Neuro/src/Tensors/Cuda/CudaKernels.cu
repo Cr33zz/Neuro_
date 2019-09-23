@@ -3,27 +3,6 @@
 
 #include "Tensors/Cuda/CudaKernels.h"
 
-__global__ void leakyRelu(int inputLen, const float* __restrict input, float alpha, float* __restrict result)
-{
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < inputLen)
-        result[i] = input[i] > 0 ? input[i] : (alpha * input[i]);
-}
-
-__global__ void leakyReluGrad(int inputLen, const float* __restrict output, const float* __restrict outputGradient, float alpha, float* __restrict result)
-{
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < inputLen)
-        result[i] = (output[i] > 0 ? 1 : alpha) * outputGradient[i];
-}
-
-__global__ void div(int inputLen, const float* __restrict input, float v, float* __restrict result)
-{
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < inputLen)
-        result[i] = input[i] / v;
-}
-
 __device__ int getIndex(int w, int h, int d, int n, int dim0, int dim0dim1, int dim0dim1dim2)
 {
     return w + h * dim0 + d * dim0dim1 + n * dim0dim1dim2;
@@ -34,6 +13,79 @@ __device__ void getDims(int width, int height, int depth, int& dim0, int& dim0di
     dim0 = width;
     dim0dim1 = width * height;
     dim0dim1dim2 = width * height * depth;
+}
+
+__global__ void upSample2D(const float* __restrict input, int inputWidth, int inputHeight, int inputDepth, int inputBatch, int scale, float* __restrict output)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+
+    int inputLen = inputWidth * inputHeight * inputDepth * inputBatch;
+
+    if (i >= inputLen)
+        return;
+
+    int inputDim0, inputDim0Dim1, inputDim0Dim1Dim2;
+    getDims(inputWidth, inputHeight, inputDepth, inputDim0, inputDim0Dim1, inputDim0Dim1Dim2);
+
+    int w = i % inputWidth;
+    int h = (i / inputDim0) % inputHeight;
+    int d = (i / inputDim0Dim1) % inputDepth;
+    int n = i / inputDim0Dim1Dim2;
+
+    int outputDim0 = inputDim0 * scale;
+    int outputDim0Dim1 = inputDim0Dim1 * scale * scale;
+    int outputDim0Dim1Dim2 = inputDim0Dim1Dim2 * scale * scale;
+
+    for (int outH = h * scale; outH < (h + 1) * scale; ++outH)
+    for (int outW = w * scale; outW < (w + 1) * scale; ++outW)
+        output[getIndex(outW, outH, d, n, outputDim0, outputDim0Dim1, outputDim0Dim1Dim2)] = input[i];
+}
+
+__global__ void upSample2DGrad(const float* __restrict outputGrad, int scale, float* __restrict inputGrad, int inputWidth, int inputHeight, int inputDepth, int inputBatch)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+
+    int inputLen = inputWidth * inputHeight * inputDepth * inputBatch;
+
+    if (i >= inputLen)
+        return;
+
+    int inputDim0, inputDim0Dim1, inputDim0Dim1Dim2;
+    getDims(inputWidth, inputHeight, inputDepth, inputDim0, inputDim0Dim1, inputDim0Dim1Dim2);
+
+    int w = i % inputWidth;
+    int h = (i / inputDim0) % inputHeight;
+    int d = (i / inputDim0Dim1) % inputDepth;
+    int n = i / inputDim0Dim1Dim2;
+
+    int outputDim0 = inputDim0 * scale;
+    int outputDim0Dim1 = inputDim0Dim1 * scale * scale;
+    int outputDim0Dim1Dim2 = inputDim0Dim1Dim2 * scale * scale;
+
+    for (int outH = h * scale; outH < (h + 1) * scale; ++outH)
+    for (int outW = w * scale; outW < (w + 1) * scale; ++outW)
+        inputGrad[i] += outputGrad[getIndex(outW, outH, d, n, outputDim0, outputDim0Dim1, outputDim0Dim1Dim2)];
+}
+
+__global__ void leakyRelu(int inputLen, const float* __restrict input, float alpha, float* __restrict output)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < inputLen)
+        output[i] = input[i] > 0 ? input[i] : (alpha * input[i]);
+}
+
+__global__ void leakyReluGrad(int inputLen, const float* __restrict output, const float* __restrict outputGrad, float alpha, float* __restrict inputGrad)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < inputLen)
+        inputGrad[i] = (output[i] > 0 ? 1 : alpha) * outputGrad[i];
+}
+
+__global__ void div(int inputLen, const float* __restrict input, float v, float* __restrict output)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < inputLen)
+        output[i] = input[i] / v;
 }
 
 __global__ void addBroadcast(float alpha, const float* __restrict t1, int t1Width, int t1Height, int t1Depth, int t1Batch, float beta, const float* __restrict t2, int t2Width, int t2Height, int t2Depth, int t2Batch, float* __restrict output, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
@@ -95,15 +147,27 @@ __global__ void sgdStep(int inputLen, float* __restrict parameterDev, float* __r
 }
 
 template<class F>
-__global__ void map(int inputLen, const float* __restrict input, F f, float* __restrict result)
+__global__ void map(int inputLen, const float* __restrict input, F f, float* __restrict output)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < inputLen)
-        result[i] = f(input[i]);
+        output[i] = f(input[i]);
 }
 
 namespace Neuro
 {
+    void CudaKernels::UpSample2D(const dim3& blocks, const dim3& threads, const float* inputDev, int inputWidth, int inputHeight, int inputDepth, int inputBatch, int scale, float* outputDev)
+    {
+        upSample2D<<<blocks, threads>>>(inputDev, inputWidth, inputHeight, inputDepth, inputBatch, scale, outputDev);
+        cudaDeviceSynchronize();
+    }
+
+    void CudaKernels::UpSample2DGradient(const dim3& blocks, const dim3& threads, const float* outputGradientDev, int scale, float* inputGradientDev, int inputWidth, int inputHeight, int inputDepth, int inputBatch)
+    {
+        upSample2DGrad<<<blocks, threads>>>(outputGradientDev, scale, inputGradientDev, inputWidth, inputHeight, inputDepth, inputBatch);
+        cudaDeviceSynchronize();
+    }
+
     void CudaKernels::LeakyReLU(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float alpha, float* outputDev)
     {
         leakyRelu<<<blocks, threads>>>(inputLen, inputDev, alpha, outputDev);

@@ -466,6 +466,36 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
+        TEST_METHOD(UpSample2D_CompareWithCpuResult)
+        {
+            Tensor t(Shape(8, 8, 3, 30)); t.FillWithRand();
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r = t.UpSample2D(3);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = t.UpSample2D(3);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(UpSample2DGradient_CompareWithCpuResult)
+        {
+            Tensor input(Shape(28, 28, 3, 30)); input.FillWithRand(15);
+            Tensor output = input.UpSample2D(3);
+            Tensor outputGradient(output.GetShape()); outputGradient.FillWithRand();
+
+            Tensor::SetForcedOpMode(CPU);
+            Tensor r(input.GetShape());
+            NEURO_PROFILE("CPU", output.UpSample2DGradient(outputGradient, 3, r);)
+
+            Tensor::SetForcedOpMode(GPU);
+            Tensor r2(input.GetShape());
+            NEURO_PROFILE("GPU", output.UpSample2DGradient(outputGradient, 3, r2);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
         TEST_METHOD(BatchNormalizationGradient_PerActivation_CompareWithCpuResult)
         {
             Tensor input(Shape(3, 4, 1, 3)); input.FillWithRand(5);

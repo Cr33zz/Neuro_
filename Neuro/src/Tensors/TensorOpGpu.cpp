@@ -357,6 +357,29 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::UpSample2D(const Tensor& input, uint32_t scaleFactor, Tensor& output) const
+    {
+        dim3 blocks, threads;
+        GetKernelRunParams(input.Length(), blocks, threads);
+        input.CopyToDevice();
+        output.CopyToDevice();
+
+        CudaKernels::UpSample2D(blocks, threads, input.GetDevicePtr(), input.Width(), input.Height(), input.Depth(), input.Batch(), scaleFactor, output.GetDevicePtr());
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::UpSample2DGradient(const Tensor& outputGradient, uint32_t scaleFactor, Tensor& inputGradient) const
+    {
+        dim3 blocks, threads;
+        GetKernelRunParams(inputGradient.Length(), blocks, threads);
+        inputGradient.Zero();
+        outputGradient.CopyToDevice();
+        inputGradient.CopyToDevice();
+        
+        CudaKernels::UpSample2DGradient(blocks, threads, outputGradient.GetDevicePtr(), scaleFactor, inputGradient.GetDevicePtr(), inputGradient.Width(), inputGradient.Height(), inputGradient.Depth(), inputGradient.Batch());
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::BatchNormalization(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor& runningMean, const Tensor& runningVar, Tensor& output) const
     {
         input.CopyToDevice();
