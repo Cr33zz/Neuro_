@@ -1829,6 +1829,8 @@ namespace Neuro
         m_ConvBackKernelWorkspace = nullptr;
         delete(m_DropoutWorkspace);
         m_DropoutWorkspace = nullptr;
+        delete(m_DropoutStates);
+        m_DropoutStates = nullptr;
     }
 
     //////////////////////////////////////////////////////////////////////////

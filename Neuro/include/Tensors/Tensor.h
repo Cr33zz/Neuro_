@@ -278,6 +278,7 @@ namespace Neuro
             CudaDeviceVariable<char>* m_ConvBackWorkspace = nullptr;
             CudaDeviceVariable<char>* m_ConvBackKernelWorkspace = nullptr;
             CudaDeviceVariable<char>* m_DropoutWorkspace = nullptr;
+            CudaDeviceVariable<char>* m_DropoutStates = nullptr;
 
         private:
             GPUData(const GPUData&);

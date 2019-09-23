@@ -356,7 +356,7 @@ namespace Neuro
             inputGradient.GetDevicePtr()));
     }
 
-    //////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::UpSample2D(const Tensor& input, uint32_t scaleFactor, Tensor& output) const
     {
         dim3 blocks, threads;
@@ -503,11 +503,18 @@ namespace Neuro
         cudnnDropoutDescriptor_t dropoutDesc; cudnnCreateDropoutDescriptor(&dropoutDesc);
 
         cudnnSetTensor4dDescriptor(inputOutputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
-        cudnnSetDropoutDescriptor(dropoutDesc, s_CudnnHandle, prob, saveMask.GetDevicePtr(), saveMask.Length() * sizeof(float), 0);
+
+        size_t dropoutStateSize;
+        CUDA_CHECK(cudnnDropoutGetStatesSize(s_CudnnHandle, &dropoutStateSize));
+        saveMask.m_GpuData.UpdateWorkspace(saveMask.m_GpuData.m_DropoutStates, dropoutStateSize);
 
         size_t dropoutReserveSize;
         CUDA_CHECK(cudnnDropoutGetReserveSpaceSize(inputOutputDesc, &dropoutReserveSize));
         saveMask.m_GpuData.UpdateWorkspace(saveMask.m_GpuData.m_DropoutWorkspace, dropoutReserveSize);
+
+        saveMask(0) = prob;
+
+        cudnnSetDropoutDescriptor(dropoutDesc, s_CudnnHandle, prob, saveMask.m_GpuData.m_DropoutStates->GetDevicePtr(), dropoutStateSize, 0);
 
         CUDA_CHECK(cudnnDropoutForward(
             s_CudnnHandle,
@@ -530,10 +537,13 @@ namespace Neuro
         cudnnDropoutDescriptor_t dropoutDesc; cudnnCreateDropoutDescriptor(&dropoutDesc);
 
         cudnnSetTensor4dDescriptor(inputOutputGradDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, outputGradient.GetShape().Dimensions[3], outputGradient.GetShape().Dimensions[2], outputGradient.GetShape().Dimensions[1], outputGradient.GetShape().Dimensions[0]);
-        cudnnSetDropoutDescriptor(dropoutDesc, s_CudnnHandle, 0, nullptr, 0, 0);
-
+        
+        size_t dropoutStateSize;
+        CUDA_CHECK(cudnnDropoutGetStatesSize(s_CudnnHandle, &dropoutStateSize));
         size_t dropoutReserveSize;
         CUDA_CHECK(cudnnDropoutGetReserveSpaceSize(inputOutputGradDesc, &dropoutReserveSize));
+
+        cudnnSetDropoutDescriptor(dropoutDesc, s_CudnnHandle, savedMask(0), savedMask.m_GpuData.m_DropoutStates->GetDevicePtr(), dropoutStateSize, 0);
 
         CUDA_CHECK(cudnnDropoutBackward(
             s_CudnnHandle,
@@ -679,20 +689,19 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Sum(const Tensor& input, EAxis axis, Tensor& output) const
     {
-        //if (axis == GlobalAxis)
-        if (axis != EAxis::BatchAxis)
+        if (axis == GlobalAxis)
             return __super::Sum(input, axis, output);
 
         output.Zero();
         input.CopyToDevice();
         output.CopyToDevice();
 
-        /*if (axis != EAxis::BatchAxis)
+        if (axis != EAxis::BatchAxis)
         {
             dim3 blocks, threads;
             GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
             return CudaKernels::Sum(blocks, threads, input.GetDevicePtr(), input.Width(), input.Height(), input.Depth(), input.Batch(), axis, output.GetDevicePtr());
-        }*/
+        }
 
         float alpha = 1, beta = 1;
         for (uint32_t n = 0; n < input.Batch(); ++n)

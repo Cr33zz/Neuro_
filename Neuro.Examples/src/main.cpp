@@ -20,6 +20,7 @@ int main()
     //ConvAutoencoderNetwork().Run();
     //GAN().Run();
     //DeepConvGAN().Run();
+    //CifarGAN().RunDiscriminatorTrainTest();
     CifarGAN().Run();
 
     //Tensor::SetDefaultOpMode(EOpMode::MultiCPU);
