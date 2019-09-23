@@ -56,8 +56,8 @@ namespace Neuro
 
         static cudnnPoolingMode_t GetCudnnPoolType(EPoolingMode mode);
         static cudnnBatchNormMode_t GetCudnnBatchNormMode(EBatchNormMode mode);
-        static void GetKernelRunParams(int count, dim3& blocks, dim3& threads);
-        static int GetBlocksNum(int count);
+        static void GetKernelRunParams(int count, dim3& blocks, dim3& threads, int threadsPerBlock);
+        static int GetBlocksNum(int count, int threadsPerBlock);
         static void CudnnLog(cudnnSeverity_t sev, void *udata, const cudnnDebug_t *dbg, const char *msg);
 
         static bool s_Initialized;

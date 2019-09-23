@@ -49,7 +49,7 @@ namespace Neuro
         if (!t1.SameDimensionsExceptBatches(t2))
         {
             dim3 blocks, threads;
-            GetKernelRunParams(output.Length(), blocks, threads);
+            GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
 
             return CudaKernels::AddBroadcast(
                 blocks, 
@@ -130,7 +130,7 @@ namespace Neuro
     void TensorOpGpu::Div(const Tensor& input, float v, Tensor& output) const
     {
         dim3 blocks, threads;
-        GetKernelRunParams(input.Length(), blocks, threads);
+        GetKernelRunParams(input.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
         input.CopyToDevice();
         output.CopyToDevice();
 
@@ -360,7 +360,7 @@ namespace Neuro
     void TensorOpGpu::UpSample2D(const Tensor& input, uint32_t scaleFactor, Tensor& output) const
     {
         dim3 blocks, threads;
-        GetKernelRunParams(input.Length(), blocks, threads);
+        GetKernelRunParams(input.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
         input.CopyToDevice();
         output.CopyToDevice();
 
@@ -371,7 +371,7 @@ namespace Neuro
     void TensorOpGpu::UpSample2DGradient(const Tensor& outputGradient, uint32_t scaleFactor, Tensor& inputGradient) const
     {
         dim3 blocks, threads;
-        GetKernelRunParams(inputGradient.Length(), blocks, threads);
+        GetKernelRunParams(inputGradient.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
         inputGradient.Zero();
         outputGradient.CopyToDevice();
         inputGradient.CopyToDevice();
@@ -598,7 +598,7 @@ namespace Neuro
     void TensorOpGpu::LeakyReLU(const Tensor& input, float alpha, Tensor& output) const
     {
         dim3 blocks, threads;
-        GetKernelRunParams(input.Length(), blocks, threads);
+        GetKernelRunParams(input.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
         input.CopyToDevice();
         output.CopyToDevice();
 
@@ -609,7 +609,7 @@ namespace Neuro
     void TensorOpGpu::LeakyReLUGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const
     {
         dim3 blocks, threads;
-        GetKernelRunParams(output.Length(), blocks, threads);
+        GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
         output.CopyToDevice();
         outputGradient.CopyToDevice();
         inputGradient.CopyToDevice();
@@ -679,12 +679,20 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Sum(const Tensor& input, EAxis axis, Tensor& output) const
     {
+        //if (axis == GlobalAxis)
         if (axis != EAxis::BatchAxis)
             return __super::Sum(input, axis, output);
 
         output.Zero();
         input.CopyToDevice();
         output.CopyToDevice();
+
+        /*if (axis != EAxis::BatchAxis)
+        {
+            dim3 blocks, threads;
+            GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
+            return CudaKernels::Sum(blocks, threads, input.GetDevicePtr(), input.Width(), input.Height(), input.Depth(), input.Batch(), axis, output.GetDevicePtr());
+        }*/
 
         float alpha = 1, beta = 1;
         for (uint32_t n = 0; n < input.Batch(); ++n)
@@ -715,7 +723,7 @@ namespace Neuro
         vGrad.CopyToDevice();
 
         dim3 blocks, threads;
-        GetKernelRunParams(parameter.Length(), blocks, threads);
+        GetKernelRunParams(parameter.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
         
         CudaKernels::AdamStep(blocks, threads, parameter.Length(), parameter.GetDevicePtr(), gradient.GetDevicePtr(), mGrad.GetDevicePtr(), vGrad.GetDevicePtr(), batchSize, lr, beta1, beta2, epsilon);
     }
@@ -727,7 +735,7 @@ namespace Neuro
         gradient.CopyToDevice();
 
         dim3 blocks, threads;
-        GetKernelRunParams(parameter.Length(), blocks, threads);
+        GetKernelRunParams(parameter.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
 
         CudaKernels::SgdStep(blocks, threads, parameter.Length(), parameter.GetDevicePtr(), gradient.GetDevicePtr(), batchSize, lr);
     }
@@ -935,12 +943,11 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::GetKernelRunParams(int count, dim3& blocks, dim3& threads)
+    void TensorOpGpu::GetKernelRunParams(int count, dim3& blocks, dim3& threads, int threadsPerBlock)
     {
-        int threadsPerBlock = s_CudaDevProp.maxThreadsPerBlock;
-        int blockCount = GetBlocksNum(count);
+        int blockCount = GetBlocksNum(count, threadsPerBlock);
 
-        if (count <= s_CudaDevProp.maxThreadsPerBlock)
+        if (count <= threadsPerBlock)
         {
             blockCount = 1;
             threadsPerBlock = count;
@@ -951,9 +958,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    int TensorOpGpu::GetBlocksNum(int count)
+    int TensorOpGpu::GetBlocksNum(int count, int threadsPerBlock)
     {
-        return (int)ceil(count / (float)s_CudaDevProp.maxThreadsPerBlock);
+        return (int)ceil(count / (float)threadsPerBlock);
     }
 
     //////////////////////////////////////////////////////////////////////////
