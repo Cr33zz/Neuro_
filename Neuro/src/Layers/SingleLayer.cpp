@@ -133,7 +133,7 @@ namespace Neuro
 
 #       ifdef LOG_OUTPUTS
         for (size_t i = 0; i < m_Outputs.size(); ++i)
-            m_Outputs[i].DebugDumpValues(Replace(Name() + "_output_" + to_string(i) + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
+            m_Outputs[i]->DebugDumpValues(Replace(Name() + "_output_" + to_string(i) + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
 #       endif
 
         if (m_Activation)
@@ -145,7 +145,7 @@ namespace Neuro
                 m_ActivationTimer.Stop();
 
 #               ifdef LOG_OUTPUTS
-                m_Outputs[i].DebugDumpValues(Replace(Name() + "_output_" + to_string(i) + "_activation_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
+                m_Outputs[i]->DebugDumpValues(Replace(Name() + "_output_" + to_string(i) + "_activation_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
 #               endif
             }
         }
@@ -167,7 +167,7 @@ namespace Neuro
                     m_Activation->Derivative(*m_Outputs[i], *outputsGradient[i], *outputsGradient[i]);
                     m_ActivationBackPropTimer.Stop();
 #                   ifdef LOG_OUTPUTS
-                    outputsGradient[i].DebugDumpValues(Replace(Name() + "_activation_" + to_string(i) + "_grad_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
+                    outputsGradient[i]->DebugDumpValues(Replace(Name() + "_activation_" + to_string(i) + "_grad_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
 #                   endif
                 }
             }
@@ -177,8 +177,8 @@ namespace Neuro
             m_BackPropTimer.Stop();
 
 #           ifdef LOG_OUTPUTS
-            for (size_t i = 0; i < m_InputShape.size(); ++i)
-                m_InputsGradient[i].DebugDumpValues(Replace(Name() + "_input_" + to_string(i) + "_grad_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
+            for (size_t i = 0; i < m_InputsGradient.size(); ++i)
+                m_InputsGradient[i]->DebugDumpValues(Replace(Name() + "_input_" + to_string(i) + "_grad_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
 #           endif
         }
 
