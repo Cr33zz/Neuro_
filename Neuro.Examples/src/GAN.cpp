@@ -75,7 +75,7 @@ void GAN::Run()
             progress.SetExtraString(extString.str());
 
             if (i % 50 == 0)
-                gModel->Predict(testNoise)[0]->Map([](float x) { return x * 127.5f + 127.5f; }).Reshaped(Shape(m_ImageShape.Width(), m_ImageShape.Height(), m_ImageShape.Depth(), -1)).SaveAsImage(Name() + "_e" + to_string(e) + "_b" + to_string(i) + ".png", false);
+                gModel->Predict(testNoise)[0]->Map([](float x) { return x * 127.5f + 127.5f; }).Reshaped(Shape(m_ImageShape.Width(), m_ImageShape.Height(), m_ImageShape.Depth(), -1)).SaveAsImage(Name() + "_e" + PadLeft(to_string(e), 4, '0') + "b" + PadLeft(to_string(i), 4, '0') + ".jpg", false);
         }
     }
 

@@ -34,6 +34,8 @@ namespace Neuro
 	string ToLower(const string& str);
     string TrimStart(const string& str, const string& chars = "\t\n\v\f\r ");
     string TrimEnd(const string& str, const string& chars = "\t\n\v\f\r ");
+    string PadLeft(const string& str, size_t len, char paddingChar = ' ');
+    string PadRight(const string& str, size_t len, char paddingChar = ' ');
     vector<string> Split(const string& str, const string& delimiter);
     string Replace(const string& str, const string& pattern, const string& replacement);
 

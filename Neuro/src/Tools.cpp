@@ -120,6 +120,24 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    string PadLeft(const string& str, size_t len, char paddingChar)
+    {
+        string ret = str;
+        if (len > str.size())
+            ret.insert(0, len - str.size(), paddingChar);
+        return ret;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    string PadRight(const string& str, size_t len, char paddingChar)
+    {
+        string ret = str;
+        if (len > str.size())
+            ret.append(len - str.size(), paddingChar);
+        return ret;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     vector<string> Split(const string& str, const string& delimiter)
     {
         vector<string> result;
