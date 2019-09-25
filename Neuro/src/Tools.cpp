@@ -104,7 +104,7 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    string TrimStart(const string& str, const string& chars /*= "\t\n\v\f\r "*/)
+    string TrimStart(const string& str, const string& chars)
     {
         string ret = str;
         ret.erase(0, str.find_first_not_of(chars));
@@ -112,7 +112,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    string TrimEnd(const string& str, const string& chars /*= "\t\n\v\f\r "*/)
+    string TrimEnd(const string& str, const string& chars)
     {
         string ret = str;
         ret.erase(str.find_last_not_of(chars) + 1);
