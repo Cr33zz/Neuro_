@@ -3,6 +3,7 @@
 #include <numeric>
 #include <cctype>
 #include <iomanip>
+#include <memory>
 
 #include "Models/ModelBase.h"
 #include "Optimizers/OptimizerBase.h"
@@ -173,6 +174,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::SaveWeights(const string& filename) const
     {
+        //https://github.com/keras-team/keras/blob/5be4ed3d9e7548dfa9d51d1d045a3f951d11c2b1/keras/engine/saving.py#L733
+
         ofstream stream(filename, ios::out | ios::binary);
         vector<ParametersAndGradients> paramsAndGrads;
         const_cast<ModelBase*>(this)->GetParametersAndGradients(paramsAndGrads, false);
@@ -312,7 +315,7 @@ namespace Neuro
             float trainTotalLoss = 0;
             float trainTotalAcc = 0;
 
-            Tqdm progress(trainSamplesCount);
+            unique_ptr<Tqdm> progress(verbose == 2 ? new Tqdm(trainSamplesCount) : nullptr);
             for (uint32_t b = 0; b < trainBatchesNum; ++b)
             {
                 uint32_t samplesInBatch = inputs[0]->Batch();
@@ -336,12 +339,12 @@ namespace Neuro
                 trainTotalLoss += loss;
                 trainTotalAcc += acc;
 
-                if (verbose == 2)
-                    progress.NextStep(samplesInBatch);
+                if (progress)
+                    progress->NextStep(samplesInBatch);
             }
 
-            if (verbose == 2)
-                LogLine(progress.Str(), false);
+            if (progress)
+                LogLine(progress->Str(), false);
 
             float trainLoss = trainTotalLoss / trainBatchesNum;
             float trainAcc = (float)trainTotalAcc / trainBatchesNum;
