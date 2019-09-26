@@ -147,7 +147,7 @@ namespace Neuro
         ss << "Layer                        Fwd[s]      Back[s]     ActFwd[s]   ActBack[s]  \n";
         ss << "=============================================================================\n";
 
-        /*for (auto layer : Layers())
+        for (auto layer : Layers())
         {
             ss << left << setw(29) << (layer->Name() + "(" + layer->ClassName() + ")").substr(0, 28);
             ss << setw(12) << layer->FeedForwardTime() * 0.001f;
@@ -155,7 +155,7 @@ namespace Neuro
             ss << setw(12) << layer->ActivationTime() * 0.001f;
             ss << setw(12) << layer->ActivationBackPropTime() * 0.001f << "\n";
             ss << "_____________________________________________________________________________\n";
-        }*/
+        }
 
         return ss.str();
     }

@@ -32,11 +32,6 @@ namespace Neuro
 
         virtual int InputOffset(const LayerBase* inputLayer) const override;
 
-        /*int FeedForwardTime() const { return (int)m_FeedForwardTimer.ElapsedMilliseconds(); }
-        int BackPropTime() const { return (int)m_BackPropTimer.ElapsedMilliseconds(); }
-        int ActivationTime() const { return (int)m_ActivationTimer.ElapsedMilliseconds(); }
-        int ActivationBackPropTime() const { return (int)m_ActivationBackPropTimer.ElapsedMilliseconds(); }*/
-
     protected:
         SingleLayer(const string& constructorName, LayerBase* inputLayer, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
         SingleLayer(const string& constructorName, const vector<LayerBase*>& inputLayers, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
@@ -62,10 +57,5 @@ namespace Neuro
 
     private:
         ActivationBase* m_Activation;
-
-        Stopwatch m_FeedForwardTimer;
-        Stopwatch m_ActivationTimer;
-        Stopwatch m_BackPropTimer;
-        Stopwatch m_ActivationBackPropTimer;
     };
 }

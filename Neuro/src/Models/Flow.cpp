@@ -78,6 +78,8 @@ namespace Neuro
 	{
         Init();
 
+        m_FeedForwardTimer.Start();
+
         if (m_InputsGradient.size() != inputs.size())
         {
             m_InputsGradient.resize(inputs.size());
@@ -109,12 +111,16 @@ namespace Neuro
 			layer->FeedForward(currInputs, training);
 		}
 
+        m_FeedForwardTimer.Stop();
+
         return m_Outputs;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
     const tensor_ptr_vec_t& Flow::BackProp(const tensor_ptr_vec_t& outputsGradient)
 	{
+        m_BackPropTimer.Start();
+
         size_t lastOutputGradIdx = 0;
         for (uint32_t i = 0; i < (int)m_ModelOutputLayers.size(); ++i)
         {
@@ -181,6 +187,8 @@ namespace Neuro
             for (auto i = 0; i < m_InputsGradient.size(); ++i)
                 m_InputsGradient[i]->Div((float)m_ModelInputLayers.size(), *m_InputsGradient[i]);
         }
+
+        m_BackPropTimer.Stop();
 
         return m_InputsGradient;
 	}

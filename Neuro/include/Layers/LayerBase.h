@@ -77,6 +77,11 @@ namespace Neuro
 
         const string& Name() const { return m_Name; }
 
+        int FeedForwardTime() const { return (int)m_FeedForwardTimer.ElapsedMilliseconds(); }
+        int BackPropTime() const { return (int)m_BackPropTimer.ElapsedMilliseconds(); }
+        int ActivationTime() const { return (int)m_ActivationTimer.ElapsedMilliseconds(); }
+        int ActivationBackPropTime() const { return (int)m_ActivationBackPropTimer.ElapsedMilliseconds(); }
+
 	protected:
         LayerBase(const string& constructorName, const string& name = "");
 		// This constructor exists only for cloning purposes
@@ -95,6 +100,11 @@ namespace Neuro
 		string GenerateName() const;
 
 		bool m_Trainable = true;
+
+        Stopwatch m_FeedForwardTimer;
+        Stopwatch m_ActivationTimer;
+        Stopwatch m_BackPropTimer;
+        Stopwatch m_ActivationBackPropTimer;
 
 	private:
 		string m_Name;
