@@ -43,17 +43,17 @@ namespace NeuroTests
         void TestTrain(int batch = 1)
         {
             GlobalRngSeed(101);
-            Shape inputShape(1, 4, 1, batch);
+            Shape inputShape(4, 1, 1, batch);
 
             auto model = new Sequential("dense_test");
             model->AddLayer(new Dense(4, 3));
 
-            Tensor randomWeights(Shape(4, 3));
+            Tensor randomWeights(Shape(3, 4));
             randomWeights.FillWithRand();
 
             Tensor input(inputShape);
             input.FillWithRand();
-            Tensor output = randomWeights.Mul(input);
+            Tensor output = input.Mul(randomWeights);
 
             model->Optimize(new SGD(0.02f), new MeanSquareError());
             model->Fit(input, output, -1, 200, nullptr, nullptr, 1, ETrack::TrainError);

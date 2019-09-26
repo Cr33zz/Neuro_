@@ -113,8 +113,8 @@ namespace NeuroTests
             auto model = new Flow({ mIn1 }, { mOut1, mOut2 });
             model->Optimize(new SGD(0.05f), new MeanSquareError());
 
-            const_tensor_ptr_vec_t inputs = { &(new Tensor(Shape(1, 10)))->FillWithRand() };
-            const_tensor_ptr_vec_t outputs = { &(new Tensor(Shape(1, 5)))->FillWithRand(), &(new Tensor(Shape(1, 8)))->FillWithRand() };
+            const_tensor_ptr_vec_t inputs = { &(new Tensor(Shape(10)))->FillWithRand() };
+            const_tensor_ptr_vec_t outputs = { &(new Tensor(Shape(5)))->FillWithRand(), &(new Tensor(Shape(8)))->FillWithRand() };
 
             model->Fit(inputs, outputs, 1, 200, nullptr, 0, ETrack::TrainError, false);
 
@@ -126,15 +126,15 @@ namespace NeuroTests
         TEST_METHOD(Flow_2Inputs_1Output)
         {
             auto mIn1 = new Dense(10, 15, new Sigmoid());
-            auto mIn2 = new Input(Shape(1, 15));
+            auto mIn2 = new Input(Shape(15));
             LayerBase* mX = new Concatenate({ mIn1, mIn2 });
             mX = (new Dense(5, new Tanh()))->Link(mX);
 
             auto model = new Flow({ mIn1, mIn2 }, { mX }, "test");
             model->Optimize(new SGD(0.05f), new MeanSquareError());
 
-            const_tensor_ptr_vec_t inputs = { &(new Tensor(Shape(1, 10)))->FillWithRand(), &(new Tensor(Shape(1, 15)))->FillWithRand() };
-            const_tensor_ptr_vec_t outputs = { &(new Tensor(Shape(1, 5)))->FillWithRand() };
+            const_tensor_ptr_vec_t inputs = { &(new Tensor(Shape(10)))->FillWithRand(), &(new Tensor(Shape(15)))->FillWithRand() };
+            const_tensor_ptr_vec_t outputs = { &(new Tensor(Shape(5)))->FillWithRand() };
 
             model->Fit(inputs, outputs, 1, 200, nullptr, nullptr, 1, ETrack::TrainError, false);
 
@@ -147,7 +147,7 @@ namespace NeuroTests
             auto model = new Sequential("flow_embedded_in_sequence_1");
             model->AddLayer(new Dense(5, 10, new Sigmoid()));
 
-            auto fIn1 = new Input(Shape(1, 10));
+            auto fIn1 = new Input(Shape(10));
             auto fX = new Dense(fIn1, 10, new Sigmoid());
             auto fOut1 = new Merge({ fIn1, fX }, MergeSum, new Sigmoid());
 
@@ -155,8 +155,8 @@ namespace NeuroTests
             model->AddLayer(new Dense(1, new Tanh()));
             model->Optimize(new SGD(0.05f), new MeanSquareError());
 
-            const_tensor_ptr_vec_t inputs = { &(new Tensor(Shape(1, 5)))->FillWithRand() };
-            const_tensor_ptr_vec_t outputs = { &(new Tensor(Shape(1, 1)))->FillWithRand() };
+            const_tensor_ptr_vec_t inputs = { &(new Tensor(Shape(5)))->FillWithRand() };
+            const_tensor_ptr_vec_t outputs = { &(new Tensor(Shape(1)))->FillWithRand() };
 
             model->Fit(inputs, outputs, 1, 200, nullptr, nullptr, 1, ETrack::TrainError, false);
 
@@ -166,7 +166,7 @@ namespace NeuroTests
 
         TEST_METHOD(Sequential_Embedded_In_Flow)
         {
-            auto m1In1 = new Input(Shape(1, 32));
+            auto m1In1 = new Input(Shape(32));
             auto m1X = (new Dense(10, new Sigmoid()))->Link(m1In1);
             auto m1 = new Flow({ m1In1 }, { m1In1, m1X });
 
@@ -175,8 +175,8 @@ namespace NeuroTests
             m2->AddLayer(new Dense(10, new Sigmoid()));
             m2->Link(m1->ModelOutputLayers()[0]);
 
-            auto m3In1 = new Input(Shape(1, 10));
-            auto m3In2 = new Input(Shape(1, 10));
+            auto m3In1 = new Input(Shape(10));
+            auto m3In2 = new Input(Shape(10));
             auto m3X = (new Merge(MergeSum, new Sigmoid()))->Link({ m3In1, m3In2 });
             m3X = (new Dense(5, new Tanh()))->Link(m3X);
             auto m3 = (new Flow({ m3In1, m3In2 }, { m3X }))->Link({ m2->ModelOutputLayers()[0], m1->ModelOutputLayers()[1] });
@@ -184,8 +184,8 @@ namespace NeuroTests
             auto model = new Flow({ m1In1 }, m3->ModelOutputLayers());
             model->Optimize(new SGD(0.05f), new MeanSquareError());
 
-            const_tensor_ptr_vec_t inputs = { &(new Tensor(Shape(1, 32)))->FillWithRand() };
-            const_tensor_ptr_vec_t outputs = { &(new Tensor(Shape(1, 5)))->FillWithRand() };
+            const_tensor_ptr_vec_t inputs = { &(new Tensor(Shape(32)))->FillWithRand() };
+            const_tensor_ptr_vec_t outputs = { &(new Tensor(Shape(5)))->FillWithRand() };
 
             model->Fit(inputs, outputs, 1, 200, nullptr, nullptr, 1, ETrack::TrainError, false);
 
@@ -195,16 +195,16 @@ namespace NeuroTests
 
         TEST_METHOD(Flow_Connected_To_Flows)
         {
-            auto m1In1 = new Input(Shape(1, 32));
+            auto m1In1 = new Input(Shape(32));
             auto m1X = (new Dense(10, new Sigmoid()))->Link(m1In1);
             auto m1 = new Flow({ m1In1 }, { m1In1, m1X });
 
-            auto m2In1 = new Input(Shape(1, 32));
+            auto m2In1 = new Input(Shape(32));
             auto m2X = (new Dense(10, new Sigmoid()))->Link(m2In1);
             auto m2 = new Flow({ m2In1 }, { m2X });
 
-            auto m3In1 = new Input(Shape(1, 10));
-            auto m3In2 = new Input(Shape(1, 10));
+            auto m3In1 = new Input(Shape(10));
+            auto m3In2 = new Input(Shape(10));
             auto m3X = (new Merge(MergeSum, new Sigmoid()))->Link({ m3In1, m3In2 });
             m3X = (new Dense(5, new Tanh()))->Link(m3X);
             auto m3 =(new Flow({ m3In1, m3In2 }, { m3X }))->Link({ m1->ModelOutputLayers()[1], m2->ModelOutputLayers()[0] });
@@ -212,8 +212,8 @@ namespace NeuroTests
             auto model = new Flow({ m1->ModelInputLayers()[0], m2->ModelInputLayers()[0] }, m3->ModelOutputLayers());
             model->Optimize(new SGD(0.05f), new MeanSquareError());
 
-            const_tensor_ptr_vec_t inputs = { &(new Tensor(Shape(1, 32)))->FillWithRand(), &(new Tensor(Shape(1, 32)))->FillWithRand() };
-            const_tensor_ptr_vec_t outputs = { &(new Tensor(Shape(1, 5)))->FillWithRand() };
+            const_tensor_ptr_vec_t inputs = { &(new Tensor(Shape(32)))->FillWithRand(), &(new Tensor(Shape(32)))->FillWithRand() };
+            const_tensor_ptr_vec_t outputs = { &(new Tensor(Shape(5)))->FillWithRand() };
 
             model->Fit(inputs, outputs, 1, 200, nullptr, nullptr, 1, ETrack::TrainError, false);
 
@@ -223,20 +223,20 @@ namespace NeuroTests
 
         TEST_METHOD(Flow_Connected_To_Flow_MultiOutputs)
         {
-            auto m1In1 = new Input(Shape(1, 10));
+            auto m1In1 = new Input(Shape(10));
             auto m1X = (new Dense(32, new Sigmoid()))->Link(m1In1);
             auto m1 = new Flow({ m1In1 }, { m1In1, m1X });
 
             auto m2In1 = new Dense(10, 10, new Tanh());
-            auto m2In2 = new Input(Shape(1, 32));
+            auto m2In2 = new Input(Shape(32));
             auto m2X = (new Dense(5, new Tanh()))->Link(m2In2);
             auto m2 = (new Flow({ m2In1, m2In2 }, { m2In1, m2X }))->Link(m1->ModelOutputLayers());
 
             auto model = new Flow({ m1In1 }, m2->ModelOutputLayers());
             model->Optimize(new SGD(0.05f), new MeanSquareError());
 
-            const_tensor_ptr_vec_t inputs = { &(new Tensor(Shape(1, 10)))->FillWithRand() };
-            const_tensor_ptr_vec_t outputs = { &(new Tensor(Shape(1, 10)))->FillWithRand(), &(new Tensor(Shape(1, 5)))->FillWithRand() };
+            const_tensor_ptr_vec_t inputs = { &(new Tensor(Shape(10)))->FillWithRand() };
+            const_tensor_ptr_vec_t outputs = { &(new Tensor(Shape(10)))->FillWithRand(), &(new Tensor(Shape(5)))->FillWithRand() };
 
             model->Fit(inputs, outputs, 1, 200, nullptr, nullptr, 1, ETrack::TrainError, false);
 

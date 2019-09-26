@@ -4,7 +4,7 @@ namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
 	Flatten::Flatten(LayerBase* inputLayer, const string& name)
-        : Reshape(__FUNCTION__, inputLayer, Shape(1, inputLayer->OutputShape().Length), name)
+        : Reshape(__FUNCTION__, inputLayer, Shape(inputLayer->OutputShape().Length), name)
 	{
 	}
 
@@ -16,7 +16,7 @@ namespace Neuro
 
 	//////////////////////////////////////////////////////////////////////////
 	Flatten::Flatten(const Shape& inputShape, const string& name)
-		: Reshape(__FUNCTION__, inputShape, Shape(1, inputShape.Length), name)
+		: Reshape(__FUNCTION__, inputShape, Shape(inputShape.Length), name)
 	{
 	}
 
@@ -31,6 +31,6 @@ namespace Neuro
     {
         __super::OnLinkInput(inputLayers);
 
-        m_OutputsShapes[0] = Shape(1, m_InputShape.Length);
+        m_OutputsShapes[0] = Shape(m_InputShape.Length);
     }
 }

@@ -9,7 +9,7 @@ namespace Neuro
         int totalLen = 0;
         for (auto input : inputLayers)
             totalLen += input->OutputShape().Length;
-        m_OutputsShapes[0] = Shape(1, totalLen);
+        m_OutputsShapes[0] = Shape(totalLen);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -32,7 +32,7 @@ namespace Neuro
         int totalLen = 0;
         for (auto input : InputLayers())
             totalLen += input->OutputShape().Length;
-        m_OutputsShapes[0] = Shape(1, totalLen);
+        m_OutputsShapes[0] = Shape(totalLen);
     }
 
     //////////////////////////////////////////////////////////////////////////

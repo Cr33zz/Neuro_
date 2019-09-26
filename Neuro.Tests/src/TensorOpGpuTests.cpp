@@ -354,7 +354,7 @@ namespace NeuroTests
 
         TEST_METHOD(SoftmaxGradient_CompareWithCpuResult)
         {
-            Tensor input(Shape(1, 30, 1, 10)); input.FillWithRand(-1, -10, 10);
+            Tensor input(Shape(30, 1, 1, 10)); input.FillWithRand(-1, -10, 10);
             Tensor output(input.GetShape()); input.Softmax(output);
             Tensor gradient(input.GetShape()); gradient.FillWithRand();
 

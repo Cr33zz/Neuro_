@@ -313,7 +313,7 @@ namespace Neuro
 
 		Tensor outputReshaped = output.Reshaped(Shape(1, Shape::Auto, 1, output.Batch()));
 		Tensor jacob = outputReshaped.DiagFlat().Sub(outputReshaped.Mul(outputReshaped.Transposed()));
-		jacob.Mul(outputGradient, inputGradient);
+        outputGradient.Mul(jacob, inputGradient);
 	}
 
     //////////////////////////////////////////////////////////////////////////

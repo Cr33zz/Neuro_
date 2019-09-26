@@ -251,7 +251,7 @@ namespace Neuro
         }
 
         input = Tensor(Shape(imgWidth, imgHeight, 1, maxImages));
-        output = Tensor(Shape(1, outputsNum, 1, maxImages));
+        output = Tensor(Shape(outputsNum, 1, 1, maxImages));
         output.Zero();
 
         uint8_t* pixelOffset = reinterpret_cast<uint8_t*>(imagesBuffer.get() + 16);
@@ -273,7 +273,7 @@ namespace Neuro
             }
 
             uint8_t label = *(labelOffset++);
-            output(0, label, 0, i) = 1;
+            output(label, 0, 0, i) = 1;
         }
 
         if (image)
@@ -319,12 +319,12 @@ namespace Neuro
         }
 
         input = Tensor(Shape(imgWidth, imgHeight, 3, maxImages));
-        output = Tensor(Shape(1, outputsNum, 1, maxImages));
+        output = Tensor(Shape(outputsNum, 1, 1, maxImages));
         output.Zero();
 
         for (uint32_t i = 0; i < (uint32_t)maxImages; ++i)
         {
-            output(0, (uint32_t)buffer[i * 3073], 0, i) = 1;
+            output((uint32_t)buffer[i * 3073], 0, 0, i) = 1;
 
             uint8_t* pixelOffset = reinterpret_cast<uint8_t*>(buffer.get() + i * 3073 + 1);
 
@@ -463,8 +463,8 @@ namespace Neuro
             }
         }
 
-        input = Tensor(inputValues, Shape(1, inputBatchSize, 1, batches));
-        output = Tensor(outputValues, Shape(1, outputsNum, 1, batches));
+        input = Tensor(inputValues, Shape(inputBatchSize, 1, 1, batches));
+        output = Tensor(outputValues, Shape(outputsNum, 1, 1, batches));
     }
 
     //////////////////////////////////////////////////////////////////////////

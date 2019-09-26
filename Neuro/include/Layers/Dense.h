@@ -51,10 +51,10 @@ namespace Neuro
         InitializerBase* m_BiasInitializer = new Zeros();
 
         Tensor _iGradTemp1;
-        Tensor _wGradTemp1;
-        Tensor _wGradTemp2;
-        Tensor _wGradTemp3;
-        Tensor _bGradTemp1;
+        Tensor _inputT;
+        Tensor _ipnutTMulOutGrad;
+        Tensor _weightsGradSum;
+        Tensor _biasGradSum;
 
         /*virtual void SerializeParameters(XmlElement elem)
         {

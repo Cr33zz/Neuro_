@@ -60,7 +60,7 @@ namespace NeuroTests
 
         TEST_METHOD(Softmax_Derivative_1Batch)
 		{
-			auto input = Tensor(Shape(1, 3));
+			auto input = Tensor(Shape(3));
 			input.FillWithRange(1);
 
 			auto output = Tensor(input.GetShape());
@@ -82,7 +82,7 @@ namespace NeuroTests
 
         TEST_METHOD(Softmax_Derivative_3Batches)
 		{
-			auto input = Tensor(Shape(1, 3, 1, 3));
+			auto input = Tensor(Shape(3, 1, 1, 3));
 			input.FillWithRange(1);
 
 			auto output = Tensor(input.GetShape());
@@ -101,7 +101,7 @@ namespace NeuroTests
 
         TEST_METHOD(Softmax_1Batch)
 		{
-			auto input = Tensor(Shape(3, 3, 3, 1));
+			auto input = Tensor(Shape(3, 1, 1, 1));
 			input.FillWithRand();
 
 			auto result = Tensor(input.GetShape());
@@ -113,7 +113,7 @@ namespace NeuroTests
 
         TEST_METHOD(Softmax_3Batches)
 		{
-			auto input = Tensor(Shape(3, 3, 3, 3));
+			auto input = Tensor(Shape(3, 1, 1, 3));
 			input.FillWithRand();
 
 			auto result = Tensor(input.GetShape());
@@ -121,7 +121,7 @@ namespace NeuroTests
 			softmax.Compute(input, result);
 
 			for (int b = 0; b < 3; ++b)
-				Assert::AreEqual((double)result.Sum(WHDAxis).Reshaped(Shape(input.Batch()))(0), 1, 1e-4);
+				Assert::AreEqual((double)result.Sum(WHDAxis).Reshaped(Shape(input.Batch()))(b), 1, 1e-4);
 		}
 	};
 }
