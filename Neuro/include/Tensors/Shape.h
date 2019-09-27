@@ -13,7 +13,7 @@ namespace Neuro
     class Shape
     {
 	public:
-        explicit Shape(uint32_t width = 0, uint32_t height = 1, uint32_t depth = 1, uint32_t batchSize = 1);
+        Shape(uint32_t width = 0, uint32_t height = 1, uint32_t depth = 1, uint32_t batchSize = 1);
         Shape(istream& stream);
 
         bool IsValid() const { return NDim > 0; }
@@ -35,7 +35,8 @@ namespace Neuro
         uint32_t GetIndex(uint32_t w, uint32_t h = 0, uint32_t d = 0, uint32_t n = 0) const;
         uint32_t GetIndex(int w, int h = 0, int d = 0, int n = 0) const;
         uint32_t GetIndex(const vector<uint32_t>& indices) const;
-        uint32_t GetIndexNCHW(const vector<uint32_t>& indices) const;
+        uint32_t GetIndexKeras(const vector<int>& indices) const;
+        vector<int> KerasDims() const;
 
 		string ToString() const;
 

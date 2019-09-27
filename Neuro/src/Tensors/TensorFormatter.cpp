@@ -13,7 +13,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    string TensorFormatter::ToStringRecursive(const Tensor& t, const vector<uint32_t>& index, const string& hanging_indent, int curr_width, const Dragon4FloatFormatter& formatter)
+    string TensorFormatter::ToStringRecursive(const Tensor& t, const vector<int>& index, const string& hanging_indent, int curr_width, const Dragon4FloatFormatter& formatter)
     {
         string separator = " ";
 
@@ -21,7 +21,7 @@ namespace Neuro
         int axes_left = t.GetShape().NDim - axis;
 
         if (axes_left == 0)
-            return formatter.FormatValue(t.GetFlat(t.GetShape().GetIndexNCHW(index)));
+            return formatter.FormatValue(t.GetFlat(t.GetShape().GetIndexKeras(index)));
 
         // when recursing, add a space to align with the [ added, and reduce the
         // length of the line by 1
@@ -46,7 +46,7 @@ namespace Neuro
 
             for (int i = 0; i < leading_items; ++i)
             {
-                vector<uint32_t> tempIndex = index;
+                vector<int> tempIndex = index;
                 tempIndex.push_back(i);
                 word = ToStringRecursive(t, tempIndex, next_hanging_indent, next_width, formatter);
                 auto exLine = ExtendLine(s, line, word, elem_width, hanging_indent);
@@ -57,7 +57,7 @@ namespace Neuro
 
             for (int i = trailing_items; i > 1; --i)
             {
-                vector<uint32_t> tempIndex = index;
+                vector<int> tempIndex = index;
                 tempIndex.push_back(-i);
                 word = ToStringRecursive(t, tempIndex, next_hanging_indent, next_width, formatter);
                 auto exLine = ExtendLine(s, line, word, elem_width, hanging_indent);
@@ -66,7 +66,7 @@ namespace Neuro
                 line += separator;
             }
 
-            vector<uint32_t> tempIndex = index;
+            vector<int> tempIndex = index;
             tempIndex.push_back(-1);
             word = ToStringRecursive(t, tempIndex, next_hanging_indent, next_width, formatter);
             auto exLine = ExtendLine(s, line, word, elem_width, hanging_indent);
@@ -85,7 +85,7 @@ namespace Neuro
 
             for (int i = 0; i < leading_items; ++i)
             {
-                vector<uint32_t> tempIndex = index;
+                vector<int> tempIndex = index;
                 tempIndex.push_back(i);
                 nested = ToStringRecursive(t, tempIndex, next_hanging_indent, next_width, formatter);
                 s += hanging_indent + nested + line_sep;
@@ -93,13 +93,13 @@ namespace Neuro
 
             for (int i = trailing_items; i > 1; --i)
             {
-                vector<uint32_t> tempIndex = index;
+                vector<int> tempIndex = index;
                 tempIndex.push_back(-i);
                 nested = ToStringRecursive(t, tempIndex, next_hanging_indent, next_width, formatter);
                 s += hanging_indent + nested + line_sep;
             }
 
-            vector<uint32_t> tempIndex = index;
+            vector<int> tempIndex = index;
             tempIndex.push_back(-1);
             nested = ToStringRecursive(t, tempIndex, next_hanging_indent, next_width, formatter);
 

@@ -107,7 +107,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    uint32_t Shape::GetIndexNCHW(const vector<uint32_t>& indices) const
+    uint32_t Shape::GetIndexKeras(const vector<int>& indices) const
     {
         size_t indicesCount = indices.size();
 
@@ -119,6 +119,15 @@ namespace Neuro
             indicesCount > 1 ? indices[indicesCount - 2] : 0,
             indicesCount > 2 ? indices[indicesCount - 3] : 0,
             indicesCount > 3 ? indices[0] : 0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    vector<int> Shape::KerasDims() const
+    {
+        vector<int> dims;
+        for (int i = NDim - 1; i >= 0; --i)
+            dims.push_back(Dimensions[i]);
+        return dims;
     }
 
     //////////////////////////////////////////////////////////////////////////

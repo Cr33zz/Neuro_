@@ -33,7 +33,7 @@ namespace Neuro
         };
 
     private:
-        static string ToStringRecursive(const Tensor& t, const vector<uint32_t>& index, const string& hanging_indent, int curr_width, const Dragon4FloatFormatter& formatter);
+        static string ToStringRecursive(const Tensor& t, const vector<int>& index, const string& hanging_indent, int curr_width, const Dragon4FloatFormatter& formatter);
         static pair<string, string> ExtendLine(string& str, string& line, const string& word, int line_width, const string& next_line_prefix);
     };
 }

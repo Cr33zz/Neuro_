@@ -4,6 +4,7 @@
 #include <cctype>
 #include <iomanip>
 #include <memory>
+#include <H5Cpp.h>
 
 #include "Models/ModelBase.h"
 #include "Optimizers/OptimizerBase.h"
@@ -11,6 +12,8 @@
 #include "Tools.h"
 #include "ChartGenerator.h"
 #include "Stopwatch.h"
+
+using namespace H5;
 
 namespace Neuro
 {
@@ -172,27 +175,180 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
+    tensor_ptr_vec_t ModelBase::Weights()
+    {
+        tensor_ptr_vec_t params;
+        vector<ParametersAndGradients> paramsAndGrads;
+
+        GetParametersAndGradients(paramsAndGrads, false);
+        for (auto paramAndGrad : paramsAndGrads)
+            params.push_back(paramAndGrad.Parameters);
+
+        return params;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void ModelBase::SaveWeights(const string& filename) const
     {
         //https://github.com/keras-team/keras/blob/5be4ed3d9e7548dfa9d51d1d045a3f951d11c2b1/keras/engine/saving.py#L733
+        H5File file = H5File(filename, H5F_ACC_TRUNC);
+        
+        vector<ParametersAndGradients> paramsAndGrads;
+        vector<string> paramNames;
 
-        ofstream stream(filename, ios::out | ios::binary);
+        for (auto layer : Layers())
+        {
+            Group g(file.createGroup(layer->Name()));
+            Group gData(g.createGroup(layer->Name()));
+
+            paramsAndGrads.clear();
+            paramNames.clear();
+            layer->GetParametersAndGradients(paramsAndGrads, false);
+            
+            for (auto i = 0; i < paramsAndGrads.size(); ++i)
+            {
+                auto& w = *paramsAndGrads[i].Parameters;
+                string name = w.Name();
+                if (name.empty())
+                    name = "param_" + to_string(i);
+
+                paramNames.push_back(name);
+            }
+
+            for (auto i = 0; i < paramsAndGrads.size(); ++i)
+            {
+                auto& w = *paramsAndGrads[i].Parameters;
+                auto& wShape = w.GetShape();
+                
+                //save dims keras-style so weights can be imported to keras
+                vector<hsize_t> kerasDims;
+                for (int i = wShape.NDim - 1; i >= 0; --i)
+                    kerasDims.push_back(wShape.Dimensions[i]);
+
+                DataSet dataset(g.createDataSet(paramNames[i], PredType::NATIVE_FLOAT, DataSpace(wShape.NDim, &kerasDims[0])));
+                dataset.write(&w.GetValues()[0], PredType::NATIVE_FLOAT);
+            }
+        }
+
+        /*ofstream stream(filename, ios::out | ios::binary);
         vector<ParametersAndGradients> paramsAndGrads;
         const_cast<ModelBase*>(this)->GetParametersAndGradients(paramsAndGrads, false);
         for (auto i = 0; i < paramsAndGrads.size(); ++i)
             paramsAndGrads[i].Parameters->SaveBin(stream);
-        stream.close();
+        stream.close();*/
     }
 
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::LoadWeights(const string& filename)
     {
-        ifstream stream(filename, ios::in | ios::binary);
+        H5File file = H5File(filename, H5F_ACC_RDONLY);
+
+        bool is_keras = file.attrExists("keras_version");
+
+        vector<ParametersAndGradients> paramsAndGrads;
+        static char buffer[1024];
+
+        auto& layers = Layers();
+
+        hsize_t layerGroupsNum;
+        H5Gget_num_objs(file.getId(), &layerGroupsNum);
+
+        // make sure number of parameters tensors match
+        assert((size_t)layerGroupsNum == layers.size());
+
+        vector<hsize_t> layersOrder(layers.size());
+        iota(layersOrder.begin(), layersOrder.end(), 0); // creation order by default
+
+        // Keras specifies order of layers by attribute containing array of layer names
+        if (is_keras)
+        {
+            map<string, hsize_t> layerNameToIdx;
+            for (hsize_t i = 0; i < layerGroupsNum; ++i)
+                layerNameToIdx[file.getObjnameByIdx(i)] = i;
+
+            Attribute att(file.openAttribute("layer_names"));
+            hsize_t layersNamesNum = 0;
+            att.getSpace().getSimpleExtentDims(&layersNamesNum);
+            assert(layersNamesNum == layerGroupsNum);
+            hsize_t strLen = att.getDataType().getSize();
+            att.read(att.getDataType(), buffer);
+
+            for (hsize_t i = 0; i < layerGroupsNum; ++i)
+            {
+                string layerName(buffer + i * strLen, strLen);
+                // we need to get rid of group/layer name from weight name
+                layerName = layerName.substr(layerName.find_last_of('/') + 1);
+                layersOrder[i] = layerNameToIdx[layerName];
+            }
+        }
+
+        for (size_t l = 0; l < layers.size(); ++l)
+        {
+            auto layer = layers[l];
+
+            Group g(file.openGroup(file.getObjnameByIdx(layersOrder[l])));
+            Group gData(g.openGroup(g.getObjnameByIdx(0)));
+
+            paramsAndGrads.clear();
+            layer->GetParametersAndGradients(paramsAndGrads, false);
+
+            hsize_t layerDatasetsNum;
+            H5Gget_num_objs(gData.getId(), &layerDatasetsNum);
+
+            // make sure number of parameters tensors match
+            assert((size_t)layerDatasetsNum == paramsAndGrads.size());
+
+            vector<hsize_t> weightsOrder(layerDatasetsNum);
+            iota(weightsOrder.begin(), weightsOrder.end(), 0); // creation order by default
+
+            // Keras specifies order of tensors by attribute containing array of tensor names
+            if (is_keras)
+            {
+                // build name to idx mapping
+                map<string, hsize_t> weightNameToIdx;
+                for (hsize_t i = 0; i < layerDatasetsNum; ++i)
+                    weightNameToIdx[gData.getObjnameByIdx(i)] = i;
+
+                Attribute att(g.openAttribute("weight_names"));
+                hsize_t weightsNamesNum = 0;
+                att.getSpace().getSimpleExtentDims(&weightsNamesNum);
+                assert(weightsNamesNum == layerDatasetsNum);
+                hsize_t strLen = att.getDataType().getSize();
+                att.read(att.getDataType(), buffer);
+
+                for (hsize_t i = 0; i < layerDatasetsNum; ++i)
+                {
+                    string weightName(buffer + i * strLen, strLen);
+                    // we need to get rid of group/layer name from weight name
+                    weightName = weightName.substr(weightName.find_last_of('/') + 1);
+                    weightsOrder[i] = weightNameToIdx[weightName];
+                }
+            }
+
+            for (hsize_t i = 0; i < layerDatasetsNum; ++i)
+            {
+                auto& w = *paramsAndGrads[i].Parameters;
+                auto& wShape = w.GetShape();
+
+                DataSet dataset(gData.openDataSet(gData.getObjnameByIdx(weightsOrder[i])));
+
+                hsize_t weightDims[5];
+                dataset.getSpace().getSimpleExtentDims(nullptr, weightDims);
+
+                assert(wShape.NDim == dataset.getSpace().getSimpleExtentNdims());
+                for (int i = wShape.NDim - 1, n = 0; i >= 0; --i, ++n)
+                    assert(weightDims[n] == wShape.Dimensions[i]);
+
+                dataset.read(&w.GetValues()[0], PredType::NATIVE_FLOAT);
+            }
+        }
+
+        /*ifstream stream(filename, ios::in | ios::binary);
         vector<ParametersAndGradients> paramsAndGrads;
         GetParametersAndGradients(paramsAndGrads, false);
         for (auto i = 0; i < paramsAndGrads.size(); ++i)
             paramsAndGrads[i].Parameters->LoadBin(stream);
-        stream.close();
+        stream.close();*/
     }
 
     //////////////////////////////////////////////////////////////////////////

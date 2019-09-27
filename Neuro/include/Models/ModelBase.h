@@ -40,6 +40,8 @@ namespace Neuro
         virtual const vector<LayerBase*>& ModelInputLayers() const = 0;
         virtual const vector<LayerBase*>& ModelOutputLayers() const = 0;
 
+        tensor_ptr_vec_t Weights();
+
         void SaveWeights(const string& filename) const;
         void LoadWeights(const string& filename);
         
