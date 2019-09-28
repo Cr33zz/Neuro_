@@ -31,6 +31,7 @@ model.Fit(input, input, 256, 20, nullptr, nullptr, 2, TrainError);
 
 cout << model.TrainSummary();
 ```
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/deep_conv_autoencoder.jpg)
 #### Deep Convolutional Generative Adversarial Network (DCGAN)
 DCGAN is trying to learn to generate data samples similar to the ones it was trained on. It is comprised of 2 connected neural networks (generator and discriminator). Generator is trying to learn to generate realistic data from random noise while discriminator is learning to distinquish real from fake data.
 ```cpp
@@ -87,11 +88,14 @@ for (uint32_t e = 1; e <= EPOCHS; ++e)
         dModel->SetTrainable(false);
         auto ganTrainRes = ganModel->TrainOnBatch(noise, real);
 
-        cout << ">" << e << ", " << i << "/" << BATCHES_PER_EPOCH << setprecision(4) << fixed << " d1=" << get<0>(realTrainRes) << " d2=" << get<0>(fakeTrainRes) << " g=" << get<0>(ganTrainRes) << endl;
+        cout << ">" << e << ", " << i << "/" << BATCHES_PER_EPOCH << setprecision(4) << fixed 
+             << " d1=" << get<0>(realTrainRes) << " d2=" << get<0>(fakeTrainRes) 
+             << " g=" << get<0>(ganTrainRes) << endl;
     }
 }
 ```
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/mnist_dc_gan_after_6_epochs.jpg "DCGAN after 6 epochs")
+Below you can see some randomly generated images after 100 epochs.  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/cifar_dc_gan_after_100_epochs.jpg "DCGAN after 100 epochs")
 ## Neuro.Examples training data
 Training data required to run examples can be downloaded via this link
 https://www.dropbox.com/s/kti8255njbx7wqy/neuro_examples_data.zip  
