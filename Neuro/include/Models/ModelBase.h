@@ -21,7 +21,7 @@ namespace Neuro
 	public:
         ~ModelBase();
 
-        void ForceInitLayers();
+        void ForceInitLayers(bool initValues = true);
 
         void Optimize(OptimizerBase* optimizer, LossBase* loss);
         void Optimize(OptimizerBase* optimizer, map<string, LossBase*> lossDict);
@@ -68,7 +68,7 @@ namespace Neuro
         ModelBase(const string& constructorName, const string& name = "", int seed = 0);
 
         virtual void OnClone(const LayerBase& source) override;
-        virtual void OnInit() override;
+        virtual void OnInit(bool initValues = true) override;
 
     private:
         // This is vectorized gradient descent

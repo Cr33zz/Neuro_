@@ -14,8 +14,6 @@ namespace Neuro
         Flatten(const Shape& inputShape, const string& name = "");
 
 	protected:
-        Flatten(bool) {}
-
 		virtual LayerBase* GetCloneInstance() const override;
         virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) override;
     };

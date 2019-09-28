@@ -42,9 +42,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Conv2DTranspose::OnInit()
+    void Conv2DTranspose::OnInit(bool initValues)
     {
-        __super::OnInit();
+        __super::OnInit(initValues);
 
         m_Kernels = Tensor(Shape(m_FilterSize, m_FilterSize, m_OutputDepth, InputShape().Depth()), Name() + "/kernels");
         m_Bias = Tensor(Shape(1, 1, m_OutputDepth), Name() + "/bias");
@@ -53,9 +53,12 @@ namespace Neuro
         m_BiasGradient = Tensor(m_Bias.GetShape(), Name() + "/bias_grad");
         m_BiasGradient.Zero();
 
-        m_KernelInitializer->Init(m_Kernels);
-        if (m_UseBias)
-            m_BiasInitializer->Init(m_Bias);
+        if (initValues)
+        {
+            m_KernelInitializer->Init(m_Kernels);
+            if (m_UseBias)
+                m_BiasInitializer->Init(m_Bias);
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////

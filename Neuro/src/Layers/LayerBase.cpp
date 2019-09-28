@@ -98,12 +98,12 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void LayerBase::Init()
+	void LayerBase::Init(bool initValues)
 	{
 		if (Initialized)
 			return;
 
-		OnInit();
+		OnInit(initValues);
 		Initialized = true;
 	}
 

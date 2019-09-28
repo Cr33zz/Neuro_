@@ -51,17 +51,17 @@ namespace Neuro
     }
     
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::OnInit()
+    void ModelBase::OnInit(bool initValues)
     {
         for (auto layer : Layers())
-            layer->Init();
+            layer->Init(initValues);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::ForceInitLayers()
+    void ModelBase::ForceInitLayers(bool initValues)
     {
         for (auto layer : Layers())
-            layer->Init();
+            layer->Init(initValues);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -222,7 +222,7 @@ namespace Neuro
                 auto& wShape = w->GetShape();
                 
                 vector<hsize_t> dims;
-                for (int i = 0; i < wShape.NDim; ++i)
+                for (uint32_t i = 0; i < wShape.NDim; ++i)
                     dims.push_back(wShape.Dimensions[i]);
 
                 DataSet dataset(g.createDataSet("param_" + to_string(i), PredType::NATIVE_FLOAT, DataSpace(wShape.NDim, &dims[0])));
@@ -241,9 +241,11 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::LoadWeights(const string& filename)
     {
+        ForceInitLayers(false);
+
         H5File file = H5File(filename, H5F_ACC_RDONLY);
 
-        bool is_keras = file.attrExists("keras_version");
+        bool is_keras = file.attrExists("layer_names");
 
         Shape tranposedParamShape;
         Tensor kerasParam;
@@ -277,66 +279,59 @@ namespace Neuro
 
             for (hsize_t i = 0; i < layerGroupsNum; ++i)
             {
-                string layerName(buffer + i * strLen, strLen);
+                string layerName(buffer + i * strLen, min(strlen(buffer + i * strLen), strLen));
                 // we need to get rid of group/layer name from weight name
                 layerName = layerName.substr(layerName.find_last_of('/') + 1);
                 layersOrder[i] = layerNameToIdx[layerName];
             }
         }
 
-        Group* datasetsGroup = nullptr;
-
         for (size_t l = 0; l < layers.size(); ++l)
         {
             auto layer = layers[l];
 
             Group g(file.openGroup(file.getObjnameByIdx(layersOrder[l])));
-            datasetsGroup = &g;
 
-            if (is_keras)
-                datasetsGroup = new Group(g.openGroup(g.getObjnameByIdx(0)));
+            /*if (is_keras)
+                datasetsGroup = new Group(g.openGroup(g.getObjnameByIdx(0)));*/
 
             params.clear();
             layer->SerializedParameters(params);
 
-            hsize_t layerDatasetsNum;
-            H5Gget_num_objs(datasetsGroup->getId(), &layerDatasetsNum);
+            //hsize_t layerDatasetsNum;
+            //H5Gget_num_objs(datasetsGroup->getId(), &layerDatasetsNum);
 
-            // make sure number of parameters tensors match
-            assert((size_t)layerDatasetsNum == params.size());
+            //// make sure number of parameters tensors match
+            //assert((size_t)layerDatasetsNum == params.size());
 
-            vector<hsize_t> weightsOrder(layerDatasetsNum);
-            iota(weightsOrder.begin(), weightsOrder.end(), 0); // creation order by default
+            vector<DataSet> weightsDatasets;
 
             // Keras specifies order of tensors by attribute containing array of tensor names
             if (is_keras)
             {
-                // build name to idx mapping
-                map<string, hsize_t> weightNameToIdx;
-                for (hsize_t i = 0; i < layerDatasetsNum; ++i)
-                    weightNameToIdx[datasetsGroup->getObjnameByIdx(i)] = i;
-
                 Attribute att(g.openAttribute("weight_names"));
                 hsize_t weightsNamesNum = 0;
                 att.getSpace().getSimpleExtentDims(&weightsNamesNum);
-                assert(weightsNamesNum == layerDatasetsNum);
+                assert(weightsNamesNum == params.size());
                 hsize_t strLen = att.getDataType().getSize();
                 att.read(att.getDataType(), buffer);
 
-                for (hsize_t i = 0; i < layerDatasetsNum; ++i)
+                for (hsize_t i = 0; i < weightsNamesNum; ++i)
                 {
-                    string weightName(buffer + i * strLen, strLen);
-                    // we need to get rid of group/layer name from weight name
-                    weightName = weightName.substr(weightName.find_last_of('/') + 1);
-                    weightsOrder[i] = weightNameToIdx[weightName];
+                    string weightName(buffer + i * strLen, min(strlen(buffer + i * strLen), strLen));
+                    weightsDatasets.push_back(g.openDataSet(weightName));
                 }
             }
-
-            for (hsize_t i = 0; i < layerDatasetsNum; ++i)
+            else
             {
-                auto w = params[i].param;
+                for (hsize_t i = 0; i < params.size(); ++i)
+                    weightsDatasets.push_back(g.openDataSet(g.getObjnameByIdx(i)));
+            }
 
-                DataSet dataset(datasetsGroup->openDataSet(datasetsGroup->getObjnameByIdx(weightsOrder[i])));
+            for (hsize_t i = 0; i < params.size(); ++i)
+            {
+                auto& dataset = weightsDatasets[i];
+                auto w = params[i].param;
 
                 hsize_t weightNDims = dataset.getSpace().getSimpleExtentNdims();
                 hsize_t weightDims[5];
@@ -368,9 +363,6 @@ namespace Neuro
                     params[i].param->Name(kerasParam.Name());
                 }
             }
-
-            if (is_keras)
-                delete datasetsGroup;
         }
 
         /*ifstream stream(filename, ios::in | ios::binary);

@@ -233,9 +233,9 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Flow::OnInit()
+    void Flow::OnInit(bool initValues)
     {
-        __super::OnInit();
+        __super::OnInit(initValues);
 
         for (auto modelOutputLayer : m_ModelOutputLayers)
             m_Outputs.insert(m_Outputs.end(), modelOutputLayer->Outputs().begin(), modelOutputLayer->Outputs().end());

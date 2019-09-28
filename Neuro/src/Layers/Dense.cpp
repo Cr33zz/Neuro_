@@ -53,9 +53,9 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Dense::OnInit()
+	void Dense::OnInit(bool initValues)
 	{
-		__super::OnInit();
+		__super::OnInit(initValues);
 
 		m_Weights = Tensor(Shape(OutputShape().Length, InputShape().Length), Name() + "/weights");
 		m_Bias = Tensor(OutputShape(), Name() + "/bias");
@@ -64,9 +64,12 @@ namespace Neuro
 		m_BiasGrad = Tensor(m_Bias.GetShape(), Name() + "/bias_grad");
         m_BiasGrad.Zero();
 
-		m_WeightsInitializer->Init(m_Weights);
-		if (m_UseBias)
-			m_BiasInitializer->Init(m_Bias);
+        if (initValues)
+        {
+            m_WeightsInitializer->Init(m_Weights);
+            if (m_UseBias)
+                m_BiasInitializer->Init(m_Bias);
+        }
 	}
 
 	//////////////////////////////////////////////////////////////////////////

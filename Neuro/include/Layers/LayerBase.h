@@ -70,7 +70,7 @@ namespace Neuro
         virtual void SerializedParameters(vector<SerializedParameter>& params);
 
 		LayerBase* Clone();
-		void Init();
+		void Init(bool initValues = true);
 		
         const string& ClassName() const { return m_ClassName; }
 
@@ -92,7 +92,7 @@ namespace Neuro
 
         virtual LayerBase* GetCloneInstance() const = 0;
         virtual void OnClone(const LayerBase& source);
-        virtual void OnInit() {}
+        virtual void OnInit(bool initValues = true) {}
         virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) = 0;
         virtual void OnLinkOutput(LayerBase* outputLayer) = 0;
         

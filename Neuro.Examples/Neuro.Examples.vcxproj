@@ -156,6 +156,7 @@
     <ClInclude Include="include\FlowNetwork.h" />
     <ClInclude Include="include\MnistConvNetwork.h" />
     <ClInclude Include="include\MnistNetwork.h" />
+    <ClInclude Include="include\VGG16.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Neuro\Neuro.vcxproj">
