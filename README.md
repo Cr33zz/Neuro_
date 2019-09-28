@@ -64,7 +64,7 @@ ganModel->AddLayer(dModel);
 ganModel->Optimize(new Adam(0.0002f, 0.5f), new BinaryCrossEntropy());
 
 const uint32_t BATCH_SIZE = 128;
-const uint32_t EPOCHS = 50;
+const uint32_t EPOCHS = 100;
 const uint32_t BATCHES_PER_EPOCH = images.Batch() / BATCH_SIZE;
 
 Tensor real(Shape::From(dModel->OutputShape(), BATCH_SIZE)); real.FillWithValue(1.f);
