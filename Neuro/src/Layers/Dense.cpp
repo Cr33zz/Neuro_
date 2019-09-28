@@ -139,15 +139,15 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Dense::GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable)
+	void Dense::ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable)
 	{
         if (onlyTrainable && !m_Trainable)
             return;
 
-        paramsAndGrads.push_back(ParametersAndGradients(&m_Weights, &m_WeightsGrad));
+        paramsAndGrads.push_back(ParameterAndGradient(&m_Weights, &m_WeightsGrad));
 
 		if (m_UseBias)
-            paramsAndGrads.push_back(ParametersAndGradients(&m_Bias, &m_BiasGrad));
+            paramsAndGrads.push_back(ParameterAndGradient(&m_Bias, &m_BiasGrad));
 	}
 
     //////////////////////////////////////////////////////////////////////////

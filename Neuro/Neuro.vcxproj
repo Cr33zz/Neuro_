@@ -156,7 +156,7 @@
     <ClInclude Include="include\Optimizers\Adam.h" />
     <ClInclude Include="include\Optimizers\OptimizerBase.h" />
     <ClInclude Include="include\Optimizers\SGD.h" />
-    <ClInclude Include="include\ParametersAndGradients.h" />
+    <ClInclude Include="include\ParameterAndGradient.h" />
     <ClInclude Include="include\Random.h" />
     <ClInclude Include="include\Stopwatch.h" />
     <ClInclude Include="include\Tensors\Cuda\CudaDeviceVariable.h" />

@@ -2,6 +2,7 @@
 #include "assert.h"
 
 #include "Tensors/Shape.h"
+#include "Tensors/Tensor.h"
 
 namespace Neuro
 {
@@ -13,6 +14,11 @@ namespace Neuro
 		Dimensions[1] = height;
 		Dimensions[2] = depth;
 		Dimensions[3] = batchSize;
+
+        Stride[0] = 1;
+        Stride[1] = width;
+        Stride[2] = width * height;
+        Stride[3] = width * height * depth;
 
         NDim = 0;
         if (batchSize > 1)
@@ -50,12 +56,26 @@ namespace Neuro
 	{
 		switch (dimNum)
 		{
-		case 1: return Shape(dimensions[0]);
-		case 2: return Shape(dimensions[0], dimensions[1]);
-		case 3: return Shape(dimensions[0], dimensions[1], dimensions[2]);
-		default: return Shape(dimensions[0], dimensions[1], dimensions[2], dimensions[3]);
+        case 1: return Shape(dimensions[0]);
+        case 2: return Shape(dimensions[0], dimensions[1]);
+        case 3: return Shape(dimensions[0], dimensions[1], dimensions[2]);
+        case 4: return Shape(dimensions[0], dimensions[1], dimensions[2], dimensions[3]);
+        default: assert(false); return Shape();
 		}
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    Shape Shape::FromKeras(const int* dimensions, int dimNum)
+    {
+        switch (dimNum)
+        {
+        case 1: return Shape(dimensions[0]);
+        case 2: return Shape(dimensions[1], dimensions[0]);
+        case 3: return Shape(dimensions[2], dimensions[1], dimensions[0]);
+        case 4: return Shape(dimensions[3], dimensions[2], dimensions[1], dimensions[0]);
+        default: assert(false); return Shape();
+        }
+    }
 
     //////////////////////////////////////////////////////////////////////////
     Shape Shape::From(const Shape& shapeWithoutBatches, int batchSize)
@@ -91,7 +111,14 @@ namespace Neuro
 		return From(dimensions, 4);
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    Shape Shape::Transposed(const vector<EAxis>& axes) const
+    {
+        vector<EAxis> permutation = Tensor::FillUpTranposeAxis(axes);
+        return Shape(Dimensions[permutation[0]], Dimensions[permutation[1]], Dimensions[permutation[2]], Dimensions[permutation[3]]);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     uint32_t Shape::GetIndex(const vector<uint32_t>& indices) const
     {
         size_t indicesCount = indices.size();
@@ -142,22 +169,13 @@ namespace Neuro
     void Shape::SaveBin(ostream& stream) const
     {
         stream.write((char*)Dimensions, sizeof(Dimensions));
-        stream.write((char*)&Dim0, sizeof(Dim0));
-        stream.write((char*)&Dim0Dim1, sizeof(Dim0Dim1));
-        stream.write((char*)&Dim0Dim1Dim2, sizeof(Dim0Dim1Dim2));
-        stream.write((char*)&Length, sizeof(Length));
-        stream.write((char*)&NDim, sizeof(NDim));
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Shape::LoadBin(istream& stream)
     {
         stream.read((char*)Dimensions, sizeof(Dimensions));
-        stream.read((char*)&Dim0, sizeof(Dim0));
-        stream.read((char*)&Dim0Dim1, sizeof(Dim0Dim1));
-        stream.read((char*)&Dim0Dim1Dim2, sizeof(Dim0Dim1Dim2));
-        stream.read((char*)&Length, sizeof(Length));
-        stream.read((char*)&NDim, sizeof(NDim));
+        new(this) Shape(Dimensions[0], Dimensions[1], Dimensions[2], Dimensions[3]); // reconstruct
     }
 
     //////////////////////////////////////////////////////////////////////////

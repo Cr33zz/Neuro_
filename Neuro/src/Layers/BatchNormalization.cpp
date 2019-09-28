@@ -40,17 +40,17 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void BatchNormalization::GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable)
+    void BatchNormalization::ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable)
     {
         if (onlyTrainable && !m_Trainable)
             return;
 
-        paramsAndGrads.push_back(ParametersAndGradients(&m_Gamma, &m_GammaGrad));
-        paramsAndGrads.push_back(ParametersAndGradients(&m_Beta, &m_BetaGrad));
+        paramsAndGrads.push_back(ParameterAndGradient(&m_Gamma, &m_GammaGrad));
+        paramsAndGrads.push_back(ParameterAndGradient(&m_Beta, &m_BetaGrad));
         if (!onlyTrainable)
         {
-            paramsAndGrads.push_back(ParametersAndGradients(&m_RunningMean, nullptr));
-            paramsAndGrads.push_back(ParametersAndGradients(&m_RunningVar, nullptr));
+            paramsAndGrads.push_back(ParameterAndGradient(&m_RunningMean, nullptr));
+            paramsAndGrads.push_back(ParameterAndGradient(&m_RunningVar, nullptr));
         }
     }
 

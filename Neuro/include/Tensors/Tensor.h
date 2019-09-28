@@ -47,6 +47,7 @@ namespace Neuro
         uint32_t Length() const { return (uint32_t)m_Values.size(); }
 
         const string& Name() const { return m_Name; }
+        void Name(const string& name) { m_Name = name; }
 
         vector<float>& GetValues();
         const vector<float>& GetValues() const;
@@ -126,7 +127,13 @@ namespace Neuro
         static void MergeMinMaxGradient(const Tensor& output, const const_tensor_ptr_vec_t& inputs, const Tensor& outputGradient, tensor_ptr_vec_t& results);
         static void MergeSumGradient(const Tensor& output, const const_tensor_ptr_vec_t& inputs, const Tensor& outputGradient, tensor_ptr_vec_t& results);
         static void MergeAvgGradient(const Tensor& output, const const_tensor_ptr_vec_t& inputs, const Tensor& outputGradient, tensor_ptr_vec_t& results);
+
+        static vector<EAxis> FillUpTranposeAxis(const vector<EAxis>& axes);
         
+        // Axis specifies new order of axis (dimensions) using input tensor axis nomenclature
+        Tensor Transposed(const vector<EAxis>& axes) const;
+        void Transpose(const vector<EAxis>& axes, Tensor& result) const;
+
         Tensor Transposed() const;
         void Transpose(Tensor& result) const;
 

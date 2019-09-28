@@ -807,6 +807,20 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
+    vector<EAxis> Tensor::FillUpTranposeAxis(const vector<EAxis>& axes)
+    {
+        vector<EAxis> permutation(axes);
+        // add unlisted axis at the end in order of axis defining shape
+        for (int a = WidthAxis; a <= BatchAxis; ++a)
+        {
+            if (find(axes.begin(), axes.end(), a) == axes.end())
+                permutation.push_back((EAxis)a);
+        }
+
+        return permutation;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     Tensor Tensor::Normalized(EAxis axis, Tensor& result, ENormMode normMode, Tensor* savedNorm) const
     {
         CopyToHost();
@@ -1070,13 +1084,38 @@ namespace Neuro
 		return result;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::Transposed(const vector<EAxis>& axes) const
+    {
+        Tensor result;
+        Transpose(axes, result);
+        return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Transpose(const vector<EAxis>& axes, Tensor& result) const
+    {
+        vector<EAxis> permutation = FillUpTranposeAxis(axes);
+
+        result.Resize(Shape(m_Shape.Dimensions[permutation[0]], m_Shape.Dimensions[permutation[1]], m_Shape.Dimensions[permutation[2]], m_Shape.Dimensions[permutation[3]]));
+
+        for (uint32_t n = 0; n < result.Batch(); ++n)
+        for (uint32_t d = 0; d < result.Depth(); ++d)
+        for (uint32_t h = 0; h < result.Height(); ++h)
+        for (uint32_t w = 0; w < result.Width(); ++w)
+        {
+            int inIndex = w * m_Shape.Stride[permutation[0]] + h * m_Shape.Stride[permutation[1]] + d * m_Shape.Stride[permutation[2]] + n * m_Shape.Stride[permutation[3]];
+            result(w, h, d, n) = m_Values[inIndex];
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void Tensor::Transpose(Tensor& result) const
 	{
 		Op()->Transpose(*this, result);
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::Reshaped(const Shape& shape) const
 	{
 		return Tensor(m_Values, m_Shape.Reshaped((int)shape.Width(), (int)shape.Height(), (int)shape.Depth(), (int)shape.Batch()));
@@ -1136,9 +1175,9 @@ namespace Neuro
 
 		for (uint32_t n = 0; n < Batch(); ++n)
 		for (uint32_t d = 0; d < Depth(); ++d)
-		for (uint32_t h = Height() - 1; h >= 0; --h)
-		for (uint32_t w = Width() - 1; w >= 0; --w)
-			result.Set(Get(Width() - w - 1, Height() - h - 1, d, n), w, h, d, n);
+		for (int h = Height() - 1; h >= 0; --h)
+		for (int w = Width() - 1; w >= 0; --w)
+			result.Set(Get(Width() - (uint32_t)w - 1, Height() - (uint32_t)h - 1, d, n), w, h, d, n);
 	}
 
 	//////////////////////////////////////////////////////////////////////////

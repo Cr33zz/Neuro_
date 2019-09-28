@@ -102,21 +102,30 @@ namespace Neuro
         {
             outputsGradient[0]->Conv2DKernelsGradient(*m_Inputs[0], *outputsGradient[0], m_Stride, m_Padding, m_KernelsGradient);
             if (m_UseBias)
-                m_BiasGradient.Add(outputsGradient[0]->Sum(EAxis::WHBAxis), m_BiasGradient);
+                m_BiasGradient.Add(outputsGradient[0]->Sum(WHBAxis), m_BiasGradient);
         }
 	}
 
     //////////////////////////////////////////////////////////////////////////
-	void Conv2D::GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable)
+	void Conv2D::ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable)
 	{
         if (onlyTrainable && !m_Trainable)
             return;
 
-        paramsAndGrads.push_back(ParametersAndGradients(&m_Kernels, &m_KernelsGradient));
+        paramsAndGrads.push_back({ &m_Kernels, &m_KernelsGradient });
 
 		if (m_UseBias)
-            paramsAndGrads.push_back(ParametersAndGradients(&m_Bias, &m_BiasGradient));
+            paramsAndGrads.push_back({ &m_Bias, &m_BiasGradient });
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    void Conv2D::SerializedParameters(vector<SerializedParameter>& params)
+    {
+        params.push_back({ &m_Kernels, { DepthAxis, BatchAxis, HeightAxis, WidthAxis } });
+
+        if (m_UseBias)
+            params.push_back({ &m_Bias, { DepthAxis, HeightAxis, WidthAxis } });
+    }
 
 	//////////////////////////////////////////////////////////////////////////
 	void Conv2D::CopyParametersTo(LayerBase& target, float tau) const

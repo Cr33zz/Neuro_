@@ -126,9 +126,6 @@
     <ClInclude Include="include\Models\Sequential.h">
       <Filter>include\Models</Filter>
     </ClInclude>
-    <ClInclude Include="include\ParametersAndGradients.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\Types.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -203,6 +200,9 @@
     </ClInclude>
     <ClInclude Include="include\Initializers\HeUniform.h">
       <Filter>include\Initializers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ParameterAndGradient.h">
+      <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

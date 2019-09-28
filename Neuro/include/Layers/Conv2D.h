@@ -18,7 +18,8 @@ namespace Neuro
 
 		virtual void CopyParametersTo(LayerBase& target, float tau) const override;
 		virtual uint32_t ParamsNum() const override;
-		virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable = true) override;
+		virtual void ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable = true) override;
+        virtual void SerializedParameters(vector<SerializedParameter>& params) override;
 		
         Tensor& Kernels() { return m_Kernels; }
         Tensor& Bias() { return m_Bias; }

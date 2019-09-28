@@ -25,12 +25,14 @@ namespace Neuro
 
         static Shape From(const vector<int>& dimensions);
         static Shape From(const int* dimensions, int dimNum);
+        static Shape FromKeras(const int* dimensions, int dimNum);
         static Shape From(const Shape& shapeWithoutBatches, int batchSize);
 
 		static const int Auto = -1; // Automatically guesses
 
         // One of the provided dimensions can be -1. In that case it will be guessed based on the length and other dimensions.
         Shape Reshaped(int w, int h, int d, int n) const;
+        Shape Transposed(const vector<EAxis>& axes) const;
 
         uint32_t GetIndex(uint32_t w, uint32_t h = 0, uint32_t d = 0, uint32_t n = 0) const;
         uint32_t GetIndex(int w, int h = 0, int d = 0, int n = 0) const;
@@ -49,6 +51,7 @@ namespace Neuro
         uint32_t Batch() const { return Dimensions[3]; }
 
         uint32_t Dimensions[4];
+        uint32_t Stride[4];
         uint32_t Dim0;
         uint32_t Dim0Dim1;
         uint32_t Dim0Dim1Dim2;

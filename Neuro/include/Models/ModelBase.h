@@ -6,7 +6,7 @@
 
 #include "Types.h"
 #include "Layers/LayerBase.h"
-#include "ParametersAndGradients.h"
+#include "ParameterAndGradient.h"
 
 namespace Neuro
 {
@@ -46,7 +46,7 @@ namespace Neuro
         void LoadWeights(const string& filename);
         
         virtual uint32_t ParamsNum() const;
-        virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable = true) override;
+        virtual void ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable = true) override;
 
         virtual void SetTrainable(bool trainable) override;
         void ForceLearningPhase(bool force) { m_ForceLearningPhase = force; }
@@ -82,7 +82,7 @@ namespace Neuro
         vector<accuracy_func_t> m_AccuracyFuncs;
         bool m_ForceLearningPhase = false;
 
-        vector<ParametersAndGradients> m_ParamsAndGrads;
+        vector<ParameterAndGradient> m_ParamsAndGrads;
 
         ofstream* m_LogFile = nullptr;
         void LogLine(const string& text, bool print = true);

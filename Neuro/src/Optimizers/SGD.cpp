@@ -34,15 +34,15 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void SGD::OnStep(vector<ParametersAndGradients>& paramsAndGrads, int batchSize)
+	void SGD::OnStep(vector<ParameterAndGradient>& paramsAndGrads, int batchSize)
 	{
         float learningRate = m_LearningRate;
 
 		for (auto i = 0; i < paramsAndGrads.size(); ++i)
 		{
 			auto& parametersAndGradient = paramsAndGrads[i];
-			auto parameter = parametersAndGradient.Parameters;
-			auto gradient = parametersAndGradient.Gradients;
+			auto parameter = parametersAndGradient.param;
+			auto gradient = parametersAndGradient.grad;
 
             Tensor::ActiveOp()->SgdStep(*parameter, *gradient, (float)batchSize, learningRate);
 		}

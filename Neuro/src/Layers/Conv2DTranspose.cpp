@@ -109,15 +109,24 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Conv2DTranspose::GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable)
+    void Conv2DTranspose::ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable)
     {
         if (onlyTrainable && !m_Trainable)
             return;
 
-        paramsAndGrads.push_back(ParametersAndGradients(&m_Kernels, &m_KernelsGradient));
+        paramsAndGrads.push_back({ &m_Kernels, &m_KernelsGradient });
 
         if (m_UseBias)
-            paramsAndGrads.push_back(ParametersAndGradients(&m_Bias, &m_BiasGradient));
+            paramsAndGrads.push_back({ &m_Bias, &m_BiasGradient });
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Conv2DTranspose::SerializedParameters(vector<SerializedParameter>& params)
+    {
+        params.push_back({ &m_Kernels, { DepthAxis, BatchAxis, HeightAxis, WidthAxis } });
+
+        if (m_UseBias)
+            params.push_back({ &m_Bias, { DepthAxis, HeightAxis, WidthAxis } });
     }
 
     //////////////////////////////////////////////////////////////////////////

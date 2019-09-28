@@ -6,7 +6,7 @@
 
 #include "Tensors/Tensor.h"
 #include "Tensors/Shape.h"
-#include "ParametersAndGradients.h"
+#include "ParameterAndGradient.h"
 #include "Stopwatch.h"
 
 namespace Neuro
@@ -66,7 +66,8 @@ namespace Neuro
         bool Trainable() const { return m_Trainable; }
 
         virtual uint32_t ParamsNum() const { return 0; }
-        virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable = true) {}
+        virtual void ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable = true) {}
+        virtual void SerializedParameters(vector<SerializedParameter>& params);
 
 		LayerBase* Clone();
 		void Init();

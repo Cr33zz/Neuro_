@@ -19,7 +19,8 @@ namespace Neuro
 
         virtual void CopyParametersTo(LayerBase& target, float tau) const override;
         virtual uint32_t ParamsNum() const override;
-        virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable = true) override;
+        virtual void ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable = true) override;
+        virtual void SerializedParameters(vector<SerializedParameter>& params) override;
 
         Tensor& Kernels() { return m_Kernels; }
         Tensor& Bias() { return m_Bias; }
@@ -37,20 +38,6 @@ namespace Neuro
         virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) override;
         virtual void FeedForwardInternal(bool training) override;
         virtual void BackPropInternal(const tensor_ptr_vec_t& outputsGradient) override;
-
-        /*internal override void SerializeParameters(XmlElement elem)
-        {
-            base.SerializeParameters(elem);
-            Kernels.Serialize(elem, "Kernels");
-            Bias.Serialize(elem, "Bias");
-        }
-
-        internal override void DeserializeParameters(XmlElement elem)
-        {
-            base.DeserializeParameters(elem);
-            Kernels.Deserialize(elem["Kernels"]);
-            Bias.Deserialize(elem["Bias"]);
-        }*/
 
     private:
         Tensor m_Kernels;

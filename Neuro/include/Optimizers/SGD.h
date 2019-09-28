@@ -13,7 +13,7 @@ namespace Neuro
 		const char* ClassName() const;
 
 	protected:
-        virtual void OnStep(vector<ParametersAndGradients>& paramsAndGrads, int batchSize) override;
+        virtual void OnStep(vector<ParameterAndGradient>& paramsAndGrads, int batchSize) override;
 
 	private:
         float m_LearningRate;

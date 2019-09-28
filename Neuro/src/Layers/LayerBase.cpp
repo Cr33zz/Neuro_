@@ -33,6 +33,16 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void LayerBase::SerializedParameters(vector<SerializedParameter>& params)
+    {
+        vector<ParameterAndGradient> paramsAndGrads;
+        ParametersAndGradients(paramsAndGrads, false);
+
+        for (auto paramAndGrad : paramsAndGrads)
+            params.push_back({ paramAndGrad.param });
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	LayerBase* LayerBase::Clone()
 	{
 		Init(); // make sure parameter matrices are created
@@ -101,10 +111,10 @@ namespace Neuro
     vector<Tensor*> LayerBase::GetParams()
     {
         vector<Tensor*> params;
-        vector<ParametersAndGradients> paramsAndGrads;
-        GetParametersAndGradients(paramsAndGrads, false);
+        vector<ParameterAndGradient> paramsAndGrads;
+        ParametersAndGradients(paramsAndGrads, false);
         for (auto i = 0; i < paramsAndGrads.size(); ++i)
-            params.push_back(paramsAndGrads[i].Parameters);
+            params.push_back(paramsAndGrads[i].param);
 
         return params;
     }

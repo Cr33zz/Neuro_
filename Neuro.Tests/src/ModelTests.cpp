@@ -41,11 +41,11 @@ namespace NeuroTests
             auto model2 = model->Clone();
             model->CopyParametersTo(*model2);
 
-            vector<ParametersAndGradients> modelParams; model->GetParametersAndGradients(modelParams);
-            vector<ParametersAndGradients> model2Params; model2->GetParametersAndGradients(model2Params);
+            vector<ParameterAndGradient> modelParams; model->ParametersAndGradients(modelParams);
+            vector<ParameterAndGradient> model2Params; model2->ParametersAndGradients(model2Params);
 
             for (auto i = 0; i < modelParams.size(); ++i)
-                Assert::IsTrue(modelParams[i].Parameters->Equals(*model2Params[i].Parameters));
+                Assert::IsTrue(modelParams[i].param->Equals(*model2Params[i].param));
         }
 
         TEST_METHOD(CopyParameters_Soft)
@@ -59,11 +59,11 @@ namespace NeuroTests
 
             model->CopyParametersTo(*model2, 0.1f);
 
-            vector<ParametersAndGradients> modelParams; model->GetParametersAndGradients(modelParams);
-            vector<ParametersAndGradients> model2Params; model2->GetParametersAndGradients(model2Params);
+            vector<ParameterAndGradient> modelParams; model->ParametersAndGradients(modelParams);
+            vector<ParameterAndGradient> model2Params; model2->ParametersAndGradients(model2Params);
 
             for (auto i = 0; i < modelParams.size(); ++i)
-                Assert::IsTrue(modelParams[i].Parameters->Equals(*model2Params[i].Parameters));
+                Assert::IsTrue(modelParams[i].param->Equals(*model2Params[i].param));
         }
 
         void TestDenseLayer(int inputsNum, int outputsNum, int samples, int batchSize, int epochs)
@@ -80,11 +80,11 @@ namespace NeuroTests
             model->Optimize(new SGD(0.07f), new MeanSquareError());
             model->Fit(inputs, outputs, batchSize, epochs, nullptr, nullptr, 0, ETrack::Nothing);
 
-            vector<ParametersAndGradients> paramsAndGrads;
-            model->LastLayer()->GetParametersAndGradients(paramsAndGrads);
+            vector<ParameterAndGradient> paramsAndGrads;
+            model->LastLayer()->ParametersAndGradients(paramsAndGrads);
 
             for (uint32_t i = 0; i < expectedWeights.Length(); ++i)
-                Assert::AreEqual((double)paramsAndGrads[0].Parameters->GetFlat(i), (double)expectedWeights.GetFlat(i), 1e-2);
+                Assert::AreEqual((double)paramsAndGrads[0].param->GetFlat(i), (double)expectedWeights.GetFlat(i), 1e-2);
         }
 
         void TestDenseNetwork(int inputsNum, int samples, int batchSize, int epochs)

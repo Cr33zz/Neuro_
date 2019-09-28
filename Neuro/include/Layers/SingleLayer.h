@@ -6,7 +6,7 @@
 
 #include "Layers/LayerBase.h"
 #include "Tensors/Shape.h"
-#include "ParametersAndGradients.h"
+#include "ParameterAndGradient.h"
 #include "Stopwatch.h"
 
 namespace Neuro
