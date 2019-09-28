@@ -197,44 +197,35 @@ namespace Neuro
         vector<SerializedParameter> params;
         vector<string> paramNames;
 
+        {
+            Attribute att(file.createAttribute("nb_layers", PredType::NATIVE_INT64, DataSpace(H5S_SCALAR)));
+            int64_t layersNum = (int64_t)Layers().size();
+            att.write(PredType::NATIVE_INT64, &layersNum);
+        }
+
+        int layerIdx = 0;
         for (auto layer : Layers())
         {
-            Group g(file.createGroup(layer->Name()));
-            Group gData(g.createGroup(layer->Name()));
+            Group g(file.createGroup("layer" + to_string(layerIdx++)));
 
             params.clear();
             paramNames.clear();
             layer->SerializedParameters(params);
+
+            Attribute att(g.createAttribute("nb_params", PredType::NATIVE_INT64, DataSpace(H5S_SCALAR)));
+            int64_t paramsNum = (int64_t)params.size();
+            att.write(PredType::NATIVE_INT64, &paramsNum);
             
             for (auto i = 0; i < params.size(); ++i)
             {
-                auto& w = *params[i].param;
-                string name = w.Name();
-                if (name.empty())
-                    name = "param_" + to_string(i);
-
-                paramNames.push_back(name);
-            }
-
-            for (auto i = 0; i < params.size(); ++i)
-            {
                 auto w = params[i].param;
-
-                if (!params[i].transAxes.empty())
-                {
-                    w->Transpose(params[i].transAxes, tranposedParam);
-                    tranposedParam.Name(w->Name());
-                    w = &tranposedParam;
-                }
-
                 auto& wShape = w->GetShape();
                 
-                //save dims keras-style so weights can be imported to keras
-                vector<hsize_t> kerasDims;
-                for (int i = wShape.NDim - 1; i >= 0; --i)
-                    kerasDims.push_back(wShape.Dimensions[i]);
+                vector<hsize_t> dims;
+                for (int i = 0; i < wShape.NDim; ++i)
+                    dims.push_back(wShape.Dimensions[i]);
 
-                DataSet dataset(g.createDataSet(paramNames[i], PredType::NATIVE_FLOAT, DataSpace(wShape.NDim, &kerasDims[0])));
+                DataSet dataset(g.createDataSet("param_" + to_string(i), PredType::NATIVE_FLOAT, DataSpace(wShape.NDim, &dims[0])));
                 dataset.write(&w->GetValues()[0], PredType::NATIVE_FLOAT);
             }
         }
@@ -293,18 +284,23 @@ namespace Neuro
             }
         }
 
+        Group* datasetsGroup = nullptr;
+
         for (size_t l = 0; l < layers.size(); ++l)
         {
             auto layer = layers[l];
 
             Group g(file.openGroup(file.getObjnameByIdx(layersOrder[l])));
-            Group gData(g.openGroup(g.getObjnameByIdx(0)));
+            datasetsGroup = &g;
+
+            if (is_keras)
+                datasetsGroup = new Group(g.openGroup(g.getObjnameByIdx(0)));
 
             params.clear();
             layer->SerializedParameters(params);
 
             hsize_t layerDatasetsNum;
-            H5Gget_num_objs(gData.getId(), &layerDatasetsNum);
+            H5Gget_num_objs(datasetsGroup->getId(), &layerDatasetsNum);
 
             // make sure number of parameters tensors match
             assert((size_t)layerDatasetsNum == params.size());
@@ -318,7 +314,7 @@ namespace Neuro
                 // build name to idx mapping
                 map<string, hsize_t> weightNameToIdx;
                 for (hsize_t i = 0; i < layerDatasetsNum; ++i)
-                    weightNameToIdx[gData.getObjnameByIdx(i)] = i;
+                    weightNameToIdx[datasetsGroup->getObjnameByIdx(i)] = i;
 
                 Attribute att(g.openAttribute("weight_names"));
                 hsize_t weightsNamesNum = 0;
@@ -340,7 +336,7 @@ namespace Neuro
             {
                 auto w = params[i].param;
 
-                DataSet dataset(gData.openDataSet(gData.getObjnameByIdx(weightsOrder[i])));
+                DataSet dataset(datasetsGroup->openDataSet(datasetsGroup->getObjnameByIdx(weightsOrder[i])));
 
                 hsize_t weightNDims = dataset.getSpace().getSimpleExtentNdims();
                 hsize_t weightDims[5];
@@ -348,7 +344,7 @@ namespace Neuro
 
                 assert(w->GetShape().Length == dataset.getSpace().getSimpleExtentNpoints());
 
-                if (!params[i].transAxes.empty())
+                if (is_keras && !params[i].transAxesKeras.empty())
                 {
                     vector<int> dims(weightNDims);
                     for (size_t n = 0; n < dims.size(); ++n)
@@ -366,12 +362,15 @@ namespace Neuro
 
                 dataset.read(&w->GetValues()[0], PredType::NATIVE_FLOAT);
 
-                if (!params[i].transAxes.empty())
+                if (is_keras && !params[i].transAxesKeras.empty())
                 {
-                    *params[i].param = w->Transposed(params[i].transAxes);
+                    *params[i].param = w->Transposed(params[i].transAxesKeras);
                     params[i].param->Name(kerasParam.Name());
                 }
             }
+
+            if (is_keras)
+                delete datasetsGroup;
         }
 
         /*ifstream stream(filename, ios::in | ios::binary);
