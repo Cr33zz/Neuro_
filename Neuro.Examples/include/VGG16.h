@@ -22,6 +22,20 @@ public:
         
         Tensor::SetForcedOpMode(GPU);
 
+        auto model = CreateModel();
+
+        cout << model->Summary();
+
+        model->LoadWeights("data/vgg16_weights_tf_dim_ordering_tf_kernels.h5");
+
+        auto prediction = model->Predict(image)[0];
+
+        cout << prediction->ArgMax(WidthAxis)(0) << " " << prediction->Max(WidthAxis)(0) * 100 << "%" <<  endl;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    static ModelBase* CreateModel()
+    {
         auto model = new Sequential("vgg16");
         model->AddLayer(new Conv2D(Shape(3, 224, 224), 64, 3, 1, 1, new ReLU(), NHWC, "block1_conv1"));
         model->AddLayer(new Conv2D(64, 3, 1, 1, new ReLU(), NHWC, "block1_conv2"));
@@ -45,13 +59,6 @@ public:
         model->AddLayer(new Dense(4096, new ReLU(), "fc1"));
         model->AddLayer(new Dense(4096, new ReLU(), "fc2"));
         model->AddLayer(new Dense(1000, new Softmax(), "predictions"));
-
-        cout << model->Summary();
-
-        model->LoadWeights("data/vgg16_weights_tf_dim_ordering_tf_kernels.h5");
-
-        auto prediction = model->Predict(image)[0];
-
-        cout << prediction->ArgMax(WidthAxis)(0) << " " << prediction->Max(WidthAxis)(0) * 100 << "%" <<  endl;
+        return model;
     }
 };
