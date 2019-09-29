@@ -468,6 +468,47 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    Tensor LoadImage(const string& filename, uint32_t targetSizeX, uint32_t targetSizeY)
+    {
+        ImageLibInit();
+
+        auto format = FreeImage_GetFileType(filename.c_str());
+        assert(format != FIF_UNKNOWN);
+
+        FIBITMAP* image = FreeImage_Load(format, filename.c_str());
+        assert(image);
+
+        const uint32_t WIDTH = targetSizeX > 0 ? targetSizeX : FreeImage_GetWidth(image);
+        const uint32_t HEIGHT = targetSizeY > 0 ? targetSizeY : FreeImage_GetHeight(image);
+
+        if (targetSizeX > 0 || targetSizeY > 0)
+        {
+            auto resizedImage = FreeImage_Rescale(image, WIDTH, HEIGHT, FILTER_BILINEAR);
+            FreeImage_Unload(image);
+            image = resizedImage;
+        }
+
+        Tensor result(Shape(3, WIDTH, HEIGHT));
+        auto& values = result.GetValues();
+
+        RGBQUAD color;
+
+        uint32_t idx = 0;
+        for (uint32_t h = 0; h < HEIGHT; ++h)
+        for (uint32_t w = 0; w < WIDTH; ++w)
+        {
+            FreeImage_GetPixelColor(image, (unsigned int)w, HEIGHT - (unsigned int)h - 1, &color);
+            values[idx++] = (float)color.rgbRed;
+            values[idx++] = (float)color.rgbGreen;
+            values[idx++] = (float)color.rgbBlue;
+        }
+
+        FreeImage_Unload(image);
+
+        return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void ImageLibInit()
     {
         if (!g_ImageLibInitialized)
