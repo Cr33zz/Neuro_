@@ -120,6 +120,12 @@
   <ItemGroup>
     <ClInclude Include="include\Activations.h" />
     <ClInclude Include="include\ChartGenerator.h" />
+    <ClInclude Include="include\CompGraph\Graph.h" />
+    <ClInclude Include="include\CompGraph\NodeBase.h" />
+    <ClInclude Include="include\CompGraph\Operation.h" />
+    <ClInclude Include="include\CompGraph\Placeholder.h" />
+    <ClInclude Include="include\CompGraph\Session.h" />
+    <ClInclude Include="include\CompGraph\Variable.h" />
     <ClInclude Include="include\Initializers\Constant.h" />
     <ClInclude Include="include\Initializers\GlorotNormal.h" />
     <ClInclude Include="include\Initializers\GlorotUniform.h" />
@@ -175,6 +181,13 @@
   <ItemGroup>
     <ClCompile Include="src\Activations.cpp" />
     <ClCompile Include="src\ChartGenerator.cpp" />
+    <ClCompile Include="src\CompGraph\Graph.cpp" />
+    <ClCompile Include="src\CompGraph\NodeBase.cpp" />
+    <ClCompile Include="src\CompGraph\Operation.cpp" />
+    <ClCompile Include="src\CompGraph\Operations\Add.cpp" />
+    <ClCompile Include="src\CompGraph\Placeholder.cpp" />
+    <ClCompile Include="src\CompGraph\Session.cpp" />
+    <ClCompile Include="src\CompGraph\Variable.cpp" />
     <ClCompile Include="src\Initializers\Constant.cpp" />
     <ClCompile Include="src\Initializers\Normal.cpp" />
     <ClCompile Include="src\Initializers\Uniform.cpp" />

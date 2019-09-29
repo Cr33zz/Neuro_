@@ -43,6 +43,18 @@
     <Filter Include="src\Tensors\Cuda">
       <UniqueIdentifier>{104429cd-8ac6-4d21-ac3f-b884a2a3d5e3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\CompGraph">
+      <UniqueIdentifier>{a3ae9ac2-6e47-45a0-8786-1955ab163e2f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\CompGraph\Operations">
+      <UniqueIdentifier>{7faac6a2-55b1-4193-83ef-2c2e7f964cce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\CompGraph">
+      <UniqueIdentifier>{a4dd455b-8b0c-42c7-aa24-dbff3b64c678}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\CompGraph\Operations">
+      <UniqueIdentifier>{0b259d88-35c1-4981-a62a-89374c6ef78f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Tensors\Shape.h">
@@ -204,6 +216,24 @@
     <ClInclude Include="include\ParameterAndGradient.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\CompGraph\NodeBase.h">
+      <Filter>include\CompGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CompGraph\Placeholder.h">
+      <Filter>include\CompGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CompGraph\Variable.h">
+      <Filter>include\CompGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CompGraph\Graph.h">
+      <Filter>include\CompGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CompGraph\Operation.h">
+      <Filter>include\CompGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CompGraph\Session.h">
+      <Filter>include\CompGraph</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -328,6 +358,27 @@
     </ClCompile>
     <ClCompile Include="src\Initializers\VarianceScaling.cpp">
       <Filter>src\Initializers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CompGraph\Graph.cpp">
+      <Filter>src\CompGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CompGraph\NodeBase.cpp">
+      <Filter>src\CompGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CompGraph\Operation.cpp">
+      <Filter>src\CompGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CompGraph\Placeholder.cpp">
+      <Filter>src\CompGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CompGraph\Session.cpp">
+      <Filter>src\CompGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CompGraph\Variable.cpp">
+      <Filter>src\CompGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CompGraph\Operations\Add.cpp">
+      <Filter>src\CompGraph\Operations</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
