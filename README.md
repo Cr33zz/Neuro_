@@ -31,7 +31,9 @@ model.Fit(input, input, 256, 20, nullptr, nullptr, 2, TrainError);
 
 cout << model.TrainSummary();
 ```
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/deep_conv_autoencoder.jpg)
+Below are original and decoded sample digits.  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/original_conv.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/decoded_conv.jpg)
 #### Deep Convolutional Generative Adversarial Network (DCGAN)
 DCGAN is trying to learn to generate data samples similar to the ones it was trained on. It is comprised of 2 connected neural networks (generator and discriminator). Generator is trying to learn to generate realistic data from random noise while discriminator is learning to distinquish real from fake data.
 ```cpp
@@ -94,14 +96,14 @@ for (uint32_t e = 1; e <= EPOCHS; ++e)
     }
 }
 ```
-Below you can see some randomly generated images after 100 epochs.  
+Below are randomly generated images after 100 epochs.  
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/cifar_dc_gan_after_100_epochs.jpg "DCGAN after 100 epochs")
 ## Neuro.Examples training data
 Training data required to run examples can be downloaded via this link
 https://www.dropbox.com/s/kti8255njbx7wqy/neuro_examples_data.zip  
 Among others it contains MNIST, CIFAR-10 data sets.
 ## Prerequisites
-Currently CUDA is required to compile the library. For GPU computation CUDA 10.1 and CudNN 7.6.1.34 are required. Both can be downloaded from NVidia website:  
+Currently CUDA is required to compile the library. For GPU computation CUDA 10.1 and CudNN 7.6.4 are required. Both can be downloaded from NVidia website:  
 https://developer.nvidia.com/cuda-downloads  
 https://developer.nvidia.com/cudnn  
 Also please make sure your graphics card drivers are up to date.
