@@ -85,7 +85,7 @@ namespace NeuroTests
             Tensor beta(gamma.GetShape());
             beta.FillWithRand();
 
-            EAxis axis = depth == 1 ? BatchAxis : WHBAxis;
+            EAxis axis = depth == 1 ? BatchAxis : _013Axes;
 
             Tensor runningMean = input.Mean(axis);
             Tensor runningVar = input.Sub(runningMean).Map([](float x) { return x * x; }).Mean(axis);

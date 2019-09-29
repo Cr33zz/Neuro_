@@ -49,6 +49,8 @@ namespace Neuro
         uint32_t Height() const { return Dimensions[1]; }
         uint32_t Depth() const { return Dimensions[2]; }
         uint32_t Batch() const { return Dimensions[3]; }
+        uint32_t Len(size_t dim) const { return Dimensions[dim]; }
+        uint32_t Str(size_t dim) const { return Stride[dim]; }
 
         uint32_t Dimensions[4];
         uint32_t Stride[4];

@@ -60,6 +60,12 @@ namespace Neuro
         L2,
     };
 
+    enum EDataFormat
+    {
+        NCHW,
+        NHWC,
+    };
+
     enum EAxis
     {
         GlobalAxis = -1, // reduces width, height, depth and batch dimensions to size 1, equivalent to axis None
@@ -67,8 +73,9 @@ namespace Neuro
         HeightAxis = 1, // reduces height dimension to size 1, equivalent to axis(1)
         DepthAxis = 2, // reduces depth dimension to size 1, equivalent to axis(2)
         BatchAxis = 3, // reduces batch dimension to size 1, equivalent to axis(3)
-        WHDAxis, // reduces width, height and depth dimensions to size 1, equivalent to axis (0, 1, 2)
-        WHBAxis, // reduces width, height and batch dimensions to size 1, equivalent to axis (0, 1, 3)
+        _012Axes, // reduces width, height and depth dimensions to size 1, equivalent to axis (0, 1, 2)
+        _013Axes, // reduces width, height and batch dimensions to size 1, equivalent to axis (0, 1, 3)
+        _123Axes, // reduces height depth and batch dimensions to size 1, equivalent to axis (1, 2, 3)
     };
 
     enum ETrack

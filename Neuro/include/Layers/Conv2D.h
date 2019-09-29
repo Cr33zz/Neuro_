@@ -9,11 +9,11 @@ namespace Neuro
     class Conv2D : public SingleLayer
     {
 	public:
-        Conv2D(LayerBase* inputLayer, uint32_t filtersNum, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, const string& name = "");
+        Conv2D(LayerBase* inputLayer, uint32_t filtersNum, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, EDataFormat dataFormat = NCHW, const string& name = "");
         // Make sure to link this layer to input when using this constructor.
-        Conv2D(uint32_t filtersNum, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, const string& name = "");
+        Conv2D(uint32_t filtersNum, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, EDataFormat dataFormat = NCHW, const string& name = "");
         // This constructor should only be used for input layer
-        Conv2D(const Shape& inputShape, uint32_t filtersNum, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, const string& name = "");
+        Conv2D(const Shape& inputShape, uint32_t filtersNum, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, EDataFormat dataFormat = NCHW, const string& name = "");
 		~Conv2D();
 
 		virtual void CopyParametersTo(LayerBase& target, float tau) const override;
@@ -38,24 +38,11 @@ namespace Neuro
         virtual void FeedForwardInternal(bool training) override;
 		virtual void BackPropInternal(const tensor_ptr_vec_t& outputsGradient) override;
 
-        /*internal override void SerializeParameters(XmlElement elem)
-        {
-            base.SerializeParameters(elem);
-            Kernels.Serialize(elem, "Kernels");
-            Bias.Serialize(elem, "Bias");
-        }
-
-        internal override void DeserializeParameters(XmlElement elem)
-        {
-            base.DeserializeParameters(elem);
-            Kernels.Deserialize(elem["Kernels"]);
-            Bias.Deserialize(elem["Bias"]);
-        }*/
-
 	private:
         Tensor m_Kernels;
         Tensor m_Bias;
         bool m_UseBias = true;
+        EDataFormat m_DataFormat = NCHW;
 
         Tensor m_KernelsGradient;
         Tensor m_BiasGradient;

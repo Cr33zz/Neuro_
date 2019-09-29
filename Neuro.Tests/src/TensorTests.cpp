@@ -248,7 +248,7 @@ namespace NeuroTests
             Tensor t2 = Tensor(Shape(3, 3, 2));
             t2.FillWithRange(0);
 
-            Tensor r = t1.Conv2D(t2, 1, 0);
+            Tensor r = t1.Conv2D(t2, 1, 0, NCHW);
             Tensor correct = Tensor({ 5511, 5664, 5817, 5970, 6429, 6582, 6735, 6888, 7347, 7500, 7653, 7806, 8265, 8418, 8571, 8724 }, Shape(4, 4, 1));
 
             Assert::IsTrue(r.Equals(correct));
@@ -263,7 +263,7 @@ namespace NeuroTests
             Tensor t2 = Tensor(Shape(3, 3, 2, 3));
             t2.FillWithRange(0);
 
-            Tensor r = t1.Conv2D(t2, 1, 0);
+            Tensor r = t1.Conv2D(t2, 1, 0, NCHW);
             Tensor correct = Tensor({ 5511, 5664, 5817, 5970, 6429, 6582, 6735, 6888, 7347, 7500, 7653, 7806, 8265, 8418, 8571, 8724, 13611, 14088, 14565, 15042, 16473, 16950, 17427, 17904, 19335, 19812, 20289, 20766, 22197, 22674, 23151, 23628, 21711, 22512, 23313, 24114, 26517, 27318, 28119, 28920, 31323, 32124, 32925, 33726, 36129, 36930, 37731, 38532 }, Shape(4, 4, 3));
 
             Assert::IsTrue(r.Equals(correct));
@@ -278,7 +278,7 @@ namespace NeuroTests
             Tensor t2 = Tensor(Shape(3, 3, 2, 2));
             t2.FillWithRange(0);
 
-            Tensor r = t1.Conv2D(t2, 1, Tensor::GetPadding(EPaddingMode::Valid, 3));
+            Tensor r = t1.Conv2D(t2, 1, Tensor::GetPadding(Valid, 3), NCHW);
             Tensor correct = Tensor({ 5511, 5664, 5817, 5970, 6429, 6582, 6735, 6888, 7347, 7500, 7653, 7806, 8265, 8418, 8571, 8724, 13611, 14088, 14565, 15042, 16473, 16950, 17427, 17904, 19335, 19812, 20289, 20766, 22197, 22674, 23151, 23628, 16527, 16680, 16833, 16986, 17445, 17598, 17751, 17904, 18363, 18516, 18669, 18822, 19281, 19434, 19587, 19740, 47955, 48432, 48909, 49386, 50817, 51294, 51771, 52248, 53679, 54156, 54633, 55110, 56541, 57018, 57495, 57972 }, Shape(4, 4, 2, 2));
 
             Assert::IsTrue(r.Equals(correct));
@@ -293,7 +293,7 @@ namespace NeuroTests
             Tensor t2 = Tensor(Shape(3, 3, 2));
             t2.FillWithRange(0);
 
-            Tensor r = t1.Conv2D(t2, 1, Tensor::GetPadding(EPaddingMode::Same, 3));
+            Tensor r = t1.Conv2D(t2, 1, Tensor::GetPadding(Same, 3), NCHW);
             Tensor correct = Tensor({ 2492, 3674, 3794, 3914, 4034, 2624, 3765, 5511, 5664, 5817, 5970, 3855, 4413, 6429, 6582, 6735, 6888, 4431, 5061, 7347, 7500, 7653, 7806, 5007, 5709, 8265, 8418, 8571, 8724, 5583, 3416, 4898, 4982, 5066, 5150, 3260 }, Shape(6, 6, 1));
 
             Assert::IsTrue(r.Equals(correct));
@@ -308,7 +308,7 @@ namespace NeuroTests
             Tensor t2 = Tensor(Shape(3, 3, 2));
             t2.FillWithRange(0);
 
-            Tensor r = t1.Conv2D(t2, 1, Tensor::GetPadding(EPaddingMode::Full, 3));
+            Tensor r = t1.Conv2D(t2, 1, Tensor::GetPadding(Full, 3), NCHW);
             Tensor correct = Tensor({ 612, 1213, 1801, 1870, 1939, 2008, 1315, 645, 1266, 2492, 3674, 3794, 3914, 4034, 2624, 1278, 1926, 3765, 5511, 5664, 5817, 5970, 3855, 1863, 2268, 4413, 6429, 6582, 6735, 6888, 4431, 2133, 2610, 5061, 7347, 7500, 7653, 7806, 5007, 2403, 2952, 5709, 8265, 8418, 8571, 8724, 5583, 2673, 1782, 3416, 4898, 4982, 5066, 5150, 3260, 1542, 786, 1489, 2107, 2140, 2173, 2206, 1375, 639 }, Shape(8, 8, 1));
 
             Assert::IsTrue(r.Equals(correct));
@@ -426,7 +426,7 @@ namespace NeuroTests
                 Assert::AreEqual((double)result.GetFlat(i), (double)-t.GetFlat(i), 1e-7);
         }
 
-        /*TEST_METHOD(Normalized_WHDAxis_L1)
+        /*TEST_METHOD(Normalized_012Axes_L1)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
@@ -434,7 +434,7 @@ namespace NeuroTests
                                 6, -1,  3,  4,
                                 2,  1, 16,  5 }, Shape(2, 2, 1, 3));
 
-            auto result = t.Normalized(WHDAxis, ENormMode::L1);
+            auto result = t.Normalized(_012Axes, ENormMode::L1);
             Tensor correct({ -0.64516129f,  0.03225806f,  0.16129032f,  0.16129032f,
                               0.42857143f, -0.07142857f,  0.21428571f,  0.28571429f,
                               0.08333333f,  0.04166667f,  0.66666667f,  0.20833333f }, t.GetShape());
@@ -443,7 +443,7 @@ namespace NeuroTests
                 Assert::AreEqual((double)correct.GetFlat(i), (double)result.GetFlat(i), 0.0001);
         }
 
-        TEST_METHOD(Normalized_WHDAxis_L2)
+        TEST_METHOD(Normalized_012Axes_L2)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
@@ -451,7 +451,7 @@ namespace NeuroTests
                                 6, -1,  3,  4,
                                 2,  1, 16,  5 }, Shape(2, 2, 1, 3));
 
-            auto result = t.Normalized(WHDAxis, ENormMode::L2);
+            auto result = t.Normalized(_012Axes, ENormMode::L2);
             Tensor correct({ -0.9417f, 0.0470f, 0.2354f, 0.2354f,
                               0.7620f, -0.1270f,  0.3810f, 0.5080f,
                               0.1182f, 0.0591f,  0.9460f,  0.2956f }, t.GetShape());
@@ -528,7 +528,7 @@ namespace NeuroTests
                 Assert::AreEqual((double)correct.GetFlat(i), (double)result.GetFlat(i), 0.0001);
         }
 
-        /*TEST_METHOD(NormalizedMinMax_WHDAxis)
+        /*TEST_METHOD(NormalizedMinMax_012Axes)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
@@ -536,7 +536,7 @@ namespace NeuroTests
                                 6, -1,  3,  4,
                                 2,  1, 16,  5 }, Shape(2, 2, 1, 3));
 
-            auto result = t.NormalizedMinMax(WHDAxis);
+            auto result = t.NormalizedMinMax(_012Axes);
             Tensor correct({ 0, 0.84f, 1, 1,
                              1, 0, 0.5714f, 0.7142f,
                              0.0666f, 0, 1, 0.2666f }, t.GetShape());
@@ -592,15 +592,31 @@ namespace NeuroTests
                 Assert::AreEqual((double)correct.GetFlat(i), (double)result.GetFlat(i), 0.0001);
         }
 
-        TEST_METHOD(Sum_WHDAxis)
+        TEST_METHOD(Sum_012Axes)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
             auto t = Tensor({ -20,  1,  5,  5,
                                 6, -1,  3,  4 }, Shape(2, 2, 1, 2));
             
-            auto result = t.Sum(WHDAxis);
+            auto result = t.Sum(_012Axes);
             Tensor correct({ -9, 12 }, Shape(1, 1, 1, 2));
+
+            for (uint32_t i = 0; i < result.GetShape().Length; ++i)
+                Assert::AreEqual((double)correct.GetFlat(i), (double)result.GetFlat(i), 0.0001);
+        }
+
+        TEST_METHOD(Sum_123Axes)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4,
+                                2,  1, 16,  5,
+                                3,  1, 10, 11 }, Shape(2, 2, 2, 2));
+
+            Tensor result = t.Sum(_123Axes);
+            Tensor correct({ 25, 27 }, Shape(2));
 
             for (uint32_t i = 0; i < result.GetShape().Length; ++i)
                 Assert::AreEqual((double)correct.GetFlat(i), (double)result.GetFlat(i), 0.0001);
@@ -666,7 +682,7 @@ namespace NeuroTests
                 Assert::AreEqual((double)correct.GetFlat(i), (double)result.GetFlat(i), 0.0001);
         }
 
-        TEST_METHOD(Sum_WHBAxis)
+        TEST_METHOD(Sum_013Axes)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
@@ -675,21 +691,21 @@ namespace NeuroTests
                                 3, -2,  8, 10,
                                 6, -1,  3,  4 }, Shape(2, 2, 2, 2));
 
-            auto result = t.Sum(WHBAxis);
+            auto result = t.Sum(_013Axes);
             Tensor correct({ 10, 11 }, Shape(1, 1, 2, 1));
 
             for (uint32_t i = 0; i < result.GetShape().Length; ++i)
                 Assert::AreEqual((double)correct.GetFlat(i), (double)result.GetFlat(i), 0.0001);
         }
 
-        TEST_METHOD(Avg_WHDAxis)
+        TEST_METHOD(Avg_012Axes)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
             auto t = Tensor({ -20,  1,  5,  5,
                                 6, -1,  3,  4 }, Shape(2, 2, 1, 2));
 
-            auto result = t.Mean(WHDAxis);
+            auto result = t.Mean(_012Axes);
             Tensor correct({ -2.25f, 3 }, Shape(2));
 
             for (uint32_t i = 0; i < result.GetShape().Length; ++i)
@@ -773,7 +789,7 @@ namespace NeuroTests
             Assert::IsTrue(result.Equals(correct));
         }
 
-        TEST_METHOD(Max_WHDAxis)
+        TEST_METHOD(Max_012Axes)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
@@ -782,8 +798,23 @@ namespace NeuroTests
                                 2,  1, 16,  5,
                                 3,  1, 10, 11 }, Shape(2, 2, 1, 4));
 
-            Tensor result = t.Max(WHDAxis);
+            Tensor result = t.Max(_012Axes);
             Tensor correct({ 5, 6, 16, 11 }, Shape(4));
+
+            Assert::IsTrue(result.Equals(correct));
+        }
+
+        TEST_METHOD(Max_123Axes)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4,
+                                2,  1, 16,  5,
+                                3,  1, 10, 11 }, Shape(2, 2, 2, 2));
+
+            Tensor result = t.Max(_123Axes);
+            Tensor correct({ 16, 11 }, Shape(2));
 
             Assert::IsTrue(result.Equals(correct));
         }
@@ -818,7 +849,7 @@ namespace NeuroTests
             Assert::IsTrue(result.Equals(correct));
         }
 
-        TEST_METHOD(ArgMax_WHDAxis)
+        TEST_METHOD(ArgMax_012Axes)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
@@ -827,7 +858,7 @@ namespace NeuroTests
                                 2,  1, 16,  5,
                                 3,  1, 10, 11 }, Shape(2, 2, 1, 4));
 
-            Tensor result = t.ArgMax(WHDAxis);
+            Tensor result = t.ArgMax(_012Axes);
             Tensor correct({ 2, 0, 2, 3 }, Shape(1, 1, 1, 4));
 
             Assert::IsTrue(result.Equals(correct));
@@ -863,7 +894,7 @@ namespace NeuroTests
             Assert::IsTrue(result.Equals(correct));
         }
 
-        TEST_METHOD(Min_WHDAxis)
+        TEST_METHOD(Min_012Axes)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
@@ -872,8 +903,23 @@ namespace NeuroTests
                                 2,  1, 16,  5,
                                 3,  1, 10, 11 }, Shape(2, 2, 1, 4));
 
-            Tensor result = t.Min(WHDAxis);
+            Tensor result = t.Min(_012Axes);
             Tensor correct({ -20, -1, 1, 1 }, Shape(4));
+
+            Assert::IsTrue(result.Equals(correct));
+        }
+
+        TEST_METHOD(Min_123Axes)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t = Tensor({ -20,  1,  5,  5,
+                                6, -1,  3,  4,
+                                2,  1, 16,  5,
+                                3,  1, 10, 11 }, Shape(2, 2, 2, 2));
+
+            Tensor result = t.Min(_123Axes);
+            Tensor correct({ -20, -1 }, Shape(2));
 
             Assert::IsTrue(result.Equals(correct));
         }
@@ -908,7 +954,7 @@ namespace NeuroTests
             Assert::IsTrue(result.Equals(correct));
         }
 
-        TEST_METHOD(ArgMin_WHDAxis)
+        TEST_METHOD(ArgMin_012Axes)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
@@ -917,7 +963,7 @@ namespace NeuroTests
                                 2,  1, 16,  5,
                                 3,  1, 10, 11 }, Shape(2, 2, 1, 4));
 
-            Tensor result = t.ArgMin(WHDAxis);
+            Tensor result = t.ArgMin(_012Axes);
             Tensor correct({ 0, 1, 1, 1 }, Shape(4));
 
             Assert::IsTrue(result.Equals(correct));
@@ -1047,7 +1093,7 @@ namespace NeuroTests
 
             auto result = Tensor(Shape(1, outputLen, 1, 2));
 
-            Tensor::Concat(WHDAxis, inputs, result);
+            Tensor::Concat(_012Axes, inputs, result);
 
             auto correct = Tensor({0,1,2,3,8,9,10,11,4,5,6,7,12,13,14,15}, result.GetShape());
 
@@ -1070,7 +1116,7 @@ namespace NeuroTests
 
             auto concated = Tensor({ 0, 1, 2, 3, 8, 9, 10, 11, 4, 5, 6, 7, 12, 13, 14, 15 }, Shape(1, outputLen, 1, 2));
 
-            concated.Split(WHDAxis, inputs);
+            concated.Split(_012Axes, inputs);
 
             auto correct1 = Tensor(Shape(2, 2, 1, 2)); correct1.FillWithRange();
             auto correct2 = Tensor(Shape(2, 2, 1, 2)); correct2.FillWithRange(8);

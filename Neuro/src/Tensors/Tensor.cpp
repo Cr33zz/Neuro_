@@ -562,20 +562,22 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
     Tensor Tensor::Sum(EAxis axis) const
 	{
-        if (axis == EAxis::GlobalAxis)
+        if (axis == GlobalAxis)
             return SumTemplate<1, 1, 1, 1>(*this, axis);
-        if (axis == EAxis::WidthAxis)
+        if (axis == WidthAxis)
             return SumTemplate<1, 0, 0, 0>(*this, axis);
-        if (axis == EAxis::HeightAxis)
+        if (axis == HeightAxis)
             return SumTemplate<0, 1, 0, 0>(*this, axis);
-        if (axis == EAxis::DepthAxis)
+        if (axis == DepthAxis)
             return SumTemplate<0, 0, 1, 0>(*this, axis);
-        if (axis == EAxis::BatchAxis)
+        if (axis == BatchAxis)
             return SumTemplate<0, 0, 0, 1>(*this, axis);
-        if (axis == EAxis::WHDAxis)
+        if (axis == _012Axes)
             return SumTemplate<1, 1, 1, 0>(*this, axis);
-        if (axis == EAxis::WHBAxis)
+        if (axis == _013Axes)
             return SumTemplate<1, 1, 0, 1>(*this, axis);
+        if (axis == _123Axes)
+            return SumTemplate<0, 1, 1, 1>(*this, axis);
 
         assert(false);
         return Tensor();
@@ -599,20 +601,22 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     Tensor Tensor::Mean(EAxis axis) const
 	{
-        if (axis == EAxis::GlobalAxis)
+        if (axis == GlobalAxis)
             return MeanTemplate<1, 1, 1, 1>(*this, axis);
-        if (axis == EAxis::WidthAxis)
+        if (axis == WidthAxis)
             return MeanTemplate<1, 0, 0, 0>(*this, axis);
-        if (axis == EAxis::HeightAxis)
+        if (axis == HeightAxis)
             return MeanTemplate<0, 1, 0, 0>(*this, axis);
-        if (axis == EAxis::DepthAxis)
+        if (axis == DepthAxis)
             return MeanTemplate<0, 0, 1, 0>(*this, axis);
-        if (axis == EAxis::BatchAxis)
+        if (axis == BatchAxis)
             return MeanTemplate<0, 0, 0, 1>(*this, axis);
-        if (axis == EAxis::WHDAxis)
+        if (axis == _012Axes)
             return MeanTemplate<1, 1, 1, 0>(*this, axis);
-        if (axis == EAxis::WHBAxis)
+        if (axis == _013Axes)
             return MeanTemplate<1, 1, 0, 1>(*this, axis);
+        if (axis == _123Axes)
+            return MeanTemplate<0, 1, 1, 1>(*this, axis);
 
         assert(false);
         return Tensor();
@@ -623,20 +627,22 @@ namespace Neuro
     {
         Sum(axis, output);
 
-        if (axis == EAxis::GlobalAxis)
+        if (axis == GlobalAxis)
             output.Div((float)Length(), output);
-        if (axis == EAxis::WidthAxis)
+        if (axis == WidthAxis)
             output.Div((float)Width(), output);
-        if (axis == EAxis::HeightAxis)
+        if (axis == HeightAxis)
             output.Div((float)Height(), output);
-        if (axis == EAxis::DepthAxis)
+        if (axis == DepthAxis)
             output.Div((float)Depth(), output);
-        if (axis == EAxis::BatchAxis)
+        if (axis == BatchAxis)
             output.Div((float)Batch(), output);
-        if (axis == EAxis::WHDAxis)
-            output.Div((float)(Width() * Height() * Depth()), output);
-        if (axis == EAxis::WHBAxis)
-            output.Div((float)(Width() * Height() * Batch()), output);
+        if (axis == _012Axes)
+            output.Div((float)(Len(0)*Len(1)*Len(2)), output);
+        if (axis == _013Axes)
+            output.Div((float)(Len(0)*Len(1)*Len(3)), output);
+        if (axis == _123Axes)
+            output.Div((float)(Len(1)*Len(2)*Len(3)), output);
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -691,7 +697,7 @@ namespace Neuro
         result.OverrideHost();
 
         // append tensors CHW separately per batch
-        if (axis == EAxis::WHDAxis)
+        if (axis == _012Axes)
         {
             for (uint32_t b = 0; b < result.Batch(); ++b)
             {
@@ -705,7 +711,7 @@ namespace Neuro
             }
         }
         // append whole tensors one after another
-        else if (axis == EAxis::GlobalAxis)
+        else if (axis == GlobalAxis)
         {
             // all tensors CHW should match!
             uint32_t elementsCopied = 0;
@@ -716,7 +722,7 @@ namespace Neuro
                 elementsCopied += inputs[i]->Length();
             }
         }
-        else //if (axis == EAxis::Batch)
+        else //if (axis == Batch)
             assert(false); // not supported yet
 	}
 
@@ -725,7 +731,7 @@ namespace Neuro
 	{
 		CopyToHost();
 
-        if (axis == EAxis::WHDAxis)
+        if (axis == _012Axes)
         {
             for (uint32_t b = 0; b < Batch(); ++b)
             {
@@ -828,7 +834,7 @@ namespace Neuro
 
         assert(result.GetShape() == GetShape());
             
-        /*if (axis == EAxis::Sample)
+        /*if (axis == Sample)
         {
             Tensor norm;
             
@@ -856,7 +862,7 @@ namespace Neuro
 
             return norm;
         }
-        else */if (axis == EAxis::BatchAxis)
+        else */if (axis == BatchAxis)
         {
             Tensor norm;
 
@@ -888,7 +894,7 @@ namespace Neuro
 
             return norm;
         }
-        else if (axis == EAxis::GlobalAxis)
+        else if (axis == GlobalAxis)
         {
             Tensor norm;
 
@@ -940,7 +946,7 @@ namespace Neuro
         Tensor min = savedMin ? *savedMin : Min(axis);
         Tensor max = savedMax ? *savedMax : Max(axis);
 
-        /*if (axis == EAxis::Sample)
+        /*if (axis == Sample)
         {
             assert(min.Width() == Batch());
             assert(max.Width() == Batch());
@@ -954,7 +960,7 @@ namespace Neuro
                     result.m_Values[idx] = rangeSpread * (m_Values[idx] - minVal) / spread + scaleMin;
             }
         }
-        else */if (axis == EAxis::BatchAxis)
+        else */if (axis == BatchAxis)
         {
             assert(SameDimensionsExceptBatches(min) && min.Batch() == 1);
             assert(SameDimensionsExceptBatches(max) && max.Batch() == 1);
@@ -970,7 +976,7 @@ namespace Neuro
                     result(w, h, d, n) = rangeSpread * (Get(w, h, d, n) - minVal) / spread + scaleMin;
             }
         }
-        else if (axis == EAxis::GlobalAxis)
+        else if (axis == GlobalAxis)
         {
             const float minVal = min(0);
             const float spread = max(0) - minVal;
@@ -998,7 +1004,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     pair<Tensor, Tensor> Tensor::Standardized(EAxis axis, Tensor& result, Tensor* mean, Tensor* invVariance) const
     {
-        if (axis == EAxis::BatchAxis)
+        if (axis == BatchAxis)
         {
             if (mean && invVariance)
             {
@@ -1008,9 +1014,9 @@ namespace Neuro
             }
 
             float n = (float)Batch();
-            Tensor xmean = Mean(EAxis::BatchAxis);
+            Tensor xmean = Mean(BatchAxis);
             Tensor xmu = Sub(xmean);
-            Tensor variance = xmu.Map([](float x) { return x * x; }).Sum(EAxis::BatchAxis).Mul(1.f / n);
+            Tensor variance = xmu.Map([](float x) { return x * x; }).Sum(BatchAxis).Mul(1.f / n);
             Tensor invVar = variance.Map([](float x) { return 1.f / x; });
             xmu.MulElem(invVar, result);
             return make_pair(xmean, invVar);
@@ -1034,20 +1040,22 @@ namespace Neuro
     Tensor Tensor::ArgMax(EAxis axis) const
 	{
         Tensor maxIndex(Shape(1));
-        if (axis == EAxis::GlobalAxis)
+        if (axis == GlobalAxis)
             maxIndex.Resize(Shape(1, 1, 1, 1));
-        else if (axis == EAxis::WidthAxis)
+        else if (axis == WidthAxis)
             maxIndex.Resize(Shape(1, Height(), Depth(), Batch()));
-        else if (axis == EAxis::HeightAxis)
+        else if (axis == HeightAxis)
             maxIndex.Resize(Shape(Width(), 1, Depth(), Batch()));
-        else if (axis == EAxis::DepthAxis)
+        else if (axis == DepthAxis)
             maxIndex.Resize(Shape(Width(), Height(), 1, Batch()));
-        else if (axis == EAxis::BatchAxis)
+        else if (axis == BatchAxis)
             maxIndex.Resize(Shape(Width(), Height(), Depth(), 1));
-        else if (axis == EAxis::WHDAxis)
-            maxIndex.Resize(Shape(1, 1, 1, Batch()));
-        else if (axis == EAxis::WHBAxis)
-            maxIndex.Resize(Shape(1, 1, Depth(), 1));
+        else if (axis == _012Axes)
+            maxIndex.Resize(Shape(1, 1, 1, Len(3)));
+        else if (axis == _013Axes)
+            maxIndex.Resize(Shape(1, 1, Len(2), 1));
+        else if (axis == _123Axes)
+            maxIndex.Resize(Shape(Len(0), 1, 1, 1));
             
 		Max(axis, &maxIndex);
 		return maxIndex;
@@ -1057,20 +1065,22 @@ namespace Neuro
     Tensor Tensor::ArgMin(EAxis axis) const
     {
         Tensor minIndex(Shape(1));
-        if (axis == EAxis::GlobalAxis)
+        if (axis == GlobalAxis)
             minIndex.Resize(Shape(1, 1, 1, 1));
-        else if (axis == EAxis::WidthAxis)
+        else if (axis == WidthAxis)
             minIndex.Resize(Shape(1, Height(), Depth(), Batch()));
-        else if (axis == EAxis::HeightAxis)
+        else if (axis == HeightAxis)
             minIndex.Resize(Shape(Width(), 1, Depth(), Batch()));
-        else if (axis == EAxis::DepthAxis)
+        else if (axis == DepthAxis)
             minIndex.Resize(Shape(Width(), Height(), 1, Batch()));
-        else if (axis == EAxis::BatchAxis)
+        else if (axis == BatchAxis)
             minIndex.Resize(Shape(Width(), Height(), Depth(), 1));
-        else if (axis == EAxis::WHDAxis)
-            minIndex.Resize(Shape(1, 1, 1, Batch()));
-        else if (axis == EAxis::WHBAxis)
-            minIndex.Resize(Shape(1, 1, Depth(), 1));
+        else if (axis == _012Axes)
+            minIndex.Resize(Shape(1, 1, 1, Len(3)));
+        else if (axis == _013Axes)
+            minIndex.Resize(Shape(1, 1, Len(2), 1));
+        else if (axis == _123Axes)
+            minIndex.Resize(Shape(Len(0), 1, 1, 1));
 
         Min(axis, &minIndex);
         return minIndex;
@@ -1189,61 +1199,61 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, Tensor& result) const
+    void Tensor::Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& result) const
 	{
-		assert(Depth() == kernels.Depth());
-		Op()->Conv2D(*this, kernels, stride, padding, padding, result);
+        assert((dataFormat == NCHW ? Depth() : Len(0)) == kernels.Depth());
+		Op()->Conv2D(*this, kernels, stride, padding, padding, dataFormat, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding) const
+    Tensor Tensor::Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat) const
 	{
-		Tensor result(GetConvOutputShape(GetShape(), kernels.Batch(), kernels.Width(), kernels.Height(), stride, padding, padding));
-		Conv2D(kernels, stride, padding, result);
+		Tensor result(GetConvOutputShape(GetShape(), kernels.Batch(), kernels.Width(), kernels.Height(), stride, padding, padding, dataFormat));
+		Conv2D(kernels, stride, padding, dataFormat, result);
 		return result;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Conv2DInputsGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t padding, Tensor& inputsGradient) const
+	void Tensor::Conv2DInputsGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& inputsGradient) const
 	{
 		inputsGradient.Zero();
-		Op()->Conv2DInputGradient(gradient, kernels, stride, padding, padding, inputsGradient);
+		Op()->Conv2DInputGradient(gradient, kernels, stride, padding, padding, dataFormat, inputsGradient);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, uint32_t stride, uint32_t padding, Tensor& kernelsGradient) const
+	void Tensor::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& kernelsGradient) const
 	{
 		kernelsGradient.Zero();
-		Op()->Conv2DKernelsGradient(input, gradient, stride, padding, padding, kernelsGradient);
+		Op()->Conv2DKernelsGradient(input, gradient, stride, padding, padding, dataFormat, kernelsGradient);
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::Conv2DTransposed(const Tensor& kernels, uint32_t stride, uint32_t padding, Tensor& result) const
+    void Tensor::Conv2DTransposed(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& result) const
     {
         assert(Depth() == kernels.Batch());
-        Conv2DInputsGradient(*this, kernels, stride, padding, result);
+        Conv2DInputsGradient(*this, kernels, stride, padding, dataFormat, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor Tensor::Conv2DTransposed(const Tensor& kernels, uint32_t outputDepth, uint32_t stride, uint32_t padding) const
+    Tensor Tensor::Conv2DTransposed(const Tensor& kernels, uint32_t outputDepth, uint32_t stride, uint32_t padding, EDataFormat dataFormat) const
     {
-        Tensor result(GetConvTransposeOutputShape(GetShape(), outputDepth, kernels.Width(), kernels.Height(), stride, padding, padding));
-        Conv2DTransposed(kernels, stride, padding, result);
+        Tensor result(GetConvTransposeOutputShape(GetShape(), outputDepth, kernels.Width(), kernels.Height(), stride, padding, padding, dataFormat));
+        Conv2DTransposed(kernels, stride, padding, dataFormat, result);
         return result;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::Conv2DTransposedInputsGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t padding, Tensor& inputsGradient) const
+    void Tensor::Conv2DTransposedInputsGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& inputsGradient) const
     {
         inputsGradient.Zero();
-        gradient.Conv2D(kernels, stride, padding, inputsGradient);
+        gradient.Conv2D(kernels, stride, padding, dataFormat, inputsGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::Conv2DTransposedKernelsGradient(const Tensor& input, const Tensor& gradient, uint32_t stride, uint32_t padding, Tensor& kernelsGradient) const
+    void Tensor::Conv2DTransposedKernelsGradient(const Tensor& input, const Tensor& gradient, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& kernelsGradient) const
     {
         kernelsGradient.Zero();
-        Op()->Conv2DKernelsGradient(gradient, input, stride, padding, padding, kernelsGradient);
+        Op()->Conv2DKernelsGradient(gradient, input, stride, padding, padding, dataFormat, kernelsGradient);
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -1256,7 +1266,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::Pool2D(uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t padding) const
 	{
-		Tensor result(GetConvOutputShape(GetShape(), GetShape().Depth(), filterSize, filterSize, stride, padding, padding));
+		Tensor result(GetConvOutputShape(GetShape(), GetShape().Depth(), filterSize, filterSize, stride, padding, padding, NCHW));
 		Pool2D(filterSize, stride, type, padding, result);
 
 		return result;
@@ -1334,13 +1344,13 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     pair<uint32_t, uint32_t> Tensor::GetPadding(EPaddingMode paddingMode, uint32_t kernelWidth, uint32_t kernelHeight)
     {
-        if (paddingMode == EPaddingMode::Valid)
+        if (paddingMode == Valid)
             return make_pair(0, 0);
 
-        if (paddingMode == EPaddingMode::Same)
+        if (paddingMode == Same)
             return make_pair((int)floor((float)kernelWidth / 2), (int)floor((float)kernelHeight / 2));
 
-        if (paddingMode == EPaddingMode::Full)
+        if (paddingMode == Full)
             return make_pair(kernelWidth - 1, kernelHeight - 1);
 
         assert(false && "Unsupported padding mode!");
@@ -1364,22 +1374,34 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Neuro::Shape Tensor::GetConvOutputShape(const Shape& inputShape, uint32_t kernelsNum, uint32_t kernelWidth, uint32_t kernelHeight, uint32_t stride, uint32_t paddingX, uint32_t paddingY)
+    Shape Tensor::GetConvOutputShape(const Shape& inputShape, uint32_t kernelsNum, uint32_t kernelWidth, uint32_t kernelHeight, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat)
     {
         assert(stride > 0);
-        return Shape((int)floor((inputShape.Width() + 2 * paddingX - kernelWidth) / (float)stride) + 1, 
-                     (int)floor((inputShape.Height() + 2 * paddingY - kernelHeight) / (float)stride) + 1,
-                     kernelsNum,
-                     inputShape.Batch());
+        if (dataFormat == NCHW)
+            return Shape((int)floor((inputShape.Width() + 2 * paddingX - kernelWidth) / (float)stride) + 1, 
+                         (int)floor((inputShape.Height() + 2 * paddingY - kernelHeight) / (float)stride) + 1,
+                         kernelsNum,
+                         inputShape.Batch());
+
+        return Shape(kernelsNum, 
+                     (int)floor((inputShape.Len(1) + 2 * paddingX - kernelWidth) / (float)stride) + 1,
+                     (int)floor((inputShape.Len(2) + 2 * paddingY - kernelHeight) / (float)stride) + 1,
+                     inputShape.Len(3));
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Shape Tensor::GetConvTransposeOutputShape(const Shape& inputShape, uint32_t outputDepth, uint32_t kernelWidth, uint32_t kernelHeight, uint32_t stride, uint32_t paddingX, uint32_t paddingY)
+    Shape Tensor::GetConvTransposeOutputShape(const Shape& inputShape, uint32_t outputDepth, uint32_t kernelWidth, uint32_t kernelHeight, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat)
     {
         assert(stride > 0);
-        return Shape((inputShape.Width() - 1) * stride + kernelWidth - 2 * paddingX,
-                     (inputShape.Height() - 1) * stride + kernelHeight - 2 * paddingY,
-                     outputDepth, 
+        if (dataFormat == NCHW)
+            return Shape((inputShape.Width() - 1) * stride + kernelWidth - 2 * paddingX,
+                         (inputShape.Height() - 1) * stride + kernelHeight - 2 * paddingY,
+                         outputDepth, 
+                         inputShape.Batch());
+
+        return Shape(outputDepth, 
+                     (inputShape.Len(1) - 1) * stride + kernelWidth - 2 * paddingX,
+                     (inputShape.Len(2) - 1) * stride + kernelHeight - 2 * paddingY,
                      inputShape.Batch());
     }
 
@@ -1587,20 +1609,22 @@ namespace Neuro
 	{
         CopyToHost();
 
-        if (axis == EAxis::GlobalAxis)
+        if (axis == GlobalAxis)
             return MaxTemplate<1, 1, 1, 1>(*this, maxIndex);
-        if (axis == EAxis::WidthAxis)
+        if (axis == WidthAxis)
             return MaxTemplate<1, 0, 0, 0>(*this, maxIndex);
-        if (axis == EAxis::HeightAxis)
+        if (axis == HeightAxis)
             return MaxTemplate<0, 1, 0, 0>(*this, maxIndex);
-        if (axis == EAxis::DepthAxis)
+        if (axis == DepthAxis)
             return MaxTemplate<0, 0, 1, 0>(*this, maxIndex);
-        if (axis == EAxis::BatchAxis)
+        if (axis == BatchAxis)
             return MaxTemplate<0, 0, 0, 1>(*this, maxIndex);
-        if (axis == EAxis::WHDAxis)
+        if (axis == _012Axes)
             return MaxTemplate<1, 1, 1, 0>(*this, maxIndex);
-        if (axis == EAxis::WHBAxis)
+        if (axis == _013Axes)
             return MaxTemplate<1, 1, 0, 1>(*this, maxIndex);
+        if (axis == _123Axes)
+            return MaxTemplate<0, 1, 1, 1>(*this, maxIndex);
 
         assert(false);
         return Tensor();
@@ -1654,20 +1678,22 @@ namespace Neuro
     {
         CopyToHost();
 
-        if (axis == EAxis::GlobalAxis)
+        if (axis == GlobalAxis)
             return MinTemplate<1, 1, 1, 1>(*this, minIndex);
-        if (axis == EAxis::WidthAxis)
+        if (axis == WidthAxis)
             return MinTemplate<1, 0, 0, 0>(*this, minIndex);
-        if (axis == EAxis::HeightAxis)
+        if (axis == HeightAxis)
             return MinTemplate<0, 1, 0, 0>(*this, minIndex);
-        if (axis == EAxis::DepthAxis)
+        if (axis == DepthAxis)
             return MinTemplate<0, 0, 1, 0>(*this, minIndex);
-        if (axis == EAxis::BatchAxis)
+        if (axis == BatchAxis)
             return MinTemplate<0, 0, 0, 1>(*this, minIndex);
-        if (axis == EAxis::WHDAxis)
+        if (axis == _012Axes)
             return MinTemplate<1, 1, 1, 0>(*this, minIndex);
-        if (axis == EAxis::WHBAxis)
+        if (axis == _013Axes)
             return MinTemplate<1, 1, 0, 1>(*this, minIndex);
+        if (axis == _123Axes)
+            return MinTemplate<0, 1, 1, 1>(*this, minIndex);
         
         assert(false);
         return Tensor();

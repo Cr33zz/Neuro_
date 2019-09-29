@@ -8,7 +8,7 @@ using namespace Neuro;
 
 namespace NeuroTests
 {
-    TEST_CLASS(DeconvolutionLayerTests)
+    TEST_CLASS(Conv2DTransposeLayerTests)
     {
         TEST_METHOD(InputGradient_1Batch_Valid)
         {
@@ -108,7 +108,7 @@ namespace NeuroTests
 
             Tensor input(inputShape);
             input.FillWithRand();
-            Tensor output = input.Conv2DTransposed(randomKernels, 3, stride, padding);
+            Tensor output = input.Conv2DTransposed(randomKernels, 3, stride, padding, NCHW);
 
             model->Optimize(new Adam(0.02f), new MeanSquareError());
             model->Fit(input, output, -1, 200, nullptr, nullptr, 1, TrainError);
