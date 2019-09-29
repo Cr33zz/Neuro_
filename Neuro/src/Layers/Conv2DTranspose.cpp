@@ -49,11 +49,16 @@ namespace Neuro
     {
         __super::OnInit(initValues);
 
-        m_Kernels = Tensor(Shape(m_FilterSize, m_FilterSize, m_OutputDepth, InputShape().Depth()), Name() + "/kernels");
         if (m_DataFormat == NCHW)
+        {
+            m_Kernels = Tensor(Shape(m_FilterSize, m_FilterSize, m_OutputDepth, InputShape().Depth()), Name() + "/kernels");
             m_Bias = Tensor(Shape(1, 1, m_OutputDepth), Name() + "/bias");
+        }
         else
+        {
+            m_Kernels = Tensor(Shape(m_FilterSize, m_FilterSize, m_OutputDepth, InputShape().Len(0)), Name() + "/kernels");
             m_Bias = Tensor(Shape(m_OutputDepth), Name() + "/bias");
+        }
         m_KernelsGradient = Tensor(m_Kernels.GetShape(), Name() + "/kernels_grad");
         m_KernelsGradient.Zero();
         m_BiasGradient = Tensor(m_Bias.GetShape(), Name() + "/bias_grad");

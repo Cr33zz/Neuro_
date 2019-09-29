@@ -1230,7 +1230,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Conv2DTransposed(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& result) const
     {
-        assert(Depth() == kernels.Batch());
+        assert((dataFormat == NCHW ? Depth() : Len(0)) == kernels.Batch());
         Conv2DInputsGradient(*this, kernels, stride, padding, dataFormat, result);
     }
 

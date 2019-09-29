@@ -95,20 +95,25 @@ namespace NeuroTests
             TestTrain(1, 0, 2);
         }
 
-        void TestTrain(uint32_t stride, uint32_t padding, int batch = 1)
+        TEST_METHOD(Train_Stride1_Pad0_NHWC_Batch2)
+        {
+            TestTrain(1, 0, 2, NHWC);
+        }
+
+        void TestTrain(uint32_t stride, uint32_t padding, int batch = 1, EDataFormat format = NCHW)
         {
             GlobalRngSeed(101);
-            Shape inputShape(4, 4, 3, batch);
+            Shape inputShape = format == NCHW ? Shape(4, 4, 3, batch) : Shape(3, 4, 4, batch);
 
             auto model = new Sequential("deconvolution_test", 7);
-            model->AddLayer(new Conv2DTranspose(inputShape, 3, 3, stride, padding));
+            model->AddLayer(new Conv2DTranspose(inputShape, 3, 3, stride, padding, nullptr, format));
 
             Tensor randomKernels(Shape(3, 3, 3, 3));
             randomKernels.FillWithRand();
 
             Tensor input(inputShape);
             input.FillWithRand();
-            Tensor output = input.Conv2DTransposed(randomKernels, 3, stride, padding, NCHW);
+            Tensor output = input.Conv2DTransposed(randomKernels, 3, stride, padding, format);
 
             model->Optimize(new Adam(0.02f), new MeanSquareError());
             model->Fit(input, output, -1, 200, nullptr, nullptr, 1, TrainError);
