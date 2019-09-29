@@ -321,7 +321,7 @@ namespace NeuroTests
             Tensor t1 = Tensor(Shape(6, 6));
             t1.FillWithRange(0);
 
-            Tensor r = t1.Pool2D(2, 2, EPoolingMode::Max, 0);
+            Tensor r = t1.Pool2D(2, 2, EPoolingMode::Max, 0, NCHW);
             Tensor correct = Tensor({ 7, 9, 11, 19, 21, 23, 31, 33, 35 }, Shape(3, 3, 1));
 
             Assert::IsTrue(r.Equals(correct));
@@ -333,7 +333,7 @@ namespace NeuroTests
 
             Tensor t1 = Tensor(Shape(6, 6, 1, 2)); t1.FillWithRange(0);
 
-            Tensor r = t1.Pool2D(2, 2, EPoolingMode::Max, 0);
+            Tensor r = t1.Pool2D(2, 2, EPoolingMode::Max, 0, NCHW);
             Tensor correct = Tensor({ 7, 9, 11, 19, 21, 23, 31, 33, 35, 43, 45, 47, 55, 57, 59, 67, 69, 71 }, Shape(3, 3, 1, 2));
 
             Assert::IsTrue(r.Equals(correct));
@@ -345,7 +345,7 @@ namespace NeuroTests
 
             Tensor t1 = Tensor(Shape(6, 6, 1, 2)); t1.FillWithRange(0);
 
-            Tensor r = t1.Pool2D(2, 2, EPoolingMode::Avg, 0);
+            Tensor r = t1.Pool2D(2, 2, EPoolingMode::Avg, 0, NCHW);
             Tensor correct = Tensor({ 3.5f, 5.5f, 7.5f, 15.5f, 17.5f, 19.5f, 27.5f, 29.5f, 31.5f, 39.5f, 41.5f, 43.5f, 51.5f, 53.5f, 55.5f, 63.5f, 65.5f, 67.5f }, Shape(3, 3, 1, 2));
 
             Assert::IsTrue(r.Equals(correct));
@@ -356,11 +356,11 @@ namespace NeuroTests
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
             Tensor input = Tensor(Shape(6, 6, 1, 2)); input.FillWithRange(0);
-            Tensor output = input.Pool2D(2, 2, EPoolingMode::Max, 0);
+            Tensor output = input.Pool2D(2, 2, EPoolingMode::Max, 0, NCHW);
             Tensor gradient = Tensor(output.GetShape()); gradient.FillWithRange(1);
             Tensor result = Tensor(input.GetShape());
 
-            output.Pool2DGradient(output, input, gradient, 2, 2, EPoolingMode::Max, 0, result);
+            output.Pool2DGradient(output, input, gradient, 2, 2, EPoolingMode::Max, 0, NCHW, result);
             Tensor correct = Tensor({ 0, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 3, 0, 0, 0, 0, 0, 0, 0, 4, 0, 5, 0, 6, 0, 0, 0, 0, 0, 0, 0, 7, 0, 8, 0, 9, 0, 0, 0, 0, 0, 0, 0, 10, 0, 11, 0, 12, 0, 0, 0, 0, 0, 0, 0, 13, 0, 14, 0, 15, 0, 0, 0, 0, 0, 0, 0, 16, 0, 17, 0, 18 }, Shape(6, 6, 1, 2));
 
             Assert::IsTrue(result.Equals(correct));
@@ -371,11 +371,11 @@ namespace NeuroTests
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
             Tensor input = Tensor(Shape(6, 6, 1, 2)); input.FillWithRange(0);
-            Tensor output = input.Pool2D(2, 2, EPoolingMode::Avg, 0);
+            Tensor output = input.Pool2D(2, 2, EPoolingMode::Avg, 0, NCHW);
             Tensor gradient = Tensor(output.GetShape()); gradient.FillWithRange(1);
             Tensor result = Tensor(input.GetShape());
 
-            output.Pool2DGradient(output, input, gradient, 2, 2, EPoolingMode::Avg, 0, result);
+            output.Pool2DGradient(output, input, gradient, 2, 2, EPoolingMode::Avg, 0, NCHW, result);
             Tensor correct = Tensor({ 0.25f, 0.25f, 0.5f, 0.5f, 0.75f, 0.75f, 0.25f, 0.25f, 0.5f, 0.5f, 0.75f, 0.75f, 1, 1, 1.25f, 1.25f, 1.5f, 1.5f, 1, 1, 1.25f, 1.25f, 1.5f, 1.5f, 1.75f, 1.75f, 2, 2, 2.25f, 2.25f, 1.75f, 1.75f, 2, 2, 2.25f, 2.25f, 2.5f, 2.5f, 2.75f, 2.75f, 3, 3, 2.5f, 2.5f, 2.75f, 2.75f, 3, 3, 3.25f, 3.25f, 3.5f, 3.5f, 3.75f, 3.75f, 3.25f, 3.25f, 3.5f, 3.5f, 3.75f, 3.75f, 4, 4, 4.25f, 4.25f, 4.5f, 4.5f, 4, 4, 4.25f, 4.25f, 4.5f, 4.5f }, Shape(6, 6, 1, 2));
 
             Assert::IsTrue(result.Equals(correct));

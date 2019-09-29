@@ -329,42 +329,75 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Pool2D(const Tensor& input, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t paddingX, uint32_t paddingY, Tensor& output) const
+    void TensorOpMultiCpu::Pool2D(const Tensor& input, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& output) const
     {
         input.CopyToHost();
         output.OverrideHost();
 
-        parallel_for(0, (int)input.Batch(), [&](int outN) {
-        parallel_for(0, (int)input.Depth(), [&](int outD) {
-        for (int outH = 0, h = -(int)paddingY; outH < (int)output.Height(); h += (int)stride, ++outH)
-        for (int outW = 0, w = -(int)paddingX; outW < (int)output.Width(); w += (int)stride, ++outW)
+        if (dataFormat == NCHW)
         {
-            if (type == EPoolingMode::Max)
-            {
-                float value = -numeric_limits<float>().max();
+            parallel_for(0, (int)input.Batch(), [&](int outN) {
+            parallel_for(0, (int)input.Depth(), [&](int outD) {
+		    for (int outH = 0, h = -(int)paddingY; outH < (int)output.Height(); h += (int)stride, ++outH)
+		    for (int outW = 0, w = -(int)paddingX; outW < (int)output.Width(); w += (int)stride, ++outW)
+		    {
+			    if (type == EPoolingMode::Max)
+			    {
+				    float value = -numeric_limits<float>().max();
 
-				for (int poolY = 0; poolY < (int)filterSize; ++poolY)
-				for (int poolX = 0; poolX < (int)filterSize; ++poolX)
-					value = max(value, input.TryGet(-numeric_limits<float>().max(), w + poolX, h + poolY, outD, outN));
+				    for (int poolY = 0; poolY < (int)filterSize; ++poolY)
+				    for (int poolX = 0; poolX < (int)filterSize; ++poolX)
+					    value = max(value, input.TryGet(-numeric_limits<float>().max(), w + poolX, h + poolY, outD, outN));
 
-				output(outW, outH, outD, outN) = value;
-            }
-            else if (type == EPoolingMode::Avg)
-            {
-                float sum = 0;
-				for (int poolY = 0; poolY < (int)filterSize; ++poolY)
-                for (int poolX = 0; poolX < (int)filterSize; ++poolX)
-                    sum += input.TryGet(0, w + poolX, h + poolY, outD, outN);
+				    output(outW, outH, outD, outN) = value;
+			    }
+			    else if (type == EPoolingMode::Avg)
+			    {
+				    float sum = 0;
+				    for (int poolY = 0; poolY < (int)filterSize; ++poolY)
+                    for (int poolX = 0; poolX < (int)filterSize; ++poolX)
+                        sum += input.TryGet(0, w + poolX, h + poolY, outD, outN);
 
-				output(outW, outH, outD, outN) = sum / (filterSize * filterSize);
-            }
+				    output(outW, outH, outD, outN) = sum / (filterSize * filterSize);
+			    }
+		    }
+            });
+            });
         }
-        });
-        });
+        else
+        {
+            parallel_for(0, (int)input.Batch(), [&](int outN) {
+            parallel_for(0, (int)input.Len(0), [&](int outD) {
+            for (int outH = 0, h = -(int)paddingY; outH < (int)output.Len(2); h += (int)stride, ++outH)
+		    for (int outW = 0, w = -(int)paddingX; outW < (int)output.Len(1); w += (int)stride, ++outW)
+		    {
+			    if (type == EPoolingMode::Max)
+			    {
+				    float value = -numeric_limits<float>().max();
+
+				    for (int poolY = 0; poolY < (int)filterSize; ++poolY)
+				    for (int poolX = 0; poolX < (int)filterSize; ++poolX)
+					    value = max(value, input.TryGet(-numeric_limits<float>().max(), outD, w + poolX, h + poolY, outN));
+
+				    output(outD, outW, outH, outN) = value;
+			    }
+			    else if (type == EPoolingMode::Avg)
+			    {
+				    float sum = 0;
+				    for (int poolY = 0; poolY < (int)filterSize; ++poolY)
+                    for (int poolX = 0; poolX < (int)filterSize; ++poolX)
+                        sum += input.TryGet(0, outD, w + poolX, h + poolY, outN);
+
+				    output(outD, outW, outH, outN) = sum / (filterSize * filterSize);
+			    }
+		    }
+            });
+            });
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t paddingX, uint32_t paddingY, Tensor& inputGradient) const
+    void TensorOpMultiCpu::Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& inputGradient) const
     {
         output.CopyToHost();
         input.CopyToHost();
@@ -372,44 +405,88 @@ namespace Neuro
         inputGradient.OverrideHost();
         inputGradient.Zero();
 
-        parallel_for(0, (int)output.Batch(), [&](int outN) {
-        parallel_for(0, (int)output.Depth(), [&](int outD) {
-        for (int outH = 0, h = -(int)paddingY; outH < (int)output.Height(); ++outH, h += (int)stride)
-        for (int outW = 0, w = -(int)paddingX; outW < (int)output.Width(); ++outW, w += (int)stride)
+        if (dataFormat == NCHW)
         {
-            if (type == EPoolingMode::Max)
-            {
-                bool maxFound = false;
-                for (int poolH = 0; poolH < (int)filterSize; ++poolH)
-                {
-                    for (int poolW = 0; poolW < (int)filterSize; ++poolW)
+            parallel_for(0, (int)output.Batch(), [&](int outN) {
+            parallel_for(0, (int)output.Depth(), [&](int outD) {
+		    for (int outH = 0, h = -(int)paddingY; outH < (int)output.Height(); ++outH, h += (int)stride)
+		    for (int outW = 0, w = -(int)paddingX; outW < (int)output.Width(); ++outW, w += (int)stride)
+		    {
+			    if (type == EPoolingMode::Max)
+			    {
+                    bool maxFound = false;
+                    for (int poolH = 0; poolH < (int)filterSize; ++poolH)
                     {
-                        float value = input.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN);
-                        if (value == output(outW, outH, outD, outN))
+                        for (int poolW = 0; poolW < (int)filterSize; ++poolW)
                         {
-                            inputGradient.TrySet(inputGradient.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN), w + poolW, h + poolH, outD, outN);
-                            maxFound = true;
-                            break;
+                            float value = input.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN);
+                            if (value == output(outW, outH, outD, outN))
+                            {
+                                inputGradient.TrySet(inputGradient.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN), w + poolW, h + poolH, outD, outN);
+                                maxFound = true;
+                                break;
+                            }
                         }
+
+                        if (maxFound)
+                            break;
                     }
+			    }
+			    else if (type == EPoolingMode::Avg)
+			    {
+                    float filterElementsNum = (float)(filterSize * filterSize);
 
-                    if (maxFound)
-                        break;
-                }
-            }
-            else if (type == EPoolingMode::Avg)
-            {
-                float filterElementsNum = (float)filterSize * filterSize;
-
-                for (int poolH = 0; poolH < (int)filterSize; ++poolH)
-                for (int poolW = 0; poolW < (int)filterSize; ++poolW)
-                {
-                    inputGradient.TrySet(inputGradient.TryGet(-numeric_limits<float>::max(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN) / filterElementsNum, w + poolW, h + poolH, outD, outN);
-                }
-            }
+				    for (int poolH = 0; poolH < (int)filterSize; ++poolH)
+				    for (int poolW = 0; poolW < (int)filterSize; ++poolW)
+				    {
+					    inputGradient.TrySet(inputGradient.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN) + outputGradient(outW, outH, outD, outN) / filterElementsNum, w + poolW, h + poolH, outD, outN);
+				    }
+			    }
+		    }
+            });
+            });
         }
-        });
-        });
+        else
+        {
+            parallel_for(0, (int)output.Batch(), [&](int outN) {
+            parallel_for(0, (int)output.Len(0), [&](int outD) {
+		    for (int outH = 0, h = -(int)paddingY; outH < (int)output.Len(2); ++outH, h += (int)stride)
+		    for (int outW = 0, w = -(int)paddingX; outW < (int)output.Len(1); ++outW, w += (int)stride)
+		    {
+			    if (type == EPoolingMode::Max)
+			    {
+                    bool maxFound = false;
+                    for (int poolH = 0; poolH < (int)filterSize; ++poolH)
+                    {
+                        for (int poolW = 0; poolW < (int)filterSize; ++poolW)
+                        {
+                            float value = input.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN);
+                            if (value == output(outD, outW, outH, outN))
+                            {
+                                inputGradient.TrySet(inputGradient.TryGet(-numeric_limits<float>().max(), outD, w + poolW, h + poolH, outN) + outputGradient(outD, outW, outH, outN), outD, w + poolW, h + poolH, outN);
+                                maxFound = true;
+                                break;
+                            }
+                        }
+
+                        if (maxFound)
+                            break;
+                    }
+			    }
+			    else if (type == EPoolingMode::Avg)
+			    {
+                    float filterElementsNum = (float)(filterSize * filterSize);
+
+				    for (int poolH = 0; poolH < (int)filterSize; ++poolH)
+				    for (int poolW = 0; poolW < (int)filterSize; ++poolW)
+				    {
+					    inputGradient.TrySet(inputGradient.TryGet(-numeric_limits<float>().max(), outD, w + poolW, h + poolH, outN) + outputGradient(outD, outW, outH, outN) / filterElementsNum, outD, w + poolW, h + poolH, outN);
+				    }
+			    }
+            }
+            });
+            });
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////

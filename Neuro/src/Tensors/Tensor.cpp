@@ -1257,26 +1257,26 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Pool2D(uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t padding, Tensor& output) const
+	void Tensor::Pool2D(uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t padding, EDataFormat dataFormat, Tensor& output) const
 	{
 		assert(output.Batch() == Batch());
-		Op()->Pool2D(*this, filterSize, stride, type, padding, padding, output);
+        Op()->Pool2D(*this, filterSize, stride, type, padding, padding, dataFormat, output);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::Pool2D(uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t padding) const
+	Tensor Tensor::Pool2D(uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t padding, EDataFormat dataFormat) const
 	{
-		Tensor result(GetConvOutputShape(GetShape(), GetShape().Depth(), filterSize, filterSize, stride, padding, padding, NCHW));
-		Pool2D(filterSize, stride, type, padding, result);
+		Tensor result(GetConvOutputShape(GetShape(), GetShape().Depth(), filterSize, filterSize, stride, padding, padding, dataFormat));
+		Pool2D(filterSize, stride, type, padding, dataFormat, result);
 
 		return result;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t padding, Tensor& result) const
+	void Tensor::Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t padding, EDataFormat dataFormat, Tensor& result) const
 	{
 		assert(output.SameDimensionsExceptBatches(outputGradient));
-		Op()->Pool2DGradient(output, input, outputGradient, filterSize, stride, type, padding, padding, result);
+		Op()->Pool2DGradient(output, input, outputGradient, filterSize, stride, type, padding, padding, dataFormat, result);
 	}
 
     //////////////////////////////////////////////////////////////////////////
@@ -1364,13 +1364,19 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Neuro::Shape Tensor::GetPooling2DOutputShape(const Shape& inputShape, uint32_t kernelWidth, uint32_t kernelHeight, uint32_t stride, uint32_t paddingX, uint32_t paddingY)
+    Neuro::Shape Tensor::GetPooling2DOutputShape(const Shape& inputShape, uint32_t kernelWidth, uint32_t kernelHeight, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat)
     {
         assert(stride > 0);
-        return Shape((int)floor((inputShape.Width() + 2 * paddingX - kernelWidth) / (float)stride) + 1, 
-                     (int)floor((inputShape.Height() + 2 * paddingY - kernelHeight) / (float)stride) + 1,
-                     inputShape.Depth(),
-                     inputShape.Batch());
+        if (dataFormat == NCHW)
+            return Shape((int)floor((inputShape.Width() + 2 * paddingX - kernelWidth) / (float)stride) + 1, 
+                         (int)floor((inputShape.Height() + 2 * paddingY - kernelHeight) / (float)stride) + 1,
+                         inputShape.Depth(),
+                         inputShape.Batch());
+
+        return Shape(inputShape.Len(0), 
+                     (int)floor((inputShape.Len(1) + 2 * paddingX - kernelWidth) / (float)stride) + 1,
+                     (int)floor((inputShape.Len(2) + 2 * paddingY - kernelHeight) / (float)stride) + 1,
+                     inputShape.Len(3));
     }
 
     //////////////////////////////////////////////////////////////////////////
