@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "CompGraph/NodeBase.h"
+#include "ComputationalGraph/NodeBase.h"
 #include "Tensors/Shape.h"
 
 namespace Neuro
@@ -9,6 +9,7 @@ namespace Neuro
     {
     public:
         Placeholder(const Shape& shape);
+        const Shape& GetShape() const { return m_Shape; }
 
     private:
         Shape m_Shape;

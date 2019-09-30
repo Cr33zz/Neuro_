@@ -148,6 +148,7 @@
     <ClInclude Include="include\AutoencoderNetwork.h" />
     <ClInclude Include="include\CifarGAN.h" />
     <ClInclude Include="include\CifarResNet.h" />
+    <ClInclude Include="include\ComputationalGraph.h" />
     <ClInclude Include="include\ConvAutoencoderNetwork.h" />
     <ClInclude Include="include\ConvNetwork.h" />
     <ClInclude Include="include\DeepConvGAN.h" />

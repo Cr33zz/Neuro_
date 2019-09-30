@@ -1,8 +1,8 @@
 #include <unordered_set>
 #include <list>
 
-#include "CompGraph/Optimizer.h"
-#include "CompGraph/Variable.h"
+#include "ComputationalGraph/Optimizer.h"
+#include "ComputationalGraph/Variable.h"
 #include "Tensors/Tensor.h"
 
 namespace Neuro
@@ -61,7 +61,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void _SGDOptimimizer::MinimizationOperation::ComputeInternal()
+    void _SGDOptimizer::MinimizationOperation::ComputeInternal()
     {
         auto gradTable = Optimizer::ComputeGradients(m_InputNodes[0]);
 

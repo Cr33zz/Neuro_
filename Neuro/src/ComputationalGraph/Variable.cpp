@@ -1,5 +1,5 @@
-﻿#include "CompGraph/Variable.h"
-#include "CompGraph/Graph.h"
+﻿#include "ComputationalGraph/Variable.h"
+#include "ComputationalGraph/Graph.h"
 
 namespace Neuro
 {

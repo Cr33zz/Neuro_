@@ -9,6 +9,7 @@
 #include "DeepConvGAN.h"
 #include "CifarGAN.h"
 #include "VGG16.h"
+#include "ComputationalGraph.h"
 
 int main()
 {
@@ -28,6 +29,7 @@ int main()
     /*for (auto weight : model.Weights())
         cout << weight->ToString() << endl;*/
 
+    ComputationalGraph().Run();
     //IrisNetwork().Run();
     //ConvNetwork().Run();
     //FlowNetwork().Run();

@@ -17,7 +17,16 @@ namespace Neuro
 		return min + GlobalRng().NextFloat() * (max - min);
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Uniform::Random(float min, float max, const Shape& shape)
+    {
+        Uniform init(min, max);
+        Tensor t(shape);
+        init.Init(t);
+        return t;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void Uniform::Init(Tensor& t)
 	{
         t.FillWithFunc([&]() { return NextSingle(m_Min, m_Max); });

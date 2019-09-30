@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "CompGraph/NodeBase.h"
+#include "ComputationalGraph/NodeBase.h"
 #include "Tensors/Tensor.h"
 
 namespace Neuro

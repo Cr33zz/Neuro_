@@ -696,8 +696,19 @@ namespace Neuro
 	{
         result.OverrideHost();
 
+        if (axis == BatchAxis)
+        {
+            result.Resize(Shape::From(inputs[0]->GetShape(), inputs[0]->Len(3) * (uint32_t)inputs.size()));
+            uint32_t elementsCopied = 0;
+            for (uint32_t i = 0; i < inputs.size(); ++i)
+            {
+                inputs[i]->CopyToHost();
+                copy(inputs[i]->m_Values.begin(), inputs[i]->m_Values.end(), result.m_Values.begin() + elementsCopied);
+                elementsCopied += inputs[i]->Length();
+            }
+        }
         // append tensors CHW separately per batch
-        if (axis == _012Axes)
+        else if (axis == _012Axes)
         {
             for (uint32_t b = 0; b < result.Batch(); ++b)
             {
@@ -710,18 +721,6 @@ namespace Neuro
                 }
             }
         }
-        // append whole tensors one after another
-        else if (axis == GlobalAxis)
-        {
-            // all tensors CHW should match!
-            uint32_t elementsCopied = 0;
-            for (uint32_t i = 0; i < inputs.size(); ++i)
-            {
-                inputs[i]->CopyToHost();
-                copy(inputs[i]->m_Values.begin(), inputs[i]->m_Values.end(), result.m_Values.begin() + elementsCopied);
-                elementsCopied += inputs[i]->Length();
-            }
-        }
         else //if (axis == Batch)
             assert(false); // not supported yet
 	}
@@ -731,7 +730,19 @@ namespace Neuro
 	{
 		CopyToHost();
 
-        if (axis == _012Axes)
+        if (axis == BatchAxis)
+        {
+            uint32_t elementsCopied = 0;
+            uint32_t singleOutputLen = Length() / (uint32_t)outputs.size();
+
+            for (uint32_t i = 0; i < outputs.size(); ++i)
+            {
+                outputs[i]->OverrideHost();
+                copy(m_Values.begin() + elementsCopied, m_Values.begin() + elementsCopied + singleOutputLen, outputs[i]->m_Values.begin());
+                elementsCopied += singleOutputLen;
+            }
+        }
+        else if (axis == _012Axes)
         {
             for (uint32_t b = 0; b < Batch(); ++b)
             {

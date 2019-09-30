@@ -62,5 +62,8 @@
     <ClInclude Include="include\NeuralStyleTransfer.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\ComputationalGraph.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

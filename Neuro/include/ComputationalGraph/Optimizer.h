@@ -1,7 +1,7 @@
 #pragma once
 
 #include <map>
-#include "CompGraph/Operation.h"
+#include "ComputationalGraph/Operation.h"
 
 namespace Neuro
 {
@@ -10,17 +10,20 @@ namespace Neuro
     class Optimizer
     {
     public:
-        virtual Operation* Minimize(NodeBase* lossNode) = 0;
+        virtual Operation* Minimize(NodeBase* loss) = 0;
+        //virtual Operation* Maximize(NodeBase* loss) = 0;
 
-        static map<NodeBase*, Tensor*> ComputeGradients(NodeBase* lossNode);
+        static map<NodeBase*, Tensor*> ComputeGradients(NodeBase* loss);
     };
 
-    class _SGDOptimimizer : public Optimizer
+    class _SGDOptimizer : public Optimizer
     {
     public:
-        virtual Operation* Minimize(NodeBase* lossNode)
+        _SGDOptimizer(float lr) : m_LearningRate(lr) {}
+
+        virtual Operation* Minimize(NodeBase* loss)
         {
-            return new MinimizationOperation(lossNode, 0.02f);
+            return new MinimizationOperation(loss, 0.02f);
         }
 
     private:
@@ -35,5 +38,7 @@ namespace Neuro
 
             float m_LearningRate;
         };
+
+        float m_LearningRate;
     };
 }

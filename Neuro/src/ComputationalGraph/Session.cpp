@@ -1,7 +1,7 @@
-﻿#include "CompGraph/Session.h"
-#include "CompGraph/Operation.h"
-#include "CompGraph/Placeholder.h"
-#include "CompGraph/Variable.h"
+﻿#include "ComputationalGraph/Session.h"
+#include "ComputationalGraph/Operation.h"
+#include "ComputationalGraph/Placeholder.h"
+#include "ComputationalGraph/Variable.h"
 #include "Tensors/Tensor.h"
 
 namespace Neuro
@@ -20,8 +20,8 @@ namespace Neuro
             else
             {
                 Operation* op = static_cast<Operation*>(node);
-                auto& inputs = op->Inputs();
-                node->m_Output = op->Compute(inputs);
+                auto inputs = op->GatherInputs();
+                op->Compute(inputs);
             }
         }
         vector<Tensor*> result(fetches.size());

@@ -8,19 +8,19 @@
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	SGD::SGD(float lr /*= 0.01f*/)
+	SGD::SGD(float lr)
 	{
 		m_LearningRate = lr;
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    Neuro::OptimizerBase* SGD::Clone() const
+    OptimizerBase* SGD::Clone() const
     {
         return new SGD(*this);
     }
 
     //////////////////////////////////////////////////////////////////////////
-	std::string SGD::ToString()
+	string SGD::ToString()
 	{
 		stringstream ss;
 		ss << setprecision(5) << "SGD(lr=" << m_LearningRate << ")";

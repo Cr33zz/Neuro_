@@ -1,4 +1,4 @@
-﻿#include "CompGraph/Graph.h"
+﻿#include "ComputationalGraph/Graph.h"
 
 namespace Neuro
 {
