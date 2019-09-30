@@ -3,7 +3,7 @@
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	void OptimizerBase::Step(vector<ParametersAndGradients>& paramsAndGrads, int batchSize)
+	void OptimizerBase::Step(vector<ParameterAndGradient>& paramsAndGrads, int batchSize)
 	{
 		++m_Iteration;
 		OnStep(paramsAndGrads, batchSize);

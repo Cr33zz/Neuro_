@@ -6,7 +6,7 @@ using namespace Neuro;
 
 namespace NeuroTests
 {
-    TEST_CLASS(PoolingLayerTests)
+    TEST_CLASS(Pool2DLayerTests)
     {
         TEST_METHOD(InputGradient_MaxPooling_1Batch)
         {

@@ -6,7 +6,7 @@
 
 #include "Tensors/Tensor.h"
 #include "Tensors/Shape.h"
-#include "ParametersAndGradients.h"
+#include "ParameterAndGradient.h"
 #include "Stopwatch.h"
 
 namespace Neuro
@@ -66,16 +66,22 @@ namespace Neuro
         bool Trainable() const { return m_Trainable; }
 
         virtual uint32_t ParamsNum() const { return 0; }
-        virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable = true) {}
+        virtual void ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable = true) {}
+        virtual void SerializedParameters(vector<SerializedParameter>& params);
 
 		LayerBase* Clone();
-		void Init();
+		void Init(bool initValues = true);
 		
         const string& ClassName() const { return m_ClassName; }
 
         vector<Tensor*> GetParams();
 
         const string& Name() const { return m_Name; }
+
+        int FeedForwardTime() const { return (int)m_FeedForwardTimer.ElapsedMilliseconds(); }
+        int BackPropTime() const { return (int)m_BackPropTimer.ElapsedMilliseconds(); }
+        int ActivationTime() const { return (int)m_ActivationTimer.ElapsedMilliseconds(); }
+        int ActivationBackPropTime() const { return (int)m_ActivationBackPropTimer.ElapsedMilliseconds(); }
 
 	protected:
         LayerBase(const string& constructorName, const string& name = "");
@@ -86,7 +92,7 @@ namespace Neuro
 
         virtual LayerBase* GetCloneInstance() const = 0;
         virtual void OnClone(const LayerBase& source);
-        virtual void OnInit() {}
+        virtual void OnInit(bool initValues = true) {}
         virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) = 0;
         virtual void OnLinkOutput(LayerBase* outputLayer) = 0;
         
@@ -95,6 +101,11 @@ namespace Neuro
 		string GenerateName() const;
 
 		bool m_Trainable = true;
+
+        Stopwatch m_FeedForwardTimer;
+        Stopwatch m_ActivationTimer;
+        Stopwatch m_BackPropTimer;
+        Stopwatch m_ActivationBackPropTimer;
 
 	private:
 		string m_Name;

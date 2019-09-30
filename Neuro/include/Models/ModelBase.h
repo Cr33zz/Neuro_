@@ -6,7 +6,7 @@
 
 #include "Types.h"
 #include "Layers/LayerBase.h"
-#include "ParametersAndGradients.h"
+#include "ParameterAndGradient.h"
 
 namespace Neuro
 {
@@ -21,7 +21,7 @@ namespace Neuro
 	public:
         ~ModelBase();
 
-        void ForceInitLayers();
+        void ForceInitLayers(bool initValues = true);
 
         void Optimize(OptimizerBase* optimizer, LossBase* loss);
         void Optimize(OptimizerBase* optimizer, map<string, LossBase*> lossDict);
@@ -40,11 +40,13 @@ namespace Neuro
         virtual const vector<LayerBase*>& ModelInputLayers() const = 0;
         virtual const vector<LayerBase*>& ModelOutputLayers() const = 0;
 
+        tensor_ptr_vec_t Weights();
+
         void SaveWeights(const string& filename) const;
         void LoadWeights(const string& filename);
         
         virtual uint32_t ParamsNum() const;
-        virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable = true) override;
+        virtual void ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable = true) override;
 
         virtual void SetTrainable(bool trainable) override;
         void ForceLearningPhase(bool force) { m_ForceLearningPhase = force; }
@@ -66,7 +68,7 @@ namespace Neuro
         ModelBase(const string& constructorName, const string& name = "", int seed = 0);
 
         virtual void OnClone(const LayerBase& source) override;
-        virtual void OnInit() override;
+        virtual void OnInit(bool initValues = true) override;
 
     private:
         // This is vectorized gradient descent
@@ -80,7 +82,7 @@ namespace Neuro
         vector<accuracy_func_t> m_AccuracyFuncs;
         bool m_ForceLearningPhase = false;
 
-        vector<ParametersAndGradients> m_ParamsAndGrads;
+        vector<ParameterAndGradient> m_ParamsAndGrads;
 
         ofstream* m_LogFile = nullptr;
         void LogLine(const string& text, bool print = true);

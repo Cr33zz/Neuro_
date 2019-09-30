@@ -81,7 +81,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void SingleLayer::OnInit()
+    void SingleLayer::OnInit(bool initValues)
     {
         m_Outputs.resize(m_OutputsShapes.size());
         for (size_t i = 0; i < m_Outputs.size(); ++i)

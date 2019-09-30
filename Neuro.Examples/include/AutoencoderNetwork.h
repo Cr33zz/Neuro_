@@ -36,7 +36,7 @@ public:
 
         Tensor input, output;
         LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, true, false, 60000);
-        input.Reshape(Shape(1, 784, 1, -1));
+        input.Reshape(Shape(784, 1, 1, -1));
 
         model.Fit(input, input, 256, 20, nullptr, nullptr, 2, TrainError);
 
@@ -44,7 +44,7 @@ public:
         
         vector<uint32_t> samplesIds(36);
         iota(samplesIds.begin(), samplesIds.end(), 0);
-        Tensor samples(Shape(1, 784, 1, (uint32_t)samplesIds.size()));
+        Tensor samples(Shape(784, 1, 1, (uint32_t)samplesIds.size()));
         input.GetBatches(samplesIds, samples);
         Tensor decodedSamples = *model.Predict(samples)[0];
         samples.Reshape(Shape(28, 28, 1, -1));

@@ -87,16 +87,16 @@ namespace Neuro
 
         layer->BackProp(outputGradient);
 
-        vector<ParametersAndGradients> paramsAndGrads;
-		layer->GetParametersAndGradients(paramsAndGrads);
+        vector<ParameterAndGradient> paramsAndGrads;
+		layer->ParametersAndGradients(paramsAndGrads);
 
 		if (paramsAndGrads.empty())
 			return true;
 
         auto result = Tensor(output.GetShape());
 
-		auto parameters = paramsAndGrads[0].Parameters;
-		auto gradients = paramsAndGrads[0].Gradients;
+		auto parameters = paramsAndGrads[0].param;
+		auto gradients = paramsAndGrads[0].grad;
 
 		for (uint32_t i = 0; i < parameters->GetShape().Length; i++)
 		{

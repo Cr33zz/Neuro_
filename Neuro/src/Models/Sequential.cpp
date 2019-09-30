@@ -55,8 +55,12 @@ namespace Neuro
         Init();
 		assert(inputs.size() == 1);
 
+        m_FeedForwardTimer.Start();
+
 		for (size_t i = 0; i < m_Layers.size(); ++i)
 			m_Layers[i]->FeedForward(i == 0 ? inputs[0] : m_Layers[i - 1]->Output(), training);
+
+        m_FeedForwardTimer.Stop();
 
         return m_Layers.back()->Outputs();
 	}
@@ -66,9 +70,13 @@ namespace Neuro
 	{
 		assert(outputsGradient.size() == 1);
 
+        m_BackPropTimer.Start();
+
         const tensor_ptr_vec_t* lastOutputsGradient = &outputsGradient;
 		for (int i = (int)m_Layers.size() - 1; i >= 0; --i)
 			lastOutputsGradient = &m_Layers[i]->BackProp(*lastOutputsGradient);
+
+        m_BackPropTimer.Stop();
 
         return m_Layers[0]->InputsGradient();
 	}

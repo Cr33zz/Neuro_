@@ -15,7 +15,7 @@ namespace Neuro
 
         virtual void CopyParametersTo(LayerBase& target, float tau) const override;
         virtual uint32_t ParamsNum() const override;
-        virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable = true) override;
+        virtual void ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable = true) override;
 
         BatchNormalization* SetMomentum(float momentum);
 
@@ -23,7 +23,7 @@ namespace Neuro
         BatchNormalization(bool) {}
 
         virtual LayerBase* GetCloneInstance() const override;
-        virtual void OnInit() override;
+        virtual void OnInit(bool initValues = true) override;
         virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) override;
         virtual void FeedForwardInternal(bool training) override;
         virtual void BackPropInternal(const tensor_ptr_vec_t& outputsGradient) override;

@@ -16,7 +16,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Adam::OnStep(vector<ParametersAndGradients>& paramsAndGrads, int batchSize)
+	void Adam::OnStep(vector<ParameterAndGradient>& paramsAndGrads, int batchSize)
 	{
 		if (m_MGradients.size() != paramsAndGrads.size())
 		{
@@ -24,7 +24,7 @@ namespace Neuro
 			
             for (uint32_t i = 0; i < paramsAndGrads.size(); ++i)
 			{
-				auto gradients = paramsAndGrads[i].Gradients;
+				auto gradients = paramsAndGrads[i].grad;
 
 				m_MGradients.push_back(Tensor(gradients->GetShape()));
 				m_VGradients.push_back(Tensor(gradients->GetShape()));
@@ -36,8 +36,8 @@ namespace Neuro
 		for (auto i = 0; i < paramsAndGrads.size(); ++i)
 		{
 			auto& parameterAndGradient = paramsAndGrads[i];
-			auto parameter = parameterAndGradient.Parameters;
-			auto gradient = parameterAndGradient.Gradients;
+			auto parameter = parameterAndGradient.param;
+			auto gradient = parameterAndGradient.grad;
             auto& mGrad = m_MGradients[i];
 			auto& vGrad = m_VGradients[i];
 

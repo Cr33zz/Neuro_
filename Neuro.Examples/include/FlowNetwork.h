@@ -25,8 +25,8 @@ public:
 
         model.Optimize(new SGD(0.05f), new MeanSquareError());
 
-        const_tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(1, 2)) };
-        const_tensor_ptr_vec_t outputs = { new Tensor({ 0, 1 }, Shape(1, 2)) };
+        const_tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(2)) };
+        const_tensor_ptr_vec_t outputs = { new Tensor({ 0, 1 }, Shape(2)) };
 
         model.Fit(inputs, outputs, 1, 60, nullptr, nullptr, 2, TrainError, false);
 

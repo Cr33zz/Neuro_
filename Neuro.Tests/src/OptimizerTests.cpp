@@ -35,13 +35,13 @@ namespace NeuroTests
             Tensor input(Shape(2, 2, 2, 2));
             input.FillWithRand(10);
 
-            vector<ParametersAndGradients> paramsAndGrads;
-            paramsAndGrads.push_back(ParametersAndGradients(nullptr, nullptr));
+            vector<ParameterAndGradient> paramsAndGrads;
+            paramsAndGrads.push_back({ nullptr, nullptr });
             for (int i = 0; i < 10000; ++i)
             {
-                paramsAndGrads[0].Parameters = &input;
+                paramsAndGrads[0].param = &input;
                 Tensor grad = SquareFuncGradient(input);
-                paramsAndGrads[0].Gradients = &grad;
+                paramsAndGrads[0].grad = &grad;
                 optimizer->Step(paramsAndGrads, 1);
             }
 

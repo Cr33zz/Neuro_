@@ -20,7 +20,7 @@ namespace Neuro
 
 	    virtual void CopyParametersTo(LayerBase& target, float tau) const override;
 		virtual uint32_t ParamsNum() const override;
-		virtual void GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable = true) override;
+		virtual void ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable = true) override;
 		
         Tensor& Weights() { return m_Weights; }
         Tensor& Bias() { return m_Bias; }
@@ -35,7 +35,7 @@ namespace Neuro
 
 		virtual LayerBase* GetCloneInstance() const override;
 		virtual void OnClone(const LayerBase& source) override;
-		virtual void OnInit() override;
+		virtual void OnInit(bool initValues) override;
         virtual void FeedForwardInternal(bool training) override;
         virtual void BackPropInternal(const tensor_ptr_vec_t& outputsGradient) override;
 
@@ -51,10 +51,10 @@ namespace Neuro
         InitializerBase* m_BiasInitializer = new Zeros();
 
         Tensor _iGradTemp1;
-        Tensor _wGradTemp1;
-        Tensor _wGradTemp2;
-        Tensor _wGradTemp3;
-        Tensor _bGradTemp1;
+        Tensor _inputT;
+        Tensor _ipnutTMulOutGrad;
+        Tensor _weightsGradSum;
+        Tensor _biasGradSum;
 
         /*virtual void SerializeParameters(XmlElement elem)
         {

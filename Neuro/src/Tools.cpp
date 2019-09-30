@@ -44,9 +44,9 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	int AccCategoricalClassificationEquality(const Tensor& target, const Tensor& output)
 	{
-        Tensor targetArgMax = target.ArgMax(EAxis::WHDAxis);
+        Tensor targetArgMax = target.ArgMax(EAxis::_012Axes);
         targetArgMax.Reshape(Shape(target.Batch()));
-        Tensor outputArgMax = output.ArgMax(EAxis::WHDAxis);
+        Tensor outputArgMax = output.ArgMax(EAxis::_012Axes);
         outputArgMax.Reshape(Shape(output.Batch()));
 
 		int hits = 0;
@@ -251,7 +251,7 @@ namespace Neuro
         }
 
         input = Tensor(Shape(imgWidth, imgHeight, 1, maxImages));
-        output = Tensor(Shape(1, outputsNum, 1, maxImages));
+        output = Tensor(Shape(outputsNum, 1, 1, maxImages));
         output.Zero();
 
         uint8_t* pixelOffset = reinterpret_cast<uint8_t*>(imagesBuffer.get() + 16);
@@ -273,7 +273,7 @@ namespace Neuro
             }
 
             uint8_t label = *(labelOffset++);
-            output(0, label, 0, i) = 1;
+            output(label, 0, 0, i) = 1;
         }
 
         if (image)
@@ -319,12 +319,12 @@ namespace Neuro
         }
 
         input = Tensor(Shape(imgWidth, imgHeight, 3, maxImages));
-        output = Tensor(Shape(1, outputsNum, 1, maxImages));
+        output = Tensor(Shape(outputsNum, 1, 1, maxImages));
         output.Zero();
 
         for (uint32_t i = 0; i < (uint32_t)maxImages; ++i)
         {
-            output(0, (uint32_t)buffer[i * 3073], 0, i) = 1;
+            output((uint32_t)buffer[i * 3073], 0, 0, i) = 1;
 
             uint8_t* pixelOffset = reinterpret_cast<uint8_t*>(buffer.get() + i * 3073 + 1);
 
@@ -363,7 +363,7 @@ namespace Neuro
         uint32_t imgWidth = 32;
         uint32_t imgHeight = 32;
 
-        auto labels = output.ArgMax(WHDAxis);
+        auto labels = output.ArgMax(_012Axes);
         labels.Reshape(Shape(output.Batch()));
 
         for (uint32_t i = 0; i < input.Batch(); ++i)
@@ -463,8 +463,49 @@ namespace Neuro
             }
         }
 
-        input = Tensor(inputValues, Shape(1, inputBatchSize, 1, batches));
-        output = Tensor(outputValues, Shape(1, outputsNum, 1, batches));
+        input = Tensor(inputValues, Shape(inputBatchSize, 1, 1, batches));
+        output = Tensor(outputValues, Shape(outputsNum, 1, 1, batches));
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor LoadImage(const string& filename, uint32_t targetSizeX, uint32_t targetSizeY)
+    {
+        ImageLibInit();
+
+        auto format = FreeImage_GetFileType(filename.c_str());
+        assert(format != FIF_UNKNOWN);
+
+        FIBITMAP* image = FreeImage_Load(format, filename.c_str());
+        assert(image);
+
+        const uint32_t WIDTH = targetSizeX > 0 ? targetSizeX : FreeImage_GetWidth(image);
+        const uint32_t HEIGHT = targetSizeY > 0 ? targetSizeY : FreeImage_GetHeight(image);
+
+        if (targetSizeX > 0 || targetSizeY > 0)
+        {
+            auto resizedImage = FreeImage_Rescale(image, WIDTH, HEIGHT, FILTER_BILINEAR);
+            FreeImage_Unload(image);
+            image = resizedImage;
+        }
+
+        Tensor result(Shape(3, WIDTH, HEIGHT));
+        auto& values = result.GetValues();
+
+        RGBQUAD color;
+
+        uint32_t idx = 0;
+        for (uint32_t h = 0; h < HEIGHT; ++h)
+        for (uint32_t w = 0; w < WIDTH; ++w)
+        {
+            FreeImage_GetPixelColor(image, (unsigned int)w, HEIGHT - (unsigned int)h - 1, &color);
+            values[idx++] = (float)color.rgbRed;
+            values[idx++] = (float)color.rgbGreen;
+            values[idx++] = (float)color.rgbBlue;
+        }
+
+        FreeImage_Unload(image);
+
+        return result;
     }
 
     //////////////////////////////////////////////////////////////////////////

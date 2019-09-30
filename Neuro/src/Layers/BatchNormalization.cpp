@@ -40,17 +40,17 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void BatchNormalization::GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable)
+    void BatchNormalization::ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable)
     {
         if (onlyTrainable && !m_Trainable)
             return;
 
-        paramsAndGrads.push_back(ParametersAndGradients(&m_Gamma, &m_GammaGrad));
-        paramsAndGrads.push_back(ParametersAndGradients(&m_Beta, &m_BetaGrad));
+        paramsAndGrads.push_back(ParameterAndGradient(&m_Gamma, &m_GammaGrad));
+        paramsAndGrads.push_back(ParameterAndGradient(&m_Beta, &m_BetaGrad));
         if (!onlyTrainable)
         {
-            paramsAndGrads.push_back(ParametersAndGradients(&m_RunningMean, nullptr));
-            paramsAndGrads.push_back(ParametersAndGradients(&m_RunningVar, nullptr));
+            paramsAndGrads.push_back(ParameterAndGradient(&m_RunningMean, nullptr));
+            paramsAndGrads.push_back(ParameterAndGradient(&m_RunningVar, nullptr));
         }
     }
 
@@ -68,33 +68,37 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void BatchNormalization::OnInit()
+    void BatchNormalization::OnInit(bool initValues)
     {
-        __super::OnInit();
+        __super::OnInit(initValues);
 
         Shape paramsShape = Shape(InputShape().Width(), InputShape().Height(), InputShape().Depth(), 1); // PerActivation
         if (InputShape().Depth() > 1) 
             paramsShape = Shape(1, 1, InputShape().Depth(), 1); // Spatial
 
         m_Gamma = Tensor(paramsShape, Name() + "/gamma");
-        m_Gamma.FillWithValue(1);
         m_Beta = Tensor(paramsShape, Name() + "/beta");
-        m_Beta.Zero();
 
         m_GammaGrad = Tensor(paramsShape, Name() + "/gamma_grad");
-        m_GammaGrad.Zero();
         m_BetaGrad = Tensor(paramsShape, Name() + "/beta_grad");
+        m_GammaGrad.Zero();
         m_BetaGrad.Zero();
-
+        
         m_RunningMean = Tensor(paramsShape, Name() + "/running_mean");
-        m_RunningMean.FillWithValue(0);
         m_RunningVar = Tensor(paramsShape, Name() + "/running_var");
-        m_RunningVar.FillWithValue(1);
 
         m_SaveMean = Tensor(paramsShape);
-        m_SaveMean.Zero();
         m_SaveVariance = Tensor(paramsShape);
-        m_SaveVariance.FillWithValue(1);
+
+        if (initValues)
+        {
+            m_Gamma.FillWithValue(1);
+            m_Beta.Zero();
+            m_RunningMean.FillWithValue(0);
+            m_RunningVar.FillWithValue(1);
+            m_SaveMean.Zero();
+            m_SaveVariance.FillWithValue(1);
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////

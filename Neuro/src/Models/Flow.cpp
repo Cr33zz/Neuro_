@@ -78,6 +78,8 @@ namespace Neuro
 	{
         Init();
 
+        m_FeedForwardTimer.Start();
+
         if (m_InputsGradient.size() != inputs.size())
         {
             m_InputsGradient.resize(inputs.size());
@@ -109,12 +111,16 @@ namespace Neuro
 			layer->FeedForward(currInputs, training);
 		}
 
+        m_FeedForwardTimer.Stop();
+
         return m_Outputs;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
     const tensor_ptr_vec_t& Flow::BackProp(const tensor_ptr_vec_t& outputsGradient)
 	{
+        m_BackPropTimer.Start();
+
         size_t lastOutputGradIdx = 0;
         for (uint32_t i = 0; i < (int)m_ModelOutputLayers.size(); ++i)
         {
@@ -182,6 +188,8 @@ namespace Neuro
                 m_InputsGradient[i]->Div((float)m_ModelInputLayers.size(), *m_InputsGradient[i]);
         }
 
+        m_BackPropTimer.Stop();
+
         return m_InputsGradient;
 	}
 
@@ -192,51 +200,42 @@ namespace Neuro
 
         auto& sourceFlow = static_cast<const Flow&>(source);
 
+        m_OutputsShapes = sourceFlow.m_OutputsShapes;
+
 		// clone is not a frequently used functionality so I'm not too concerned about its performance
 
 		// make clones first and store then in dictionary
-		//map<string, LayerBase*> clones;
+		map<string, LayerBase*> clones;
+		for (auto layer : sourceFlow.m_Order)
+		{
+			auto clone = layer->Clone();
+			clones[clone->Name()] = clone;
+		}
 
-		//for (auto layer : sourceFlow.m_Order)
-		//{
-		//	auto clone = layer->Clone();
-		//	clones[clone->Name()] = clone;
-		//}
+		// then connect them in the same manner as in original network and clone order
+		for (auto layer : sourceFlow.m_Order)
+		{
+			auto layerClone = clones[layer->Name()];
+			for (auto inLayer : layer->InputLayers())
+                layerClone->Link(clones[inLayer->Name()]);
 
-		//// then connect them in the same manner as in original network and clone order
-		//for (auto layer : sourceFlow.m_Order)
-		//{
-		//	auto layerClone = clones[layer->Name()];
-		//	for (auto inLayer : layer->InputLayers())
-		//	{
-		//		auto inLayerClone = clones[inLayer->Name()];
-		//		layerClone->InputLayers().push_back(inLayerClone);
-		//		inLayerClone->OutputLayers().push_back(layerClone);
-		//	}
+			m_Order.push_back(layerClone);
+		}
 
-		//	m_Order.push_back(layerClone);
-		//}
+		m_ReversedOrder.resize(m_Order.size());
+		reverse_copy(m_Order.begin(), m_Order.end(), m_ReversedOrder.begin());
 
-		//m_ReversedOrder.resize(m_Order.size());
-		//reverse_copy(m_Order.begin(), m_Order.end(), m_ReversedOrder.begin());
+        for (auto layer : sourceFlow.m_ModelInputLayers)
+            m_ModelInputLayers.push_back(clones[layer->Name()]);
 
-  //      for (auto layer : sourceFlow.m_ModelInputLayers)
-		//{
-		//	auto layerClone = clones[layer->Name()];
-  //          m_ModelInputLayers.push_back(layerClone);
-		//}
-
-  //      for (auto layer : sourceFlow.m_ModelOutputLayers)
-		//{
-		//	auto layerClone = clones[layer->Name()];
-  //          m_ModelOutputLayers.push_back(layerClone);
-		//}
+        for (auto layer : sourceFlow.m_ModelOutputLayers)
+            m_ModelOutputLayers.push_back(clones[layer->Name()]);
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Flow::OnInit()
+    void Flow::OnInit(bool initValues)
     {
-        __super::OnInit();
+        __super::OnInit(initValues);
 
         for (auto modelOutputLayer : m_ModelOutputLayers)
             m_Outputs.insert(m_Outputs.end(), modelOutputLayer->Outputs().begin(), modelOutputLayer->Outputs().end());

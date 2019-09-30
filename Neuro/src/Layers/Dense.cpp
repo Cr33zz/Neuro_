@@ -7,19 +7,19 @@ namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
 	Dense::Dense(LayerBase* inputLayer, int outputs, ActivationBase* activation, const string& name)
-        : SingleLayer(__FUNCTION__, inputLayer, Shape(1, outputs), activation, name)
+        : SingleLayer(__FUNCTION__, inputLayer, Shape(outputs), activation, name)
 	{
 	}
 
     //////////////////////////////////////////////////////////////////////////
     Dense::Dense(int outputs, ActivationBase* activation, const string& name)
-        : SingleLayer(__FUNCTION__, Shape(1, outputs), activation, name)
+        : SingleLayer(__FUNCTION__, Shape(outputs), activation, name)
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
 	Dense::Dense(int inputs, int outputs, ActivationBase* activation, const string& name)
-		: SingleLayer(__FUNCTION__, Shape(1, inputs), Shape(1, outputs), activation, name)
+		: SingleLayer(__FUNCTION__, Shape(inputs), Shape(outputs), activation, name)
 	{
 	}
 
@@ -53,26 +53,29 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Dense::OnInit()
+	void Dense::OnInit(bool initValues)
 	{
-		__super::OnInit();
+		__super::OnInit(initValues);
 
-		m_Weights = Tensor(Shape(InputShape().Length, OutputShape().Length), Name() + "/weights");
+		m_Weights = Tensor(Shape(OutputShape().Length, InputShape().Length), Name() + "/weights");
 		m_Bias = Tensor(OutputShape(), Name() + "/bias");
 		m_WeightsGrad = Tensor(m_Weights.GetShape(), Name() + "/weights_grad");
         m_WeightsGrad.Zero();
 		m_BiasGrad = Tensor(m_Bias.GetShape(), Name() + "/bias_grad");
         m_BiasGrad.Zero();
 
-		m_WeightsInitializer->Init(m_Weights);
-		if (m_UseBias)
-			m_BiasInitializer->Init(m_Bias);
+        if (initValues)
+        {
+            m_WeightsInitializer->Init(m_Weights);
+            if (m_UseBias)
+                m_BiasInitializer->Init(m_Bias);
+        }
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Dense::FeedForwardInternal(bool training)
 	{
-		m_Weights.Mul(*m_Inputs[0], *m_Outputs[0]);
+        m_Inputs[0]->Mul(m_Weights, *m_Outputs[0]);
 		if (m_UseBias)
 			m_Outputs[0]->Add(m_Bias, *m_Outputs[0]);
 	}
@@ -88,33 +91,33 @@ namespace Neuro
         {
             _iGradTemp1.Resize(Shape(m_Weights.Height(), m_Weights.Width(), 1, 1));
             m_Weights.Transpose(_iGradTemp1);
-            _iGradTemp1.Mul(*outputsGradient[0], *m_InputsGradient[0]);
+            outputsGradient[0]->Mul(_iGradTemp1, *m_InputsGradient[0]);
         }
         else
-            m_Weights.Transposed().Mul(*outputsGradient[0], *m_InputsGradient[0]);
+            outputsGradient[0]->Mul(m_Weights.Transposed(), *m_InputsGradient[0]);
 
         if (m_Trainable)
         {
             if (USE_TEMPS)
             {
-                _wGradTemp1.Resize(Shape(m_Inputs[0]->Height(), m_Inputs[0]->Width(), 1, m_Inputs[0]->Batch()));
-                m_Inputs[0]->Transpose(_wGradTemp1);
-                _wGradTemp2.Resize(Shape::From(m_WeightsGrad.GetShape(), m_Inputs[0]->Batch()));
-                outputsGradient[0]->Mul(_wGradTemp1, _wGradTemp2);
-                _wGradTemp3.Resize(m_WeightsGrad.GetShape());
-                _wGradTemp2.Sum(BatchAxis, _wGradTemp3);
-                m_WeightsGrad.Add(_wGradTemp3, m_WeightsGrad);
+                _inputT.Resize(Shape(m_Inputs[0]->Height(), m_Inputs[0]->Width(), 1, m_Inputs[0]->Batch()));
+                m_Inputs[0]->Transpose(_inputT);
+                _ipnutTMulOutGrad.Resize(Shape::From(m_WeightsGrad.GetShape(), m_Inputs[0]->Batch()));
+                _inputT.Mul(*outputsGradient[0], _ipnutTMulOutGrad);
+                _weightsGradSum.Resize(m_WeightsGrad.GetShape());
+                _ipnutTMulOutGrad.Sum(BatchAxis, _weightsGradSum);
+                m_WeightsGrad.Add(_weightsGradSum, m_WeightsGrad);
             }
             else
-                m_WeightsGrad.Add(outputsGradient[0]->Mul(m_Inputs[0]->Transposed()).Sum(BatchAxis), m_WeightsGrad);
+                m_WeightsGrad.Add(m_Inputs[0]->Transposed().Mul(*outputsGradient[0]).Sum(BatchAxis), m_WeightsGrad);
 
             if (m_UseBias)
             {
                 if (USE_TEMPS)
                 {
-                    _bGradTemp1.Resize(m_BiasGrad.GetShape());
-                    outputsGradient[0]->Sum(BatchAxis, _bGradTemp1);
-                    m_BiasGrad.Add(_bGradTemp1, m_BiasGrad);
+                    _biasGradSum.Resize(m_BiasGrad.GetShape());
+                    outputsGradient[0]->Sum(BatchAxis, _biasGradSum);
+                    m_BiasGrad.Add(_biasGradSum, m_BiasGrad);
                 }
                 else
                     m_BiasGrad.Add(outputsGradient[0]->Sum(BatchAxis), m_BiasGrad);
@@ -139,15 +142,15 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Dense::GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable)
+	void Dense::ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable)
 	{
         if (onlyTrainable && !m_Trainable)
             return;
 
-        paramsAndGrads.push_back(ParametersAndGradients(&m_Weights, &m_WeightsGrad));
+        paramsAndGrads.push_back(ParameterAndGradient(&m_Weights, &m_WeightsGrad));
 
 		if (m_UseBias)
-            paramsAndGrads.push_back(ParametersAndGradients(&m_Bias, &m_BiasGrad));
+            paramsAndGrads.push_back(ParameterAndGradient(&m_Bias, &m_BiasGrad));
 	}
 
     //////////////////////////////////////////////////////////////////////////

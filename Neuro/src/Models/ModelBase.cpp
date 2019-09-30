@@ -3,6 +3,8 @@
 #include <numeric>
 #include <cctype>
 #include <iomanip>
+#include <memory>
+#include <H5Cpp.h>
 
 #include "Models/ModelBase.h"
 #include "Optimizers/OptimizerBase.h"
@@ -10,6 +12,8 @@
 #include "Tools.h"
 #include "ChartGenerator.h"
 #include "Stopwatch.h"
+
+using namespace H5;
 
 namespace Neuro
 {
@@ -47,17 +51,17 @@ namespace Neuro
     }
     
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::OnInit()
+    void ModelBase::OnInit(bool initValues)
     {
         for (auto layer : Layers())
-            layer->Init();
+            layer->Init(initValues);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::ForceInitLayers()
+    void ModelBase::ForceInitLayers(bool initValues)
     {
         for (auto layer : Layers())
-            layer->Init();
+            layer->Init(initValues);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -146,7 +150,7 @@ namespace Neuro
         ss << "Layer                        Fwd[s]      Back[s]     ActFwd[s]   ActBack[s]  \n";
         ss << "=============================================================================\n";
 
-        /*for (auto layer : Layers())
+        for (auto layer : Layers())
         {
             ss << left << setw(29) << (layer->Name() + "(" + layer->ClassName() + ")").substr(0, 28);
             ss << setw(12) << layer->FeedForwardTime() * 0.001f;
@@ -154,7 +158,7 @@ namespace Neuro
             ss << setw(12) << layer->ActivationTime() * 0.001f;
             ss << setw(12) << layer->ActivationBackPropTime() * 0.001f << "\n";
             ss << "_____________________________________________________________________________\n";
-        }*/
+        }
 
         return ss.str();
     }
@@ -171,25 +175,202 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
+    tensor_ptr_vec_t ModelBase::Weights()
+    {
+        tensor_ptr_vec_t params;
+        vector<ParameterAndGradient> paramsAndGrads;
+
+        ParametersAndGradients(paramsAndGrads, false);
+        for (auto paramAndGrad : paramsAndGrads)
+            params.push_back(paramAndGrad.param);
+
+        return params;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void ModelBase::SaveWeights(const string& filename) const
     {
-        ofstream stream(filename, ios::out | ios::binary);
+        //https://github.com/keras-team/keras/blob/5be4ed3d9e7548dfa9d51d1d045a3f951d11c2b1/keras/engine/saving.py#L733
+        H5File file = H5File(filename, H5F_ACC_TRUNC);
+        
+        Tensor tranposedParam;
+        vector<SerializedParameter> params;
+        vector<string> paramNames;
+
+        {
+            Attribute att(file.createAttribute("nb_layers", PredType::NATIVE_INT64, DataSpace(H5S_SCALAR)));
+            int64_t layersNum = (int64_t)Layers().size();
+            att.write(PredType::NATIVE_INT64, &layersNum);
+        }
+
+        int layerIdx = 0;
+        for (auto layer : Layers())
+        {
+            Group g(file.createGroup("layer" + to_string(layerIdx++)));
+
+            params.clear();
+            paramNames.clear();
+            layer->SerializedParameters(params);
+
+            Attribute att(g.createAttribute("nb_params", PredType::NATIVE_INT64, DataSpace(H5S_SCALAR)));
+            int64_t paramsNum = (int64_t)params.size();
+            att.write(PredType::NATIVE_INT64, &paramsNum);
+            
+            for (auto i = 0; i < params.size(); ++i)
+            {
+                auto w = params[i].param;
+                auto& wShape = w->GetShape();
+                
+                vector<hsize_t> dims;
+                for (uint32_t i = 0; i < wShape.NDim; ++i)
+                    dims.push_back(wShape.Dimensions[i]);
+
+                DataSet dataset(g.createDataSet("param_" + to_string(i), PredType::NATIVE_FLOAT, DataSpace(wShape.NDim, &dims[0])));
+                dataset.write(&w->GetValues()[0], PredType::NATIVE_FLOAT);
+            }
+        }
+
+        /*ofstream stream(filename, ios::out | ios::binary);
         vector<ParametersAndGradients> paramsAndGrads;
-        const_cast<ModelBase*>(this)->GetParametersAndGradients(paramsAndGrads, false);
+        const_cast<ModelBase*>(this)->ParametersAndGradients(paramsAndGrads, false);
         for (auto i = 0; i < paramsAndGrads.size(); ++i)
             paramsAndGrads[i].Parameters->SaveBin(stream);
-        stream.close();
+        stream.close();*/
     }
 
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::LoadWeights(const string& filename)
     {
-        ifstream stream(filename, ios::in | ios::binary);
+        ForceInitLayers(false);
+
+        H5File file = H5File(filename, H5F_ACC_RDONLY);
+
+        bool is_keras = file.attrExists("layer_names");
+
+        Shape tranposedParamShape;
+        Tensor kerasParam;
+        vector<SerializedParameter> params;
+        static char buffer[1024];
+
+        auto& layers = Layers();
+
+        hsize_t layerGroupsNum;
+        H5Gget_num_objs(file.getId(), &layerGroupsNum);
+
+        // make sure number of parameters tensors match
+        assert((size_t)layerGroupsNum == layers.size());
+
+        vector<hsize_t> layersOrder(layers.size());
+        iota(layersOrder.begin(), layersOrder.end(), 0); // creation order by default
+
+        // Keras specifies order of layers by attribute containing array of layer names
+        if (is_keras)
+        {
+            map<string, hsize_t> layerNameToIdx;
+            for (hsize_t i = 0; i < layerGroupsNum; ++i)
+                layerNameToIdx[file.getObjnameByIdx(i)] = i;
+
+            Attribute att(file.openAttribute("layer_names"));
+            hsize_t layersNamesNum = 0;
+            att.getSpace().getSimpleExtentDims(&layersNamesNum);
+            assert(layersNamesNum == layerGroupsNum);
+            hsize_t strLen = att.getDataType().getSize();
+            att.read(att.getDataType(), buffer);
+
+            for (hsize_t i = 0; i < layerGroupsNum; ++i)
+            {
+                string layerName(buffer + i * strLen, min(strlen(buffer + i * strLen), strLen));
+                // we need to get rid of group/layer name from weight name
+                layerName = layerName.substr(layerName.find_last_of('/') + 1);
+                layersOrder[i] = layerNameToIdx[layerName];
+            }
+        }
+
+        for (size_t l = 0; l < layers.size(); ++l)
+        {
+            auto layer = layers[l];
+
+            Group g(file.openGroup(file.getObjnameByIdx(layersOrder[l])));
+
+            /*if (is_keras)
+                datasetsGroup = new Group(g.openGroup(g.getObjnameByIdx(0)));*/
+
+            params.clear();
+            layer->SerializedParameters(params);
+
+            //hsize_t layerDatasetsNum;
+            //H5Gget_num_objs(datasetsGroup->getId(), &layerDatasetsNum);
+
+            //// make sure number of parameters tensors match
+            //assert((size_t)layerDatasetsNum == params.size());
+
+            vector<DataSet> weightsDatasets;
+
+            // Keras specifies order of tensors by attribute containing array of tensor names
+            if (is_keras)
+            {
+                Attribute att(g.openAttribute("weight_names"));
+                hsize_t weightsNamesNum = 0;
+                att.getSpace().getSimpleExtentDims(&weightsNamesNum);
+                assert(weightsNamesNum == params.size());
+                hsize_t strLen = att.getDataType().getSize();
+                att.read(att.getDataType(), buffer);
+
+                for (hsize_t i = 0; i < weightsNamesNum; ++i)
+                {
+                    string weightName(buffer + i * strLen, min(strlen(buffer + i * strLen), strLen));
+                    weightsDatasets.push_back(g.openDataSet(weightName));
+                }
+            }
+            else
+            {
+                for (hsize_t i = 0; i < params.size(); ++i)
+                    weightsDatasets.push_back(g.openDataSet(g.getObjnameByIdx(i)));
+            }
+
+            for (hsize_t i = 0; i < params.size(); ++i)
+            {
+                auto& dataset = weightsDatasets[i];
+                auto w = params[i].param;
+
+                hsize_t weightNDims = dataset.getSpace().getSimpleExtentNdims();
+                hsize_t weightDims[5];
+                dataset.getSpace().getSimpleExtentDims(nullptr, weightDims);
+
+                assert(w->GetShape().Length == dataset.getSpace().getSimpleExtentNpoints());
+
+                if (is_keras && !params[i].transAxesKeras.empty())
+                {
+                    vector<int> dims(weightNDims);
+                    for (size_t n = 0; n < dims.size(); ++n)
+                        dims[n] = (int)weightDims[n];
+                    kerasParam.Resize(Shape::FromKeras(&dims[0], (int)weightNDims));
+                    kerasParam.Name(w->Name());
+                    w = &kerasParam;
+                }
+
+                auto wShape = w->GetShape();
+
+                assert(wShape.NDim == dataset.getSpace().getSimpleExtentNdims());
+                for (int i = wShape.NDim - 1, n = 0; i >= 0; --i, ++n)
+                    assert(weightDims[n] == wShape.Dimensions[i]);
+
+                dataset.read(&w->GetValues()[0], PredType::NATIVE_FLOAT);
+
+                if (is_keras && !params[i].transAxesKeras.empty())
+                {
+                    *params[i].param = w->Transposed(params[i].transAxesKeras);
+                    params[i].param->Name(kerasParam.Name());
+                }
+            }
+        }
+
+        /*ifstream stream(filename, ios::in | ios::binary);
         vector<ParametersAndGradients> paramsAndGrads;
-        GetParametersAndGradients(paramsAndGrads, false);
+        ParametersAndGradients(paramsAndGrads, false);
         for (auto i = 0; i < paramsAndGrads.size(); ++i)
             paramsAndGrads[i].Parameters->LoadBin(stream);
-        stream.close();
+        stream.close();*/
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -202,13 +383,13 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::GetParametersAndGradients(vector<ParametersAndGradients>& paramsAndGrads, bool onlyTrainable)
+    void ModelBase::ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable)
     {
         if (onlyTrainable && !m_Trainable)
             return;
 
         for (auto layer : Layers())
-            layer->GetParametersAndGradients(paramsAndGrads, onlyTrainable);
+            layer->ParametersAndGradients(paramsAndGrads, onlyTrainable);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -312,7 +493,7 @@ namespace Neuro
             float trainTotalLoss = 0;
             float trainTotalAcc = 0;
 
-            Tqdm progress(trainSamplesCount);
+            unique_ptr<Tqdm> progress(verbose == 2 ? new Tqdm(trainSamplesCount) : nullptr);
             for (uint32_t b = 0; b < trainBatchesNum; ++b)
             {
                 uint32_t samplesInBatch = inputs[0]->Batch();
@@ -336,12 +517,12 @@ namespace Neuro
                 trainTotalLoss += loss;
                 trainTotalAcc += acc;
 
-                if (verbose == 2)
-                    progress.NextStep(samplesInBatch);
+                if (progress)
+                    progress->NextStep(samplesInBatch);
             }
 
-            if (verbose == 2)
-                LogLine(progress.Str(), false);
+            if (progress)
+                LogLine(progress->Str(), false);
 
             float trainLoss = trainTotalLoss / trainBatchesNum;
             float trainAcc = (float)trainTotalAcc / trainBatchesNum;
@@ -486,16 +667,16 @@ namespace Neuro
         BackProp(outputsGrad);
 
         m_ParamsAndGrads.clear();
-        GetParametersAndGradients(m_ParamsAndGrads);
+        ParametersAndGradients(m_ParamsAndGrads);
 
 #       ifdef LOG_OUTPUTS
-        vector<ParametersAndGradients> allParamsAndGrads;
-        GetParametersAndGradients(allParamsAndGrads, false);
+        vector<ParameterAndGradient> allParamsAndGrads;
+        ParametersAndGradients(allParamsAndGrads, false);
         for (auto paramAndGrad : allParamsAndGrads)
         {
-            paramAndGrad.Parameters->DebugDumpValues(Replace(paramAndGrad.Parameters->Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
-            if (paramAndGrad.Gradients)
-                paramAndGrad.Gradients->DebugDumpValues(Replace(paramAndGrad.Gradients->Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
+            paramAndGrad.param->DebugDumpValues(Replace(paramAndGrad.param->Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
+            if (paramAndGrad.grad)
+                paramAndGrad.grad->DebugDumpValues(Replace(paramAndGrad.grad->Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
         }
 #       endif
 

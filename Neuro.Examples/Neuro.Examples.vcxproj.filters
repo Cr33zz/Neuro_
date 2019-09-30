@@ -56,5 +56,11 @@
     <ClInclude Include="include\CifarResNet.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\VGG16.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\NeuralStyleTransfer.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -9,7 +9,7 @@ namespace Neuro
         int totalLen = 0;
         for (auto input : inputLayers)
             totalLen += input->OutputShape().Length;
-        m_OutputsShapes[0] = Shape(1, totalLen);
+        m_OutputsShapes[0] = Shape(totalLen);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -32,19 +32,19 @@ namespace Neuro
         int totalLen = 0;
         for (auto input : InputLayers())
             totalLen += input->OutputShape().Length;
-        m_OutputsShapes[0] = Shape(1, totalLen);
+        m_OutputsShapes[0] = Shape(totalLen);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Concatenate::FeedForwardInternal(bool training)
     {
         // output is already of proper shape thanks to LayerBase.FeedForward
-        Tensor::Concat(WHDAxis, m_Inputs, *m_Outputs[0]);
+        Tensor::Concat(_012Axes, m_Inputs, *m_Outputs[0]);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Concatenate::BackPropInternal(const tensor_ptr_vec_t& outputsGradient)
     {
-        outputsGradient[0]->Split(WHDAxis, m_InputsGradient);
+        outputsGradient[0]->Split(_012Axes, m_InputsGradient);
     }
 }

@@ -8,7 +8,7 @@ using namespace Neuro;
 
 namespace NeuroTests
 {
-    TEST_CLASS(ConvolutionLayerTests)
+    TEST_CLASS(Conv2DLayerTests)
     {
         TEST_METHOD(InputGradient_1Batch_Valid)
         {
@@ -80,20 +80,25 @@ namespace NeuroTests
             TestTrain(1, 0, 2);
         }
 
-        void TestTrain(uint32_t stride, uint32_t padding, int batch = 1)
+        TEST_METHOD(Train_Stride1_Pad0_NHWC_Batch2)
+        {
+            TestTrain(1, 0, 2, NHWC);
+        }
+
+        void TestTrain(uint32_t stride, uint32_t padding, int batch = 1, EDataFormat format = NCHW)
         {
             GlobalRngSeed(101);
-            Shape inputShape(4, 4, 3, batch);
+            Shape inputShape = format == NCHW ? Shape(4, 4, 3, batch) : Shape(3, 4, 4, batch);
 
             auto model = new Sequential("convolution_test");
-            model->AddLayer(new Conv2D(inputShape, 3, 3, stride, padding));
+            model->AddLayer(new Conv2D(inputShape, 3, 3, stride, padding, nullptr, format));
 
             Tensor randomKernels(Shape(3, 3, 3, 3));
             randomKernels.FillWithRand();
 
             Tensor input(inputShape);
             input.FillWithRand();
-            Tensor output = input.Conv2D(randomKernels, stride, padding);
+            Tensor output = input.Conv2D(randomKernels, stride, padding, format);
 
             model->Optimize(new Adam(0.02f), new MeanSquareError());
             model->Fit(input, output, -1, 200, nullptr, nullptr, 1, TrainError);

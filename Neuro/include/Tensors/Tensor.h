@@ -43,10 +43,13 @@ namespace Neuro
         uint32_t Height() const { return m_Shape.Height(); }
         uint32_t Depth() const { return m_Shape.Depth(); }
         uint32_t Batch() const { return m_Shape.Batch(); }
-        uint32_t BatchLength() const { return m_Shape.Dim0Dim1Dim2; }
+        uint32_t Len(size_t dim) const { return m_Shape.Dimensions[dim]; }
+        uint32_t Stride(size_t dim) const { return m_Shape.Stride[dim]; }
+        uint32_t BatchLength() const { return m_Shape.Stride[3]; }
         uint32_t Length() const { return (uint32_t)m_Values.size(); }
 
         const string& Name() const { return m_Name; }
+        void Name(const string& name) { m_Name = name; }
 
         vector<float>& GetValues();
         const vector<float>& GetValues() const;
@@ -126,7 +129,13 @@ namespace Neuro
         static void MergeMinMaxGradient(const Tensor& output, const const_tensor_ptr_vec_t& inputs, const Tensor& outputGradient, tensor_ptr_vec_t& results);
         static void MergeSumGradient(const Tensor& output, const const_tensor_ptr_vec_t& inputs, const Tensor& outputGradient, tensor_ptr_vec_t& results);
         static void MergeAvgGradient(const Tensor& output, const const_tensor_ptr_vec_t& inputs, const Tensor& outputGradient, tensor_ptr_vec_t& results);
+
+        static vector<EAxis> FillUpTranposeAxis(const vector<EAxis>& axes);
         
+        // Axis specifies new order of axis (dimensions) using input tensor axis nomenclature
+        Tensor Transposed(const vector<EAxis>& axes) const;
+        void Transpose(const vector<EAxis>& axes, Tensor& result) const;
+
         Tensor Transposed() const;
         void Transpose(Tensor& result) const;
 
@@ -156,19 +165,19 @@ namespace Neuro
         pair<Tensor, Tensor> Standardized(EAxis axis, Tensor& result, Tensor* mean = nullptr, Tensor* invVariance = nullptr) const;
         Tensor Standardized(EAxis axis, Tensor* mean = nullptr, Tensor* invVariance = nullptr) const;
 
-        void Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, Tensor& result) const;
-        Tensor Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding) const;
-        void Conv2DInputsGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t padding, Tensor& inputsGradient) const;
-        void Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, uint32_t stride, uint32_t padding, Tensor& kernelsGradient) const;
+        void Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& result) const;
+        Tensor Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat) const;
+        void Conv2DInputsGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& inputsGradient) const;
+        void Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& kernelsGradient) const;
 
-        void Conv2DTransposed(const Tensor& kernels, uint32_t stride, uint32_t padding, Tensor& result) const;
-        Tensor Conv2DTransposed(const Tensor& kernels, uint32_t outputDepth, uint32_t stride, uint32_t padding) const;
-        void Conv2DTransposedInputsGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t padding, Tensor& inputsGradient) const;
-        void Conv2DTransposedKernelsGradient(const Tensor& input, const Tensor& gradient, uint32_t stride, uint32_t padding, Tensor& kernelsGradient) const;
+        void Conv2DTransposed(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& result) const;
+        Tensor Conv2DTransposed(const Tensor& kernels, uint32_t outputDepth, uint32_t stride, uint32_t padding, EDataFormat dataFormat) const;
+        void Conv2DTransposedInputsGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& inputsGradient) const;
+        void Conv2DTransposedKernelsGradient(const Tensor& input, const Tensor& gradient, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& kernelsGradient) const;
 
-        void Pool2D(uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t padding, Tensor& output) const;
-        Tensor Pool2D(uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t padding) const;
-        void Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t padding, Tensor& result) const;
+        void Pool2D(uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t padding, EDataFormat dataFormat, Tensor& output) const;
+        Tensor Pool2D(uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t padding, EDataFormat dataFormat) const;
+        void Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t padding, EDataFormat dataFormat, Tensor& result) const;
 
         void UpSample2D(uint32_t scaleFactor, Tensor& output) const;
         Tensor UpSample2D(uint32_t scaleFactor) const;
@@ -186,9 +195,9 @@ namespace Neuro
 
         static pair<uint32_t, uint32_t> GetPadding(EPaddingMode paddingMode, uint32_t kernelWidth, uint32_t kernelHeight);
         static uint32_t GetPadding(EPaddingMode paddingMode, uint32_t kernelSize);
-        static Shape GetPooling2DOutputShape(const Shape& inputShape, uint32_t kernelWidth, uint32_t kernelHeight, uint32_t stride, uint32_t paddingX, uint32_t paddingY);
-        static Shape GetConvOutputShape(const Shape& inputShape, uint32_t kernelsNum, uint32_t kernelWidth, uint32_t kernelHeight, uint32_t stride, uint32_t paddingX, uint32_t paddingY);
-        static Shape GetConvTransposeOutputShape(const Shape& inputShape, uint32_t outputDepth, uint32_t kernelWidth, uint32_t kernelHeight, uint32_t stride, uint32_t paddingX, uint32_t paddingY);
+        static Shape GetPooling2DOutputShape(const Shape& inputShape, uint32_t kernelWidth, uint32_t kernelHeight, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat);
+        static Shape GetConvOutputShape(const Shape& inputShape, uint32_t kernelsNum, uint32_t kernelWidth, uint32_t kernelHeight, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat);
+        static Shape GetConvTransposeOutputShape(const Shape& inputShape, uint32_t outputDepth, uint32_t kernelWidth, uint32_t kernelHeight, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat);
 
         //internal void Serialize(XmlElement parentElem, string name)
         //{
