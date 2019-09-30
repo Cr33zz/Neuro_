@@ -1,37 +1,21 @@
-﻿using Neuro.Tensors;
+﻿#pragma once
 
-namespace Neuro.ComputationalGraph
+#include "CompGraph/Operation.h"
+
+namespace Neuro
 {
-    public static partial class Ops
+    class Add : public Operation
     {
-        private class Add : Operation
-        {
-            public Add(NodeBase a, NodeBase b)
-                : base(new[] {a, b})
-            {
-            }
+    public:
+        Add(NodeBase* a, NodeBase* b);
 
-            public override Tensor Compute(Tensor[] inputs)
-            {
-                base.Compute(inputs);
-                return inputs[0].Add(inputs[1]);
-            }
+    protected:
+        virtual void ComputeInternal() override;        
+        virtual void ComputeGradientInternal(const Tensor& grad) override;
+    };
 
-            public override Tensor[] ComputeGradient(Tensor grad)
-            {
-                var a = Inputs[0];
-                var b = Inputs[1];
-
-                var gradWrtA = grad;
-                var gradWrtB = grad;
-
-                return new[] {gradWrtA, gradWrtB};
-            }
-        }
-
-        public static Operation add(NodeBase a, NodeBase b)
-        {
-            return new Add(a, b);
-        }
+    static Operation* add(NodeBase* a, NodeBase* b)
+    {
+        return new Add(a, b);
     }
 }

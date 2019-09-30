@@ -72,6 +72,7 @@
     <Lib>
       <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\h5cpp\lib;$(CudaToolkitLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>cudart_static.lib;cudnn.lib;cublas.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib</AdditionalDependencies>
+      <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Lib>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
@@ -105,6 +106,7 @@
     <Lib>
       <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\h5cpp\lib;$(CudaToolkitLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>cudart_static.lib;cudnn.lib;cublas.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib</AdditionalDependencies>
+      <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Lib>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
@@ -123,6 +125,8 @@
     <ClInclude Include="include\CompGraph\Graph.h" />
     <ClInclude Include="include\CompGraph\NodeBase.h" />
     <ClInclude Include="include\CompGraph\Operation.h" />
+    <ClInclude Include="include\CompGraph\Operations\Add.h" />
+    <ClInclude Include="include\CompGraph\Optimizer.h" />
     <ClInclude Include="include\CompGraph\Placeholder.h" />
     <ClInclude Include="include\CompGraph\Session.h" />
     <ClInclude Include="include\CompGraph\Variable.h" />
@@ -185,6 +189,7 @@
     <ClCompile Include="src\CompGraph\NodeBase.cpp" />
     <ClCompile Include="src\CompGraph\Operation.cpp" />
     <ClCompile Include="src\CompGraph\Operations\Add.cpp" />
+    <ClCompile Include="src\CompGraph\Optimizer.cpp" />
     <ClCompile Include="src\CompGraph\Placeholder.cpp" />
     <ClCompile Include="src\CompGraph\Session.cpp" />
     <ClCompile Include="src\CompGraph\Variable.cpp" />

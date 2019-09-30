@@ -8,11 +8,7 @@ namespace Neuro
     class Placeholder : public NodeBase
     {
     public:
-        Placeholder(const Shape& shape)
-        {
-            m_Shape = shape;
-            Graph.Default.Placeholders.Add(this);
-        }
+        Placeholder(const Shape& shape);
 
     private:
         Shape m_Shape;

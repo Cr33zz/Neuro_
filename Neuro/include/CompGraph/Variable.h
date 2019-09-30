@@ -5,16 +5,14 @@
 
 namespace Neuro
 {
+    class Optimizer;
+
     class Variable : public NodeBase
     {
     public:
-        Variable(const Tensor& initValue)
-        {
-            m_Value = initValue;
-            Graph.Default.Variables.Add(this);
-        }
+        Variable(const Tensor& initValue);
 
-        const Tensor& Value() const { return m_Value;  }
+        Tensor& Value() { return m_Value;  }
 
     private:
         Tensor m_Value;

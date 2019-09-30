@@ -234,6 +234,12 @@
     <ClInclude Include="include\CompGraph\Session.h">
       <Filter>include\CompGraph</Filter>
     </ClInclude>
+    <ClInclude Include="include\CompGraph\Operations\Add.h">
+      <Filter>include\CompGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CompGraph\Optimizer.h">
+      <Filter>include\CompGraph</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -379,6 +385,9 @@
     </ClCompile>
     <ClCompile Include="src\CompGraph\Operations\Add.cpp">
       <Filter>src\CompGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CompGraph\Optimizer.cpp">
+      <Filter>src\CompGraph</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

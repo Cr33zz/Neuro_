@@ -44,6 +44,7 @@ namespace Neuro
         uint32_t Depth() const { return m_Shape.Depth(); }
         uint32_t Batch() const { return m_Shape.Batch(); }
         uint32_t Len(size_t dim) const { return m_Shape.Dimensions[dim]; }
+        uint32_t NDim() const { return m_Shape.NDim; }
         uint32_t Stride(size_t dim) const { return m_Shape.Stride[dim]; }
         uint32_t BatchLength() const { return m_Shape.Stride[3]; }
         uint32_t Length() const { return (uint32_t)m_Values.size(); }

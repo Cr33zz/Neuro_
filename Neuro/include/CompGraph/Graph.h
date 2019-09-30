@@ -13,17 +13,9 @@ namespace Neuro
     class Graph
     {
     public:
-        Graph()
-        {
-            if (!s_Default)
-                SetAsDefault();
-        }
+        Graph();
 
-        void SetAsDefault()
-        {
-            s_Default = this;
-        }
-
+        void SetAsDefault() { s_Default = this; }
         static Graph* Default() { return s_Default; }
 
     private:

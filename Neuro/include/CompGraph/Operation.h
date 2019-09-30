@@ -9,32 +9,21 @@ namespace Neuro
     class Operation : public NodeBase
     {
     public:
-        const Tensor& Compute(const vector<Tensor*>& inputs)
-        {
-            m_Inputs = inputs;
-            return ComputeInternal();
-        }
+        virtual bool IsOp() const override { return true; }
 
-        const vector<Tensor*> ComputeGradient(Tensor grad)
-        {
+        const vector<Tensor*>& Inputs() const { return m_Inputs; }
 
-        }
+        const Tensor& Compute(const vector<Tensor*>& inputs);
+        const vector<Tensor*>& ComputeGradient(const Tensor& grad);
 
     protected:
-        Operation(const vector<NodeBase*>& inputNodes)
-        {
-            m_InputNodes = inputNodes;
+        Operation(const vector<NodeBase*>& inputNodes);
 
-            for (auto inputNode : inputNodes)
-                inputNode->m_Consumers.push_back(this);
-
-            Graph::Default()->m_Operations.push_back(this);
-        }
-
-        virtual const Tensor& ComputeInternal() = 0;
-        virtual vector<Tensor*> ComputeGradientInternal(const Tensor& grad) = 0;
+        virtual void ComputeInternal() = 0;
+        virtual void ComputeGradientInternal(const Tensor& grad) = 0;
 
         vector<Tensor*> m_Inputs;
         vector<Tensor> m_InputsGrads;
+        vector<Tensor*> m_InputsGradsPtrs; // for performance
     };
 }
