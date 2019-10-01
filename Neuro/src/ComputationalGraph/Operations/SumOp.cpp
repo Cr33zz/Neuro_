@@ -1,16 +1,16 @@
-#include "ComputationalGraph/Operations/Sum.h"
+#include "ComputationalGraph/Operations/SumOp.h"
 
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Op::Sum::Sum(NodeBase* x, EAxis axis)
+    SumOp::SumOp(NodeBase* x, EAxis axis)
         : Operation({ x }), m_Axis(axis)
     {
         assert(axis <= BatchAxis);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::Sum::ComputeInternal()
+    void SumOp::ComputeInternal()
     {
         if (m_Axis == GlobalAxis)
             m_Output.Resize(Shape(1, 1, 1, 1));
@@ -27,7 +27,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::Sum::ComputeGradientInternal(const Tensor& grad)
+    void SumOp::ComputeGradientInternal(const Tensor& grad)
     {
         m_InputsGrads[0].FillWithValue(1);
         m_InputsGrads[0].MulElem(grad, m_InputsGrads[0]);

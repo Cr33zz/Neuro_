@@ -1,24 +1,23 @@
-#include "ComputationalGraph/Operations/Exp.h"
+#include "ComputationalGraph/Operations/SigmoidOp.h"
 
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Op::Exp::Exp(NodeBase* x)
+    SigmoidOp::SigmoidOp(NodeBase* x)
         : Operation({x})
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::Exp::ComputeInternal()
+    void SigmoidOp::ComputeInternal()
     {
         m_Output.Resize(m_Inputs[0]->GetShape());
-        m_Inputs[0]->Map([](float x) {return ::exp(x); }, m_Output);
+        m_Inputs[0]->Sigmoid(m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::Exp::ComputeGradientInternal(const Tensor& grad)
+    void SigmoidOp::ComputeGradientInternal(const Tensor& grad)
     {
-        // in_grad = grad * e^x
-        grad.Map([](float g, float x) {return g * x; }, m_Output, m_InputsGrads[0]);
+        m_Output.SigmoidGradient(m_Output, grad, m_InputsGrads[0]);
     }
 }

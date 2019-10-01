@@ -1,24 +1,24 @@
-#include "ComputationalGraph/Operations/Log.h"
+#include "ComputationalGraph/Operations/NegativeOp.h"
 
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Op::Log::Log(NodeBase* x)
+    NegativeOp::NegativeOp(NodeBase* x)
         : Operation({x})
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::Log::ComputeInternal()
+    void NegativeOp::ComputeInternal()
     {
         m_Output.Resize(m_Inputs[0]->GetShape());
-        m_Inputs[0]->Map([](float x) {return ::log(x); }, m_Output);
+        m_Inputs[0]->Map([](float x) {return -x; }, m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::Log::ComputeGradientInternal(const Tensor& grad)
+    void NegativeOp::ComputeGradientInternal(const Tensor& grad)
     {
-        //in_grad = grad / x
-        grad.Map([](float g, float x) {return g / x; }, *m_Inputs[0], m_InputsGrads[0]);
+        //in_grad = -grad
+        grad.Map([](float g) {return -g; }, m_InputsGrads[0]);
     }
 }

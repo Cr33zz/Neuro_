@@ -1,23 +1,23 @@
 #include <algorithm>
-#include "ComputationalGraph/Operations/MatMul.h"
+#include "ComputationalGraph/Operations/MatMulOp.h"
 
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Op::MatMul::MatMul(NodeBase* a, NodeBase* b)
+    MatMulOp::MatMulOp(NodeBase* a, NodeBase* b)
         : Operation({a, b})
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::MatMul::ComputeInternal()
+    void MatMulOp::ComputeInternal()
     {
         m_Output.Resize(Shape(m_Inputs[1]->Len(0), m_Inputs[0]->Len(1), m_Inputs[0]->Len(2), max(m_Inputs[0]->Len(3), m_Inputs[1]->Len(3))));
         m_Inputs[0]->Mul(*m_Inputs[1], m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::MatMul::ComputeGradientInternal(const Tensor& grad)
+    void MatMulOp::ComputeGradientInternal(const Tensor& grad)
     {
         auto& a = *m_Inputs[0];
         auto& b = *m_Inputs[1];

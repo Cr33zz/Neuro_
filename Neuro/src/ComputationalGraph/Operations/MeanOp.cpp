@@ -1,16 +1,16 @@
-#include "ComputationalGraph/Operations/Mean.h"
+#include "ComputationalGraph/Operations/MeanOp.h"
 
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Op::Mean::Mean(NodeBase* x, EAxis axis)
+    MeanOp::MeanOp(NodeBase* x, EAxis axis)
         : Operation({x}), m_Axis(axis)
     {
         assert(axis <= BatchAxis);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::Mean::ComputeInternal()
+    void MeanOp::ComputeInternal()
     {
         if (m_Axis == GlobalAxis)
             m_Output.Resize(Shape(1, 1, 1, 1));
@@ -27,7 +27,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::Mean::ComputeGradientInternal(const Tensor& grad)
+    void MeanOp::ComputeGradientInternal(const Tensor& grad)
     {
         float n = (float)m_Inputs[0]->Length();
         if (m_Axis != GlobalAxis)

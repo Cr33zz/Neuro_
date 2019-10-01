@@ -1,24 +1,24 @@
-#include "ComputationalGraph/Operations/Negative.h"
+#include "ComputationalGraph/Operations/ExpOp.h"
 
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Op::Negative::Negative(NodeBase* x)
+    ExpOp::ExpOp(NodeBase* x)
         : Operation({x})
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::Negative::ComputeInternal()
+    void ExpOp::ComputeInternal()
     {
         m_Output.Resize(m_Inputs[0]->GetShape());
-        m_Inputs[0]->Map([](float x) {return -x; }, m_Output);
+        m_Inputs[0]->Map([](float x) {return ::exp(x); }, m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::Negative::ComputeGradientInternal(const Tensor& grad)
+    void ExpOp::ComputeGradientInternal(const Tensor& grad)
     {
-        //in_grad = -grad
-        grad.Map([](float g) {return -g; }, m_InputsGrads[0]);
+        // in_grad = grad * e^x
+        grad.Map([](float g, float x) {return g * x; }, m_Output, m_InputsGrads[0]);
     }
 }

@@ -1,34 +1,34 @@
-﻿#include <algorithm>
-#include "ComputationalGraph/Operations/Add.h"
+#include <algorithm>
+#include "ComputationalGraph/Operations/SubtractOp.h"
 
 namespace Neuro
-{        
+{
     //////////////////////////////////////////////////////////////////////////
-    Op::Add::Add(NodeBase* a, NodeBase* b)
+    SubtractOp::SubtractOp(NodeBase* a, NodeBase* b)
         : Operation({ a, b })
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::Add::ComputeInternal()
+    void SubtractOp::ComputeInternal()
     {
         m_Output.Resize(Shape(
-            max(m_Inputs[0]->Len(0), m_Inputs[1]->Len(0)), 
-            max(m_Inputs[0]->Len(1), m_Inputs[1]->Len(1)), 
-            max(m_Inputs[0]->Len(2), m_Inputs[1]->Len(2)), 
+            max(m_Inputs[0]->Len(0), m_Inputs[1]->Len(0)),
+            max(m_Inputs[0]->Len(1), m_Inputs[1]->Len(1)),
+            max(m_Inputs[0]->Len(2), m_Inputs[1]->Len(2)),
             max(m_Inputs[0]->Len(3), m_Inputs[1]->Len(3))));
 
-        return m_Inputs[0]->Add(*m_Inputs[1], m_Output);
+        return m_Inputs[0]->Sub(*m_Inputs[1], m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::Add::ComputeGradientInternal(const Tensor& grad)
+    void SubtractOp::ComputeGradientInternal(const Tensor& grad)
     {
         auto& a = *m_Inputs[0];
         auto& b = *m_Inputs[1];
 
         auto gradWrtA = grad;
-        auto gradWrtB = grad;
+        auto gradWrtB = grad.Negated();
 
         for (int i = WidthAxis; i <= BatchAxis; ++i)
         {

@@ -1,34 +1,34 @@
-#include <algorithm>
-#include "ComputationalGraph/Operations/Multiply.h"
+﻿#include <algorithm>
+#include "ComputationalGraph/Operations/AddOp.h"
 
 namespace Neuro
-{
+{        
     //////////////////////////////////////////////////////////////////////////
-    Op::Multiply::Multiply(NodeBase* a, NodeBase* b)
-        : Operation({a, b})
+    AddOp::AddOp(NodeBase* a, NodeBase* b)
+        : Operation({ a, b })
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::Multiply::ComputeInternal()
+    void AddOp::ComputeInternal()
     {
         m_Output.Resize(Shape(
-            max(m_Inputs[0]->Len(0), m_Inputs[1]->Len(0)),
-            max(m_Inputs[0]->Len(1), m_Inputs[1]->Len(1)),
-            max(m_Inputs[0]->Len(2), m_Inputs[1]->Len(2)),
+            max(m_Inputs[0]->Len(0), m_Inputs[1]->Len(0)), 
+            max(m_Inputs[0]->Len(1), m_Inputs[1]->Len(1)), 
+            max(m_Inputs[0]->Len(2), m_Inputs[1]->Len(2)), 
             max(m_Inputs[0]->Len(3), m_Inputs[1]->Len(3))));
 
-        return m_Inputs[0]->MulElem(*m_Inputs[1], m_Output);
+        return m_Inputs[0]->Add(*m_Inputs[1], m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::Multiply::ComputeGradientInternal(const Tensor& grad)
+    void AddOp::ComputeGradientInternal(const Tensor& grad)
     {
         auto& a = *m_Inputs[0];
         auto& b = *m_Inputs[1];
 
-        auto gradWrtA = grad * b;
-        auto gradWrtB = grad * a;
+        auto gradWrtA = grad;
+        auto gradWrtB = grad;
 
         for (int i = WidthAxis; i <= BatchAxis; ++i)
         {

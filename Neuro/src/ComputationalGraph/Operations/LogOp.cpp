@@ -1,23 +1,24 @@
-#include "ComputationalGraph/Operations/Softmax.h"
+#include "ComputationalGraph/Operations/LogOp.h"
 
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Op::Softmax::Softmax(NodeBase* x)
+    LogOp::LogOp(NodeBase* x)
         : Operation({x})
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::Softmax::ComputeInternal()
+    void LogOp::ComputeInternal()
     {
         m_Output.Resize(m_Inputs[0]->GetShape());
-        m_Inputs[0]->Softmax(m_Output);
+        m_Inputs[0]->Map([](float x) {return ::log(x); }, m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::Softmax::ComputeGradientInternal(const Tensor& grad)
+    void LogOp::ComputeGradientInternal(const Tensor& grad)
     {
-        m_Output.SoftmaxGradient(m_Output, grad, m_InputsGrads[0]);
+        //in_grad = grad / x
+        grad.Map([](float g, float x) {return g / x; }, *m_Inputs[0], m_InputsGrads[0]);
     }
 }

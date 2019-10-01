@@ -1,22 +1,22 @@
-#include "ComputationalGraph/Operations/Pow.h"
+#include "ComputationalGraph/Operations/PowOp.h"
 
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Op::Pow::Pow(NodeBase* x, float p)
+    PowOp::PowOp(NodeBase* x, float p)
         : Operation({ x }), m_Power(p)
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::Pow::ComputeInternal()
+    void PowOp::ComputeInternal()
     {
         m_Output.Resize(m_Inputs[0]->GetShape());
         m_Inputs[0]->Map([&](float x) {return ::pow(x, m_Power); }, m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::Pow::ComputeGradientInternal(const Tensor& grad)
+    void PowOp::ComputeGradientInternal(const Tensor& grad)
     {
         //in_grad = p * grad^(p-1)
         if (m_Power == 2)

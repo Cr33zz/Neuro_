@@ -1,23 +1,23 @@
-#include "ComputationalGraph/Operations/Sigmoid.h"
+#include "ComputationalGraph/Operations/TanHOp.h"
 
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Op::Sigmoid::Sigmoid(NodeBase* x)
-        : Operation({x})
+    TanHOp::TanHOp(NodeBase* x)
+        : Operation({ x })
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::Sigmoid::ComputeInternal()
+    void TanHOp::ComputeInternal()
     {
         m_Output.Resize(m_Inputs[0]->GetShape());
-        m_Inputs[0]->Sigmoid(m_Output);
+        m_Inputs[0]->Tanh(m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::Sigmoid::ComputeGradientInternal(const Tensor& grad)
+    void TanHOp::ComputeGradientInternal(const Tensor& grad)
     {
-        m_Output.SigmoidGradient(m_Output, grad, m_InputsGrads[0]);
+        m_Output.TanhGradient(m_Output, grad, m_InputsGrads[0]);
     }
 }

@@ -1,23 +1,23 @@
-#include "ComputationalGraph/Operations/TanH.h"
+#include "ComputationalGraph/Operations/SoftmaxOp.h"
 
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Op::TanH::TanH(NodeBase* x)
-        : Operation({ x })
+    SoftmaxOp::SoftmaxOp(NodeBase* x)
+        : Operation({x})
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::TanH::ComputeInternal()
+    void SoftmaxOp::ComputeInternal()
     {
         m_Output.Resize(m_Inputs[0]->GetShape());
-        m_Inputs[0]->Tanh(m_Output);
+        m_Inputs[0]->Softmax(m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Op::TanH::ComputeGradientInternal(const Tensor& grad)
+    void SoftmaxOp::ComputeGradientInternal(const Tensor& grad)
     {
-        m_Output.TanhGradient(m_Output, grad, m_InputsGrads[0]);
+        m_Output.SoftmaxGradient(m_Output, grad, m_InputsGrads[0]);
     }
 }
