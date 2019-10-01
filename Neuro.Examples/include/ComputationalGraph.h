@@ -28,11 +28,13 @@ public:
 
         auto minimizeOp = _SGDOptimizer(0.02f).Minimize(loss);
 
+        auto input1 = Uniform::Random(-1, 1, x1->GetShape());
+        auto input2 = Uniform::Random(-1, 1, x2->GetShape());
+        auto output = Uniform::Random(0, 1, y->GetShape());
+
         for (int step = 0; step < 200; ++step)
         {
-            auto result = Session::Default->Run({ o, loss },
-                { {x1, new Tensor(Uniform::Random(-1, 1, x1->GetShape()))},
-                  {x2, new Tensor(Uniform::Random(-1, 1, x2->GetShape()))} });
+            auto result = Session::Default->Run({ o, loss }, { {x1, &input1}, {x2, &input2}, {y, &output} });
 
             cout << "step: " << step << " loss: " << (*result[1])(0) << endl;
         }

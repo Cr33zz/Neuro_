@@ -11,7 +11,7 @@ namespace Neuro
         for (auto inputNode : inputNodes)
             inputNode->m_Consumers.push_back(this);
 
-        Graph::Default()->Operations.push_back(this);
+        //Graph::Default()->Operations.push_back(this);
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -7,6 +7,6 @@ namespace Neuro
     Placeholder::Placeholder(const Shape& shape)
     {
         m_Shape = shape;
-        Graph::Default()->Placeholders.push_back(this);
+        //Graph::Default()->Placeholders.push_back(this);
     }
 }
