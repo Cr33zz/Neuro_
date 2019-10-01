@@ -6,15 +6,17 @@
 namespace Neuro
 {
     class Optimizer;
+    class InitializerBase;
 
     class Variable : public NodeBase
     {
     public:
-        Variable(const Tensor& initValue);
+        Variable(const Tensor& initValue, const string& name = "");
+        Variable(const Shape& shape, InitializerBase* initializer = nullptr, const string& name = "");
 
-        Tensor& Value() { return m_Value;  }
+        const string& Name() const { return m_Name; }
 
     private:
-        Tensor m_Value;
+        string m_Name;
     };
 }

@@ -2,14 +2,13 @@
 
 namespace Neuro
 {
-	class Tensor;
+	class NodeBase;
 
     class LossBase
     {
 	public:
         virtual LossBase* Clone() const = 0;
-        virtual void Compute(const Tensor& targetOutput, const Tensor& output, Tensor& result) const = 0;
-        virtual void Derivative(const Tensor& targetOutput, const Tensor& output, Tensor& result) const = 0;
+        virtual NodeBase* Build(NodeBase* targetOutput, NodeBase* output) = 0;
 	};
 
     // This function can be used for any output being probability distribution (i.e. softmax-ed)
@@ -29,16 +28,14 @@ namespace Neuro
     {
 	public:
         virtual LossBase* Clone() const override { return new BinaryCrossEntropy(*this); }
-        virtual void Compute(const Tensor& targetOutput, const Tensor& output, Tensor& result) const override;
-        virtual void Derivative(const Tensor& targetOutput, const Tensor& output, Tensor& result) const override;
+        virtual NodeBase* Build(NodeBase* targetOutput, NodeBase* output) override;
 	};
 
     class MeanSquareError : public LossBase
     {
 	public:
         virtual LossBase* Clone() const override { return new MeanSquareError(*this); }
-        virtual void Compute(const Tensor& targetOutput, const Tensor& output, Tensor& result) const override;
-        virtual void Derivative(const Tensor& targetOutput, const Tensor& output, Tensor& result) const override;
+        virtual NodeBase* Build(NodeBase* targetOutput, NodeBase* output) override;
 	};
 
     class Huber : public LossBase
@@ -47,8 +44,7 @@ namespace Neuro
         Huber(float delta);
 
         virtual LossBase* Clone() const override { return new Huber(*this); }
-        virtual void Compute(const Tensor& targetOutput, const Tensor& output, Tensor& result) const override;
-        virtual void Derivative(const Tensor& targetOutput, const Tensor& output, Tensor& result) const override;
+        virtual NodeBase* Build(NodeBase* targetOutput, NodeBase* output) override;
 
 	private:
         float Delta;

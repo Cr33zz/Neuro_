@@ -285,6 +285,18 @@
     <ClInclude Include="include\ComputationalGraph\Operations\Conv2DOp.h">
       <Filter>include\ComputationalGraph\Operations</Filter>
     </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\NameScope.h">
+      <Filter>include\ComputationalGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Ops.h">
+      <Filter>include\ComputationalGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Predicter.h">
+      <Filter>include\ComputationalGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Trainer.h">
+      <Filter>include\ComputationalGraph</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -478,6 +490,15 @@
     </ClCompile>
     <ClCompile Include="src\ComputationalGraph\Operations\Conv2DOp.cpp">
       <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\NameScope.cpp">
+      <Filter>src\ComputationalGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Predicter.cpp">
+      <Filter>src\ComputationalGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Trainer.cpp">
+      <Filter>src\ComputationalGraph</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

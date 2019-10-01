@@ -2,6 +2,9 @@
 #include "Tensors/Tensor.h"
 #include "Initializers/GlorotUniform.h"
 #include "Initializers/Zeros.h"
+#include "ComputationalGraph/NameScope.h"
+#include "ComputationalGraph/Variable.h"
+#include "ComputationalGraph/Ops.h"
 
 namespace Neuro
 {
@@ -31,7 +34,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     Dense::~Dense()
 	{
-		delete m_WeightsInitializer;
+        delete m_WeightsInitializer;
 		delete m_BiasInitializer;
 	}
 
@@ -57,72 +60,16 @@ namespace Neuro
 	{
 		__super::OnInit(initValues);
 
-		m_Weights = Tensor(Shape(OutputShape().Length, InputShape().Length), Name() + "/weights");
-		m_Bias = Tensor(OutputShape(), Name() + "/bias");
-		m_WeightsGrad = Tensor(m_Weights.GetShape(), Name() + "/weights_grad");
-        m_WeightsGrad.Zero();
-		m_BiasGrad = Tensor(m_Bias.GetShape(), Name() + "/bias_grad");
-        m_BiasGrad.Zero();
+        NameScope scope(Name());
+        m_Weights = new Variable(Shape(OutputShape().Length, InputShape().Length), initValues ? m_WeightsInitializer : nullptr, "weights");
+        m_Bias = new Variable(OutputShape(), initValues ? m_BiasInitializer : nullptr, "bias");
 
-        if (initValues)
-        {
-            m_WeightsInitializer->Init(m_Weights);
-            if (m_UseBias)
-                m_BiasInitializer->Init(m_Bias);
-        }
-	}
+        m_OutputOps[0] = matmul(m_InputOps[0], m_Weights);
 
-	//////////////////////////////////////////////////////////////////////////
-	void Dense::FeedForwardInternal(bool training)
-	{
-        m_Inputs[0]->Mul(m_Weights, *m_Outputs[0]);
-		if (m_UseBias)
-			m_Outputs[0]->Add(m_Bias, *m_Outputs[0]);
-	}
+        if (m_UseBias)
+            m_OutputOps[0] = add(m_OutputOps[0], m_Bias);
 
-	//////////////////////////////////////////////////////////////////////////
-	void Dense::BackPropInternal(const tensor_ptr_vec_t& outputsGradient)
-	{
-        const bool USE_TEMPS = true;
-
-		// for explanation watch https://www.youtube.com/watch?v=8H2ODPNxEgA&t=898s
-		// each input is responsible for the output error proportionally to weights it is multiplied by
-        if (USE_TEMPS)
-        {
-            _iGradTemp1.Resize(Shape(m_Weights.Height(), m_Weights.Width(), 1, 1));
-            m_Weights.Transpose(_iGradTemp1);
-            outputsGradient[0]->Mul(_iGradTemp1, *m_InputsGradient[0]);
-        }
-        else
-            outputsGradient[0]->Mul(m_Weights.Transposed(), *m_InputsGradient[0]);
-
-        if (m_Trainable)
-        {
-            if (USE_TEMPS)
-            {
-                _inputT.Resize(Shape(m_Inputs[0]->Height(), m_Inputs[0]->Width(), 1, m_Inputs[0]->Batch()));
-                m_Inputs[0]->Transpose(_inputT);
-                _ipnutTMulOutGrad.Resize(Shape::From(m_WeightsGrad.GetShape(), m_Inputs[0]->Batch()));
-                _inputT.Mul(*outputsGradient[0], _ipnutTMulOutGrad);
-                _weightsGradSum.Resize(m_WeightsGrad.GetShape());
-                _ipnutTMulOutGrad.Sum(BatchAxis, _weightsGradSum);
-                m_WeightsGrad.Add(_weightsGradSum, m_WeightsGrad);
-            }
-            else
-                m_WeightsGrad.Add(m_Inputs[0]->Transposed().Mul(*outputsGradient[0]).Sum(BatchAxis), m_WeightsGrad);
-
-            if (m_UseBias)
-            {
-                if (USE_TEMPS)
-                {
-                    _biasGradSum.Resize(m_BiasGrad.GetShape());
-                    outputsGradient[0]->Sum(BatchAxis, _biasGradSum);
-                    m_BiasGrad.Add(_biasGradSum, m_BiasGrad);
-                }
-                else
-                    m_BiasGrad.Add(outputsGradient[0]->Sum(BatchAxis), m_BiasGrad);
-            }
-        }
+        m_Outputs[0] = &m_OutputOps[0]->Output();
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -131,8 +78,8 @@ namespace Neuro
 		__super::CopyParametersTo(target, tau);
 
 		auto& targetDense = static_cast<Dense&>(target);
-		m_Weights.CopyTo(targetDense.m_Weights, tau);
-		m_Bias.CopyTo(targetDense.m_Bias, tau);
+		m_Weights->Output().CopyTo(targetDense.m_Weights->Output(), tau);
+		m_Bias->Output().CopyTo(targetDense.m_Bias->Output(), tau);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -147,10 +94,10 @@ namespace Neuro
         if (onlyTrainable && !m_Trainable)
             return;
 
-        paramsAndGrads.push_back(ParameterAndGradient(&m_Weights, &m_WeightsGrad));
+        paramsAndGrads.push_back(ParameterAndGradient(&m_Weights->Output(), nullptr));
 
 		if (m_UseBias)
-            paramsAndGrads.push_back(ParameterAndGradient(&m_Bias, &m_BiasGrad));
+            paramsAndGrads.push_back(ParameterAndGradient(&m_Bias->Output(), nullptr));
 	}
 
     //////////////////////////////////////////////////////////////////////////
@@ -175,4 +122,17 @@ namespace Neuro
         m_UseBias = useBias;
         return this;
     }
+
+    //////////////////////////////////////////////////////////////////////////
+    Neuro::Tensor& Dense::Weights()
+    {
+        return m_Weights->Output();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Neuro::Tensor& Dense::Bias()
+    {
+        return m_Bias->Output();
+    }
+
 }

@@ -20,11 +20,7 @@ namespace Neuro
     public:
         virtual ~SingleLayer();
 
-        virtual const tensor_ptr_vec_t& FeedForward(const const_tensor_ptr_vec_t& inputs, bool training) override;
-        virtual const tensor_ptr_vec_t& BackProp(const tensor_ptr_vec_t& outputsGradient) override;
-
         virtual const Shape& InputShape() const override { return m_InputShape; }
-        virtual const vector<Tensor*>& InputsGradient() override { return m_InputsGradient; }
         virtual const tensor_ptr_vec_t& Outputs() const override { return m_Outputs; }
         virtual const vector<Shape>& OutputShapes() const override { return m_OutputsShapes; }
         virtual const vector<LayerBase*>& InputLayers() const override { return m_InputLayers; }
@@ -39,18 +35,18 @@ namespace Neuro
         SingleLayer(const string& constructorName, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
         SingleLayer() {}
 
+        virtual vector<NodeBase*>& OutputOps() override { return m_OutputOps; }
+
         virtual void OnClone(const LayerBase& source) override;
         virtual void OnInit(bool initValues = true) override;
         virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) override;
         virtual void OnLinkOutput(LayerBase* outputLayer) override;
 
-        virtual void FeedForwardInternal(bool training);
-        virtual void BackPropInternal(const tensor_ptr_vec_t& outputsGradient);
-
         Shape m_InputShape;
-        const_tensor_ptr_vec_t m_Inputs;
-        vector<Tensor*> m_InputsGradient;
+        vector<NodeBase*> m_InputOps;
+        //vector<Tensor*> m_InputsGradient;
         vector<Tensor*> m_Outputs;
+        vector<NodeBase*> m_OutputOps;
         vector<Shape> m_OutputsShapes;
         vector<LayerBase*> m_InputLayers;
         vector<LayerBase*> m_OutputLayers;

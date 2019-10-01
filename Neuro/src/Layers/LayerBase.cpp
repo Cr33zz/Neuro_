@@ -90,14 +90,6 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-    const tensor_ptr_vec_t& LayerBase::FeedForward(const Tensor* input, bool training)
-	{
-        const_tensor_ptr_vec_t inputs;
-        inputs.push_back(input);
-        return FeedForward(inputs, training);
-	}
-
-	//////////////////////////////////////////////////////////////////////////
 	void LayerBase::Init(bool initValues)
 	{
 		if (Initialized)

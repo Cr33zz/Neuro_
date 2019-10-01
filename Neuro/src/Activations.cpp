@@ -1,74 +1,26 @@
 ﻿#include <algorithm>
 #include "Activations.h"
-#include "Tensors/Tensor.h"
+#include "ComputationalGraph/Ops.h"
 
 namespace Neuro
 {	
 	//////////////////////////////////////////////////////////////////////////
-    void Linear::Compute(const Tensor& input, Tensor& result) const
-	{
-		input.CopyTo(result);
-	}
+    NodeBase* Linear::Build(NodeBase* input)
+    {
+        return input;
+    }
 
 	//////////////////////////////////////////////////////////////////////////
-	void Linear::Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
-	{
-		outputGradient.CopyTo(result);
-	}
+    NodeBase* Sigmoid::Build(NodeBase* input)
+    {
+        return sigmoid(input);
+    }
 
-	//////////////////////////////////////////////////////////////////////////
-	void Sigmoid::Compute(const Tensor& input, Tensor& result) const
-	{
-        input.Sigmoid(result);
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	void Sigmoid::Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
-	{
-        output.SigmoidGradient(output, outputGradient, result);
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	void Tanh::Compute(const Tensor& input, Tensor& result) const
-	{
-        input.Tanh(result);
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	void Tanh::Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
-	{
-        output.TanhGradient(output, outputGradient, result);
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	void ReLU::Compute(const Tensor& input, Tensor& result) const
-	{
-        input.ReLU(result);
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	void ReLU::Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
-	{
-        output.ReLUGradient(output, outputGradient, result);
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	ELU::ELU(float alpha)
-		: m_Alpha(alpha)
-	{
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	void ELU::Compute(const Tensor& input, Tensor& result) const
-	{
-		input.Elu(m_Alpha, result);
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	void ELU::Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
-	{
-		output.EluGradient(output, outputGradient, m_Alpha, result);
-	}
+    //////////////////////////////////////////////////////////////////////////
+    NodeBase* Tanh::Build(NodeBase* input)
+    {
+        return tanh(input);
+    }
 
     //////////////////////////////////////////////////////////////////////////
     LeakyReLU::LeakyReLU(float alpha)
@@ -77,26 +29,29 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void LeakyReLU::Compute(const Tensor& input, Tensor& result) const
+    NodeBase* LeakyReLU::Build(NodeBase* input)
     {
-        input.LeakyReLU(m_Alpha, result);
+        assert(false);
+        return nullptr;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void LeakyReLU::Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
+    NodeBase* ReLU::Build(NodeBase* input)
     {
-        output.LeakyReLUGradient(output, outputGradient, m_Alpha, result);
+        assert(false);
+        return nullptr;
     }
 
-	//////////////////////////////////////////////////////////////////////////
-	void Softmax::Compute(const Tensor& input, Tensor& result) const
-	{
-		input.Softmax(result);
-	}
+    //////////////////////////////////////////////////////////////////////////
+    NodeBase* ELU::Build(NodeBase* input)
+    {
+        assert(false);
+        return nullptr;
+    }
 
-	//////////////////////////////////////////////////////////////////////////
-	void Softmax::Derivative(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
-	{
-		output.SoftmaxGradient(output, outputGradient, result);
-	}
+    //////////////////////////////////////////////////////////////////////////
+    NodeBase* Softmax::Build(NodeBase* input)
+    {
+        return softmax(input);
+    }
 }

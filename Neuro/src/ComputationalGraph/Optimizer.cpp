@@ -71,7 +71,7 @@ namespace Neuro
         auto vars = Optimizer::ComputeGradients(m_InputNodes[0]);
 
         for (auto v : vars)
-            v->Value().Sub(v->OutputGrad().Mul(m_LearningRate), v->Value());
+            v->Output().Sub(v->OutputGrad().Mul(m_LearningRate), v->Output());
     }
 
 }

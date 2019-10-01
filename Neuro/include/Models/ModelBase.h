@@ -15,6 +15,8 @@ namespace Neuro
 	class Tensor;
     class LossBase;
     class OptimizerBase;
+    class Trainer;
+    class Predicter;
 
     class ModelBase : public LayerBase
     {
@@ -81,6 +83,9 @@ namespace Neuro
         OptimizerBase* m_Optimizer = nullptr;
         vector<accuracy_func_t> m_AccuracyFuncs;
         bool m_ForceLearningPhase = false;
+
+        Trainer* m_Trainer = nullptr;
+        Predicter* m_Predicter = nullptr;
 
         vector<ParameterAndGradient> m_ParamsAndGrads;
 

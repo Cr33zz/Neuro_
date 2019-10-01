@@ -17,7 +17,7 @@ namespace Neuro
     public:
         static Session* Default;
 
-        vector<Tensor*> Run(const vector<NodeBase*>& fetches, const map<Placeholder*, Tensor*>& feeds);
+        vector<Tensor*> Run(const vector<NodeBase*>& fetches, const map<Placeholder*, const Tensor*>& feeds);
 
     private:
         vector<NodeBase*> BuildForwardGraph(const vector<NodeBase*>& endNodes);

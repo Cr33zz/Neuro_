@@ -14,6 +14,7 @@ namespace Neuro
 	using namespace std;
 
     class SingleLayer;
+    class NodeBase;
 
     // The concept of layer is that it is a 'block box' that supports forward and backward propagation.
     // Layer can have multiple inputs and outputs. Models are layers and can be combined with each other.
@@ -25,7 +26,6 @@ namespace Neuro
         virtual ~LayerBase() {}
 
         virtual const Shape& InputShape() const = 0;
-        virtual const vector<Tensor*>& InputsGradient() = 0;
         virtual const tensor_ptr_vec_t& Outputs() const = 0;
         virtual const vector<Shape>& OutputShapes() const = 0;
         virtual const vector<LayerBase*>& InputLayers() const = 0;
@@ -57,11 +57,6 @@ namespace Neuro
         // parameters will be updated as follows: this_parameters * tau + target_parameters * (1 - tau)
         virtual void CopyParametersTo(LayerBase& target, float tau = 0) const;
 
-        const tensor_ptr_vec_t& FeedForward(const Tensor* input, bool training);
-
-        virtual const tensor_ptr_vec_t& FeedForward(const const_tensor_ptr_vec_t& inputs, bool training) = 0;
-        virtual const tensor_ptr_vec_t& BackProp(const tensor_ptr_vec_t& outputsGradient) = 0;
-
         virtual void SetTrainable(bool trainable) { m_Trainable = trainable; }
         bool Trainable() const { return m_Trainable; }
 
@@ -87,6 +82,8 @@ namespace Neuro
         LayerBase(const string& constructorName, const string& name = "");
 		// This constructor exists only for cloning purposes
         LayerBase() {}
+
+        virtual vector<NodeBase*>& OutputOps() = 0;
 
         virtual LayerBase* LinkImpl(const vector<LayerBase*>& inputLayers);
 

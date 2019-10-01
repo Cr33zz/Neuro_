@@ -12,6 +12,10 @@
 #include "Tools.h"
 #include "ChartGenerator.h"
 #include "Stopwatch.h"
+#include "ComputationalGraph/Ops.h"
+#include "ComputationalGraph/NameScope.h"
+#include "ComputationalGraph/Trainer.h"
+#include "ComputationalGraph/Predicter.h"
 
 using namespace H5;
 
@@ -67,14 +71,14 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     const tensor_ptr_vec_t& ModelBase::Predict(const const_tensor_ptr_vec_t& inputs)
     {
-        FeedForward(inputs, m_ForceLearningPhase);
+        m_Predicter->Predict(inputs, m_ForceLearningPhase);
         return Outputs();
     }
 
     //////////////////////////////////////////////////////////////////////////
     const tensor_ptr_vec_t& ModelBase::Predict(const Tensor& input)
     {
-        FeedForward({ &input }, m_ForceLearningPhase);
+        m_Predicter->Predict({ &input }, m_ForceLearningPhase);
         return Outputs();
     }
 
@@ -111,6 +115,40 @@ namespace Neuro
             m_AccuracyFuncs[i] = outputsShapes[i].Length == 1 ? AccBinaryClassificationEquality : AccCategoricalClassificationEquality;
             m_LossFuncs[i] = lossDict[outLayer->Name()];
         }
+
+        NodeBase* totalLoss = nullptr;
+
+        vector<NodeBase*> trainOutputs;
+        vector<NodeBase*> targets;
+
+        {
+            NameScope("loss");
+
+            for (size_t i = 0; i < ModelOutputLayers().size(); ++i)
+            {
+                auto layer = ModelOutputLayers()[i];
+
+                {
+                    NameScope(layer->Name());
+
+                    targets.push_back(new Placeholder(Shape(layer->OutputShape()), "target"));
+                    auto loss = mean(m_LossFuncs[i]->Build(targets.back(), layer->OutputOps[0])); // mean over all batches
+
+                    if (!totalLoss)
+                        totalLoss = loss;
+                    else
+                        totalLoss = add(totalLoss, loss);
+                }
+            }
+        }
+
+        trainOutputs.push_back(totalLoss);
+        //Metrics["loss"] = (totalLoss, train_outputs.Count - 1);
+
+        // any additional metrics should go in here
+
+        m_Trainer = new Trainer(ModelInputLayers().Select(x = > x.Input).ToList(), targets, optimizer.Minimize(Parameters, totalLoss));
+        m_Predicter = new Predicter(InputLayers.Select(x = > x.Input).ToList(), OutputLayers.Select(x = > x.Output).ToList());
     }
 
     //////////////////////////////////////////////////////////////////////////

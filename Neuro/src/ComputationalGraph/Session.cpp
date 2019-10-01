@@ -9,14 +9,12 @@ namespace Neuro
     Session* Session::Default = new Session();
 
     //////////////////////////////////////////////////////////////////////////
-    vector<Tensor*> Session::Run(const vector<NodeBase*>& fetches, const map<Placeholder*, Tensor*>& feeds)
+    vector<Tensor*> Session::Run(const vector<NodeBase*>& fetches, const map<Placeholder*, const Tensor*>& feeds)
     {
         for(auto node : BuildForwardGraph(fetches))
         {
             if (Placeholder* p = dynamic_cast<Placeholder*>(node))
                 node->m_Output = *feeds.find(p)->second;
-            else if (Variable* v = dynamic_cast<Variable*>(node))
-                node->m_Output = v->Value();
             else
             {
                 Operation* op = static_cast<Operation*>(node);

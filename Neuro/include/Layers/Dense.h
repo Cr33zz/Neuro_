@@ -6,6 +6,7 @@
 
 namespace Neuro
 {
+    class Variable;
 	class InitializerBase;
 
     class Dense : public SingleLayer
@@ -22,8 +23,8 @@ namespace Neuro
 		virtual uint32_t ParamsNum() const override;
 		virtual void ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable = true) override;
 		
-        Tensor& Weights() { return m_Weights; }
-        Tensor& Bias() { return m_Bias; }
+        Tensor& Weights();
+        Tensor& Bias();
 
         Dense* WeightsInitializer(InitializerBase* initializer);
         Dense* BiasInitializer(InitializerBase* initializer);
@@ -36,38 +37,13 @@ namespace Neuro
 		virtual LayerBase* GetCloneInstance() const override;
 		virtual void OnClone(const LayerBase& source) override;
 		virtual void OnInit(bool initValues) override;
-        virtual void FeedForwardInternal(bool training) override;
-        virtual void BackPropInternal(const tensor_ptr_vec_t& outputsGradient) override;
 
 	private:
-        Tensor m_Weights;
-        Tensor m_Bias;
+        Variable* m_Weights;
+        Variable* m_Bias;
         bool m_UseBias = true;
 
-		Tensor m_WeightsGrad;
-        Tensor m_BiasGrad;
-        
-        InitializerBase* m_WeightsInitializer = new GlorotUniform();
+		InitializerBase* m_WeightsInitializer = new GlorotUniform();
         InitializerBase* m_BiasInitializer = new Zeros();
-
-        Tensor _iGradTemp1;
-        Tensor _inputT;
-        Tensor _ipnutTMulOutGrad;
-        Tensor _weightsGradSum;
-        Tensor _biasGradSum;
-
-        /*virtual void SerializeParameters(XmlElement elem)
-        {
-            base.SerializeParameters(elem);
-            Weights.Serialize(elem, "Weights");
-            Bias.Serialize(elem, "Bias");
-        }
-
-        virtual void DeserializeParameters(XmlElement elem)
-        {
-            base.DeserializeParameters(elem);
-            Weights.Deserialize(elem["Weights"]);
-            Bias.Deserialize(elem["Bias"]);
-        }*/
 	};
 }
