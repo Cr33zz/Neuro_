@@ -8,10 +8,11 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    map<NodeBase*, Tensor*> Optimizer::ComputeGradients(NodeBase* lossNode)
+    vector<Variable*> Optimizer::ComputeGradients(NodeBase* lossNode)
     {
-        map<NodeBase*, Tensor*> gradTable;
-        gradTable[lossNode] = &(new Tensor(lossNode->m_Output.GetShape()))->FillWithValue(1);
+        vector<Variable*> variables;
+        lossNode->m_OutputGrad.Resize(lossNode->m_Output.GetShape());
+        lossNode->m_OutputGrad.FillWithValue(1);
 
         unordered_set<NodeBase*> visited;
         list<NodeBase*> queue;
@@ -24,25 +25,29 @@ namespace Neuro
             auto node = queue.front();
             queue.pop_front();
 
+            if (Variable* v = dynamic_cast<Variable*>(node))
+                variables.push_back(v);
+
             if (node != lossNode)
             {
-                auto nodeGrad = gradTable[node];
-                nodeGrad->Zero(); // reset gradient
+                auto& nodeGrad = node->m_OutputGrad;
+                nodeGrad.Resize(node->m_Output.GetShape());
+                nodeGrad.Zero(); // reset gradient
 
                 for (auto consumer : node->m_Consumers)
                 {
-                    auto outputGrad = gradTable[consumer];
-                    auto& inputsGrad = static_cast<Operation*>(consumer)->ComputeGradient(*outputGrad);
+                    auto& outputGrad = consumer->m_OutputGrad;
+                    auto& inputsGrad = static_cast<Operation*>(consumer)->ComputeGradient(outputGrad);
 
                     if (inputsGrad.size() == 1)
                     {
-                        nodeGrad->Add(*inputsGrad[0], *nodeGrad);
+                        nodeGrad.Add(*inputsGrad[0], nodeGrad);
                     }
                     else
                     {
                         auto nodeIndexInConsumerInputs = distance(consumer->m_InputNodes.begin(), find(consumer->m_InputNodes.begin(), consumer->m_InputNodes.end(), node));
                         auto lossGradWrtNode = inputsGrad[nodeIndexInConsumerInputs];
-                        nodeGrad->Add(*lossGradWrtNode, *nodeGrad);
+                        nodeGrad.Add(*lossGradWrtNode, nodeGrad);
                     }
                 }
             }
@@ -57,22 +62,16 @@ namespace Neuro
             }
         }
 
-        return gradTable;
+        return variables;
     }
 
     //////////////////////////////////////////////////////////////////////////
     void _SGDOptimizer::MinimizationOperation::ComputeInternal()
     {
-        auto gradTable = Optimizer::ComputeGradients(m_InputNodes[0]);
+        auto vars = Optimizer::ComputeGradients(m_InputNodes[0]);
 
-        for (auto entry : gradTable)
-        {
-            if (Variable* v = dynamic_cast<Variable*>(entry.first))
-            {
-                auto grad = entry.second;
-                v->Value().Sub(grad->Mul(m_LearningRate), v->Value());
-            }
-        }
+        for (auto v : vars)
+            v->Value().Sub(v->OutputGrad().Mul(m_LearningRate), v->Value());
     }
 
 }

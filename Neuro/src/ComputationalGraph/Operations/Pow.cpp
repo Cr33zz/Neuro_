@@ -11,6 +11,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Op::Pow::ComputeInternal()
     {
+        m_Output.Resize(m_Inputs[0]->GetShape());
         m_Inputs[0]->Map([&](float x) {return ::pow(x, m_Power); }, m_Output);
     }
 

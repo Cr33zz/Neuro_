@@ -11,6 +11,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Op::Sigmoid::ComputeInternal()
     {
+        m_Output.Resize(m_Inputs[0]->GetShape());
         m_Inputs[0]->Sigmoid(m_Output);
     }
 

@@ -6,6 +6,7 @@
 namespace Neuro
 {
     class Operation;
+    class Variable;
 
     class Optimizer
     {
@@ -13,7 +14,7 @@ namespace Neuro
         virtual Operation* Minimize(NodeBase* loss) = 0;
         //virtual Operation* Maximize(NodeBase* loss) = 0;
 
-        static map<NodeBase*, Tensor*> ComputeGradients(NodeBase* loss);
+        static vector<Variable*> ComputeGradients(NodeBase* loss);
     };
 
     class _SGDOptimizer : public Optimizer

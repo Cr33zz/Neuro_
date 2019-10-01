@@ -35,8 +35,12 @@ namespace Neuro
     const vector<Tensor*>& Operation::ComputeGradient(const Tensor& grad)
     {
         m_InputsGradsPtrs.resize(m_Inputs.size());
+        m_InputsGrads.resize(m_Inputs.size());
         for (size_t i = 0; i < m_InputsGrads.size(); ++i)
+        {
             m_InputsGrads[i].Resize(m_Inputs[i]->GetShape());
+            m_InputsGradsPtrs[i] = &m_InputsGrads[i];
+        }
         ComputeGradientInternal(grad);
         return m_InputsGradsPtrs;
     }

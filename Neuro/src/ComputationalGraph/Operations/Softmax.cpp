@@ -11,6 +11,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Op::Softmax::ComputeInternal()
     {
+        m_Output.Resize(m_Inputs[0]->GetShape());
         m_Inputs[0]->Softmax(m_Output);
     }
 

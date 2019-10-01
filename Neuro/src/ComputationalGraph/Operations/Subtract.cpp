@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "ComputationalGraph/Operations/Subtract.h"
 
 namespace Neuro
@@ -11,6 +12,12 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Op::Subtract::ComputeInternal()
     {
+        m_Output.Resize(Shape(
+            max(m_Inputs[0]->Len(0), m_Inputs[1]->Len(0)),
+            max(m_Inputs[0]->Len(1), m_Inputs[1]->Len(1)),
+            max(m_Inputs[0]->Len(2), m_Inputs[1]->Len(2)),
+            max(m_Inputs[0]->Len(3), m_Inputs[1]->Len(3))));
+
         return m_Inputs[0]->Sub(*m_Inputs[1], m_Output);
     }
 

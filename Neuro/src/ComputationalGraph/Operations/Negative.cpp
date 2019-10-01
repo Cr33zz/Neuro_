@@ -11,6 +11,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Op::Negative::ComputeInternal()
     {
+        m_Output.Resize(m_Inputs[0]->GetShape());
         m_Inputs[0]->Map([](float x) {return -x; }, m_Output);
     }
 

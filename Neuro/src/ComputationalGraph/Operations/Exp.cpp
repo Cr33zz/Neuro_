@@ -11,6 +11,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Op::Exp::ComputeInternal()
     {
+        m_Output.Resize(m_Inputs[0]->GetShape());
         m_Inputs[0]->Map([](float x) {return ::exp(x); }, m_Output);
     }
 

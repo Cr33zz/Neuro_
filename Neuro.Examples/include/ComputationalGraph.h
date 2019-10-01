@@ -16,7 +16,7 @@ public:
     {
         auto x1 = new Placeholder(Shape(5));
         auto x2 = new Placeholder(Shape(5));
-        auto y = new Placeholder(Shape(5));
+        auto y = new Placeholder(Shape(2));
 
         auto w = new Variable(Tensor(Shape(2, 5)).FillWithRand());
         auto b = new Variable(Tensor(Shape(2)).FillWithRand());
@@ -34,7 +34,7 @@ public:
 
         for (int step = 0; step < 200; ++step)
         {
-            auto result = Session::Default->Run({ o, loss }, { {x1, &input1}, {x2, &input2}, {y, &output} });
+            auto result = Session::Default->Run({ o, loss, minimizeOp }, { {x1, &input1}, {x2, &input2}, {y, &output} });
 
             cout << "step: " << step << " loss: " << (*result[1])(0) << endl;
         }

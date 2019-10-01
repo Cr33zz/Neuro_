@@ -698,7 +698,6 @@ namespace Neuro
 
         if (axis == BatchAxis)
         {
-            result.Resize(Shape::From(inputs[0]->GetShape(), inputs[0]->Len(3) * (uint32_t)inputs.size()));
             uint32_t elementsCopied = 0;
             for (uint32_t i = 0; i < inputs.size(); ++i)
             {

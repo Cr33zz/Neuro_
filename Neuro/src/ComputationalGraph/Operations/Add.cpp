@@ -1,4 +1,5 @@
-﻿#include "ComputationalGraph/Operations/Add.h"
+﻿#include <algorithm>
+#include "ComputationalGraph/Operations/Add.h"
 
 namespace Neuro
 {        
@@ -11,6 +12,12 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Op::Add::ComputeInternal()
     {
+        m_Output.Resize(Shape(
+            max(m_Inputs[0]->Len(0), m_Inputs[1]->Len(0)), 
+            max(m_Inputs[0]->Len(1), m_Inputs[1]->Len(1)), 
+            max(m_Inputs[0]->Len(2), m_Inputs[1]->Len(2)), 
+            max(m_Inputs[0]->Len(3), m_Inputs[1]->Len(3))));
+
         return m_Inputs[0]->Add(*m_Inputs[1], m_Output);
     }
 
