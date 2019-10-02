@@ -4,18 +4,18 @@
 
 namespace Neuro
 {
-    class LogOp : public Operation
+    class ReLUOp : public Operation
     {
     public:
-        LogOp(TensorLike* x);
+        ReLUOp(TensorLike* x);
 
     protected:
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
     };
 
-    static Operation* log(TensorLike* x)
+    static Operation* relu(TensorLike* x)
     {
-        return new LogOp(x);
+        return new ReLUOp(x);
     }
 }

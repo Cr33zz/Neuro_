@@ -69,8 +69,14 @@ namespace Neuro
         ModelBase() {}
         ModelBase(const string& constructorName, const string& name = "", int seed = 0);
 
+        virtual vector<TensorLike*>& InputOps() override { return m_InputOps; }
+        virtual vector<TensorLike*>& OutputOps() override { return m_OutputOps; }
+
         virtual void OnClone(const LayerBase& source) override;
         virtual void OnInit(bool initValues = true) override;
+
+        vector<TensorLike*> m_InputOps;
+        vector<TensorLike*> m_OutputOps;
 
     private:
         // This is vectorized gradient descent
@@ -79,7 +85,6 @@ namespace Neuro
         // Build a single tensor with multiple batches for each input
         const_tensor_ptr_vec_t GenerateBatch(const const_tensor_ptr_vec_t& inputs, const vector<uint32_t>& batchIndices);
 
-        vector<LossBase*> m_LossFuncs;
         OptimizerBase* m_Optimizer = nullptr;
         vector<accuracy_func_t> m_AccuracyFuncs;
         bool m_ForceLearningPhase = false;
@@ -87,7 +92,7 @@ namespace Neuro
         Trainer* m_Trainer = nullptr;
         Predicter* m_Predicter = nullptr;
 
-        vector<ParameterAndGradient> m_ParamsAndGrads;
+        map<string, pair<TensorLike*, size_t>> m_Metrics;
 
         ofstream* m_LogFile = nullptr;
         void LogLine(const string& text, bool print = true);

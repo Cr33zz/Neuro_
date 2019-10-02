@@ -3,7 +3,7 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    SqrtOp::SqrtOp(NodeBase* x)
+    SqrtOp::SqrtOp(TensorLike* x)
         : Operation({ x })
     {
     }

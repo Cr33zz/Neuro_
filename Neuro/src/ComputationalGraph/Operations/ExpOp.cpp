@@ -3,7 +3,7 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    ExpOp::ExpOp(NodeBase* x)
+    ExpOp::ExpOp(TensorLike* x)
         : Operation({x})
     {
     }

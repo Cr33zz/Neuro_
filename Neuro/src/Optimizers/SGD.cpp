@@ -2,7 +2,7 @@
 #include <iomanip>
 
 #include "Optimizers/SGD.h"
-#include "Tensors/Tensor.h"
+#include "ComputationalGraph/Variable.h"
 #include "Tensors/TensorOpCpu.h"
 
 namespace Neuro
@@ -33,19 +33,12 @@ namespace Neuro
 		return "SGD";
 	}
 
-	//////////////////////////////////////////////////////////////////////////
-	void SGD::OnStep(vector<ParameterAndGradient>& paramsAndGrads, int batchSize)
-	{
-        float learningRate = m_LearningRate;
+    //////////////////////////////////////////////////////////////////////////
+    void SGD::MinimizationOperation::ComputeInternal()
+    {
+        auto vars = OptimizerBase::ComputeGradients(m_InputNodes[0]);
 
-		for (auto i = 0; i < paramsAndGrads.size(); ++i)
-		{
-			auto& parametersAndGradient = paramsAndGrads[i];
-			auto parameter = parametersAndGradient.param;
-			auto gradient = parametersAndGradient.grad;
-
-            Tensor::ActiveOp()->SgdStep(*parameter, *gradient, (float)batchSize, learningRate);
-		}
-	}
-
+        for (auto v : vars)
+            Tensor::ActiveOp()->SgdStep(v->Output(), v->OutputGrad(), (float)v->Output().Batch(), m_Owner->m_LearningRate);
+    }
 }

@@ -3,7 +3,7 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    NegativeOp::NegativeOp(NodeBase* x)
+    NegativeOp::NegativeOp(TensorLike* x)
         : Operation({x})
     {
     }

@@ -13,6 +13,7 @@
 #include "ChartGenerator.h"
 #include "Stopwatch.h"
 #include "ComputationalGraph/Ops.h"
+#include "ComputationalGraph/Placeholder.h"
 #include "ComputationalGraph/NameScope.h"
 #include "ComputationalGraph/Trainer.h"
 #include "ComputationalGraph/Predicter.h"
@@ -27,7 +28,6 @@ namespace Neuro
     ModelBase::~ModelBase()
     {
         delete m_Optimizer;
-        DeleteContainer(m_LossFuncs);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -50,8 +50,6 @@ namespace Neuro
         auto& sourceModel = static_cast<const ModelBase&>(source);
         m_Seed = sourceModel.m_Seed;
         m_Optimizer = sourceModel.m_Optimizer ? sourceModel.m_Optimizer->Clone() : nullptr;
-        for (auto loss : sourceModel.m_LossFuncs)
-            m_LossFuncs.push_back(loss->Clone());
     }
     
     //////////////////////////////////////////////////////////////////////////
@@ -59,6 +57,12 @@ namespace Neuro
     {
         for (auto layer : Layers())
             layer->Init(initValues);
+
+        for (auto inLayer : ModelInputLayers())
+            m_InputOps.insert(m_InputOps.end(), inLayer->InputOps().begin(), inLayer->InputOps().end());
+
+        for (auto outLayer : ModelOutputLayers())
+            m_OutputOps.insert(m_OutputOps.end(), outLayer->OutputOps().begin(), outLayer->OutputOps().end());
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -71,68 +75,60 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     const tensor_ptr_vec_t& ModelBase::Predict(const const_tensor_ptr_vec_t& inputs)
     {
-        m_Predicter->Predict(inputs, m_ForceLearningPhase);
+        m_Predicter->Predict(inputs);
         return Outputs();
     }
 
     //////////////////////////////////////////////////////////////////////////
     const tensor_ptr_vec_t& ModelBase::Predict(const Tensor& input)
     {
-        m_Predicter->Predict({ &input }, m_ForceLearningPhase);
+        m_Predicter->Predict({ &input });
         return Outputs();
     }
 
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::Optimize(OptimizerBase* optimizer, LossBase* loss)
     {
-        m_Optimizer = optimizer;
-        auto& outputsShapes = OutputShapes();
-        m_AccuracyFuncs.resize(outputsShapes.size());
-        m_LossFuncs.resize(outputsShapes.size());
-        for (size_t i = 0; i < outputsShapes.size(); ++i)
-        {
-            m_AccuracyFuncs[i] = outputsShapes[i].Length == 1 ? AccBinaryClassificationEquality : AccCategoricalClassificationEquality;
-            m_LossFuncs[i] = i == 0 ? loss : loss->Clone();
-        }
+        map<string, LossBase*> lossDict;
+        for (auto outLayer : ModelOutputLayers())
+            lossDict[outLayer->Name()] = loss;
+
+        Optimize(optimizer, lossDict);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::Optimize(OptimizerBase* optimizer, map<string, LossBase*> lossDict)
     {
+        Init();
+
         m_Optimizer = optimizer;
 
-#ifdef VALIDATION_ENABLED
-        //if () throw new Exception($"Mismatched number of loss functions ({lossDict.Count}) and output layers ({Model->GetOutputLayersCount()})!");
-#endif
+        assert(lossDict.size() == ModelOutputLayers().size());
 
         auto& outputsShapes = OutputShapes();
-        assert(lossDict.size() == outputsShapes.size());
         m_AccuracyFuncs.resize(outputsShapes.size());
-        m_LossFuncs.resize(outputsShapes.size());
-        for (uint32_t i = 0; i < outputsShapes.size(); ++i)
-        {
-            auto outLayer = ModelOutputLayers()[i];
-            m_AccuracyFuncs[i] = outputsShapes[i].Length == 1 ? AccBinaryClassificationEquality : AccCategoricalClassificationEquality;
-            m_LossFuncs[i] = lossDict[outLayer->Name()];
-        }
 
-        NodeBase* totalLoss = nullptr;
+        vector<Placeholder*> inputOps;
+        vector<Placeholder*> targetsOps;
+        vector<TensorLike*> outputOps;
+        vector<TensorLike*> fetchOps;
 
-        vector<NodeBase*> trainOutputs;
-        vector<NodeBase*> targets;
+        TensorLike* totalLoss = nullptr;
 
-        {
-            NameScope("loss");
+        {NameScope lossScope("loss");
 
             for (size_t i = 0; i < ModelOutputLayers().size(); ++i)
             {
-                auto layer = ModelOutputLayers()[i];
+                auto outLayer = ModelOutputLayers()[i];
 
-                {
-                    NameScope(layer->Name());
+                outputOps.insert(outputOps.end(), outLayer->OutputOps().begin(), outLayer->OutputOps().end());
 
-                    targets.push_back(new Placeholder(Shape(layer->OutputShape()), "target"));
-                    auto loss = mean(m_LossFuncs[i]->Build(targets.back(), layer->OutputOps[0])); // mean over all batches
+                m_AccuracyFuncs[i] = outputsShapes[i].Length == 1 ? AccBinaryClassificationEquality : AccCategoricalClassificationEquality;
+
+                {NameScope layerScope(outLayer->Name());
+
+                    targetsOps.push_back(new Placeholder(Shape(outLayer->OutputShape()), "target"));
+                    auto loss = sum(lossDict[outLayer->Name()]->Build(targetsOps.back(), outLayer->OutputOps()[0]), BatchAxis);
 
                     if (!totalLoss)
                         totalLoss = loss;
@@ -142,13 +138,23 @@ namespace Neuro
             }
         }
 
-        trainOutputs.push_back(totalLoss);
-        //Metrics["loss"] = (totalLoss, train_outputs.Count - 1);
-
+        fetchOps.push_back(totalLoss);
+        m_Metrics["loss"] = make_pair(totalLoss, fetchOps.size() - 1);
         // any additional metrics should go in here
 
-        m_Trainer = new Trainer(ModelInputLayers().Select(x = > x.Input).ToList(), targets, optimizer.Minimize(Parameters, totalLoss));
-        m_Predicter = new Predicter(InputLayers.Select(x = > x.Input).ToList(), OutputLayers.Select(x = > x.Output).ToList());
+        fetchOps.push_back(optimizer->Minimize(totalLoss));
+
+        for (auto inLayer : ModelInputLayers())
+        {
+            for (auto inputOp : inLayer->InputOps())
+            {
+                assert(dynamic_cast<Placeholder*>(inputOp));
+                inputOps.push_back(static_cast<Placeholder*>(inputOp));
+            }
+        }
+
+        m_Trainer = new Trainer(inputOps, targetsOps, fetchOps);
+        m_Predicter = new Predicter(inputOps, outputOps);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -592,7 +598,7 @@ namespace Neuro
 
                 for (uint32_t b = 0; b < validationBatchesNum; ++b)
                 {
-                    FeedForward(validInputsBatches[b], false);
+                    /*FeedForward(validInputsBatches[b], false);
 
                     vector<Tensor> out;
                     for (size_t i = 0; i < modelOutputs.size(); ++i)
@@ -612,7 +618,7 @@ namespace Neuro
                         cout << progressStr;
                         for (uint32_t i = 0; i < progressStr.length(); ++i)
                             cout << '\b';
-                    }
+                    }*/
                 }
 
                 float validationLoss = validationTotalLoss / validationSamplesCount / outputs.size();
@@ -663,62 +669,10 @@ namespace Neuro
 
         ++g_DebugStep;
 
-        FeedForward(inputs, true);
-
-        auto& modelOutputs = Outputs();
-        vector<Tensor> tmpOutputsGrad(modelOutputs.size());
-        vector<Tensor*> outputsGrad(modelOutputs.size());
-        float totalLoss = 0;
-        int hits = 0;
-
-        for (size_t i = 0; i < modelOutputs.size(); ++i)
-        {
-            auto& output = modelOutputs[i];
-
-            tmpOutputsGrad[i].Resize(output->GetShape());
-            outputsGrad[i] = &tmpOutputsGrad[i];
-            m_LossFuncs[i]->Compute(*outputs[i], *output, tmpOutputsGrad[i]);
-
-#           ifdef LOG_OUTPUTS
-            tmpOutputsGrad[i].DebugDumpValues(Replace(Name() + "_output_" + to_string(i) + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
-#           endif
-
-            if (loss)
-                totalLoss += tmpOutputsGrad[i].Sum(GlobalAxis)(0) / output->BatchLength();
-
-            if (acc)
-                hits += m_AccuracyFuncs[i](*outputs[i], *output);
-
-            m_LossFuncs[i]->Derivative(*outputs[i], *output, tmpOutputsGrad[i]);
-
-#           ifdef LOG_OUTPUTS
-            tmpOutputsGrad[i].DebugDumpValues(Replace(Name() + "_output_" + to_string(i) + "_grad_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
-#           endif
-        }
+        auto results = m_Trainer->Train(inputs, outputs);
 
         if (loss)
-            *loss = totalLoss / (inputs[0]->Batch() * outputs.size());
-
-        if (acc)
-            *acc = (float)hits / (inputs[0]->Batch() * outputs.size());
-
-        BackProp(outputsGrad);
-
-        m_ParamsAndGrads.clear();
-        ParametersAndGradients(m_ParamsAndGrads);
-
-#       ifdef LOG_OUTPUTS
-        vector<ParameterAndGradient> allParamsAndGrads;
-        ParametersAndGradients(allParamsAndGrads, false);
-        for (auto paramAndGrad : allParamsAndGrads)
-        {
-            paramAndGrad.param->DebugDumpValues(Replace(paramAndGrad.param->Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
-            if (paramAndGrad.grad)
-                paramAndGrad.grad->DebugDumpValues(Replace(paramAndGrad.grad->Name() + "_step" + to_string(ModelBase::g_DebugStep) + ".log", "/", "_"));
-        }
-#       endif
-
-        m_Optimizer->Step(m_ParamsAndGrads, inputs[0]->Batch());
+            *loss = (*results[m_Metrics["loss"].second])(0);
     }
 
     //////////////////////////////////////////////////////////////////////////

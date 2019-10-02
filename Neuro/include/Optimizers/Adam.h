@@ -10,18 +10,32 @@ namespace Neuro
 	public:
         Adam(float lr = 0.001f, float beta1 = 0.9f, float beta2 = 0.999f);
 
-        virtual void OnStep(vector<ParameterAndGradient>& paramsAndGrads, int batchSize) override;
         virtual OptimizerBase* Clone() const override;
         virtual string ToString() override;
 		const char* ClassName() const;
 
-	private:
+        virtual Operation* Minimize(TensorLike* loss) override { return new MinimizationOperation(loss, this); }
+
+    private:
+        class MinimizationOperation : public Operation
+        {
+        public:
+            MinimizationOperation(TensorLike* loss, Adam* owner) : Operation({ loss }), m_Owner(owner) {}
+        protected:
+            virtual void ComputeInternal();
+            virtual void ComputeGradientInternal(const Tensor& grad) {}
+
+            Adam* m_Owner;
+            vector<Tensor> m_MGradients;
+            vector<Tensor> m_VGradients;
+        };
+
+    private:
         float m_LearningRate;
         float m_Beta1;
         float m_Beta2;
         float m_Epsilon = 1e-8f;
 
-        vector<Tensor> m_MGradients;
-        vector<Tensor> m_VGradients;
+        friend class MinimizationOperation;
 	};
 }

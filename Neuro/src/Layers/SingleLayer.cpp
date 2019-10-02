@@ -1,11 +1,13 @@
 #include <sstream>
 
+#include "Types.h"
 #include "Layers/SingleLayer.h"
 #include "Activations.h"
 #include "Tensors/Shape.h"
 #include "Tools.h"
 #include "Models/ModelBase.h"
-#include "Types.h"
+#include "ComputationalGraph/Placeholder.h"
+#include "ComputationalGraph/NameScope.h"
 
 namespace Neuro
 {
@@ -80,26 +82,26 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void SingleLayer::OnInit(bool initValues)
     {
+        if (m_InputLayers.empty())
+        {
+            NameScope layerScope(Name());
+            m_InputOps.push_back(new Placeholder(m_InputShape, "input"));
+        }
+        else
+        {
+            for (auto inLayer : m_InputLayers)
+                m_InputOps.insert(m_InputOps.end(), inLayer->OutputOps().begin(), inLayer->OutputOps().end());
+        }
+
         m_Outputs.resize(m_OutputsShapes.size());
+        m_OutputOps.resize(m_Outputs.size());
+
+        InitOps(initValues);
         
         if (m_Activation)
         {
             for (size_t i = 0; i < m_Outputs.size(); ++i)
                 m_OutputOps[i] = m_Activation->Build(m_OutputOps[i]);
         }
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    int SingleLayer::InputOffset(const LayerBase* inputLayer) const
-    {
-        int offset = 0;
-        for (auto layer : m_InputLayers)
-        {
-            if (inputLayer == layer)
-                return offset;
-
-            offset += (int)layer->Outputs().size();
-        }
-        return -offset;
     }
 }

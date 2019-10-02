@@ -4,7 +4,7 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    SubtractOp::SubtractOp(NodeBase* a, NodeBase* b)
+    SubtractOp::SubtractOp(TensorLike* a, TensorLike* b)
         : Operation({ a, b })
     {
     }

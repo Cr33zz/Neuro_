@@ -15,16 +15,10 @@ namespace Neuro
         ~Sequential();
 
         virtual const Shape& InputShape() const override { return m_Layers[0]->InputShape(); }
-        virtual const vector<Tensor*>& InputsGradient() override { return m_Layers[0]->InputsGradient(); }
         virtual const tensor_ptr_vec_t& Outputs() const override { return m_Layers.back()->Outputs(); }
         virtual const vector<Shape>& OutputShapes() const override { return m_Layers.back()->OutputShapes(); }
         virtual const vector<LayerBase*>& InputLayers() const override { return m_Layers[0]->InputLayers(); }
         virtual const vector<LayerBase*>& OutputLayers() const override { return m_Layers.back()->OutputLayers(); }
-
-        virtual const tensor_ptr_vec_t& FeedForward(const const_tensor_ptr_vec_t& inputs, bool training) override;
-        virtual const tensor_ptr_vec_t& BackProp(const tensor_ptr_vec_t& outputsGradient) override;
-
-        virtual int InputOffset(const LayerBase* inputLayer) const override;
 
         virtual const vector<LayerBase*>& ModelInputLayers() const override { return m_ModelInputLayers; }
         virtual const vector<LayerBase*>& ModelOutputLayers() const override { return m_ModelOutputLayers; }

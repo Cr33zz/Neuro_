@@ -7,14 +7,14 @@ namespace Neuro
     class SigmoidOp : public Operation
     {
     public:
-        SigmoidOp(NodeBase* x);
+        SigmoidOp(TensorLike* x);
 
     protected:
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
     };
 
-    static Operation* sigmoid(NodeBase* x)
+    static Operation* sigmoid(TensorLike* x)
     {
         return new SigmoidOp(x);
     }

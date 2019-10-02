@@ -4,7 +4,7 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Operation::Operation(const vector<NodeBase*>& inputNodes)
+    Operation::Operation(const vector<TensorLike*>& inputNodes)
     {
         m_InputNodes = inputNodes;
 

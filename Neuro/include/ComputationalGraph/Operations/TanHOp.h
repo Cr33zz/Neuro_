@@ -7,14 +7,14 @@ namespace Neuro
     class TanHOp : public Operation
     {
     public:
-        TanHOp(NodeBase* x);
+        TanHOp(TensorLike* x);
 
     protected:
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
     };
 
-    static Operation* tanh(NodeBase* x)
+    static Operation* tanh(TensorLike* x)
     {
         return new TanHOp(x);
     }

@@ -1,14 +1,14 @@
-#include "AutoencoderNetwork.h"
-#include "ConvAutoencoderNetwork.h"
-#include "ConvNetwork.h"
-#include "FlowNetwork.h"
+//#include "AutoencoderNetwork.h"
+//#include "ConvAutoencoderNetwork.h"
+//#include "ConvNetwork.h"
+//#include "FlowNetwork.h"
 #include "IrisNetwork.h"
-#include "MnistConvNetwork.h"
-#include "MnistNetwork.h"
-#include "GAN.h"
-#include "DeepConvGAN.h"
-#include "CifarGAN.h"
-#include "VGG16.h"
+//#include "MnistConvNetwork.h"
+//#include "MnistNetwork.h"
+//#include "GAN.h"
+//#include "DeepConvGAN.h"
+//#include "CifarGAN.h"
+//#include "VGG16.h"
 #include "ComputationalGraph.h"
 
 int main()
@@ -29,8 +29,8 @@ int main()
     /*for (auto weight : model.Weights())
         cout << weight->ToString() << endl;*/
 
-    ComputationalGraph().Run();
-    //IrisNetwork().Run();
+    //ComputationalGraph().Run();
+    IrisNetwork().Run();
     //ConvNetwork().Run();
     //FlowNetwork().Run();
     //MnistConvNetwork().Run();
@@ -40,7 +40,7 @@ int main()
     //GAN().Run();
     //DeepConvGAN().Run();
     //CifarGAN().RunDiscriminatorTrainTest();
-    CifarGAN().Run();
+    //CifarGAN().Run();
     //VGG16().Run();
 
     cin.get();

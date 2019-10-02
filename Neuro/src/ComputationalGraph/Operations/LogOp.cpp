@@ -3,7 +3,7 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    LogOp::LogOp(NodeBase* x)
+    LogOp::LogOp(TensorLike* x)
         : Operation({x})
     {
     }

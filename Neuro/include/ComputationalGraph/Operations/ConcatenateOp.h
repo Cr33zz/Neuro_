@@ -7,7 +7,7 @@ namespace Neuro
     class ConcatenateOp : public Operation
     {
     public:
-        ConcatenateOp(const vector<NodeBase*>& elements, EAxis axis = BatchAxis);
+        ConcatenateOp(const vector<TensorLike*>& elements, EAxis axis = BatchAxis);
 
     protected:
         virtual void ComputeInternal() override;
@@ -17,7 +17,7 @@ namespace Neuro
         EAxis m_Axis;
     };
 
-    static Operation* concatenate(const vector<NodeBase*>& elements, EAxis axis = BatchAxis)
+    static Operation* concatenate(const vector<TensorLike*>& elements, EAxis axis = BatchAxis)
     {
         return new ConcatenateOp(elements, axis);
     }

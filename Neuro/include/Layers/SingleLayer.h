@@ -26,8 +26,6 @@ namespace Neuro
         virtual const vector<LayerBase*>& InputLayers() const override { return m_InputLayers; }
         virtual const vector<LayerBase*>& OutputLayers() const override { return m_OutputLayers; }
 
-        virtual int InputOffset(const LayerBase* inputLayer) const override;
-
     protected:
         SingleLayer(const string& constructorName, LayerBase* inputLayer, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
         SingleLayer(const string& constructorName, const vector<LayerBase*>& inputLayers, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
@@ -35,18 +33,20 @@ namespace Neuro
         SingleLayer(const string& constructorName, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
         SingleLayer() {}
 
-        virtual vector<NodeBase*>& OutputOps() override { return m_OutputOps; }
+        virtual vector<TensorLike*>& InputOps() override { return m_InputOps; }
+        virtual vector<TensorLike*>& OutputOps() override { return m_OutputOps; }
 
         virtual void OnClone(const LayerBase& source) override;
         virtual void OnInit(bool initValues = true) override;
         virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) override;
         virtual void OnLinkOutput(LayerBase* outputLayer) override;
 
+        virtual void InitOps(bool initValues = true) {}
+
         Shape m_InputShape;
-        vector<NodeBase*> m_InputOps;
-        //vector<Tensor*> m_InputsGradient;
+        vector<TensorLike*> m_InputOps;
+        vector<TensorLike*> m_OutputOps;
         vector<Tensor*> m_Outputs;
-        vector<NodeBase*> m_OutputOps;
         vector<Shape> m_OutputsShapes;
         vector<LayerBase*> m_InputLayers;
         vector<LayerBase*> m_OutputLayers;

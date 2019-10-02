@@ -7,14 +7,14 @@ namespace Neuro
     class MatMulOp : public Operation
     {
     public:
-        MatMulOp(NodeBase* x1, NodeBase* x2);
+        MatMulOp(TensorLike* x1, TensorLike* x2);
 
     protected:
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
     };
 
-    static Operation* matmul(NodeBase* x1, NodeBase* x2)
+    static Operation* matmul(TensorLike* x1, TensorLike* x2)
     {
         return new MatMulOp(x1, x2);
     }

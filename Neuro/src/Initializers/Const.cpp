@@ -1,16 +1,16 @@
-﻿#include "Initializers/Constant.h"
+﻿#include "Initializers/Const.h"
 #include "Tensors/Tensor.h"
 
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	Constant::Constant(float value)
+	Const::Const(float value)
 	{
 		m_Value = value;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Constant::Init(Tensor& t)
+	void Const::Init(Tensor& t)
 	{
         t.FillWithValue(m_Value);
 	}

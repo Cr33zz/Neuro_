@@ -4,7 +4,7 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    MatMulOp::MatMulOp(NodeBase* a, NodeBase* b)
+    MatMulOp::MatMulOp(TensorLike* a, TensorLike* b)
         : Operation({a, b})
     {
     }

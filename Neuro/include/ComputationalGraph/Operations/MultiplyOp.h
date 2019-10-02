@@ -7,14 +7,14 @@ namespace Neuro
     class MultiplyOp : public Operation
     {
     public:
-        MultiplyOp(NodeBase* a, NodeBase* b);
+        MultiplyOp(TensorLike* a, TensorLike* b);
 
     protected:
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
     };
 
-    static Operation* multiply(NodeBase* a, NodeBase* b)
+    static Operation* multiply(TensorLike* a, TensorLike* b)
     {
         return new MultiplyOp(a, b);
     }

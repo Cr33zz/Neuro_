@@ -7,7 +7,7 @@ namespace Neuro
     class SumOp : public Operation
     {
     public:
-        SumOp(NodeBase* x, EAxis axis = GlobalAxis);
+        SumOp(TensorLike* x, EAxis axis = GlobalAxis);
 
     protected:
         virtual void ComputeInternal() override;
@@ -17,7 +17,7 @@ namespace Neuro
         EAxis m_Axis;
     };
 
-    static Operation* sum(NodeBase* x, EAxis axis = GlobalAxis)
+    static Operation* sum(TensorLike* x, EAxis axis = GlobalAxis)
     {
         return new SumOp(x, axis);
     }

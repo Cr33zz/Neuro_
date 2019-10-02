@@ -4,10 +4,10 @@
 
 namespace Neuro
 {
-    class Constant : public InitializerBase
+    class Const : public InitializerBase
     {
 	public:
-        Constant(float value = 1.f);
+        Const(float value = 1.f);
 
         virtual void Init(Tensor& t) override;
 

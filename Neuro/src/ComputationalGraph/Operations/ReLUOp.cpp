@@ -1,23 +1,23 @@
-#include "ComputationalGraph/Operations/SigmoidOp.h"
+#include "ComputationalGraph/Operations/ReLUOp.h"
 
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    SigmoidOp::SigmoidOp(TensorLike* x)
-        : Operation({x})
+    ReLUOp::ReLUOp(TensorLike* x)
+        : Operation({ x })
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void SigmoidOp::ComputeInternal()
+    void ReLUOp::ComputeInternal()
     {
         m_Output.Resize(m_Inputs[0]->GetShape());
-        m_Inputs[0]->Sigmoid(m_Output);
+        m_Inputs[0]->ReLU(m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void SigmoidOp::ComputeGradientInternal(const Tensor& grad)
+    void ReLUOp::ComputeGradientInternal(const Tensor& grad)
     {
-        m_Output.SigmoidGradient(m_Output, grad, m_InputsGrads[0]);
+        m_Output.ReLUGradient(m_Output, grad, m_InputsGrads[0]);
     }
 }

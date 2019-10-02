@@ -5,19 +5,19 @@
 namespace Neuro
 {	
 	//////////////////////////////////////////////////////////////////////////
-    NodeBase* Linear::Build(NodeBase* input)
+    TensorLike* Linear::Build(TensorLike* input)
     {
         return input;
     }
 
 	//////////////////////////////////////////////////////////////////////////
-    NodeBase* Sigmoid::Build(NodeBase* input)
+    TensorLike* Sigmoid::Build(TensorLike* input)
     {
         return sigmoid(input);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    NodeBase* Tanh::Build(NodeBase* input)
+    TensorLike* Tanh::Build(TensorLike* input)
     {
         return tanh(input);
     }
@@ -29,28 +29,25 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    NodeBase* LeakyReLU::Build(NodeBase* input)
+    TensorLike* LeakyReLU::Build(TensorLike* input)
     {
-        assert(false);
-        return nullptr;
+        return leakyrelu(input, m_Alpha);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    NodeBase* ReLU::Build(NodeBase* input)
+    TensorLike* ReLU::Build(TensorLike* input)
     {
-        assert(false);
-        return nullptr;
+        return relu(input);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    NodeBase* ELU::Build(NodeBase* input)
+    TensorLike* ELU::Build(TensorLike* input)
     {
-        assert(false);
-        return nullptr;
+        return elu(input, m_Alpha);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    NodeBase* Softmax::Build(NodeBase* input)
+    TensorLike* Softmax::Build(TensorLike* input)
     {
         return softmax(input);
     }

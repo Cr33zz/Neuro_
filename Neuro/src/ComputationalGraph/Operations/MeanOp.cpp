@@ -3,7 +3,7 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    MeanOp::MeanOp(NodeBase* x, EAxis axis)
+    MeanOp::MeanOp(TensorLike* x, EAxis axis)
         : Operation({x}), m_Axis(axis)
     {
         assert(axis <= BatchAxis);

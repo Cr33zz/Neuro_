@@ -4,18 +4,22 @@
 
 namespace Neuro
 {
-    class LogOp : public Operation
+    class ClipOp : public Operation
     {
     public:
-        LogOp(TensorLike* x);
+        ClipOp(TensorLike* x, float min, float max);
 
     protected:
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
+
+    private:
+        float m_Min;
+        float m_Max;
     };
 
-    static Operation* log(TensorLike* x)
+    static Operation* clip(TensorLike* x, float min, float max)
     {
-        return new LogOp(x);
+        return new ClipOp(x, min, max);
     }
 }

@@ -3,7 +3,7 @@
 namespace Neuro
 {        
     //////////////////////////////////////////////////////////////////////////
-    Conv2DOp::Conv2DOp(NodeBase* x, NodeBase* kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat)
+    Conv2DOp::Conv2DOp(TensorLike* x, TensorLike* kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat)
         : Operation({ x, kernels }), m_Stride(stride), m_Padding(padding), m_DataFormat(dataFormat)
     {
     }

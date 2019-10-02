@@ -7,7 +7,7 @@ namespace Neuro
     class MeanOp : public Operation
     {
     public:
-        MeanOp(NodeBase* x, EAxis axis = GlobalAxis);
+        MeanOp(TensorLike* x, EAxis axis = GlobalAxis);
 
     protected:
         virtual void ComputeInternal() override;
@@ -17,7 +17,7 @@ namespace Neuro
         EAxis m_Axis;
     };
 
-    static Operation* mean(NodeBase* x)
+    static Operation* mean(TensorLike* x)
     {
         return new MeanOp(x);
     }

@@ -56,10 +56,8 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Dense::OnInit(bool initValues)
+	void Dense::InitOps(bool initValues)
 	{
-		__super::OnInit(initValues);
-
         NameScope scope(Name());
         m_Weights = new Variable(Shape(OutputShape().Length, InputShape().Length), initValues ? m_WeightsInitializer : nullptr, "weights");
         m_Bias = new Variable(OutputShape(), initValues ? m_BiasInitializer : nullptr, "bias");

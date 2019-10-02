@@ -7,14 +7,14 @@ namespace Neuro
     class NegativeOp : public Operation
     {
     public:
-        NegativeOp(NodeBase* x);
+        NegativeOp(TensorLike* x);
 
     protected:
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
     };
 
-    static Operation* negative(NodeBase* x)
+    static Operation* negative(TensorLike* x)
     {
         return new NegativeOp(x);
     }

@@ -4,7 +4,7 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    MultiplyOp::MultiplyOp(NodeBase* a, NodeBase* b)
+    MultiplyOp::MultiplyOp(TensorLike* a, TensorLike* b)
         : Operation({a, b})
     {
     }

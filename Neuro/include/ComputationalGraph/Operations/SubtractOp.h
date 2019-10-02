@@ -7,14 +7,14 @@ namespace Neuro
     class SubtractOp : public Operation
     {
     public:
-        SubtractOp(NodeBase* a, NodeBase* b);
+        SubtractOp(TensorLike* a, TensorLike* b);
 
     protected:
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
     };
 
-    static Operation* subtract(NodeBase* a, NodeBase* b)
+    static Operation* subtract(TensorLike* a, TensorLike* b)
     {
         return new SubtractOp(a, b);
     }

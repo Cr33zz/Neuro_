@@ -12,15 +12,6 @@
     <ClCompile Include="src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\GAN.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\DeepConvGAN.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\CifarGAN.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\IrisNetwork.h">

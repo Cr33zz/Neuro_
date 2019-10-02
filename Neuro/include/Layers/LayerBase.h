@@ -13,8 +13,7 @@ namespace Neuro
 {
 	using namespace std;
 
-    class SingleLayer;
-    class NodeBase;
+    class TensorLike;
 
     // The concept of layer is that it is a 'block box' that supports forward and backward propagation.
     // Layer can have multiple inputs and outputs. Models are layers and can be combined with each other.
@@ -41,12 +40,6 @@ namespace Neuro
         //bool HasInputShape() const { return !InputShapes().empty();  }
         bool HasInputLayers() const { return !InputLayers().empty(); }
 
-        // Return offset under which input layer related data can be found in input/inputGradient vectors.
-        // It becomes useful in flow model where some layers can have multiple input layers and during back
-        // propagation we need to figure out which subset of input gradients should be passed over to which
-        // input layer.
-        virtual int InputOffset(const LayerBase* inputLayer) const = 0;
-        
         LayerBase* Link(LayerBase* inputLayer);
         LayerBase* operator() (LayerBase* inputLayer);
 
@@ -83,7 +76,8 @@ namespace Neuro
 		// This constructor exists only for cloning purposes
         LayerBase() {}
 
-        virtual vector<NodeBase*>& OutputOps() = 0;
+        virtual vector<TensorLike*>& InputOps() = 0;
+        virtual vector<TensorLike*>& OutputOps() = 0;
 
         virtual LayerBase* LinkImpl(const vector<LayerBase*>& inputLayers);
 
@@ -114,5 +108,6 @@ namespace Neuro
         friend class ModelBase;
 		friend class Flow;
         friend class Sequential;
+        friend class SingleLayer;
 	};
 }

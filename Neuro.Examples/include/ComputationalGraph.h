@@ -26,7 +26,7 @@ public:
 
         auto loss = sum(sum(multiply(negative(y), log(o)), BatchAxis)); //cross-entropy loss
 
-        auto minimizeOp = _SGDOptimizer(0.02f).Minimize(loss);
+        auto minimizeOp = SGD(0.02f).Minimize(loss);
 
         auto input1 = Uniform::Random(-1, 1, x1->GetShape());
         auto input2 = Uniform::Random(-1, 1, x2->GetShape());

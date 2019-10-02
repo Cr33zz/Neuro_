@@ -87,9 +87,6 @@
     <ClInclude Include="include\Optimizers\SGD.h">
       <Filter>include\Optimizers</Filter>
     </ClInclude>
-    <ClInclude Include="include\Initializers\Constant.h">
-      <Filter>include\Initializers</Filter>
-    </ClInclude>
     <ClInclude Include="include\Initializers\GlorotNormal.h">
       <Filter>include\Initializers</Filter>
     </ClInclude>
@@ -142,9 +139,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Neuro.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\TestTools.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Stopwatch.h">
@@ -219,13 +213,7 @@
     <ClInclude Include="include\ComputationalGraph\Graph.h">
       <Filter>include\ComputationalGraph</Filter>
     </ClInclude>
-    <ClInclude Include="include\ComputationalGraph\NodeBase.h">
-      <Filter>include\ComputationalGraph</Filter>
-    </ClInclude>
     <ClInclude Include="include\ComputationalGraph\Operation.h">
-      <Filter>include\ComputationalGraph</Filter>
-    </ClInclude>
-    <ClInclude Include="include\ComputationalGraph\Optimizer.h">
       <Filter>include\ComputationalGraph</Filter>
     </ClInclude>
     <ClInclude Include="include\ComputationalGraph\Placeholder.h">
@@ -297,6 +285,27 @@
     <ClInclude Include="include\ComputationalGraph\Trainer.h">
       <Filter>include\ComputationalGraph</Filter>
     </ClInclude>
+    <ClInclude Include="include\Initializers\Const.h">
+      <Filter>include\Initializers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Constant.h">
+      <Filter>include\ComputationalGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\ReLUOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\EluOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\TensorLike.h">
+      <Filter>include\ComputationalGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\LeakyReLUOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\ClipOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -320,25 +329,10 @@
     <ClCompile Include="src\Activations.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Layers\Concatenate.cpp">
-      <Filter>src\Layers</Filter>
-    </ClCompile>
     <ClCompile Include="src\Layers\Dense.cpp">
       <Filter>src\Layers</Filter>
     </ClCompile>
-    <ClCompile Include="src\Layers\Flatten.cpp">
-      <Filter>src\Layers</Filter>
-    </ClCompile>
     <ClCompile Include="src\Layers\Input.cpp">
-      <Filter>src\Layers</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Layers\Lambda.cpp">
-      <Filter>src\Layers</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Layers\LayerBase.cpp">
-      <Filter>src\Layers</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Layers\Merge.cpp">
       <Filter>src\Layers</Filter>
     </ClCompile>
     <ClCompile Include="src\Models\Flow.cpp">
@@ -359,9 +353,6 @@
     <ClCompile Include="src\Optimizers\SGD.cpp">
       <Filter>src\Optimizers</Filter>
     </ClCompile>
-    <ClCompile Include="src\Initializers\Constant.cpp">
-      <Filter>src\Initializers</Filter>
-    </ClCompile>
     <ClCompile Include="src\Initializers\Normal.cpp">
       <Filter>src\Initializers</Filter>
     </ClCompile>
@@ -370,9 +361,6 @@
     </ClCompile>
     <ClCompile Include="src\Initializers\Zeros.cpp">
       <Filter>src\Initializers</Filter>
-    </ClCompile>
-    <ClCompile Include="src\TestTools.cpp">
-      <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\Stopwatch.cpp">
       <Filter>src</Filter>
@@ -386,35 +374,11 @@
     <ClCompile Include="src\Tensors\TensorOpGpu.cpp">
       <Filter>src\Tensors</Filter>
     </ClCompile>
-    <ClCompile Include="src\Layers\Dropout.cpp">
-      <Filter>src\Layers</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Layers\BatchNormalization.cpp">
-      <Filter>src\Layers</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Layers\Pooling2D.cpp">
-      <Filter>src\Layers</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Layers\Conv2D.cpp">
-      <Filter>src\Layers</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Layers\Conv2DTranspose.cpp">
-      <Filter>src\Layers</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Layers\UpSampling2D.cpp">
-      <Filter>src\Layers</Filter>
-    </ClCompile>
     <ClCompile Include="src\Tensors\TensorFormatter.cpp">
       <Filter>src\Tensors</Filter>
     </ClCompile>
     <ClCompile Include="src\Tensors\Cuda\CudaErrorCheck.cpp">
       <Filter>src\Tensors\Cuda</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Layers\Reshape.cpp">
-      <Filter>src\Layers</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Layers\Activation.cpp">
-      <Filter>src\Layers</Filter>
     </ClCompile>
     <ClCompile Include="src\Layers\SingleLayer.cpp">
       <Filter>src\Layers</Filter>
@@ -425,13 +389,7 @@
     <ClCompile Include="src\ComputationalGraph\Graph.cpp">
       <Filter>src\ComputationalGraph</Filter>
     </ClCompile>
-    <ClCompile Include="src\ComputationalGraph\NodeBase.cpp">
-      <Filter>src\ComputationalGraph</Filter>
-    </ClCompile>
     <ClCompile Include="src\ComputationalGraph\Operation.cpp">
-      <Filter>src\ComputationalGraph</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ComputationalGraph\Optimizer.cpp">
       <Filter>src\ComputationalGraph</Filter>
     </ClCompile>
     <ClCompile Include="src\ComputationalGraph\Placeholder.cpp">
@@ -499,6 +457,30 @@
     </ClCompile>
     <ClCompile Include="src\ComputationalGraph\Trainer.cpp">
       <Filter>src\ComputationalGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Initializers\Const.cpp">
+      <Filter>src\Initializers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Constant.cpp">
+      <Filter>src\ComputationalGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\ReLUOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\EluOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\TensorLike.cpp">
+      <Filter>src\ComputationalGraph</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\LayerBase.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\LeakyReLUOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\ClipOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

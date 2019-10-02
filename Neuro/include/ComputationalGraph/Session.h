@@ -7,7 +7,7 @@ namespace Neuro
 {
     using namespace std;
 
-    class NodeBase;
+    class TensorLike;
     class Operation;
     class Placeholder;
     class Tensor;
@@ -17,11 +17,11 @@ namespace Neuro
     public:
         static Session* Default;
 
-        vector<Tensor*> Run(const vector<NodeBase*>& fetches, const map<Placeholder*, const Tensor*>& feeds);
+        vector<Tensor*> Run(const vector<TensorLike*>& fetches, const map<Placeholder*, const Tensor*>& feeds);
 
     private:
-        vector<NodeBase*> BuildForwardGraph(const vector<NodeBase*>& endNodes);
+        vector<TensorLike*> BuildForwardGraph(const vector<TensorLike*>& endNodes);
 
-        void ProcessForwardNode(NodeBase* node, vector<NodeBase*>& nodes);
+        void ProcessForwardNode(TensorLike* node, vector<TensorLike*>& nodes);
     };
 }

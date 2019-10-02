@@ -1,12 +1,12 @@
 ﻿#pragma once
 
-#include "ComputationalGraph/NodeBase.h"
+#include "ComputationalGraph/TensorLike.h"
 
 namespace Neuro
 {
     class Tensor;
 
-    class Operation : public NodeBase
+    class Operation : public TensorLike
     {
     public:
         virtual bool IsOp() const override { return true; }
@@ -17,7 +17,7 @@ namespace Neuro
         const vector<Tensor*>& ComputeGradient(const Tensor& grad);
 
     protected:
-        Operation(const vector<NodeBase*>& inputNodes);
+        Operation(const vector<TensorLike*>& inputNodes);
 
         virtual void ComputeInternal() = 0;
         virtual void ComputeGradientInternal(const Tensor& grad) = 0;

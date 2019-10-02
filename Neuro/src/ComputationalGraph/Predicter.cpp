@@ -6,7 +6,7 @@ namespace Neuro
 {
 
     //////////////////////////////////////////////////////////////////////////
-    Predicter::Predicter(const vector<Placeholder*>& inputOps, const vector<NodeBase*>& outputOps)
+    Predicter::Predicter(const vector<Placeholder*>& inputOps, const vector<TensorLike*>& outputOps)
     {
         m_InputOps = inputOps;
         m_OutputOps = outputOps;

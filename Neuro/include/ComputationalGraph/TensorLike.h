@@ -8,33 +8,33 @@ namespace Neuro
 {
     using namespace std;
 
-    class Operation;
-
-    class NodeBase
+    class TensorLike
     {
     public:
-        virtual ~NodeBase() {}
+        virtual ~TensorLike() {}
 
-        const Tensor& Output() const { return m_Output; }
         Tensor& Output() { return m_Output; }
         Tensor* OutputPtr() { return &m_Output; }
 
-        const Tensor& OutputGrad() const { return m_OutputGrad; }
+        Tensor& OutputGrad() { return m_OutputGrad; }
         Tensor* OutputGradPtr() { return &m_OutputGrad; }
 
         const string& Name() const { return m_Name; }
 
         virtual bool IsOp() const { return false; }
+        virtual bool IsPlaceholder() const { return false; }
 
     protected:
-        vector<NodeBase*> m_Consumers;
-        vector<NodeBase*> m_InputNodes;
+        TensorLike(const string& name = "");
+
+        vector<TensorLike*> m_Consumers;
+        vector<TensorLike*> m_InputNodes;
         Tensor m_Output;
         Tensor m_OutputGrad;
         string m_Name;
 
         friend class Operation;
         friend class Session;
-        friend class Optimizer;
+        friend class OptimizerBase;
     };
 }

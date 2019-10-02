@@ -9,13 +9,13 @@ namespace Neuro
     Session* Session::Default = new Session();
 
     //////////////////////////////////////////////////////////////////////////
-    vector<Tensor*> Session::Run(const vector<NodeBase*>& fetches, const map<Placeholder*, const Tensor*>& feeds)
+    vector<Tensor*> Session::Run(const vector<TensorLike*>& fetches, const map<Placeholder*, const Tensor*>& feeds)
     {
         for(auto node : BuildForwardGraph(fetches))
         {
             if (Placeholder* p = dynamic_cast<Placeholder*>(node))
                 node->m_Output = *feeds.find(p)->second;
-            else
+            else if (node->IsOp())
             {
                 Operation* op = static_cast<Operation*>(node);
                 auto inputs = op->GatherInputs();
@@ -29,16 +29,16 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    std::vector<NodeBase*> Session::BuildForwardGraph(const vector<NodeBase*>& endNodes)
+    std::vector<TensorLike*> Session::BuildForwardGraph(const vector<TensorLike*>& endNodes)
     {
-        vector<NodeBase*> result;
+        vector<TensorLike*> result;
         for (auto node : endNodes)
             ProcessForwardNode(node, result);
         return result;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Session::ProcessForwardNode(NodeBase* node, vector<NodeBase*>& nodes)
+    void Session::ProcessForwardNode(TensorLike* node, vector<TensorLike*>& nodes)
     {
         if (node->IsOp())
         {

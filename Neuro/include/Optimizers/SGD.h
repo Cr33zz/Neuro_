@@ -12,10 +12,22 @@ namespace Neuro
 		virtual string ToString() override;
 		const char* ClassName() const;
 
-	protected:
-        virtual void OnStep(vector<ParameterAndGradient>& paramsAndGrads, int batchSize) override;
+        virtual Operation* Minimize(TensorLike* loss) override { return new MinimizationOperation(loss, this); }
 
-	private:
+    private:
+        class MinimizationOperation : public Operation
+        {
+        public:
+            MinimizationOperation(TensorLike* loss, SGD* owner) :Operation({ loss }), m_Owner(owner) {}
+        protected:
+            virtual void ComputeInternal();
+            virtual void ComputeGradientInternal(const Tensor& grad) {}
+
+            SGD* m_Owner;
+        };
+
         float m_LearningRate;
+
+        friend class MinimizationOperation;
 	};
 }

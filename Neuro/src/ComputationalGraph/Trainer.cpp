@@ -5,11 +5,11 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Trainer::Trainer(const vector<Placeholder*>& inputOps, const vector<Placeholder*>& targetOps, const vector<NodeBase*>& updatesOps)
+    Trainer::Trainer(const vector<Placeholder*>& inputOps, const vector<Placeholder*>& targetOps, const vector<TensorLike*>& fetchOps)
     {
         m_InputOps = inputOps;
         m_TargetOps = targetOps;
-        m_UpdateOps = updatesOps;
+        m_FetchOps = fetchOps;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -26,6 +26,6 @@ namespace Neuro
         for (size_t i = 0; i < m_TargetOps.size(); ++i)
             feeds[m_TargetOps[i]] = outputs[i];
 
-        return Session::Default->Run(m_UpdateOps, feeds);
+        return Session::Default->Run(m_FetchOps, feeds);
     }
 }

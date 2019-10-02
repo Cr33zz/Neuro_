@@ -2,36 +2,36 @@
 
 namespace Neuro
 {
-	class NodeBase;
+	class TensorLike;
 
     class ActivationBase
     {
 	public:
-        virtual NodeBase* Build(NodeBase* input) = 0;
+        virtual TensorLike* Build(TensorLike* input) = 0;
 	};
 
     class Linear : public ActivationBase
     {
 	public:
-        virtual NodeBase* Build(NodeBase* input) override;
+        virtual TensorLike* Build(TensorLike* input) override;
 	};
 
     class Sigmoid : public ActivationBase
     {
 	public:
-        virtual NodeBase* Build(NodeBase* input) override;
+        virtual TensorLike* Build(TensorLike* input) override;
 	};
 
     class Tanh : public ActivationBase
     {
 	public:
-        virtual NodeBase* Build(NodeBase* input) override;
+        virtual TensorLike* Build(TensorLike* input) override;
 	};
 
     class ReLU : public ActivationBase
     {
 	public:
-        virtual NodeBase* Build(NodeBase* input) override;
+        virtual TensorLike* Build(TensorLike* input) override;
 	};
 
     class ELU : public ActivationBase
@@ -39,7 +39,7 @@ namespace Neuro
 	public:
 		ELU(float alpha);
 
-        virtual NodeBase* Build(NodeBase* input) override;
+        virtual TensorLike* Build(TensorLike* input) override;
 
 	private:
         const float m_Alpha;
@@ -50,7 +50,7 @@ namespace Neuro
     public:
         LeakyReLU(float alpha);
 
-        virtual NodeBase* Build(NodeBase* input) override;
+        virtual TensorLike* Build(TensorLike* input) override;
 
     private:
         const float m_Alpha;
@@ -59,6 +59,6 @@ namespace Neuro
     class Softmax : public ActivationBase
     {
 	public:
-        virtual NodeBase* Build(NodeBase* input) override;
+        virtual TensorLike* Build(TensorLike* input) override;
 	};
 }

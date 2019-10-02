@@ -3,7 +3,7 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    PowOp::PowOp(NodeBase* x, float p)
+    PowOp::PowOp(TensorLike* x, float p)
         : Operation({ x }), m_Power(p)
     {
     }

@@ -3,7 +3,7 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    TanHOp::TanHOp(NodeBase* x)
+    TanHOp::TanHOp(TensorLike* x)
         : Operation({ x })
     {
     }

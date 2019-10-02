@@ -3,7 +3,7 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    ConcatenateOp::ConcatenateOp(const vector<NodeBase*>& elements, EAxis axis)
+    ConcatenateOp::ConcatenateOp(const vector<TensorLike*>& elements, EAxis axis)
         : Operation(elements), m_Axis(axis)
     {
         assert(axis == BatchAxis);

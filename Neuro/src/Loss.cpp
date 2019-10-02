@@ -1,9 +1,12 @@
 ﻿#include "Loss.h"
+#include "Tensors/Tensor.h"
+#include "Tools.h"
 #include "ComputationalGraph/Ops.h"
+#include "ComputationalGraph/Constant.h"
+#include "ComputationalGraph/NameScope.h"
 
 namespace Neuro
 {
-
 	//////////////////////////////////////////////////////////////////////////
 	//void CategoricalCrossEntropy::Compute(const Tensor& targetOutput, const Tensor& output, Tensor& result) const
 	//{
@@ -19,15 +22,19 @@ namespace Neuro
 	//}
 
 	//////////////////////////////////////////////////////////////////////////
-    NodeBase* BinaryCrossEntropy::Build(NodeBase* targetOutput, NodeBase* output)
+    TensorLike* BinaryCrossEntropy::Build(TensorLike* targetOutput, TensorLike* output)
     {
-        return sum(sum(multiply(negative(targetOutput), log(output)), BatchAxis));
+        NameScope scope("cross_entropy");
+        auto clippedOutput = clip(output, _EPSILON, 1 - _EPSILON);
+        return negative(add(multiply(targetOutput, log(clippedOutput)),
+                            multiply(subtract(new Constant(1), targetOutput), log(subtract(new Constant(1), clippedOutput)))));
     }
 
     //////////////////////////////////////////////////////////////////////////
-    NodeBase* MeanSquareError::Build(NodeBase* targetOutput, NodeBase* output)
+    TensorLike* MeanSquareError::Build(TensorLike* targetOutput, TensorLike* output)
     {
-        return sum(mean(pow(subtract(output, targetOutput), 2)));
+        NameScope scope("mean_square_error");
+        return multiply(pow(subtract(output, targetOutput), 2), new Constant(0.5f));
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -37,20 +44,10 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    Neuro::NodeBase* Huber::Build(NodeBase* targetOutput, NodeBase* output)
+    Neuro::TensorLike* Huber::Build(TensorLike* targetOutput, TensorLike* output)
     {
-        return ;
+        NameScope scope("huber");
+        assert(false);
+        return nullptr;//huber(targetOutput, output);
     }
-
-    //////////////////////////////////////////////////////////////////////////
-	void Huber::Compute(const Tensor& targetOutput, const Tensor& output, Tensor& result) const
-	{
-		targetOutput.Map([&](float yTrue, float y) { float a = y - yTrue; return abs(a) <= Delta ? (0.5f * a * a) : (Delta * (float)abs(a) - 0.5f * Delta * Delta); }, output, result);
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	void Huber::Derivative(const Tensor& targetOutput, const Tensor& output, Tensor& result) const
-	{
-		targetOutput.Map([&](float yTrue, float y) { float a = y - yTrue; return abs(a) <= Delta ? a : (Delta * Sign(a)); }, output, result);
-	}
 }

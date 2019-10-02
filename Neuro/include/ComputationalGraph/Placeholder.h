@@ -1,20 +1,20 @@
 ﻿#pragma once
 
-#include "ComputationalGraph/NodeBase.h"
+#include "ComputationalGraph/TensorLike.h"
 #include "Tensors/Shape.h"
 
 namespace Neuro
 {
-    class Placeholder : public NodeBase
+    class Placeholder : public TensorLike
     {
     public:
         Placeholder(const Shape& shape, const string& name = "");
 
+        virtual bool IsPlaceholder() const override { return true; }
+
         const Shape& GetShape() const { return m_Shape; }
-        const string& Name() const { return m_Name; }
 
     private:
         Shape m_Shape;
-        string m_Name;
     };
 }

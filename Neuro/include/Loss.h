@@ -2,13 +2,13 @@
 
 namespace Neuro
 {
-	class NodeBase;
+	class TensorLike;
 
     class LossBase
     {
 	public:
         virtual LossBase* Clone() const = 0;
-        virtual NodeBase* Build(NodeBase* targetOutput, NodeBase* output) = 0;
+        virtual TensorLike* Build(TensorLike* targetOutput, TensorLike* output) = 0;
 	};
 
     // This function can be used for any output being probability distribution (i.e. softmax-ed)
@@ -28,14 +28,14 @@ namespace Neuro
     {
 	public:
         virtual LossBase* Clone() const override { return new BinaryCrossEntropy(*this); }
-        virtual NodeBase* Build(NodeBase* targetOutput, NodeBase* output) override;
+        virtual TensorLike* Build(TensorLike* targetOutput, TensorLike* output) override;
 	};
 
     class MeanSquareError : public LossBase
     {
 	public:
         virtual LossBase* Clone() const override { return new MeanSquareError(*this); }
-        virtual NodeBase* Build(NodeBase* targetOutput, NodeBase* output) override;
+        virtual TensorLike* Build(TensorLike* targetOutput, TensorLike* output) override;
 	};
 
     class Huber : public LossBase
@@ -44,7 +44,7 @@ namespace Neuro
         Huber(float delta);
 
         virtual LossBase* Clone() const override { return new Huber(*this); }
-        virtual NodeBase* Build(NodeBase* targetOutput, NodeBase* output) override;
+        virtual TensorLike* Build(TensorLike* targetOutput, TensorLike* output) override;
 
 	private:
         float Delta;
