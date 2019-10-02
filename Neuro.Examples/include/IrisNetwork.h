@@ -13,8 +13,9 @@ public:
     void Run()
     {
         Tensor::SetDefaultOpMode(GPU);
+        GlobalRngSeed(1337);
 
-        auto model = Sequential("iris", 100);
+        auto model = Sequential("iris");
         model.AddLayer(new Dense(4, 1000, new ReLU()));
         model.AddLayer(new Dense(model.LastLayer(), 500, new ReLU()));
         model.AddLayer(new Dense(model.LastLayer(), 300, new ReLU()));

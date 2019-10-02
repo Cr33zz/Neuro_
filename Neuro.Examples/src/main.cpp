@@ -28,14 +28,14 @@ int main()
     /*for (auto weight : model.Weights())
         cout << weight->ToString() << endl;*/
 
-    //IrisNetwork().Run();
-    //ConvNetwork().Run();
-    //FlowNetwork().Run();
-    //MnistConvNetwork().Run();
-    //MnistNetwork().Run();
-    //AutoencoderNetwork().Run();
-    //ConvAutoencoderNetwork().Run();
-    //GAN().Run();
+    IrisNetwork().Run();
+    ConvNetwork().Run();
+    FlowNetwork().Run();
+    MnistConvNetwork().Run();
+    MnistNetwork().Run();
+    AutoencoderNetwork().Run();
+    ConvAutoencoderNetwork().Run();
+    GAN().Run();
     //DeepConvGAN().Run();
     //CifarGAN().RunDiscriminatorTrainTest();
     CifarGAN().Run();

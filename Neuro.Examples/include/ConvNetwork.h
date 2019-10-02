@@ -13,6 +13,7 @@ public:
 	void Run()
 	{
 		Tensor::SetDefaultOpMode(GPU);
+        GlobalRngSeed(1337);
 
         Shape inputShape(64, 64, 4);
         auto model = Sequential("conv");

@@ -13,8 +13,9 @@ public:
     void Run()
     {
         Tensor::SetDefaultOpMode(GPU);
+        GlobalRngSeed(1337);
 
-        auto model = Sequential("mnist", 1337);
+        auto model = Sequential("mnist");
         model.AddLayer(new Dense(784, 64, new ReLU()));
         //model.AddLayer(new BatchNormalization());
         model.AddLayer(new Dropout(0.2f));

@@ -14,6 +14,7 @@ public:
     static void Run()
     {
         Tensor::SetDefaultOpMode(GPU);
+        GlobalRngSeed(1337);
 
         //Based on https://blog.keras.io/building-autoencoders-in-keras.html
 
