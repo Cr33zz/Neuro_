@@ -1,5 +1,18 @@
 ## Neuro_
-This is C++ port of Neuro library (when it's done, original Neuro will no longer be developed)
+C++ implementation of neural networks library with Keras-like API. Contains majority of commonly used layers, losses and optimizers. Supports sequential and multi-input-output (flow) models. Supports single CPU, Multi-CPU and GPU tensor operations (using cuDNN and cuBLAS). This is a result of months of scouring internet for information regarding minute details of how neural networks work. Hopefully, it serves a good source of knowlegde for those who want to understand how neural networks are implemented.
+Supported layers:  
+* Dense
+* Conv2D
+* Conv2DTranspose
+* Pooling2D
+* UpSampling2D
+* BatchNormalization
+* Dropout
+* Flatten
+* Reshape
+* Concatenate
+* Merge
+* Activation
 
 ## Code examples
 #### Deep Autoencoder

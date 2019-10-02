@@ -76,6 +76,8 @@ void GAN::Run()
         }
     }
 
+    ganModel->SaveWeights(Name() + ".h5");
+
     cin.get();
 }
 

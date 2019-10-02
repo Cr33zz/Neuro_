@@ -11,11 +11,11 @@ using namespace Neuro;
 class AutoencoderNetwork
 {
 public:
+    //Based on https://blog.keras.io/building-autoencoders-in-keras.html
     void Run()
     {
         Tensor::SetDefaultOpMode(GPU);
-
-        //Based on https://blog.keras.io/building-autoencoders-in-keras.html
+        GlobalRngSeed(1337);
 
         auto encoder = new Sequential("encoder");
         encoder->AddLayer(new Dense(784, 128, new ReLU()));
@@ -26,7 +26,7 @@ public:
         decoder->AddLayer(new Dense(128, new ReLU()));
         decoder->AddLayer(new Dense(784, new Sigmoid()));
 
-        auto model = Sequential("autoencoder", 1337);
+        auto model = Sequential("autoencoder");
         model.AddLayer(encoder);
         model.AddLayer(decoder);
         model.Optimize(new Adam(), new BinaryCrossEntropy());

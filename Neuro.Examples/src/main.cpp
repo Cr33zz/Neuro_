@@ -22,7 +22,7 @@ int main()
     model.AddLayer(new Conv2D(2, 3, 1, 1, nullptr, NHWC));
     model.AddLayer(new MaxPooling2D(2, 2, 0, NHWC));
     model.LoadWeights("sample.h5");*/
-    
+
     //cout << model.Predict(input)[0]->ToString() << endl;
     //cout << model.Predict(input)[0]->Transposed({ DepthAxis, WidthAxis, HeightAxis }).ToString() << endl;
 
@@ -41,13 +41,13 @@ int main()
 
     ComputationalGraph().Run();
     IrisNetwork().Run();
-    //ConvNetwork().Run();
-    //FlowNetwork().Run();
-    //MnistConvNetwork().Run();
-    //MnistNetwork().Run();
-    //AutoencoderNetwork().Run();
-    //ConvAutoencoderNetwork().Run();
-    //GAN().Run();
+    ConvNetwork().Run();
+    FlowNetwork().Run();
+    MnistConvNetwork().Run();
+    MnistNetwork().Run();
+    AutoencoderNetwork().Run();
+    ConvAutoencoderNetwork().Run();
+    GAN().Run();
     //DeepConvGAN().Run();
     //CifarGAN().RunDiscriminatorTrainTest();
     //CifarGAN().Run();
