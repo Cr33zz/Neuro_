@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     EluOp::EluOp(TensorLike* x, float alpha)
-        : Operation({ x }), m_Alpha(alpha)
+        : Operation({ x }, "elu"), m_Alpha(alpha)
     {
     }
 

@@ -20,10 +20,10 @@ public:
         model.AddLayer(new Dense(model.LastLayer(), 500, new ReLU()));
         model.AddLayer(new Dense(model.LastLayer(), 300, new ReLU()));
 
-        //auto dropout = new Dropout(model.LastLayer(), 0.2f);
-        //dropout->SetTrainable(false);
+        auto dropout = new Dropout(model.LastLayer(), 0.2f);
+        dropout->SetTrainable(false);
 
-        //model.AddLayer(dropout);
+        model.AddLayer(dropout);
         model.AddLayer(new Dense(model.LastLayer(), 3, new Softmax()));
         model.Optimize(new Adam(), new BinaryCrossEntropy());
 

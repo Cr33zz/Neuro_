@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     ReLUOp::ReLUOp(TensorLike* x)
-        : Operation({ x })
+        : Operation({ x }, "relu")
     {
     }
 

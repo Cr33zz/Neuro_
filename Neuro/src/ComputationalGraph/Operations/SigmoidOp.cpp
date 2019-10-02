@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     SigmoidOp::SigmoidOp(TensorLike* x)
-        : Operation({x})
+        : Operation({x}, "sigmoid")
     {
     }
 

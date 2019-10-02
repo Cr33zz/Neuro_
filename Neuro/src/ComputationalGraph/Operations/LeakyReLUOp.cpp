@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     LeakyReLUOp::LeakyReLUOp(TensorLike* x, float alpha)
-        : Operation({ x }), m_Alpha(alpha)
+        : Operation({ x }, "leaky_relu"), m_Alpha(alpha)
     {
     }
 

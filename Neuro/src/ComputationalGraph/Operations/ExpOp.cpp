@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     ExpOp::ExpOp(TensorLike* x)
-        : Operation({x})
+        : Operation({x}, "exp")
     {
     }
 

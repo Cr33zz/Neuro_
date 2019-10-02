@@ -18,7 +18,7 @@ namespace Neuro
         class MinimizationOperation : public Operation
         {
         public:
-            MinimizationOperation(TensorLike* loss, SGD* owner) :Operation({ loss }), m_Owner(owner) {}
+            MinimizationOperation(TensorLike* loss, SGD* owner) :Operation({ loss }, "sgd_minimize"), m_Owner(owner) {}
         protected:
             virtual void ComputeInternal();
             virtual void ComputeGradientInternal(const Tensor& grad) {}

@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     AssignOp::AssignOp(TensorLike* x, TensorLike* val)
-        : Operation({ x, val })
+        : Operation({ x, val }, "assign")
     {
     }
 

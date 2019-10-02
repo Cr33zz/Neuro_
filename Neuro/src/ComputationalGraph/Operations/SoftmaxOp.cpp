@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     SoftmaxOp::SoftmaxOp(TensorLike* x)
-        : Operation({x})
+        : Operation({x}, "softmax")
     {
     }
 

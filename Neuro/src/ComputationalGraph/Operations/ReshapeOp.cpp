@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     ReshapeOp::ReshapeOp(TensorLike* x, const Shape& shape)
-        : Operation({x}), m_Shape(shape)
+        : Operation({x}, "reshape"), m_Shape(shape)
     {
     }
 

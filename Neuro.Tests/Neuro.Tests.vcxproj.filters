@@ -10,25 +10,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\ActivationTests.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ConvolutionLayerTests.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\DenseLayerTests.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\FlattenLayerTests.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\TensorTests.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\MergeLayerTests.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\PoolingLayerTests.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\ShapeTests.cpp">
@@ -40,25 +22,10 @@
     <ClCompile Include="src\RandomTests.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\DeconvolutionLayerTests.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\BatchNormalizationLayerTests.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\UpSampling2DLayerTests.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\TensorOpGpuTests.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\DropoutLayerTests.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\ModelTests.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\OptimizerTests.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

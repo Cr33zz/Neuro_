@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     BatchNormalizeOp::BatchNormalizeOp(TensorLike* x, TensorLike* gamma, TensorLike* beta, TensorLike* runningMean, TensorLike* runningVar, float momentum, float epsilon, TensorLike* training)
-        : Operation({ x, gamma, beta, runningMean, runningVar, training }), m_Epsilon(epsilon), m_Momentum(momentum)
+        : Operation({ x, gamma, beta, runningMean, runningVar, training }, "batch_normalize"), m_Epsilon(epsilon), m_Momentum(momentum)
     {
     }
 
@@ -14,8 +14,8 @@ namespace Neuro
         auto& x = *m_Inputs[0];
         auto& gamma = *m_Inputs[1];
         auto& beta = *m_Inputs[2];
-        auto& runningMean = *const_cast<Tensor*>(m_Inputs[3]);
-        auto& runningVar = *const_cast<Tensor*>(m_Inputs[4]);
+        auto& runningMean = m_InputNodes[3]->Output();
+        auto& runningVar = m_InputNodes[4]->Output();
         bool training = (*m_Inputs[5])(0) != 0;
 
         m_Output.Resize(m_Inputs[0]->GetShape());

@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     NegativeOp::NegativeOp(TensorLike* x)
-        : Operation({x})
+        : Operation({x}, "negative")
     {
     }
 

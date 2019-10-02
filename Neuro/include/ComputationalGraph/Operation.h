@@ -17,7 +17,7 @@ namespace Neuro
         const vector<Tensor*>& ComputeGradient(const Tensor& grad);
 
     protected:
-        Operation(const vector<TensorLike*>& inputNodes);
+        Operation(const vector<TensorLike*>& inputNodes, const string& name);
 
         virtual void ComputeInternal() = 0;
         virtual void ComputeGradientInternal(const Tensor& grad) = 0;

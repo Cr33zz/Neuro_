@@ -19,23 +19,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\ActivationTests.cpp" />
-    <ClCompile Include="src\BatchNormalizationLayerTests.cpp" />
-    <ClCompile Include="src\ConvolutionLayerTests.cpp" />
-    <ClCompile Include="src\DeconvolutionLayerTests.cpp" />
-    <ClCompile Include="src\DenseLayerTests.cpp" />
-    <ClCompile Include="src\DropoutLayerTests.cpp" />
-    <ClCompile Include="src\FlattenLayerTests.cpp" />
-    <ClCompile Include="src\MergeLayerTests.cpp" />
     <ClCompile Include="src\ModelTests.cpp" />
-    <ClCompile Include="src\OptimizerTests.cpp" />
-    <ClCompile Include="src\PoolingLayerTests.cpp" />
     <ClCompile Include="src\RandomTests.cpp" />
     <ClCompile Include="src\ShapeTests.cpp" />
     <ClCompile Include="src\TensorOpGpuTests.cpp" />
     <ClCompile Include="src\TensorOpMultiCpuTests.cpp" />
     <ClCompile Include="src\TensorTests.cpp" />
-    <ClCompile Include="src\UpSampling2DLayerTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Neuro\Neuro.vcxproj">

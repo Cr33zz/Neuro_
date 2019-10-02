@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     ClipOp::ClipOp(TensorLike* x, float min, float max)
-        : Operation({ x }), m_Min(min), m_Max(max)
+        : Operation({ x }, "clip"), m_Min(min), m_Max(max)
     {
     }
 

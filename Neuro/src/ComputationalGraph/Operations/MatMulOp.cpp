@@ -5,15 +5,20 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     MatMulOp::MatMulOp(TensorLike* a, TensorLike* b)
-        : Operation({a, b})
+        : Operation({a, b}, "matmul")
     {
+        /*assert(a->GetShape().Width() == b->GetShape().Height());
+        assert(a->GetShape().Depth() == b->GetShape().Depth());*/
     }
 
     //////////////////////////////////////////////////////////////////////////
     void MatMulOp::ComputeInternal()
     {
-        m_Output.Resize(Shape(m_Inputs[1]->Len(0), m_Inputs[0]->Len(1), m_Inputs[0]->Len(2), max(m_Inputs[0]->Len(3), m_Inputs[1]->Len(3))));
-        m_Inputs[0]->Mul(*m_Inputs[1], m_Output);
+        auto& a = *m_Inputs[0];
+        auto& b = *m_Inputs[1];
+
+        m_Output.Resize(Shape(b.Width(), a.Height(), a.Depth(), max(a.Batch(), b.Batch())));
+        a.Mul(b, m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////

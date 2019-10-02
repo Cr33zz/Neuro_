@@ -4,8 +4,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Concatenate::Concatenate(const vector<LayerBase*>& inputLayers, const string& name)
-        : SingleLayer(__FUNCTION__, inputLayers, Shape(), nullptr, name)
+    Concatenate::Concatenate(const vector<LayerBase*>& inputLayers, EAxis axis, const string& name)
+        : SingleLayer(__FUNCTION__, inputLayers, Shape(), nullptr, name), m_Axis(axis)
     {
         int totalLen = 0;
         for (auto input : inputLayers)
@@ -14,15 +14,15 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Concatenate::Concatenate(const string& name)
-        : SingleLayer(__FUNCTION__, Shape(), nullptr, name)
+    Concatenate::Concatenate(EAxis axis, const string& name)
+        : SingleLayer(__FUNCTION__, Shape(), nullptr, name), m_Axis(axis)
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
     LayerBase* Concatenate::GetCloneInstance() const
     {
-        return new Concatenate(false);
+        return new Concatenate();
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -39,6 +39,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Concatenate::InitOps(TensorLike* training, bool initValues)
     {
-        m_OutputOps[0] = concatenate(m_InputOps);
+        m_OutputOps[0] = concat(m_InputOps, m_Axis);
     }
 }

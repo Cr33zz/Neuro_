@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     UpSample2dOp::UpSample2dOp(TensorLike* x, int scaleFactor)
-        : Operation({x}), m_ScaleFactor(scaleFactor)
+        : Operation({x}, "upsample2d"), m_ScaleFactor(scaleFactor)
     {
     }
 

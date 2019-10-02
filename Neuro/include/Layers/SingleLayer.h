@@ -43,7 +43,7 @@ namespace Neuro
         virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) override;
         virtual void OnLinkOutput(LayerBase* outputLayer) override;
 
-        virtual void InitOps(TensorLike* training, bool initValues = true) {}
+        virtual void InitOps(TensorLike* training, bool initValues = true);
 
         Shape m_InputShape;
         vector<TensorLike*> m_InputOps;

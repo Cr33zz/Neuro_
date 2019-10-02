@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     TanHOp::TanHOp(TensorLike* x)
-        : Operation({ x })
+        : Operation({ x }, "tanh")
     {
     }
 

@@ -17,7 +17,7 @@ namespace Neuro
         EAxis m_Axis;
     };
 
-    static Operation* concatenate(const vector<TensorLike*>& elements, EAxis axis = BatchAxis)
+    static Operation* concat(const vector<TensorLike*>& elements, EAxis axis = BatchAxis)
     {
         return new ConcatenateOp(elements, axis);
     }

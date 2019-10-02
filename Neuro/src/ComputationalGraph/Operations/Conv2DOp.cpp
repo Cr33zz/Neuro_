@@ -4,7 +4,7 @@ namespace Neuro
 {        
     //////////////////////////////////////////////////////////////////////////
     Conv2dOp::Conv2dOp(TensorLike* x, TensorLike* kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat)
-        : Operation({ x, kernels }), m_Stride(stride), m_Padding(padding), m_DataFormat(dataFormat)
+        : Operation({ x, kernels }, "conv2d"), m_Stride(stride), m_Padding(padding), m_DataFormat(dataFormat)
     {
     }
 

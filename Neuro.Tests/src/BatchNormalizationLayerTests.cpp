@@ -10,7 +10,7 @@ namespace NeuroTests
 {
     TEST_CLASS(BatchNormalizationLayerTests)
     {
-        TEST_METHOD(InputGradient_Spatial_1Batch)
+        /*TEST_METHOD(InputGradient_Spatial_1Batch)
         {
             Assert::IsTrue(TestTools::VerifyInputGradient(std::unique_ptr<LayerBase>(CreateLayer(3)).get()));
         }
@@ -48,7 +48,7 @@ namespace NeuroTests
         TEST_METHOD(ParametersGradient_PerActivation_3Batches)
         {
             Assert::IsTrue(TestTools::VerifyInputGradient(std::unique_ptr<LayerBase>(CreateLayer(1)).get(), 3));
-        }
+        }*/
 
         TEST_METHOD(Train_PerActivation_Batch2)
         {

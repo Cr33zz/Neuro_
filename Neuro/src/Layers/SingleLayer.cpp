@@ -80,6 +80,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void SingleLayer::InitOps(TensorLike* training, bool initValues)
+    {
+        m_OutputOps = m_InputOps;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void SingleLayer::OnInit(TensorLike* training, bool initValues)
     {
         NameScope scope(Name());

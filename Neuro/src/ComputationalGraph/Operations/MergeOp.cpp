@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     MergeOp::MergeOp(const vector<TensorLike*>& xs, EMergeMode mode)
-        : Operation(xs), m_Mode(mode)
+        : Operation(xs, "merge"), m_Mode(mode)
     {
     }
 

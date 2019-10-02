@@ -13,6 +13,8 @@ namespace Neuro
     public:
         virtual ~TensorLike() {}
 
+        const Shape& GetShape() const { return m_Output.GetShape(); }
+
         Tensor& Output() { return m_Output; }
         Tensor* OutputPtr() { return &m_Output; }
 

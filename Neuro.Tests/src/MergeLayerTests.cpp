@@ -8,7 +8,7 @@ namespace NeuroTests
 {
     TEST_CLASS(MergeLayerTests)
     {
-        TEST_METHOD(Sum_InputGradient_1Batch)
+        /*TEST_METHOD(Sum_InputGradient_1Batch)
         {
             Assert::IsTrue(TestTools::VerifyInputGradient(CreateLayer(MergeSum)));
         }
@@ -46,7 +46,7 @@ namespace NeuroTests
         TEST_METHOD(Max_InputGradient_3Batches)
         {
             Assert::IsTrue(TestTools::VerifyInputGradient(CreateLayer(MergeMax), 3));
-        }
+        }*/
 
         LayerBase* CreateLayer(EMergeMode mode)
         {

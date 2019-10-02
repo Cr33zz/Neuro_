@@ -691,6 +691,28 @@ namespace Neuro
 		return output;
 	}
 
+    //////////////////////////////////////////////////////////////////////////
+    template <int W, int H, int D, int N>
+    void ConcatTemplate(const const_tensor_ptr_vec_t& inputs, Tensor& output)
+    {
+        auto& shape = inputs[0]->GetShape();
+        const uint32_t width = shape.Width();
+        const uint32_t height = shape.Height();
+        const uint32_t depth = shape.Depth();
+        const uint32_t batch = shape.Batch();
+
+        for (uint32_t i = 0; i < (uint32_t)inputs.size(); ++i)
+        {
+            auto& inputValues = inputs[0]->GetValues();
+            size_t j = 0;
+            for (uint32_t n = 0; n < batch; ++n)
+            for (uint32_t d = 0; d < depth; ++d)
+            for (uint32_t h = 0; h < height; ++h)
+            for (uint32_t w = 0; w < width; ++w, ++j)
+                output(w + (W ? width * i : 0), h + (H ? height * i : 0), d + (D ? depth * i : 0), n + (N ? batch * i : 0)) = inputValues[j];
+        }
+    }
+
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Concat(EAxis axis, const const_tensor_ptr_vec_t& inputs, Tensor& result)
 	{
@@ -706,23 +728,43 @@ namespace Neuro
                 elementsCopied += inputs[i]->Length();
             }
         }
-        // append tensors CHW separately per batch
-        else if (axis == _012Axes)
+        else if (axis == WidthAxis)
         {
-            for (uint32_t b = 0; b < result.Batch(); ++b)
-            {
-                uint32_t elementsCopied = 0;
-                for (uint32_t i = 0; i < inputs.size(); ++i)
-                {
-                    inputs[i]->CopyToHost();
-                    copy(inputs[i]->m_Values.begin() + b * inputs[i]->BatchLength(), inputs[i]->m_Values.begin() + (b + 1) * inputs[i]->BatchLength(), result.m_Values.begin() + b * result.BatchLength() + elementsCopied);
-                    elementsCopied += inputs[i]->BatchLength();
-                }
-            }
+            ConcatTemplate<1, 0, 0, 0>(inputs, result);
         }
-        else //if (axis == Batch)
-            assert(false); // not supported yet
+        else if (axis == HeightAxis)
+        {
+            ConcatTemplate<0, 1, 0, 0>(inputs, result);
+        }
+        else if (axis == DepthAxis)
+        {
+            ConcatTemplate<0, 0, 1, 0>(inputs, result);
+        }
+        else
+            assert(false); // not supported
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    template <int W, int H, int D, int N>
+    void SplitTemplate(const Tensor& input, tensor_ptr_vec_t& outputs)
+    {
+        auto& shape = outputs[0]->GetShape();
+        const uint32_t width = shape.Width();
+        const uint32_t height = shape.Height();
+        const uint32_t depth = shape.Depth();
+        const uint32_t batch = shape.Batch();
+
+        for (uint32_t i = 0; i < (uint32_t)outputs.size(); ++i)
+        {
+            auto& outputValues = outputs[0]->GetValues();
+            size_t j = 0;
+            for (uint32_t n = 0; n < batch; ++n)
+            for (uint32_t d = 0; d < depth; ++d)
+            for (uint32_t h = 0; h < height; ++h)
+            for (uint32_t w = 0; w < width; ++w, ++j)
+                outputValues[j] = input(w + (W ? width * i : 0), h + (H ? height * i : 0), d + (D ? depth * i : 0), n + (N ? batch * i : 0));
+        }
+    }
 
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Split(EAxis axis, tensor_ptr_vec_t& outputs) const
@@ -741,20 +783,17 @@ namespace Neuro
                 elementsCopied += singleOutputLen;
             }
         }
-        else if (axis == _012Axes)
+        else if (axis == WidthAxis)
         {
-            for (uint32_t b = 0; b < Batch(); ++b)
-            {
-                uint32_t elementsCopied = 0;
-                for (uint32_t i = 0; i < outputs.size(); ++i)
-                {
-                    outputs[i]->OverrideHost();
-                    copy(m_Values.begin() + b * BatchLength() + elementsCopied,
-                         m_Values.begin() + b * BatchLength() + elementsCopied + outputs[i]->BatchLength(),
-                         outputs[i]->m_Values.begin() + b * outputs[i]->BatchLength());
-                    elementsCopied += outputs[i]->BatchLength();
-                }
-            }
+            SplitTemplate<1, 0, 0, 0>(*this, outputs);
+        }
+        else if (axis == HeightAxis)
+        {
+            SplitTemplate<0, 1, 0, 0>(*this, outputs);
+        }
+        else if (axis == DepthAxis)
+        {
+            SplitTemplate<0, 0, 1, 0>(*this, outputs);
         }
         else
             assert(false); // not supported yet

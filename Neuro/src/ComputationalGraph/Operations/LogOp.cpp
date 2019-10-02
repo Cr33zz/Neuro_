@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     LogOp::LogOp(TensorLike* x)
-        : Operation({x})
+        : Operation({x}, "log")
     {
     }
 

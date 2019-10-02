@@ -11,10 +11,5 @@ namespace Neuro
         Placeholder(const Shape& shape, const string& name = "");
 
         virtual bool IsPlaceholder() const override { return true; }
-
-        const Shape& GetShape() const { return m_Shape; }
-
-    private:
-        Shape m_Shape;
     };
 }

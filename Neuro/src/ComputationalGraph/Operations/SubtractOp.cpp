@@ -5,8 +5,10 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     SubtractOp::SubtractOp(TensorLike* a, TensorLike* b)
-        : Operation({ a, b })
+        : Operation({ a, b }, "sub")
     {
+        /*for (uint32_t i = 0; i < a->GetShape().NDim; ++i)
+            assert(max(a->GetShape().Len(i), b->GetShape().Len(i)) % min(a->GetShape().Len(i), b->GetShape().Len(i)) == 0);*/
     }
 
     //////////////////////////////////////////////////////////////////////////

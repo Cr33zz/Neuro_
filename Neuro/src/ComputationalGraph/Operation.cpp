@@ -4,7 +4,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Operation::Operation(const vector<TensorLike*>& inputNodes)
+    Operation::Operation(const vector<TensorLike*>& inputNodes, const string& name)
+        : TensorLike(name)
     {
         m_InputNodes = inputNodes;
 

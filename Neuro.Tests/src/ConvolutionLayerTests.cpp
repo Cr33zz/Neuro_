@@ -10,7 +10,7 @@ namespace NeuroTests
 {
     TEST_CLASS(Conv2DLayerTests)
     {
-        TEST_METHOD(InputGradient_1Batch_Valid)
+        /*TEST_METHOD(InputGradient_1Batch_Valid)
         {
             Assert::IsTrue(TestTools::VerifyInputGradient(std::unique_ptr<LayerBase>(CreateLayer(0)).get()));
         }
@@ -48,7 +48,7 @@ namespace NeuroTests
         TEST_METHOD(ParametersGradient_3Batches_Valid)
         {
             Assert::IsTrue(TestTools::VerifyInputGradient(std::unique_ptr<LayerBase>(CreateLayer(0)).get(), 3));
-        }
+        }*/
 
         TEST_METHOD(Train_Stride1_Pad1)
         {

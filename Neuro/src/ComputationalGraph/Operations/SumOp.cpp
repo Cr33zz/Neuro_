@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     SumOp::SumOp(TensorLike* x, EAxis axis)
-        : Operation({ x }), m_Axis(axis)
+        : Operation({ x }, "sum"), m_Axis(axis)
     {
         assert(axis <= BatchAxis);
     }

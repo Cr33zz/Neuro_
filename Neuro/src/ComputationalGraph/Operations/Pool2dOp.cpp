@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     Pool2dOp::Pool2dOp(TensorLike* x, uint32_t filterSize, uint32_t stride, uint32_t padding, EPoolingMode mode, EDataFormat dataFormat)
-        : Operation({x}), m_FilterSize(filterSize), m_Stride(stride), m_Padding(padding), m_DataFormat(dataFormat)
+        : Operation({x}, "pool2d"), m_FilterSize(filterSize), m_Stride(stride), m_Padding(padding), m_DataFormat(dataFormat)
     {
     }
 

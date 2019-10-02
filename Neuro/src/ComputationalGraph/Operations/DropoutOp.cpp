@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     DropoutOp::DropoutOp(TensorLike* x, float prob, TensorLike* training)
-        : Operation({ x, training }), m_Prob(prob)
+        : Operation({ x, training }, "dropout"), m_Prob(prob)
     {
     }
 

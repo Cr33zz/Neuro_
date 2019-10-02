@@ -4,7 +4,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     SqrtOp::SqrtOp(TensorLike* x)
-        : Operation({ x })
+        : Operation({ x }, "sqrt")
     {
     }
 
