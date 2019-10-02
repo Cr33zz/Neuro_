@@ -306,6 +306,9 @@
     <ClInclude Include="include\ComputationalGraph\Operations\ClipOp.h">
       <Filter>include\ComputationalGraph\Operations</Filter>
     </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\GradientsOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -480,6 +483,9 @@
       <Filter>src\ComputationalGraph\Operations</Filter>
     </ClCompile>
     <ClCompile Include="src\ComputationalGraph\Operations\ClipOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\GradientsOp.cpp">
       <Filter>src\ComputationalGraph\Operations</Filter>
     </ClCompile>
   </ItemGroup>

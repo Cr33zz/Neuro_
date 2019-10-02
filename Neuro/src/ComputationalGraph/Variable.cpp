@@ -13,6 +13,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    Variable::Variable(float initValue, const string& name)
+        : Variable(Tensor({ initValue }, Shape(1)), name)
+    {
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     Variable::Variable(const Shape& shape, InitializerBase* initializer, const string& name)
         : TensorLike(name)
     {

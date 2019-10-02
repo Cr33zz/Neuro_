@@ -18,7 +18,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void SqrtOp::ComputeGradientInternal(const Tensor& grad)
     {
-        //in_grad = 1 / (2 * sqrt(x))
+        //in_grad = grad / (2 * sqrt(x))
         grad.Map([](float g, float x) {return g / 2 * x; }, m_Output, m_InputsGrads[0]);
     }
 }

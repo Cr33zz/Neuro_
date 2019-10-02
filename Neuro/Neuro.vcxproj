@@ -126,6 +126,7 @@
     <ClInclude Include="include\ComputationalGraph\Graph.h" />
     <ClInclude Include="include\ComputationalGraph\NameScope.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\ClipOp.h" />
+    <ClInclude Include="include\ComputationalGraph\Operations\GradientsOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\LeakyReLUOp.h" />
     <ClInclude Include="include\ComputationalGraph\TensorLike.h" />
     <ClInclude Include="include\ComputationalGraph\Operation.h" />
@@ -211,6 +212,7 @@
     <ClCompile Include="src\ComputationalGraph\Graph.cpp" />
     <ClCompile Include="src\ComputationalGraph\NameScope.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\ClipOp.cpp" />
+    <ClCompile Include="src\ComputationalGraph\Operations\GradientsOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\LeakyReLUOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\TensorLike.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operation.cpp" />

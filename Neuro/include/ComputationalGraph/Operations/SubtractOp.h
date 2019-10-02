@@ -18,4 +18,9 @@ namespace Neuro
     {
         return new SubtractOp(a, b);
     }
+
+    static Operation* sub(TensorLike* a, TensorLike* b)
+    {
+        return subtract(a, b);
+    }
 }

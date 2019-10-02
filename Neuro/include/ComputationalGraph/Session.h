@@ -11,13 +11,15 @@ namespace Neuro
     class Operation;
     class Placeholder;
     class Tensor;
+    class Variable;
 
     class Session
     {
     public:
         static Session* Default;
 
-        vector<Tensor*> Run(const vector<TensorLike*>& fetches, const map<Placeholder*, const Tensor*>& feeds);
+        vector<Tensor*> Run(const vector<TensorLike*>& fetches, const map<Placeholder*, const Tensor*>& feeds = {});
+        vector<Variable*> ComputeGradients(TensorLike* loss);
 
     private:
         vector<TensorLike*> BuildForwardGraph(const vector<TensorLike*>& endNodes);

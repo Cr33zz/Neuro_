@@ -29,7 +29,17 @@ int main()
     /*for (auto weight : model.Weights())
         cout << weight->ToString() << endl;*/
 
-    //ComputationalGraph().Run();
+    auto x = new Variable(2);
+    auto y = subtract(add(pow(x, 2), x), new Constant(1));
+
+    auto grads = gradients(y, x);
+
+    auto result = Session::Default->Run(grads);
+    cout << (*result[0])(0) << endl;
+
+
+
+    ComputationalGraph().Run();
     IrisNetwork().Run();
     //ConvNetwork().Run();
     //FlowNetwork().Run();

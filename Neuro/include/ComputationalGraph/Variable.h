@@ -12,6 +12,7 @@ namespace Neuro
     {
     public:
         Variable(const Tensor& initValue, const string& name = "");
+        Variable(float initValue, const string& name = "");
         Variable(const Shape& shape, InitializerBase* initializer = nullptr, const string& name = "");
     };
 }

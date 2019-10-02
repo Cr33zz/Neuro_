@@ -6,6 +6,7 @@
 #include "ComputationalGraph/Operations/Conv2DOp.h"
 #include "ComputationalGraph/Operations/EluOp.h"
 #include "ComputationalGraph/Operations/ExpOp.h"
+#include "ComputationalGraph/Operations/GradientsOp.h"
 #include "ComputationalGraph/Operations/LogOp.h"
 #include "ComputationalGraph/Operations/LeakyReLUOp.h"
 #include "ComputationalGraph/Operations/MatMulOp.h"

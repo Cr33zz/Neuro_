@@ -22,8 +22,6 @@ namespace Neuro
         virtual Operation* Minimize(TensorLike* loss) = 0;
         //virtual Operation* Maximize(NodeBase* loss) = 0;
 
-        static vector<Variable*> ComputeGradients(TensorLike* loss);
-
 	protected:
 		float m_Iteration = 0;
 	};
