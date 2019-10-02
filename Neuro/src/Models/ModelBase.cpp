@@ -672,7 +672,7 @@ namespace Neuro
         auto results = m_Trainer->Train(inputs, outputs);
 
         if (loss)
-            *loss = (*results[m_Metrics["loss"].second])(0);
+            *loss = (*results[m_Metrics["loss"].second])(0) / outputs[0]->BatchLength();
     }
 
     //////////////////////////////////////////////////////////////////////////

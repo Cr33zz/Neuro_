@@ -57,8 +57,22 @@ namespace Neuro
 
             for (auto inputNode : node->m_InputNodes)
             {
-                if (inputNode->IsPlaceholder() || visited.find(inputNode) != visited.end())
+                if (visited.find(inputNode) != visited.end())
                     continue;
+
+                //do not enqueue nodes where there are not visited consumers (that can happen often for same placeholders used in mutiple operations
+                bool allConsumersVisited = true;
+                for (auto consumer : inputNode->m_Consumers)
+                {
+                    if (visited.find(consumer) == visited.end())
+                    {
+                        allConsumersVisited = false;
+                        break;
+                    }
+                }
+                
+                if (!allConsumersVisited)
+                    continue; // we will add this input node as soon as its last consumer was visited
 
                 visited.insert(inputNode);
                 queue.push_back(inputNode);
