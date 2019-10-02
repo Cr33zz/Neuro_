@@ -13,6 +13,8 @@ namespace Neuro
 {
     using namespace std;
 
+    class Variable;
+    class TensorLike;
     class ActivationBase;
 
     class SingleLayer : public LayerBase
@@ -37,11 +39,11 @@ namespace Neuro
         virtual vector<TensorLike*>& OutputOps() override { return m_OutputOps; }
 
         virtual void OnClone(const LayerBase& source) override;
-        virtual void OnInit(bool initValues = true) override;
+        virtual void OnInit(TensorLike* training, bool initValues = true) override;
         virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) override;
         virtual void OnLinkOutput(LayerBase* outputLayer) override;
 
-        virtual void InitOps(bool initValues = true) {}
+        virtual void InitOps(TensorLike* training, bool initValues = true) {}
 
         Shape m_InputShape;
         vector<TensorLike*> m_InputOps;

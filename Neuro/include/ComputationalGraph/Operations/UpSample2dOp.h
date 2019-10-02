@@ -4,21 +4,21 @@
 
 namespace Neuro
 {
-    class LeakyReLUOp : public Operation
+    class UpSample2dOp : public Operation
     {
     public:
-        LeakyReLUOp(TensorLike* x, float alpha);
+        UpSample2dOp(TensorLike* x, int scaleFactor);
 
     protected:
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
 
     private:
-        float m_Alpha;
+        int m_ScaleFactor;
     };
 
-    static Operation* leaky_relu(TensorLike* x, float alpha)
+    static Operation* upsample2d(TensorLike* x, int scaleFactor)
     {
-        return new LeakyReLUOp(x, alpha);
+        return new UpSample2dOp(x, scaleFactor);
     }
 }

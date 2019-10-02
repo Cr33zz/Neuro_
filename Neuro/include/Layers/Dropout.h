@@ -18,11 +18,10 @@ namespace Neuro
 
         virtual LayerBase* GetCloneInstance() const override;
         virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) override;
-        virtual void FeedForwardInternal(bool training) override;
-        virtual void BackPropInternal(const tensor_ptr_vec_t& outputsGradient) override;
+
+        virtual void InitOps(TensorLike* training, bool initValues = true) override;
 
     private:
-        Tensor m_Mask;
         float m_Prob;
     };
 }

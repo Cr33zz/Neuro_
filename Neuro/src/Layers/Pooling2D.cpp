@@ -1,4 +1,5 @@
 ﻿#include "Layers/Pooling2D.h"
+#include "ComputationalGraph/Ops.h"
 
 namespace Neuro
 {
@@ -79,15 +80,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Pooling2D::FeedForwardInternal(bool training)
+    void Pooling2D::InitOps(TensorLike* training, bool initValues)
     {
-        m_Inputs[0]->Pool2D(m_FilterSize, m_Stride, m_Mode, m_Padding, m_DataFormat, *m_Outputs[0]);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void Pooling2D::BackPropInternal(const tensor_ptr_vec_t& outputsGradient)
-    {
-        m_Inputs[0]->Pool2DGradient(*m_Outputs[0], *m_Inputs[0], *outputsGradient[0], m_FilterSize, m_Stride, m_Mode, m_Padding, m_DataFormat, *m_InputsGradient[0]);
+        m_OutputOps[0] = pool2d(m_InputOps[0], m_FilterSize, m_Stride, m_Padding, m_Mode, m_DataFormat);
     }
 
     //////////////////////////////////////////////////////////////////////////

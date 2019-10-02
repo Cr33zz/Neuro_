@@ -19,5 +19,7 @@ namespace Neuro
         Reshape() {}
 
         virtual LayerBase* GetCloneInstance() const override;
+
+        virtual void InitOps(TensorLike* training, bool initValues = true);
     };
 }

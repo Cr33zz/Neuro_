@@ -2,7 +2,6 @@
 #include "Tensors/Tensor.h"
 #include "Initializers/GlorotUniform.h"
 #include "Initializers/Zeros.h"
-#include "ComputationalGraph/NameScope.h"
 #include "ComputationalGraph/Variable.h"
 #include "ComputationalGraph/Ops.h"
 
@@ -50,24 +49,20 @@ namespace Neuro
 		__super::OnClone(source);
 
 		auto& sourceDense = static_cast<const Dense&>(source);
-		m_Weights = sourceDense.m_Weights;
-		m_Bias = sourceDense.m_Bias;
+		m_Weights = new Variable(*sourceDense.m_Weights);
+		m_Bias = new Variable(*sourceDense.m_Bias);
 		m_UseBias = sourceDense.m_UseBias;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Dense::InitOps(bool initValues)
+	void Dense::InitOps(TensorLike* training, bool initValues)
 	{
-        NameScope scope(Name());
         m_Weights = new Variable(Shape(OutputShape().Length, InputShape().Length), initValues ? m_WeightsInitializer : nullptr, "weights");
         m_Bias = new Variable(OutputShape(), initValues ? m_BiasInitializer : nullptr, "bias");
 
         m_OutputOps[0] = matmul(m_InputOps[0], m_Weights);
-
         if (m_UseBias)
             m_OutputOps[0] = add(m_OutputOps[0], m_Bias);
-
-        m_Outputs[0] = &m_OutputOps[0]->Output();
 	}
 
 	//////////////////////////////////////////////////////////////////////////

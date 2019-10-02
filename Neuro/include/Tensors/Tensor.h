@@ -376,4 +376,7 @@ namespace Neuro
     Tensor sqrt(const Tensor& t);
     Tensor sum(const Tensor& t, EAxis axis);
     Tensor mean(const Tensor& t, EAxis axis);
+
+    Tensor zeros(const Shape& shape);
+    Tensor ones(const Shape& shape);
 }

@@ -1,4 +1,5 @@
 ﻿#include "Layers/Merge.h"
+#include "ComputationalGraph/Ops.h"
 
 namespace Neuro
 {
@@ -47,39 +48,21 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Merge::FeedForwardInternal(bool training)
+    void Merge::InitOps(TensorLike* training, bool initValues)
     {
         switch (m_MergeMode)
         {
         case MergeAvg:
-            Tensor::MergeAvg(m_Inputs, *m_Outputs[0]);
+            m_OutputOps[0] = merge_avg(m_InputOps);
             break;
         case MergeMax:
-            Tensor::MergeMax(m_Inputs, *m_Outputs[0]);
+            m_OutputOps[0] = merge_max(m_InputOps);
             break;
         case MergeMin:
-            Tensor::MergeMin(m_Inputs, *m_Outputs[0]);
+            m_OutputOps[0] = merge_min(m_InputOps);
             break;
         case MergeSum:
-            Tensor::MergeSum(m_Inputs, *m_Outputs[0]);
-            break;
-        }
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void Merge::BackPropInternal(const tensor_ptr_vec_t& outputsGradient)
-    {
-        switch (m_MergeMode)
-        {
-        case MergeAvg:
-            Tensor::MergeAvgGradient(*m_Outputs[0], m_Inputs, *outputsGradient[0], m_InputsGradient);
-            break;
-        case MergeMax:
-        case MergeMin:
-            Tensor::MergeMinMaxGradient(*m_Outputs[0], m_Inputs, *outputsGradient[0], m_InputsGradient);
-            break;
-        case MergeSum:
-            Tensor::MergeSumGradient(*m_Outputs[0], m_Inputs, *outputsGradient[0], m_InputsGradient);
+            m_OutputOps[0] = merge_sum(m_InputOps);
             break;
         }
     }

@@ -1,6 +1,8 @@
 #include "Layers/Conv2DTranspose.h"
 #include "Layers/Conv2D.h"
 #include "Tensors/Tensor.h"
+#include "ComputationalGraph/Variable.h"
+#include "ComputationalGraph/Ops.h"
 
 namespace Neuro
 {
@@ -45,31 +47,22 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Conv2DTranspose::OnInit(bool initValues)
+    void Conv2DTranspose::InitOps(TensorLike* training, bool initValues)
     {
-        __super::OnInit(initValues);
-
         if (m_DataFormat == NCHW)
         {
-            m_Kernels = Tensor(Shape(m_FilterSize, m_FilterSize, m_OutputDepth, InputShape().Depth()), Name() + "/kernels");
-            m_Bias = Tensor(Shape(1, 1, m_OutputDepth), Name() + "/bias");
+            m_Kernels = new Variable(Shape(m_FilterSize, m_FilterSize, m_OutputDepth, InputShape().Depth()), initValues ? m_KernelInitializer : nullptr, "kernels");
+            m_Bias = new Variable(Shape(1, 1, m_OutputDepth), initValues ? m_BiasInitializer : nullptr, "bias");
         }
         else
         {
-            m_Kernels = Tensor(Shape(m_FilterSize, m_FilterSize, m_OutputDepth, InputShape().Len(0)), Name() + "/kernels");
-            m_Bias = Tensor(Shape(m_OutputDepth), Name() + "/bias");
+            m_Kernels = new Variable(Shape(m_FilterSize, m_FilterSize, m_OutputDepth, InputShape().Len(0)), initValues ? m_KernelInitializer : nullptr, "kernels");
+            m_Bias = new Variable(Shape(m_OutputDepth), initValues ? m_BiasInitializer : nullptr, "bias");
         }
-        m_KernelsGradient = Tensor(m_Kernels.GetShape(), Name() + "/kernels_grad");
-        m_KernelsGradient.Zero();
-        m_BiasGradient = Tensor(m_Bias.GetShape(), Name() + "/bias_grad");
-        m_BiasGradient.Zero();
 
-        if (initValues)
-        {
-            m_KernelInitializer->Init(m_Kernels);
-            if (m_UseBias)
-                m_BiasInitializer->Init(m_Bias);
-        }
+        m_OutputOps[0] = conv2d_transpose(m_InputOps[0], m_Kernels, m_Stride, m_Padding, m_DataFormat);
+        if (m_UseBias)
+            m_OutputOps[0] = add(m_OutputOps[0], m_Bias);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -92,8 +85,8 @@ namespace Neuro
         __super::OnClone(source);
 
         auto& sourceDeconv = static_cast<const Conv2DTranspose&>(source);
-        m_Kernels = Tensor(sourceDeconv.m_Kernels);
-        m_Bias = Tensor(sourceDeconv.m_Bias);
+        m_Kernels = new Variable(*sourceDeconv.m_Kernels);
+        m_Bias = new Variable(*sourceDeconv.m_Bias);
         m_UseBias = sourceDeconv.m_UseBias;
         m_FilterSize = sourceDeconv.m_FilterSize;
         m_OutputDepth = sourceDeconv.m_OutputDepth;
@@ -102,50 +95,41 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Conv2DTranspose::FeedForwardInternal(bool training)
-    {
-        m_Inputs[0]->Conv2DTransposed(m_Kernels, m_Stride, m_Padding, m_DataFormat, *m_Outputs[0]);
-        if (m_UseBias)
-            m_Outputs[0]->Add(m_Bias, *m_Outputs[0]);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void Conv2DTranspose::BackPropInternal(const tensor_ptr_vec_t& outputsGradient)
-    {
-        outputsGradient[0]->Conv2DTransposedInputsGradient(*outputsGradient[0], m_Kernels, m_Stride, m_Padding, m_DataFormat, *m_InputsGradient[0]);
-
-        if (m_Trainable)
-        {
-            outputsGradient[0]->Conv2DTransposedKernelsGradient(*m_Inputs[0], *outputsGradient[0], m_Stride, m_Padding, m_DataFormat, m_KernelsGradient);
-            if (m_UseBias)
-                m_BiasGradient.Add(outputsGradient[0]->Sum(m_DataFormat == NCHW ? _013Axes : _123Axes), m_BiasGradient);
-        }
-    }
-
-    //////////////////////////////////////////////////////////////////////////
     void Conv2DTranspose::ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable)
     {
         if (onlyTrainable && !m_Trainable)
             return;
 
-        paramsAndGrads.push_back({ &m_Kernels, &m_KernelsGradient });
+        paramsAndGrads.push_back({ &m_Kernels->Output() });
 
         if (m_UseBias)
-            paramsAndGrads.push_back({ &m_Bias, &m_BiasGradient });
+            paramsAndGrads.push_back({ &m_Bias->Output() });
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Conv2DTranspose::SerializedParameters(vector<SerializedParameter>& params)
     {
-        params.push_back({ &m_Kernels, { DepthAxis, BatchAxis, HeightAxis, WidthAxis } });
+        params.push_back({ &m_Kernels->Output(), { DepthAxis, BatchAxis, HeightAxis, WidthAxis } });
 
         if (m_UseBias)
         {
             if (m_DataFormat == NCHW)
-                params.push_back({ &m_Bias, { DepthAxis, HeightAxis, WidthAxis } });
+                params.push_back({ &m_Bias->Output(), { DepthAxis, HeightAxis, WidthAxis } });
             else
-                params.push_back({ &m_Bias });
+                params.push_back({ &m_Bias->Output() });
         }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Neuro::Tensor& Conv2DTranspose::Kernels()
+    {
+        return m_Kernels->Output();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Neuro::Tensor& Conv2DTranspose::Bias()
+    {
+        return m_Bias->Output();
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -154,8 +138,8 @@ namespace Neuro
         __super::CopyParametersTo(target, tau);
 
         auto& targetConv = static_cast<Conv2DTranspose&>(target);
-        m_Kernels.CopyTo(targetConv.m_Kernels, tau);
-        m_Bias.CopyTo(targetConv.m_Bias, tau);
+        m_Kernels->Output().CopyTo(targetConv.m_Kernels->Output(), tau);
+        m_Bias->Output().CopyTo(targetConv.m_Bias->Output(), tau);
     }
 
     //////////////////////////////////////////////////////////////////////////

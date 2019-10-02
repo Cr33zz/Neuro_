@@ -21,8 +21,8 @@ namespace Neuro
 		virtual void ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable = true) override;
         virtual void SerializedParameters(vector<SerializedParameter>& params) override;
 		
-        Tensor& Kernels() { return m_Kernels; }
-        Tensor& Bias() { return m_Bias; }
+        Tensor& Kernels();
+        Tensor& Bias();
 
         Conv2D* KernelInitializer(InitializerBase* initializer);
         Conv2D* BiasInitializer(InitializerBase* initializer);
@@ -33,19 +33,15 @@ namespace Neuro
 
 		virtual LayerBase* GetCloneInstance() const override;
 		virtual void OnClone(const LayerBase& source) override;
-		virtual void OnInit(bool initValues = true) override;
         virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) override;
-        virtual void FeedForwardInternal(bool training) override;
-		virtual void BackPropInternal(const tensor_ptr_vec_t& outputsGradient) override;
+		
+        virtual void InitOps(TensorLike* training, bool initValues = true) override;
 
 	private:
-        Tensor m_Kernels;
-        Tensor m_Bias;
+        Variable * m_Kernels;
+        Variable* m_Bias;
         bool m_UseBias = true;
         EDataFormat m_DataFormat = NCHW;
-
-        Tensor m_KernelsGradient;
-        Tensor m_BiasGradient;
 
         InitializerBase* m_KernelInitializer = new GlorotUniform();
         InitializerBase* m_BiasInitializer = new Zeros();

@@ -1,5 +1,6 @@
 #include "Layers/Dropout.h"
 #include "Tools.h"
+#include "ComputationalGraph/Ops.h"
 
 namespace Neuro
 {
@@ -36,24 +37,8 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Dropout::FeedForwardInternal(bool training)
+    void Dropout::InitOps(TensorLike* training, bool initValues)
     {
-        if (training)
-        {
-            if (m_Mask.GetShape() != m_Inputs[0]->GetShape())
-                m_Mask = Tensor(m_Inputs[0]->GetShape());
-
-            m_Inputs[0]->Dropout(m_Prob, m_Mask, *m_Outputs[0]);
-        }
-        else
-        {
-            m_Inputs[0]->CopyTo(*m_Outputs[0]);
-        }
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void Dropout::BackPropInternal(const tensor_ptr_vec_t& outputsGradient)
-    {
-        outputsGradient[0]->DropoutGradient(*outputsGradient[0], m_Mask, *m_InputsGradient[0]);
+        m_OutputOps[0] = dropout(m_InputOps[0], m_Prob, training);
     }
 }

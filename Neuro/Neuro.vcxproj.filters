@@ -270,9 +270,6 @@
     <ClInclude Include="include\ComputationalGraph\Operations\TanHOp.h">
       <Filter>include\ComputationalGraph\Operations</Filter>
     </ClInclude>
-    <ClInclude Include="include\ComputationalGraph\Operations\Conv2DOp.h">
-      <Filter>include\ComputationalGraph\Operations</Filter>
-    </ClInclude>
     <ClInclude Include="include\ComputationalGraph\NameScope.h">
       <Filter>include\ComputationalGraph</Filter>
     </ClInclude>
@@ -307,6 +304,33 @@
       <Filter>include\ComputationalGraph\Operations</Filter>
     </ClInclude>
     <ClInclude Include="include\ComputationalGraph\Operations\GradientsOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\AssignOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\Conv2dOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\Conv2dTransposeOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\ReshapeOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\MergeOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\BatchNormalizeOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\Pool2dOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\UpSample2dOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\DropoutOp.h">
       <Filter>include\ComputationalGraph\Operations</Filter>
     </ClInclude>
   </ItemGroup>
@@ -449,9 +473,6 @@
     <ClCompile Include="src\ComputationalGraph\Operations\TanHOp.cpp">
       <Filter>src\ComputationalGraph\Operations</Filter>
     </ClCompile>
-    <ClCompile Include="src\ComputationalGraph\Operations\Conv2DOp.cpp">
-      <Filter>src\ComputationalGraph\Operations</Filter>
-    </ClCompile>
     <ClCompile Include="src\ComputationalGraph\NameScope.cpp">
       <Filter>src\ComputationalGraph</Filter>
     </ClCompile>
@@ -486,6 +507,66 @@
       <Filter>src\ComputationalGraph\Operations</Filter>
     </ClCompile>
     <ClCompile Include="src\ComputationalGraph\Operations\GradientsOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\AssignOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Conv2D.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Conv2DTranspose.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\Conv2dOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\Conv2dTransposeOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Activation.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Reshape.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\ReshapeOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Flatten.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Merge.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\MergeOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Pooling2D.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\BatchNormalizeOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\Pool2dOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\UpSample2dOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\UpSampling2D.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\BatchNormalization.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Concatenate.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\Dropout.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\DropoutOp.cpp">
       <Filter>src\ComputationalGraph\Operations</Filter>
     </ClCompile>
   </ItemGroup>

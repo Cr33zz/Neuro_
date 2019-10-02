@@ -14,6 +14,7 @@
 #include "Stopwatch.h"
 #include "ComputationalGraph/Ops.h"
 #include "ComputationalGraph/Placeholder.h"
+#include "ComputationalGraph/Variable.h"
 #include "ComputationalGraph/NameScope.h"
 #include "ComputationalGraph/Trainer.h"
 #include "ComputationalGraph/Predicter.h"
@@ -34,6 +35,8 @@ namespace Neuro
     ModelBase::ModelBase(const string& constructorName, const string& name, int seed)
         : LayerBase(constructorName, name)
     {
+        m_Training = new Variable(0);
+
         // output shape will be established when layers are added
         if (seed > 0)
         {
@@ -53,10 +56,10 @@ namespace Neuro
     }
     
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::OnInit(bool initValues)
+    void ModelBase::OnInit(TensorLike* training, bool initValues)
     {
         for (auto layer : Layers())
-            layer->Init(initValues);
+            layer->Init(training, initValues);
 
         for (auto inLayer : ModelInputLayers())
             m_InputOps.insert(m_InputOps.end(), inLayer->InputOps().begin(), inLayer->InputOps().end());
@@ -69,12 +72,13 @@ namespace Neuro
     void ModelBase::ForceInitLayers(bool initValues)
     {
         for (auto layer : Layers())
-            layer->Init(initValues);
+            layer->Init(m_Training, initValues);
     }
 
     //////////////////////////////////////////////////////////////////////////
     const tensor_ptr_vec_t& ModelBase::Predict(const const_tensor_ptr_vec_t& inputs)
     {
+        m_Training->Output()(0) = 0;
         m_Predicter->Predict(inputs);
         return Outputs();
     }
@@ -82,8 +86,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     const tensor_ptr_vec_t& ModelBase::Predict(const Tensor& input)
     {
-        m_Predicter->Predict({ &input });
-        return Outputs();
+        const_tensor_ptr_vec_t inputs{ &input };
+        return Predict(inputs);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -99,7 +103,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::Optimize(OptimizerBase* optimizer, map<string, LossBase*> lossDict)
     {
-        Init();
+        Init(m_Training);
 
         m_Optimizer = optimizer;
 
@@ -669,6 +673,7 @@ namespace Neuro
 
         ++g_DebugStep;
 
+        m_Training->Output()(0) = 1;
         auto results = m_Trainer->Train(inputs, outputs);
 
         if (loss)

@@ -4,6 +4,8 @@
 
 namespace Neuro
 {
+    class Variable;
+
     class BatchNormalization : public SingleLayer
     {
     public:
@@ -23,26 +25,18 @@ namespace Neuro
         BatchNormalization(bool) {}
 
         virtual LayerBase* GetCloneInstance() const override;
-        virtual void OnInit(bool initValues = true) override;
         virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) override;
-        virtual void FeedForwardInternal(bool training) override;
-        virtual void BackPropInternal(const tensor_ptr_vec_t& outputsGradient) override;
+        
+        virtual void InitOps(TensorLike* training, bool initValues = true) override;
 
     private:
-        Tensor m_Gamma;
-        Tensor m_Beta;
-        Tensor m_GammaGrad;
-        Tensor m_BetaGrad;
+        Variable* m_Gamma;
+        Variable* m_Beta;
 
-        Tensor m_RunningMean;
-        Tensor m_RunningVar;
+        Variable* m_RunningMean;
+        Variable* m_RunningVar;
 
         float m_Momentum = 0.9f;
         float m_Epsilon = 0.001f;
-
-        // Used as cache between forward and backward steps
-        Tensor m_SaveMean;
-        // Used as cache between forward and backward steps
-        Tensor m_SaveVariance;
     };
 }

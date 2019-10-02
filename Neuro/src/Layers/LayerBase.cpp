@@ -45,7 +45,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
 	LayerBase* LayerBase::Clone()
 	{
-		Init(); // make sure parameter matrices are created
+		//Init(); // make sure parameter matrices are created
 		LayerBase* clone = GetCloneInstance();
 		clone->OnClone(*this);
 		return clone;
@@ -90,12 +90,12 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void LayerBase::Init(bool initValues)
+	void LayerBase::Init(TensorLike* training, bool initValues)
 	{
 		if (Initialized)
 			return;
 
-		OnInit(initValues);
+		OnInit(training, initValues);
 		Initialized = true;
 	}
 

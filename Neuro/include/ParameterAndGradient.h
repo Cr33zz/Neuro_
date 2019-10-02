@@ -8,7 +8,7 @@ namespace Neuro
 
 	struct ParameterAndGradient
 	{
-		ParameterAndGradient(Tensor* parameter, Tensor* gradient)
+		ParameterAndGradient(Tensor* parameter, Tensor* gradient = nullptr)
 			: param(parameter), grad(gradient)
 		{}
 

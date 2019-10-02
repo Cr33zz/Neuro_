@@ -1,5 +1,7 @@
 ﻿#include "Layers/Conv2D.h"
 #include "Tensors/Tensor.h"
+#include "ComputationalGraph/Variable.h"
+#include "ComputationalGraph/Ops.h"
 
 namespace Neuro
 {
@@ -44,31 +46,22 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Conv2D::OnInit(bool initValues)
+	void Conv2D::InitOps(TensorLike* training, bool initValues)
 	{
-		__super::OnInit(initValues);
-
         if (m_DataFormat == NCHW)
         {
-            m_Kernels = Tensor(Shape(m_FilterSize, m_FilterSize, InputShape().Depth(), m_FiltersNum), Name() + "/kernels");
-            m_Bias = Tensor(Shape(1, 1, m_FiltersNum), Name() + "/bias");
+            m_Kernels = new Variable(Shape(m_FilterSize, m_FilterSize, InputShape().Depth(), m_FiltersNum), initValues ? m_KernelInitializer : nullptr, "kernels");
+            m_Bias = new Variable(Shape(1, 1, m_FiltersNum), initValues ? m_BiasInitializer : nullptr, "bias");
         }
         else
         {
-            m_Kernels = Tensor(Shape(m_FilterSize, m_FilterSize, InputShape().Len(0), m_FiltersNum), Name() + "/kernels");
-            m_Bias = Tensor(Shape(m_FiltersNum), Name() + "/bias");
+            m_Kernels = new Variable(Shape(m_FilterSize, m_FilterSize, InputShape().Len(0), m_FiltersNum), initValues ? m_KernelInitializer : nullptr, "kernels");
+            m_Bias = new Variable(Shape(m_FiltersNum), initValues ? m_BiasInitializer : nullptr, "bias");
         }
-		m_KernelsGradient = Tensor(m_Kernels.GetShape(), Name() + "/kernels_grad");
-        m_KernelsGradient.Zero();
-		m_BiasGradient = Tensor(m_Bias.GetShape(), Name() + "/bias_grad");
-        m_BiasGradient.Zero();
 
-        if (initValues)
-        {
-            m_KernelInitializer->Init(m_Kernels);
-            if (m_UseBias)
-                m_BiasInitializer->Init(m_Bias);
-        }
+        m_OutputOps[0] = conv2d(m_InputOps[0], m_Kernels, m_Stride, m_Padding, m_DataFormat);
+        if (m_UseBias)
+            m_OutputOps[0] = add(m_OutputOps[0], m_Bias);
 	}
 
     //////////////////////////////////////////////////////////////////////////
@@ -91,8 +84,8 @@ namespace Neuro
 		__super::OnClone(source);
 
 		auto& sourceConv = static_cast<const Conv2D&>(source);
-		m_Kernels = Tensor(sourceConv.m_Kernels);
-		m_Bias = Tensor(sourceConv.m_Bias);
+		m_Kernels = new Variable(*sourceConv.m_Kernels);
+        m_Bias = new Variable(*sourceConv.m_Bias);
 		m_UseBias = sourceConv.m_UseBias;
 		m_FilterSize = sourceConv.m_FilterSize;
 		m_FiltersNum = sourceConv.m_FiltersNum;
@@ -100,60 +93,51 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Conv2D::FeedForwardInternal(bool training)
-	{
-		m_Inputs[0]->Conv2D(m_Kernels, m_Stride, m_Padding, m_DataFormat, *m_Outputs[0]);
-		if (m_UseBias)
-			m_Outputs[0]->Add(m_Bias, *m_Outputs[0]);
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	void Conv2D::BackPropInternal(const tensor_ptr_vec_t& outputsGradient)
-	{
-		outputsGradient[0]->Conv2DInputsGradient(*outputsGradient[0], m_Kernels, m_Stride, m_Padding, m_DataFormat, *m_InputsGradient[0]);
-
-        if (m_Trainable)
-        {
-            outputsGradient[0]->Conv2DKernelsGradient(*m_Inputs[0], *outputsGradient[0], m_Stride, m_Padding, m_DataFormat, m_KernelsGradient);
-            if (m_UseBias)
-                m_BiasGradient.Add(outputsGradient[0]->Sum(m_DataFormat == NCHW ? _013Axes : _123Axes), m_BiasGradient);
-        }
-	}
-
-    //////////////////////////////////////////////////////////////////////////
 	void Conv2D::ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable)
 	{
         if (onlyTrainable && !m_Trainable)
             return;
 
-        paramsAndGrads.push_back({ &m_Kernels, &m_KernelsGradient });
+        paramsAndGrads.push_back({ &m_Kernels->Output(), nullptr });
 
 		if (m_UseBias)
-            paramsAndGrads.push_back({ &m_Bias, &m_BiasGradient });
+            paramsAndGrads.push_back({ &m_Bias->Output(), nullptr });
 	}
 
     //////////////////////////////////////////////////////////////////////////
     void Conv2D::SerializedParameters(vector<SerializedParameter>& params)
     {
-        params.push_back({ &m_Kernels, { DepthAxis, BatchAxis, HeightAxis, WidthAxis } });
+        params.push_back({ &m_Kernels->Output(), { DepthAxis, BatchAxis, HeightAxis, WidthAxis } });
 
         if (m_UseBias)
         {
             if (m_DataFormat == NCHW)
-                params.push_back({ &m_Bias, { DepthAxis, HeightAxis, WidthAxis } });
+                params.push_back({ &m_Bias->Output(), { DepthAxis, HeightAxis, WidthAxis } });
             else
-                params.push_back({ &m_Bias });
+                params.push_back({ &m_Bias->Output() });
         }
     }
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    Neuro::Tensor& Conv2D::Kernels()
+    {
+        return m_Kernels->Output();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Neuro::Tensor& Conv2D::Bias()
+    {
+        return m_Bias->Output();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void Conv2D::CopyParametersTo(LayerBase& target, float tau) const
 	{
 		__super::CopyParametersTo(target, tau);
 
 		auto& targetConv = static_cast<Conv2D&>(target);
-		m_Kernels.CopyTo(targetConv.m_Kernels, tau);
-		m_Bias.CopyTo(targetConv.m_Bias, tau);
+		m_Kernels->Output().CopyTo(targetConv.m_Kernels->Output(), tau);
+		m_Bias->Output().CopyTo(targetConv.m_Bias->Output(), tau);
 	}
 
 	//////////////////////////////////////////////////////////////////////////

@@ -1,4 +1,5 @@
 #include "Layers/UpSampling2D.h"
+#include "ComputationalGraph/Ops.h"
 
 namespace Neuro
 {
@@ -47,14 +48,8 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void UpSampling2D::FeedForwardInternal(bool training)
+    void UpSampling2D::InitOps(TensorLike* training, bool initValues)
     {
-        m_Inputs[0]->UpSample2D(m_ScaleFactor, *m_Outputs[0]);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void UpSampling2D::BackPropInternal(const tensor_ptr_vec_t& outputsGradient)
-    {
-        outputsGradient[0]->UpSample2DGradient(*outputsGradient[0], m_ScaleFactor, *m_InputsGradient[0]);
+        m_OutputOps[0] = upsample2d(m_InputOps[0], m_ScaleFactor);
     }
 }

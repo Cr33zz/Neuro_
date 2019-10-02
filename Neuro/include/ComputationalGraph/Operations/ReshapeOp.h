@@ -4,21 +4,21 @@
 
 namespace Neuro
 {
-    class LeakyReLUOp : public Operation
+    class ReshapeOp : public Operation
     {
     public:
-        LeakyReLUOp(TensorLike* x, float alpha);
+        ReshapeOp(TensorLike* x, const Shape& shape);
 
     protected:
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
 
     private:
-        float m_Alpha;
+        Shape m_Shape;
     };
 
-    static Operation* leaky_relu(TensorLike* x, float alpha)
+    static Operation* reshape(TensorLike* x, const Shape& shape)
     {
-        return new LeakyReLUOp(x, alpha);
+        return new ReshapeOp(x, shape);
     }
 }

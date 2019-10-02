@@ -1,5 +1,7 @@
 #include "Layers/BatchNormalization.h"
 #include "Tools.h"
+#include "ComputationalGraph/Variable.h"
+#include "ComputationalGraph/Ops.h"
 
 namespace Neuro
 {
@@ -27,10 +29,10 @@ namespace Neuro
         __super::CopyParametersTo(target, tau);
 
         auto& targetBatchNorm = static_cast<BatchNormalization&>(target);
-        m_Gamma.CopyTo(targetBatchNorm.m_Gamma, tau);
-        m_Beta.CopyTo(targetBatchNorm.m_Beta, tau);
-        m_RunningMean.CopyTo(targetBatchNorm.m_RunningMean, tau);
-        m_RunningVar.CopyTo(targetBatchNorm.m_RunningVar, tau);
+        m_Gamma->Output().CopyTo(targetBatchNorm.m_Gamma->Output(), tau);
+        m_Beta->Output().CopyTo(targetBatchNorm.m_Beta->Output(), tau);
+        m_RunningMean->Output().CopyTo(targetBatchNorm.m_RunningMean->Output(), tau);
+        m_RunningVar->Output().CopyTo(targetBatchNorm.m_RunningVar->Output(), tau);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -45,12 +47,12 @@ namespace Neuro
         if (onlyTrainable && !m_Trainable)
             return;
 
-        paramsAndGrads.push_back(ParameterAndGradient(&m_Gamma, &m_GammaGrad));
-        paramsAndGrads.push_back(ParameterAndGradient(&m_Beta, &m_BetaGrad));
+        paramsAndGrads.push_back(ParameterAndGradient(&m_Gamma->Output()));
+        paramsAndGrads.push_back(ParameterAndGradient(&m_Beta->Output()));
         if (!onlyTrainable)
         {
-            paramsAndGrads.push_back(ParameterAndGradient(&m_RunningMean, nullptr));
-            paramsAndGrads.push_back(ParameterAndGradient(&m_RunningVar, nullptr));
+            paramsAndGrads.push_back(ParameterAndGradient(&m_RunningMean->Output()));
+            paramsAndGrads.push_back(ParameterAndGradient(&m_RunningVar->Output()));
         }
     }
 
@@ -68,37 +70,19 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void BatchNormalization::OnInit(bool initValues)
+    void BatchNormalization::InitOps(TensorLike* training, bool initValues)
     {
-        __super::OnInit(initValues);
-
         Shape paramsShape = Shape(InputShape().Width(), InputShape().Height(), InputShape().Depth(), 1); // PerActivation
         if (InputShape().Depth() > 1) 
             paramsShape = Shape(1, 1, InputShape().Depth(), 1); // Spatial
 
-        m_Gamma = Tensor(paramsShape, Name() + "/gamma");
-        m_Beta = Tensor(paramsShape, Name() + "/beta");
+        m_Gamma = new Variable(ones(paramsShape), "gamma");
+        m_Beta = new Variable(zeros(paramsShape), "beta");
 
-        m_GammaGrad = Tensor(paramsShape, Name() + "/gamma_grad");
-        m_BetaGrad = Tensor(paramsShape, Name() + "/beta_grad");
-        m_GammaGrad.Zero();
-        m_BetaGrad.Zero();
-        
-        m_RunningMean = Tensor(paramsShape, Name() + "/running_mean");
-        m_RunningVar = Tensor(paramsShape, Name() + "/running_var");
+        m_RunningMean = new Variable(zeros(paramsShape), "running_mean");
+        m_RunningVar = new Variable(ones(paramsShape), "running_var");
 
-        m_SaveMean = Tensor(paramsShape);
-        m_SaveVariance = Tensor(paramsShape);
-
-        if (initValues)
-        {
-            m_Gamma.FillWithValue(1);
-            m_Beta.Zero();
-            m_RunningMean.FillWithValue(0);
-            m_RunningVar.FillWithValue(1);
-            m_SaveMean.Zero();
-            m_SaveVariance.FillWithValue(1);
-        }
+        m_OutputOps[0] = batch_norm(m_InputOps[0], m_Gamma, m_Beta, m_RunningMean, m_RunningVar, m_Momentum, m_Epsilon, training);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -107,20 +91,5 @@ namespace Neuro
         __super::OnLinkInput(inputLayers);
 
         m_OutputsShapes[0] = m_InputShape;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void BatchNormalization::FeedForwardInternal(bool training)
-    {
-        if (training)
-            m_Inputs[0]->BatchNormalizationTrain(m_Gamma, m_Beta, m_Momentum, m_Epsilon, m_RunningMean, m_RunningVar, m_SaveMean, m_SaveVariance, *m_Outputs[0]);
-        else
-            m_Inputs[0]->BatchNormalization(m_Gamma, m_Beta, m_Epsilon, m_RunningMean, m_RunningVar, *m_Outputs[0]);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void BatchNormalization::BackPropInternal(const tensor_ptr_vec_t& outputsGradient)
-    {
-        outputsGradient[0]->BatchNormalizationGradient(*m_Inputs[0], m_Gamma, m_Epsilon, *outputsGradient[0], m_SaveMean, m_SaveVariance, m_GammaGrad, m_BetaGrad, m_Trainable, *m_InputsGradient[0]);
     }
 }

@@ -1,4 +1,5 @@
 #include "Layers/Reshape.h"
+#include "ComputationalGraph/Ops.h"
 
 namespace Neuro
 {
@@ -42,5 +43,11 @@ namespace Neuro
     LayerBase* Reshape::GetCloneInstance() const
     {
         return new Reshape();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Reshape::InitOps(TensorLike* training, bool initValues)
+    {
+        m_OutputOps[0] = reshape(m_InputOps[0], OutputShape());
     }
 }

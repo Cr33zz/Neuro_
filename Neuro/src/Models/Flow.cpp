@@ -113,9 +113,9 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Flow::OnInit(bool initValues)
+    void Flow::OnInit(TensorLike* training, bool initValues)
     {
-        __super::OnInit(initValues);
+        __super::OnInit(training, initValues);
 
         for (auto modelOutputLayer : m_ModelOutputLayers)
             m_Outputs.insert(m_Outputs.end(), modelOutputLayer->Outputs().begin(), modelOutputLayer->Outputs().end());

@@ -2010,4 +2010,16 @@ namespace Neuro
     {
         return t.Mean(axis);
     }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor zeros(const Shape& shape)
+    {
+        return Tensor(shape).FillWithValue(0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor ones(const Shape& shape)
+    {
+        return Tensor(shape).FillWithValue(1);
+    }
 }

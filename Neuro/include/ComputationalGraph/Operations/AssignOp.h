@@ -4,21 +4,18 @@
 
 namespace Neuro
 {
-    class LeakyReLUOp : public Operation
+    class AssignOp : public Operation
     {
     public:
-        LeakyReLUOp(TensorLike* x, float alpha);
+        AssignOp(TensorLike* x, TensorLike* val);
 
     protected:
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
-
-    private:
-        float m_Alpha;
     };
 
-    static Operation* leaky_relu(TensorLike* x, float alpha)
+    static Operation* assign(TensorLike* x, TensorLike* val)
     {
-        return new LeakyReLUOp(x, alpha);
+        return new AssignOp(x, val);
     }
 }

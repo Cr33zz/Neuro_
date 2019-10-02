@@ -1,15 +1,15 @@
-﻿#include "ComputationalGraph/Operations/Conv2DOp.h"
+﻿#include "ComputationalGraph/Operations/Conv2dOp.h"
 
 namespace Neuro
 {        
     //////////////////////////////////////////////////////////////////////////
-    Conv2DOp::Conv2DOp(TensorLike* x, TensorLike* kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat)
+    Conv2dOp::Conv2dOp(TensorLike* x, TensorLike* kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat)
         : Operation({ x, kernels }), m_Stride(stride), m_Padding(padding), m_DataFormat(dataFormat)
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Conv2DOp::ComputeInternal()
+    void Conv2dOp::ComputeInternal()
     {
         auto& x = *m_Inputs[0];
         auto& kernels = *m_Inputs[1];
@@ -20,7 +20,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Conv2DOp::ComputeGradientInternal(const Tensor& grad)
+    void Conv2dOp::ComputeGradientInternal(const Tensor& grad)
     {
         auto& x = *m_Inputs[0];
         auto& kernels = *m_Inputs[1];

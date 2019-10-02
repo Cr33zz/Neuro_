@@ -17,6 +17,7 @@ namespace Neuro
     class OptimizerBase;
     class Trainer;
     class Predicter;
+    class Variable;
 
     class ModelBase : public LayerBase
     {
@@ -73,7 +74,7 @@ namespace Neuro
         virtual vector<TensorLike*>& OutputOps() override { return m_OutputOps; }
 
         virtual void OnClone(const LayerBase& source) override;
-        virtual void OnInit(bool initValues = true) override;
+        virtual void OnInit(TensorLike* training, bool initValues = true) override;
 
         vector<TensorLike*> m_InputOps;
         vector<TensorLike*> m_OutputOps;
@@ -89,6 +90,7 @@ namespace Neuro
         vector<accuracy_func_t> m_AccuracyFuncs;
         bool m_ForceLearningPhase = false;
 
+        Variable* m_Training = nullptr;
         Trainer* m_Trainer = nullptr;
         Predicter* m_Predicter = nullptr;
 

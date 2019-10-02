@@ -1,4 +1,5 @@
 ﻿#include "Layers/Concatenate.h"
+#include "ComputationalGraph/Ops.h"
 
 namespace Neuro
 {
@@ -36,15 +37,8 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Concatenate::FeedForwardInternal(bool training)
+    void Concatenate::InitOps(TensorLike* training, bool initValues)
     {
-        // output is already of proper shape thanks to LayerBase.FeedForward
-        Tensor::Concat(_012Axes, m_Inputs, *m_Outputs[0]);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void Concatenate::BackPropInternal(const tensor_ptr_vec_t& outputsGradient)
-    {
-        outputsGradient[0]->Split(_012Axes, m_InputsGradient);
+        m_OutputOps[0] = concatenate(m_InputOps);
     }
 }

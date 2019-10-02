@@ -4,10 +4,10 @@
 
 namespace Neuro
 {
-    class Conv2DOp : public Operation
+    class Conv2dOp : public Operation
     {
     public:
-        Conv2DOp(TensorLike* x, TensorLike* kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat = NCHW);
+        Conv2dOp(TensorLike* x, TensorLike* kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat = NCHW);
 
     protected:
         virtual void ComputeInternal() override;
@@ -21,6 +21,6 @@ namespace Neuro
 
     static Operation* conv2d(TensorLike* x, TensorLike* kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat)
     {
-        return new Conv2DOp(x, kernels, stride, padding, dataFormat);
+        return new Conv2dOp(x, kernels, stride, padding, dataFormat);
     }
 }
