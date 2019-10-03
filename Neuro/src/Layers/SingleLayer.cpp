@@ -8,6 +8,9 @@
 #include "Models/ModelBase.h"
 #include "ComputationalGraph/Placeholder.h"
 #include "ComputationalGraph/NameScope.h"
+#include "ComputationalGraph/Operations/DumpOp.h"
+
+#define LOG_OUTPUTS
 
 namespace Neuro
 {
@@ -102,12 +105,30 @@ namespace Neuro
         m_Outputs.resize(m_OutputsShapes.size());
         m_OutputOps.resize(m_Outputs.size());
 
+#       ifdef LOG_OUTPUTS
+        auto originalInputsOps = m_InputOps;
+        for (size_t i = 0; i < m_InputOps.size(); ++i)
+            m_InputOps[i] = dump(m_InputOps[i], "input_" + to_string(i));
+#       endif
+
         InitOps(training, initValues);
+
+#       ifdef LOG_OUTPUTS
+        m_InputOps = originalInputsOps;
+        for (size_t i = 0; i < m_OutputOps.size(); ++i)
+            m_OutputOps[i] = dump(m_OutputOps[i], "output_" + to_string(i));
+#       endif
         
         for (size_t i = 0; i < m_Outputs.size(); ++i)
         {
             if (m_Activation)
+            {
                 m_OutputOps[i] = m_Activation->Build(m_OutputOps[i]);
+#               ifdef LOG_OUTPUTS
+                for (size_t i = 0; i < m_OutputOps.size(); ++i)
+                    m_OutputOps[i] = dump(m_OutputOps[i], "output_" + to_string(i) + "_activation");
+#               endif
+            }
             m_Outputs[i] = &m_OutputOps[i]->Output();
         }
     }

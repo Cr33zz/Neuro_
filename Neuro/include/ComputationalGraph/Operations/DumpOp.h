@@ -4,18 +4,18 @@
 
 namespace Neuro
 {
-    class TanHOp : public Operation
+    class DumpOp : public Operation
     {
     public:
-        TanHOp(TensorLike* x, const string& name = "");
+        DumpOp(TensorLike* x, const string& name = "");
 
     protected:
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
     };
 
-    static Operation* tanh(TensorLike* x, const string& name = "")
+    static Operation* dump(TensorLike* x, const string& name = "")
     {
-        return new TanHOp(x, name);
+        return new DumpOp(x, name);
     }
 }

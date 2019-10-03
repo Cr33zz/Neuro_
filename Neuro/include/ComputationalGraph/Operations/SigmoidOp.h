@@ -7,15 +7,15 @@ namespace Neuro
     class SigmoidOp : public Operation
     {
     public:
-        SigmoidOp(TensorLike* x);
+        SigmoidOp(TensorLike* x, const string& name = "");
 
     protected:
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
     };
 
-    static Operation* sigmoid(TensorLike* x)
+    static Operation* sigmoid(TensorLike* x, const string& name = "")
     {
-        return new SigmoidOp(x);
+        return new SigmoidOp(x, name);
     }
 }

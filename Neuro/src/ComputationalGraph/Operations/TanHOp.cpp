@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    TanHOp::TanHOp(TensorLike* x)
-        : Operation({ x }, "tanh")
+    TanHOp::TanHOp(TensorLike* x, const string& name)
+        : Operation({ x }, name.empty() ? "tanh" : name)
     {
     }
 

@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    SigmoidOp::SigmoidOp(TensorLike* x)
-        : Operation({x}, "sigmoid")
+    SigmoidOp::SigmoidOp(TensorLike* x, const string& name)
+        : Operation({ x }, name.empty() ? "sigmoid" : name)
     {
     }
 

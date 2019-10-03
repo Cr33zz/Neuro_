@@ -4,8 +4,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    MatMulOp::MatMulOp(TensorLike* a, TensorLike* b)
-        : Operation({a, b}, "matmul")
+    MatMulOp::MatMulOp(TensorLike* a, TensorLike* b, const string& name)
+        : Operation({ a, b }, name.empty() ? "matmul" : name)
     {
         /*assert(a->GetShape().Width() == b->GetShape().Height());
         assert(a->GetShape().Depth() == b->GetShape().Depth());*/

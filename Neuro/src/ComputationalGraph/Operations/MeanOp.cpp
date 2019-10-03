@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    MeanOp::MeanOp(TensorLike* x, EAxis axis)
-        : Operation({x}, "mean"), m_Axis(axis)
+    MeanOp::MeanOp(TensorLike* x, EAxis axis, const string& name)
+        : Operation({ x }, name.empty() ? "mean" : name), m_Axis(axis)
     {
         assert(axis <= BatchAxis);
     }

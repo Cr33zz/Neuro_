@@ -2,8 +2,6 @@
 
 #include <vector>
 
-//#define LOG_OUTPUTS
-
 namespace Neuro
 {
 	using namespace std;

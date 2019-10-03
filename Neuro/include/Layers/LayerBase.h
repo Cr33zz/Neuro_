@@ -50,7 +50,7 @@ namespace Neuro
         // parameters will be updated as follows: this_parameters * tau + target_parameters * (1 - tau)
         virtual void CopyParametersTo(LayerBase& target, float tau = 0) const;
 
-        virtual void SetTrainable(bool trainable) { m_Trainable = trainable; }
+        virtual void SetTrainable(bool trainable);
         bool Trainable() const { return m_Trainable; }
 
         virtual uint32_t ParamsNum() const { return 0; }

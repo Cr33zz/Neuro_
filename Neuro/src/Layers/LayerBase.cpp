@@ -89,7 +89,14 @@ namespace Neuro
 		assert(InputShape() == target.InputShape() && OutputShapes() == target.OutputShapes() && "Cannot copy parameters between incompatible layers.");
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    void LayerBase::SetTrainable(bool trainable)
+    {
+
+        m_Trainable = trainable;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void LayerBase::Init(TensorLike* training, bool initValues)
 	{
 		if (Initialized)

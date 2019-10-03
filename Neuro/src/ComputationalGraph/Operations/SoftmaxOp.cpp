@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    SoftmaxOp::SoftmaxOp(TensorLike* x)
-        : Operation({x}, "softmax")
+    SoftmaxOp::SoftmaxOp(TensorLike* x, const string& name)
+        : Operation({ x }, name.empty() ? "softmax" : name)
     {
     }
 

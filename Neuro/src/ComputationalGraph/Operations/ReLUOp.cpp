@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    ReLUOp::ReLUOp(TensorLike* x)
-        : Operation({ x }, "relu")
+    ReLUOp::ReLUOp(TensorLike* x, const string& name)
+        : Operation({ x }, name.empty() ? "relu" : name)
     {
     }
 

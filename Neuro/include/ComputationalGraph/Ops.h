@@ -8,6 +8,7 @@
 #include "ComputationalGraph/Operations/Conv2dOp.h"
 #include "ComputationalGraph/Operations/Conv2dTransposeOp.h"
 #include "ComputationalGraph/Operations/DropoutOp.h"
+#include "ComputationalGraph/Operations/DumpOp.h"
 #include "ComputationalGraph/Operations/EluOp.h"
 #include "ComputationalGraph/Operations/ExpOp.h"
 #include "ComputationalGraph/Operations/GradientsOp.h"
