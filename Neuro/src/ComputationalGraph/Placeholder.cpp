@@ -8,6 +8,7 @@ namespace Neuro
         : TensorLike(name)
     {
         m_Output.Resize(shape);
+        m_Output.Zero();
         //Graph::Default()->Placeholders.push_back(this);
     }
 }
