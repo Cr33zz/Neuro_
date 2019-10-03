@@ -17,8 +17,8 @@ namespace Neuro
         EAxis m_Axis;
     };
 
-    static Operation* mean(TensorLike* x)
+    static Operation* mean(TensorLike* x, EAxis axis = GlobalAxis)
     {
-        return new MeanOp(x);
+        return new MeanOp(x, axis);
     }
 }

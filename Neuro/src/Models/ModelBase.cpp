@@ -132,7 +132,7 @@ namespace Neuro
                 {NameScope layerScope(outLayer->Name());
 
                     targetsOps.push_back(new Placeholder(Shape(outLayer->OutputShape()), "target"));
-                    auto loss = sum(lossDict[outLayer->Name()]->Build(targetsOps.back(), outLayer->OutputOps()[0]));
+                    auto loss = mean(lossDict[outLayer->Name()]->Build(targetsOps.back(), outLayer->OutputOps()[0]));
 
                     if (!totalLoss)
                         totalLoss = loss;
@@ -677,7 +677,7 @@ namespace Neuro
         auto results = m_Trainer->Train(inputs, outputs);
 
         if (loss)
-            *loss = (*results[m_Metrics["loss"].second])(0) / outputs[0]->BatchLength();
+            *loss = (*results[m_Metrics["loss"].second])(0) / (float)outputs.size();
     }
 
     //////////////////////////////////////////////////////////////////////////

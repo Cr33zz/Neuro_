@@ -24,7 +24,7 @@ public:
         auto o = concat({ x1, x2 }, BatchAxis);
         o = sigmoid(add(matmul(o, w), b)); // dense layer
 
-        auto loss = sum(sum(multiply(negative(y), log(o)), BatchAxis)); //cross-entropy loss
+        auto loss = mean(multiply(negative(y), log(o))); //cross-entropy loss
 
         auto minimizeOp = SGD(0.04f).Minimize(loss);
 
