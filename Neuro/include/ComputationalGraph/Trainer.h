@@ -21,5 +21,7 @@ namespace Neuro
         vector<Placeholder*> m_InputOps;
         vector<Placeholder*> m_TargetOps;
         vector<TensorLike*> m_FetchOps;
+
+        vector<TensorLike*> m_Order;
     };
 }

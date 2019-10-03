@@ -14,17 +14,24 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<Tensor*> Session::Run(const vector<TensorLike*>& fetches, const map<Placeholder*, const Tensor*>& feeds)
     {
-        for(auto node : BuildForwardGraph(fetches))
+        return RunInOrder(BuildForwardOrder(fetches), fetches, feeds);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    vector<Tensor*> Session::RunInOrder(const vector<TensorLike*>& order, const vector<TensorLike*>& fetches, const map<Placeholder*, const Tensor*>& feeds)
+    {
+        for (auto feed : feeds)
+            feed.first->m_Output = *feed.second;
+
+        for (auto node : order)
         {
-            if (Placeholder* p = dynamic_cast<Placeholder*>(node))
-                node->m_Output = *feeds.find(p)->second;
-            else if (node->IsOp())
+            if (node->IsOp())
             {
                 Operation* op = static_cast<Operation*>(node);
-                auto inputs = op->GatherInputs();
-                op->Compute(inputs);
+                op->Compute(op->GatherInputs());
             }
         }
+
         vector<Tensor*> result(fetches.size());
         for (size_t i = 0; i < fetches.size(); ++i)
             result[i] = fetches[i]->OutputPtr();
@@ -32,7 +39,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    std::vector<TensorLike*> Session::BuildForwardGraph(const vector<TensorLike*>& endNodes)
+    vector<TensorLike*> Session::BuildForwardOrder(const vector<TensorLike*>& endNodes)
     {
         vector<TensorLike*> result;
         for (auto node : endNodes)
@@ -117,6 +124,48 @@ namespace Neuro
 
                 visited.insert(inputNode);
                 queue.push_back(inputNode);
+            }
+        }
+
+        return variables;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    vector<Variable*> Session::ComputeGradientsInOrder(const vector<TensorLike*>& order)
+    {
+        vector<Variable*> variables;
+        order[0]->m_OutputGrad.Resize(order[0]->m_Output.GetShape());
+        order[0]->m_OutputGrad.FillWithValue(1);
+
+        for (size_t n = 1; n < order.size(); ++n)
+        {
+            auto node = order[n];
+            
+            if (Variable* v = dynamic_cast<Variable*>(node))
+                variables.push_back(v);
+
+            auto& nodeGrad = node->m_OutputGrad;
+            nodeGrad.Resize(node->m_Output.GetShape());
+            nodeGrad.Zero(); // reset gradient
+
+            for (auto consumer : node->m_Consumers)
+            {
+                auto& outputGrad = consumer->m_OutputGrad;
+                assert(outputGrad.Length());
+                auto& inputsGrad = static_cast<Operation*>(consumer)->ComputeGradient(outputGrad);
+
+                if (inputsGrad.size() == 1)
+                {
+                    assert(inputsGrad[0]->Length());
+                    nodeGrad.Add(*inputsGrad[0], nodeGrad);
+                }
+                else
+                {
+                    auto nodeIndexInConsumerInputs = distance(consumer->m_InputNodes.begin(), find(consumer->m_InputNodes.begin(), consumer->m_InputNodes.end(), node));
+                    auto lossGradWrtNode = inputsGrad[nodeIndexInConsumerInputs];
+                    assert(lossGradWrtNode->Length());
+                    nodeGrad.Add(*lossGradWrtNode, nodeGrad);
+                }
             }
         }
 

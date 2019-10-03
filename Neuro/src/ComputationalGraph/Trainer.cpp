@@ -10,15 +10,13 @@ namespace Neuro
         m_InputOps = inputOps;
         m_TargetOps = targetOps;
         m_FetchOps = fetchOps;
+
+        m_Order = Session::Default->BuildForwardOrder(m_FetchOps);
     }
 
     //////////////////////////////////////////////////////////////////////////
     tensor_ptr_vec_t Trainer::Train(const const_tensor_ptr_vec_t& inputs, const const_tensor_ptr_vec_t& outputs)
     {
-        //var init = tf.Graph.GetGlobalVariablesInitializer();
-        //foreach (var op in init)
-        //    session.Run(new Tensorflow.TF_Output[0], new Tensorflow.Tensor[0], new Tensorflow.TF_Output[0], new[] { op });
-
         map<Placeholder*, const Tensor*> feeds;
 
         for (size_t i = 0; i < m_InputOps.size(); ++i)
@@ -26,6 +24,6 @@ namespace Neuro
         for (size_t i = 0; i < m_TargetOps.size(); ++i)
             feeds[m_TargetOps[i]] = outputs[i];
 
-        return Session::Default->Run(m_FetchOps, feeds);
+        return Session::Default->RunInOrder(m_Order, m_FetchOps, feeds);
     }
 }
