@@ -2,6 +2,7 @@
 #include <list>
 
 #include "ComputationalGraph/Session.h"
+#include "ComputationalGraph/Graph.h"
 #include "ComputationalGraph/Operation.h"
 #include "ComputationalGraph/Placeholder.h"
 #include "ComputationalGraph/Variable.h"
@@ -9,7 +10,25 @@
 
 namespace Neuro
 {
-    Session* Session::Default = new Session();
+    static Session* s_Default = nullptr;
+
+    //////////////////////////////////////////////////////////////////////////
+    Session::Session(Graph* graph)
+    {
+        if (!graph)
+            graph = Graph::Default();
+
+        m_Graph = graph;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Session* Session::Default()
+    {
+        if (!s_Default)
+            s_Default = new Session();
+
+        return s_Default;
+    }
 
     //////////////////////////////////////////////////////////////////////////
     vector<Tensor*> Session::Run(const vector<TensorLike*>& fetches, const map<Placeholder*, const Tensor*>& feeds)
@@ -36,23 +55,6 @@ namespace Neuro
         for (size_t i = 0; i < fetches.size(); ++i)
             result[i] = fetches[i]->OutputPtr();
         return result;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> Session::BuildForwardOrder(const vector<TensorLike*>& endNodes)
-    {
-        vector<TensorLike*> result;
-        for (auto node : endNodes)
-            ProcessForwardNode(node, result);
-        return result;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void Session::ProcessForwardNode(TensorLike* node, vector<TensorLike*>& nodes)
-    {
-        for (auto inputNode : node->m_InputNodes)
-            ProcessForwardNode(inputNode, nodes);
-        nodes.push_back(node);
     }
 
     //////////////////////////////////////////////////////////////////////////

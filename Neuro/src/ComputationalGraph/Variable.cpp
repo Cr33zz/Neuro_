@@ -9,7 +9,7 @@ namespace Neuro
         : TensorLike(name)
     {
         m_Output = initValue;
-        //Graph::Default()->Variables.push_back(this);
+        Graph::Default()->m_Variables.push_back(this);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -20,10 +20,15 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     Variable::Variable(const Shape& shape, InitializerBase* initializer, const string& name)
-        : TensorLike(name)
+        : TensorLike(name), m_Initializer(initializer)
     {
         m_Output.Resize(shape);
-        if (initializer)
-            initializer->Init(m_Output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Variable::Init()
+    {
+        if (m_Initializer)
+            m_Initializer->Init(m_Output);
     }
 }

@@ -8,6 +8,8 @@ namespace Neuro
 {
     using namespace std;
 
+    class Graph;
+
     class TensorLike
     {
     public:
@@ -23,6 +25,8 @@ namespace Neuro
 
         const string& Name() const { return m_Name; }
 
+        Graph* GetGraph() const { return m_Graph; }
+
         virtual bool IsOp() const { return false; }
         virtual bool IsPlaceholder() const { return false; }
 
@@ -31,6 +35,7 @@ namespace Neuro
     protected:
         TensorLike(const string& name = "");
 
+        Graph* m_Graph;
         vector<TensorLike*> m_Consumers;
         vector<TensorLike*> m_InputNodes;
         Tensor m_Output;
@@ -39,6 +44,7 @@ namespace Neuro
 
         friend class Operation;
         friend class Session;
+        friend class Graph;
         friend class OptimizerBase;
     };
 }

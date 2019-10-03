@@ -6,6 +6,7 @@ namespace Neuro
 {
     using namespace std;
 
+    class TensorLike;
     class Placeholder;
     class Operation;
     class Variable;
@@ -18,10 +19,16 @@ namespace Neuro
         void SetAsDefault() { s_Default = this; }
         static Graph* Default() { return s_Default; }
 
+        void InitVariables();
+        vector<TensorLike*> BuildForwardOrder(const vector<TensorLike*>& endNodes);
+
     private:
-        vector<Placeholder*> Placeholders;
-        vector<Operation*> Operations;
-        vector<Variable*> Variables;
+        void ProcessForwardNode(TensorLike* node, vector<TensorLike*>& nodes);
+
+        vector<Placeholder*> m_Placeholders;
+        vector<Operation*> m_Operations;
+        vector<Variable*> m_Variables;
+        bool m_VariablesInitialized = false;
 
         static Graph* s_Default;
 

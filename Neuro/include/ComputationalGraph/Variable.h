@@ -18,7 +18,10 @@ namespace Neuro
         void Trainable(bool enabled) { m_Trainable = enabled; }
         bool Trainable() const { return m_Trainable; }
 
+        void Init();
+
     private:
         bool m_Trainable = true;
+        InitializerBase* m_Initializer = nullptr;
     };
 }
