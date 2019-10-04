@@ -1,6 +1,7 @@
 #include <map>
 #include "ComputationalGraph/Trainer.h"
 #include "ComputationalGraph/Session.h"
+#include "ComputationalGraph/Graph.h"
 
 namespace Neuro
 {
@@ -11,7 +12,7 @@ namespace Neuro
         m_TargetOps = targetOps;
         m_FetchOps = fetchOps;
 
-        m_Order = Session::Default->BuildForwardOrder(m_FetchOps);
+        m_Order = Graph::Default()->BuildForwardOrder(m_FetchOps);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -24,6 +25,6 @@ namespace Neuro
         for (size_t i = 0; i < m_TargetOps.size(); ++i)
             feeds[m_TargetOps[i]] = outputs[i];
 
-        return Session::Default->RunInOrder(m_Order, m_FetchOps, feeds);
+        return Session::Default()->RunInOrder(m_Order, m_FetchOps, feeds);
     }
 }

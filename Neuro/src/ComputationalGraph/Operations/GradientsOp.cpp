@@ -18,7 +18,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void GradientsOp::ComputeInternal()
     {
-        Session::Default->ComputeGradients(m_InputNodes[0]/*, m_Params*/);
+        Session::Default()->ComputeGradients(m_InputNodes/*, m_Params*/);
         for (size_t i = 0; i < m_Params.size(); ++i)
             m_Params[i]->OutputGrad().CopyTo(m_Grads[i]->Output());
     }

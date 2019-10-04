@@ -24,6 +24,6 @@ namespace Neuro
         for (size_t i = 0; i < m_InputOps.size(); ++i)
             feeds[m_InputOps[i]] = inputs[i];
 
-        return Session::Default->Run(m_OutputOps, feeds);
+        return Session::Default()->Run(m_OutputOps, feeds);
     }
 }

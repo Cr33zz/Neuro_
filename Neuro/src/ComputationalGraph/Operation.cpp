@@ -1,5 +1,7 @@
 ﻿#include "ComputationalGraph/Operation.h"
 #include "ComputationalGraph/Graph.h"
+#include "Types.h"
+#include "Tools.h"
 
 namespace Neuro
 {
@@ -29,6 +31,9 @@ namespace Neuro
     {
         m_Inputs = inputs;
         ComputeInternal();
+#ifdef LOG_OUTPUTS
+        m_Output.DebugDumpValues(Replace(Name() + "_step" + to_string(g_LogOutputsStep) + ".log", "/", "_"));
+#endif
         return m_Output;
     }
 
@@ -43,6 +48,10 @@ namespace Neuro
             m_InputsGradsPtrs[i] = &m_InputsGrads[i];
         }
         ComputeGradientInternal(grad);
+#ifdef LOG_GRADS
+        for (size_t i = 0; i < m_InputsGrads.size(); ++i)
+            grad.DebugDumpValues(Replace(Name() + "_grad_" + to_string(i) + "_step" + to_string(g_LogOutputsStep) + ".log", "/", "_"));
+#endif
         return m_InputsGradsPtrs;
     }
 }

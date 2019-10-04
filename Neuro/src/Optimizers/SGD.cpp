@@ -37,7 +37,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void SGD::MinimizationOperation::ComputeInternal()
     {
-        auto vars = Session::Default->ComputeGradients(m_InputNodes[0]);
+        auto vars = Session::Default()->ComputeGradients(m_InputNodes);
 
         for (auto v : vars)
             Tensor::ActiveOp()->SgdStep(v->Output(), v->OutputGrad(), (float)v->Output().Batch(), m_Owner->m_LearningRate);

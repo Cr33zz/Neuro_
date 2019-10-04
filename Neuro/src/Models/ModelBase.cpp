@@ -117,9 +117,10 @@ namespace Neuro
         vector<TensorLike*> outputOps;
         vector<TensorLike*> fetchOps;
 
+        vector<TensorLike*> losses;
         TensorLike* totalLoss = nullptr;
 
-        {NameScope lossScope("loss");
+        {NameScope scope("loss");
 
             for (size_t i = 0; i < ModelOutputLayers().size(); ++i)
             {
@@ -129,15 +130,18 @@ namespace Neuro
 
                 m_AccuracyFuncs[i] = outputsShapes[i].Length == 1 ? AccBinaryClassificationEquality : AccCategoricalClassificationEquality;
 
-                {NameScope layerScope(outLayer->Name());
+                {//NameScope scope();
 
                     targetsOps.push_back(new Placeholder(Shape(outLayer->OutputShape()), "target"));
-                    auto loss = mean(lossDict[outLayer->Name()]->Build(targetsOps.back(), outLayer->OutputOps()[0]));
+                    auto loss = lossDict[outLayer->Name()]->Build(targetsOps.back(), outLayer->OutputOps()[0]);
+
+                    losses.push_back(loss);
+                    fetchOps.push_back(loss);
 
                     if (!totalLoss)
-                        totalLoss = loss;
+                        totalLoss = mean(loss);
                     else
-                        totalLoss = add(totalLoss, loss);
+                        totalLoss = merge_sum({ totalLoss, mean(loss) });
                 }
             }
         }
@@ -146,7 +150,7 @@ namespace Neuro
         m_Metrics["loss"] = make_pair(totalLoss, fetchOps.size() - 1);
         // any additional metrics should go in here
 
-        fetchOps.push_back(optimizer->Minimize(totalLoss));
+        fetchOps.push_back(optimizer->Minimize(losses));
 
         for (auto inLayer : ModelInputLayers())
         {
@@ -671,7 +675,7 @@ namespace Neuro
         for (auto i = 0; i < outputs.size(); ++i)
             assert(ModelOutputLayers()[i]->OutputShape().EqualsIgnoreBatch(outputs[i]->GetShape()));*/
 
-        ++g_DebugStep;
+        ++g_LogOutputsStep;
 
         m_Training->Output()(0) = 1;
         auto results = m_Trainer->Train(inputs, outputs);

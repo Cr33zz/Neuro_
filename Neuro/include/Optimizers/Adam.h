@@ -14,13 +14,13 @@ namespace Neuro
         virtual string ToString() override;
 		const char* ClassName() const;
 
-        virtual Operation* Minimize(TensorLike* loss) override { return new MinimizationOperation(loss, this); }
+        virtual Operation* Minimize(const vector<TensorLike*>& losses) override { return new MinimizationOperation(losses, this); }
 
     private:
         class MinimizationOperation : public Operation
         {
         public:
-            MinimizationOperation(TensorLike* loss, Adam* owner) : Operation({ loss }, "adam_minimize"), m_Owner(owner) {}
+            MinimizationOperation(const vector<TensorLike*>& losses, Adam* owner) : Operation(losses, "adam_minimize"), m_Owner(owner) {}
         protected:
             virtual void ComputeInternal();
             virtual void ComputeGradientInternal(const Tensor& grad) {}

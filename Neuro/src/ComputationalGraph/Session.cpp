@@ -10,7 +10,7 @@
 
 namespace Neuro
 {
-    static Session* s_Default = nullptr;
+    Session* Session::s_Default = nullptr;
 
     //////////////////////////////////////////////////////////////////////////
     Session::Session(Graph* graph)
@@ -33,12 +33,15 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<Tensor*> Session::Run(const vector<TensorLike*>& fetches, const map<Placeholder*, const Tensor*>& feeds)
     {
-        return RunInOrder(BuildForwardOrder(fetches), fetches, feeds);
+        m_Graph->InitVariables();
+        return RunInOrder(m_Graph->BuildForwardOrder(fetches), fetches, feeds);
     }
 
     //////////////////////////////////////////////////////////////////////////
     vector<Tensor*> Session::RunInOrder(const vector<TensorLike*>& order, const vector<TensorLike*>& fetches, const map<Placeholder*, const Tensor*>& feeds)
     {
+        m_Graph->InitVariables();
+
         for (auto feed : feeds)
             feed.first->m_Output = *feed.second;
 
@@ -58,17 +61,19 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<Variable*> Session::ComputeGradients(TensorLike* lossNode)
+    vector<Variable*> Session::ComputeGradients(const vector<TensorLike*>& losses)
     {
         vector<Variable*> variables;
-        lossNode->m_OutputGrad.Resize(lossNode->m_Output.GetShape());
-        lossNode->m_OutputGrad.FillWithValue(1);
-
         unordered_set<TensorLike*> visited;
         list<TensorLike*> queue;
 
-        visited.insert(lossNode);
-        queue.push_back(lossNode);
+        for (auto lossNode : losses)
+        {
+            lossNode->m_OutputGrad.Resize(lossNode->m_Output.GetShape());
+            lossNode->m_OutputGrad.FillWithValue(1);
+            visited.insert(lossNode);
+            queue.push_back(lossNode);
+        }
 
         while (!queue.empty())
         {
@@ -78,7 +83,8 @@ namespace Neuro
             if (Variable* v = dynamic_cast<Variable*>(node))
                 variables.push_back(v);
 
-            if (node != lossNode)
+            // losses already have gradient established (1) so we want to skip them here
+            if (find(losses.begin(), losses.end(), node) == losses.end())
             {
                 auto& nodeGrad = node->m_OutputGrad;
                 nodeGrad.Resize(node->m_Output.GetShape());

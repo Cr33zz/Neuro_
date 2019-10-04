@@ -10,8 +10,6 @@
 #include "ComputationalGraph/NameScope.h"
 #include "ComputationalGraph/Operations/DumpOp.h"
 
-#define LOG_OUTPUTS
-
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////

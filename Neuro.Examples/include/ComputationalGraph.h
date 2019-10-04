@@ -26,7 +26,7 @@ public:
 
         auto loss = mean(multiply(negative(y), log(o))); //cross-entropy loss
 
-        auto minimizeOp = SGD(0.04f).Minimize(loss);
+        auto minimizeOp = SGD(0.04f).Minimize({ loss });
 
         auto input1 = Uniform::Random(-1, 1, x1->GetShape());
         auto input2 = Uniform::Random(-1, 1, x2->GetShape());
@@ -34,7 +34,7 @@ public:
 
         for (int step = 0; step < 200; ++step)
         {
-            auto result = Session::Default->Run({ o, loss, minimizeOp }, { {x1, &input1}, {x2, &input2}, {y, &output} });
+            auto result = Session::Default()->Run({ o, loss, minimizeOp }, { {x1, &input1}, {x2, &input2}, {y, &output} });
 
             cout << "step: " << step << " loss: " << (*result[1])(0) << endl;
         }

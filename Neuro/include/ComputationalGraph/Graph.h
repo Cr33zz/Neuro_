@@ -16,8 +16,8 @@ namespace Neuro
     public:
         Graph();
 
-        void SetAsDefault() { s_Default = this; }
-        static Graph* Default() { return s_Default; }
+        //void SetAsDefault() { s_Default = this; }
+        static Graph* Default();
 
         void InitVariables();
         vector<TensorLike*> BuildForwardOrder(const vector<TensorLike*>& endNodes);

@@ -64,8 +64,6 @@ namespace Neuro
 
         float LastTrainError() const { return m_LastTrainError; }
 
-        static int g_DebugStep;
-
     protected:
         ModelBase() {}
         ModelBase(const string& constructorName, const string& name = "", int seed = 0);
