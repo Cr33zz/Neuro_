@@ -4,7 +4,6 @@
 #include <vector>
 #include <fstream>
 
-#include "Types.h"
 #include "Layers/LayerBase.h"
 #include "ParameterAndGradient.h"
 

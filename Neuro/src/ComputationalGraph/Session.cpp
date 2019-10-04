@@ -54,6 +54,8 @@ namespace Neuro
             }
         }
 
+        m_Graph->DebugLog();
+
         vector<Tensor*> result(fetches.size());
         for (size_t i = 0; i < fetches.size(); ++i)
             result[i] = fetches[i]->OutputPtr();

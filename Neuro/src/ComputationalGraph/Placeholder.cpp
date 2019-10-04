@@ -9,6 +9,6 @@ namespace Neuro
     {
         m_Output.Resize(shape);
         m_Output.Zero();
-        Graph::Default()->m_Placeholders.push_back(this);
+        Graph::Default()->AddPlaceholder(this);
     }
 }

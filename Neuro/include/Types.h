@@ -2,21 +2,6 @@
 
 #include <vector>
 
-#define LOG_OUTPUTS
-#define LOG_GRADS
-
-#ifdef LOG_OUTPUTS
-    #define _dump(x) dump(x)
-    #define _dumpn(x, name) dump(x, name)
-    #define _dump_grad(x) dump_grad(x)
-    #define _dump_gradn(x, name) dump_grad(x, name)
-#else
-    #define _dump(x) x
-    #define _dumpn(x, name) x
-    #define _dump_grad(x) x
-    #define _dump_gradn(x, name) x
-#endif
-
 namespace Neuro
 {
 	using namespace std;
@@ -26,8 +11,6 @@ namespace Neuro
     typedef vector<const Tensor*> const_tensor_ptr_vec_t;
     typedef vector<Tensor*> tensor_ptr_vec_t;
 	typedef int(*accuracy_func_t)(const Tensor& targetOutput, const Tensor& output);
-
-    int g_LogOutputsStep;
 
     enum EOpMode
     {

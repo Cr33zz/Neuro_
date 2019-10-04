@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "Neuro.h"
+#include "Debug.h"
 
 using namespace std;
 using namespace Neuro;
@@ -12,6 +13,8 @@ class IrisNetwork
 public:
     void Run()
     {
+        Debug::LogAllGrads();
+
         Tensor::SetDefaultOpMode(GPU);
         GlobalRngSeed(1337);
 

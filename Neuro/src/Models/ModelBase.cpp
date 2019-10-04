@@ -10,6 +10,7 @@
 #include "Optimizers/OptimizerBase.h"
 #include "Loss.h"
 #include "Tools.h"
+#include "Debug.h"
 #include "ChartGenerator.h"
 #include "Stopwatch.h"
 #include "ComputationalGraph/Ops.h"
@@ -23,8 +24,6 @@ using namespace H5;
 
 namespace Neuro
 {
-    int ModelBase::g_DebugStep = 0;
-
     //////////////////////////////////////////////////////////////////////////
     ModelBase::~ModelBase()
     {
@@ -675,13 +674,14 @@ namespace Neuro
         for (auto i = 0; i < outputs.size(); ++i)
             assert(ModelOutputLayers()[i]->OutputShape().EqualsIgnoreBatch(outputs[i]->GetShape()));*/
 
-        ++g_LogOutputsStep;
 
         m_Training->Output()(0) = 1;
         auto results = m_Trainer->Train(inputs, outputs);
 
         if (loss)
             *loss = (*results[m_Metrics["loss"].second])(0) / (float)outputs.size();
+
+        Debug::Step();
     }
 
     //////////////////////////////////////////////////////////////////////////

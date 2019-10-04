@@ -5,7 +5,6 @@
 #include "Tensors/Shape.h"
 #include "Tools.h"
 #include "Models/ModelBase.h"
-#include "Types.h"
 
 namespace Neuro
 {

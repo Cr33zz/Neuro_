@@ -19,8 +19,14 @@ namespace Neuro
         //void SetAsDefault() { s_Default = this; }
         static Graph* Default();
 
+        void AddVariable(Variable* v);
+        void AddPlaceholder(Placeholder* p);
+        void AddOperation(Operation* op);
+
         void InitVariables();
         vector<TensorLike*> BuildForwardOrder(const vector<TensorLike*>& endNodes);
+
+        void DebugLog();
 
     private:
         void ProcessForwardNode(TensorLike* node, vector<TensorLike*>& nodes);
@@ -28,12 +34,9 @@ namespace Neuro
         vector<Placeholder*> m_Placeholders;
         vector<Operation*> m_Operations;
         vector<Variable*> m_Variables;
+        vector<TensorLike*> m_Nodes;
         bool m_VariablesInitialized = false;
 
         static Graph* s_Default;
-
-        friend class Placeholder;
-        friend class Variable;
-        friend class Operation;
     };
 }
