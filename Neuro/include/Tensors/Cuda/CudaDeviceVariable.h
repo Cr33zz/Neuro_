@@ -73,6 +73,11 @@ namespace Neuro
             CUDA_CHECK(cudaMemset(m_DevPtr, 0, GetSizeInBytes()));
         }
 
+        void OneOnDevice() const
+        {
+            //CUDA_CHECK(cuMemsetD32(m_DevPtr, 1.f, GetSizeInBytes()));
+        }
+
         T* GetDevicePtr() const { return static_cast<T*>(m_DevPtr); }
         size_t GetSizeInBytes() const { return m_Length * m_TypeSize; }
 

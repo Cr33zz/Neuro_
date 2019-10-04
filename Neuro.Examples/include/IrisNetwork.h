@@ -15,7 +15,7 @@ public:
     {
         Debug::LogAllGrads();
 
-        Tensor::SetDefaultOpMode(GPU);
+        Tensor::SetDefaultOpMode(MultiCPU);
         GlobalRngSeed(1337);
 
         auto model = Sequential("iris");

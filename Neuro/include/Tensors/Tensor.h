@@ -63,6 +63,7 @@ namespace Neuro
         Tensor& FillWithFunc(const function<float()>& func, uint32_t offset = 0);
 
         void Zero();
+        void One();
 
         // Converts to NCHW assuming the data is in NHWC format. Shape remains unchanged.
         Tensor ToNCHW() const;

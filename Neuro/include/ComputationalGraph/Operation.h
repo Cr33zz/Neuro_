@@ -16,6 +16,8 @@ namespace Neuro
         const Tensor& Compute(const vector<const Tensor*>& inputs);
         const vector<Tensor*>& ComputeGradient(const Tensor& grad);
 
+        const vector<Tensor>& InputsGrads() const { return m_InputsGrads; }
+
     protected:
         Operation(const vector<TensorLike*>& inputNodes, const string& name);
 

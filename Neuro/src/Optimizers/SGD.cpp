@@ -2,9 +2,9 @@
 #include <iomanip>
 
 #include "Optimizers/SGD.h"
-#include "ComputationalGraph/Variable.h"
-#include "ComputationalGraph/Session.h"
 #include "Tensors/TensorOpCpu.h"
+#include "ComputationalGraph/Variable.h"
+#include "ComputationalGraph/Graph.h"
 
 namespace Neuro
 {
@@ -37,7 +37,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void SGD::MinimizationOperation::ComputeInternal()
     {
-        auto vars = Session::Default()->ComputeGradients(m_InputNodes);
+        auto vars = Graph::Default()->ComputeGradients(m_InputNodes);
 
         for (auto v : vars)
             Tensor::ActiveOp()->SgdStep(v->Output(), v->OutputGrad(), (float)v->Output().Batch(), m_Owner->m_LearningRate);

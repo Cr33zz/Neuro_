@@ -24,12 +24,15 @@ namespace Neuro
         void AddOperation(Operation* op);
 
         void InitVariables();
-        vector<TensorLike*> BuildForwardOrder(const vector<TensorLike*>& endNodes);
+        vector<TensorLike*> BuildForwardOrder(const vector<TensorLike*>& endNodes, bool inludeEndNodes = true);
+
+        vector<Variable*> ComputeGradients(const vector<TensorLike*>& losses);
+        vector<Variable*> ComputeGradientsInOrder(const vector<TensorLike*>& order);
 
         void DebugLog();
 
     private:
-        void ProcessForwardNode(TensorLike* node, vector<TensorLike*>& nodes);
+        void ProcessForwardNode(TensorLike* node, vector<TensorLike*>& nodes, bool inludeNode = true);
 
         vector<Placeholder*> m_Placeholders;
         vector<Operation*> m_Operations;

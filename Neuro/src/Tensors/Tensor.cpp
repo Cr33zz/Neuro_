@@ -270,6 +270,17 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
+    void Tensor::One()
+    {
+        OverrideHost();
+        fill(m_Values.begin(), m_Values.end(), 1.f);
+        /*if (m_CurrentLocation == ELocation::Host)
+            fill(m_Values.begin(), m_Values.end(), 1.f);
+        else
+            GetDeviceVar().OneOnDevice();*/
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     Tensor Tensor::ToNCHW() const
     {
         Tensor result(GetShape());

@@ -1,6 +1,6 @@
 #include "ComputationalGraph/Operations/GradientsOp.h"
 #include "ComputationalGraph/Variable.h"
-#include "ComputationalGraph/Session.h"
+#include "ComputationalGraph/Graph.h"
 
 namespace Neuro
 {
@@ -18,7 +18,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void GradientsOp::ComputeInternal()
     {
-        Session::Default()->ComputeGradients(m_InputNodes/*, m_Params*/);
+        m_InputNodes[0]->GetGraph()->ComputeGradients(m_InputNodes/*, m_Params*/);
         for (size_t i = 0; i < m_Params.size(); ++i)
             m_Params[i]->OutputGrad().CopyTo(m_Grads[i]->Output());
     }

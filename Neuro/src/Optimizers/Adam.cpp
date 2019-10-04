@@ -5,7 +5,7 @@
 #include "Tensors/Tensor.h"
 #include "Tensors/TensorOpCpu.h"
 #include "ComputationalGraph/Variable.h"
-#include "ComputationalGraph/Session.h"
+#include "ComputationalGraph/Graph.h"
 
 namespace Neuro
 {    
@@ -40,7 +40,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Adam::MinimizationOperation::ComputeInternal()
     {
-        auto vars = Session::Default()->ComputeGradients(m_InputNodes);
+        auto vars = Graph::Default()->ComputeGradients(m_InputNodes);
         ++m_Owner->m_Iteration;
 
         if (m_MGradients.size() != vars.size())

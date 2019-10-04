@@ -57,11 +57,11 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> Graph::BuildForwardOrder(const vector<TensorLike*>& endNodes)
+    vector<TensorLike*> Graph::BuildForwardOrder(const vector<TensorLike*>& endNodes, bool inludeEndNodes)
     {
         vector<TensorLike*> result;
         for (auto node : endNodes)
-            ProcessForwardNode(node, result);
+            ProcessForwardNode(node, result, inludeEndNodes);
         return result;
     }
 
@@ -80,10 +80,76 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Graph::ProcessForwardNode(TensorLike* node, vector<TensorLike*>& nodes)
+    void Graph::ProcessForwardNode(TensorLike* node, vector<TensorLike*>& nodes, bool inludeNode)
     {
         for (auto inputNode : node->m_InputNodes)
             ProcessForwardNode(inputNode, nodes);
-        nodes.push_back(node);
+
+        if (inludeNode)
+            nodes.push_back(node);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    vector<Variable*> Graph::ComputeGradients(const vector<TensorLike*>& losses)
+    {
+        auto order = BuildForwardOrder(losses, false);
+        reverse(order.begin(), order.end());
+        
+        for (auto loss : losses)
+        {
+            loss->OutputGrad().One();
+            if (loss->IsOp())
+                static_cast<Operation*>(loss)->ComputeGradient(loss->OutputGrad());
+        }
+
+        return ComputeGradientsInOrder(order);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    vector<Variable*> Graph::ComputeGradientsInOrder(const vector<TensorLike*>& order)
+    {
+        vector<Variable*> variables;
+        
+        for (size_t n = 0; n < order.size(); ++n)
+        {
+            auto node = order[n];
+
+            if (Variable* v = dynamic_cast<Variable*>(node))
+                variables.push_back(v);
+
+            auto& nodeOutputGrad = node->m_OutputGrad;
+            nodeOutputGrad.Resize(node->m_Output.GetShape());
+            nodeOutputGrad.Zero(); // reset gradient
+
+            for (auto consumer : node->m_Consumers)
+            {
+                assert(consumer->IsOp());
+
+                auto& outputGrad = consumer->m_OutputGrad;
+                assert(outputGrad.Length());
+                auto& inputsGrad = static_cast<Operation*>(consumer)->InputsGrads();
+
+                if (inputsGrad.size() == 1)
+                {
+                    assert(inputsGrad[0].Length());
+                    nodeOutputGrad.Add(inputsGrad[0], nodeOutputGrad);
+                }
+                else
+                {
+                    auto nodeIndexInConsumerInputs = distance(consumer->m_InputNodes.begin(), find(consumer->m_InputNodes.begin(), consumer->m_InputNodes.end(), node));
+                    auto& lossGradWrtNode = inputsGrad[nodeIndexInConsumerInputs];
+                    assert(lossGradWrtNode.Length());
+                    nodeOutputGrad.Add(lossGradWrtNode, nodeOutputGrad);
+                }
+            }
+
+            //average output grad
+            nodeOutputGrad.Div((float)node->m_Consumers.size(), nodeOutputGrad);
+
+            if (node->IsOp())
+                static_cast<Operation*>(node)->ComputeGradient(nodeOutputGrad);
+        }
+
+        return variables;
     }
 }
