@@ -57,50 +57,108 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> Graph::BuildForwardOrder(const vector<TensorLike*>& endNodes, bool inludeEndNodes)
+    void Graph::IncrementStep()
+    {
+        ++m_CurrentStep;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    vector<TensorLike*> Graph::BuildForwardOrder(const vector<TensorLike*>& endNodes)
     {
         vector<TensorLike*> result;
+        unordered_set<TensorLike*> visited;
+
         for (auto node : endNodes)
-            ProcessForwardNode(node, result, inludeEndNodes);
+            ProcessForwardNode(node, result, visited);
+
         return result;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Graph::DebugLog()
+    void Graph::ProcessForwardNode(TensorLike* node, vector<TensorLike*>& nodes, unordered_set<TensorLike*>& visited)
     {
-#ifdef DEBUG_LOG_ENABLED
-        for (auto node : m_Nodes)
-        {
-            if (Debug::ShouldLogOutput(node->Name()))
-                node->Output().DebugDumpValues(Replace(node->Name() + "_step" + to_string(Debug::GetStep()) + ".log", "/", "_"));
-            if (Debug::ShouldLogGrad(node->Name()))
-                node->OutputGrad().DebugDumpValues(Replace(node->Name() + "_grad_step" + to_string(Debug::GetStep()) + ".log", "/", "_"));
-        }
-#endif
+        for (auto inputNode : node->m_InputNodes)
+            ProcessForwardNode(inputNode, nodes, visited);
+
+        if (!node->IsOp())
+            return;
+
+        if (visited.find(node) != visited.end())
+            return;
+
+        visited.insert(node);
+        nodes.push_back(node);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Graph::ProcessForwardNode(TensorLike* node, vector<TensorLike*>& nodes, bool inludeNode)
+    vector<TensorLike*> Graph::BuildBackwardOrder(const vector<TensorLike*>& endNodes, bool inludeEndNodes)
     {
-        for (auto inputNode : node->m_InputNodes)
-            ProcessForwardNode(inputNode, nodes);
+        // we need to figure out which nodes were required to calculate end nodes
+        // later on when check if all consumers were visited we will additionally check if
+        // any particular consumer is required, otherwise it's inputs' gradients are not important 
+        // (and won't be computed anyway)
+        auto nodesAffectingLosses = BuildForwardOrder(endNodes);
 
-        if (inludeNode)
-            nodes.push_back(node);
+        // build hash set for fast lookup
+        unordered_set<TensorLike*> required;
+        required.insert(nodesAffectingLosses.begin(), nodesAffectingLosses.end());
+
+        vector<TensorLike*> result;
+        unordered_set<TensorLike*> visited;
+
+        for (auto node : endNodes)
+            ProcessBackwardNode(node, result, false, visited, required);
+
+        return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Graph::ProcessBackwardNode(TensorLike* node, vector<TensorLike*>& nodes, bool ignoreConsumersCheck, unordered_set<TensorLike*>& visited, const unordered_set<TensorLike*>& required)
+    {
+        bool allConsumersVisited = true;
+
+        if (!ignoreConsumersCheck)
+        {
+            // only include node when all consumers are already visited
+            // we have to make sure that all consumers' input gradients are computed in order to properly average node's output gradient
+            for (auto consumer : node->m_Consumers)
+            {
+                assert(consumer->IsOp());
+
+                // we don't care about consumers that didn't contribute to losses
+                if (required.find(consumer) == required.end())
+                    continue;
+
+                if (visited.find(consumer) == visited.end())
+                {
+                    allConsumersVisited = false;
+                    break;
+                }
+            }
+        }
+
+        if (!allConsumersVisited)
+            return;
+
+        visited.insert(node);
+        nodes.push_back(node);
+
+        for (auto inputNode : node->m_InputNodes)
+            ProcessBackwardNode(inputNode, nodes, false, visited, required);
     }
 
     //////////////////////////////////////////////////////////////////////////
     vector<Variable*> Graph::ComputeGradients(const vector<TensorLike*>& losses)
     {
-        auto order = BuildForwardOrder(losses, false);
-        reverse(order.begin(), order.end());
+        auto order = BuildBackwardOrder(losses, false);
         
-        for (auto loss : losses)
+        /*for (auto loss : losses)
         {
+            loss->OutputGrad().Resize(loss->GetShape());
             loss->OutputGrad().One();
             if (loss->IsOp())
                 static_cast<Operation*>(loss)->ComputeGradient(loss->OutputGrad());
-        }
+        }*/
 
         return ComputeGradientsInOrder(order);
     }
@@ -121,13 +179,23 @@ namespace Neuro
             nodeOutputGrad.Resize(node->m_Output.GetShape());
             nodeOutputGrad.Zero(); // reset gradient
 
+            int inputGradsUsed = 0;
+
             for (auto consumer : node->m_Consumers)
             {
                 assert(consumer->IsOp());
+                Operation* consumerOp = static_cast<Operation*>(consumer);
 
-                auto& outputGrad = consumer->m_OutputGrad;
-                assert(outputGrad.Length());
-                auto& inputsGrad = static_cast<Operation*>(consumer)->InputsGrads();
+                auto& inputsGrad = consumerOp->InputsGrads();
+
+                // ignore consumer when it didn't participate in forward step or its input gradients were not computed
+                // the latter can happen when it wasn't required for loss computation (alternatively we could pass
+                // required nodes to this function and check against that but it would be more involving from 'user'
+                // point of view
+                if (consumerOp->LastComputeStep() != m_CurrentStep || inputsGrad.empty())
+                    continue;
+
+                ++inputGradsUsed;
 
                 if (inputsGrad.size() == 1)
                 {
@@ -143,13 +211,40 @@ namespace Neuro
                 }
             }
 
-            //average output grad
-            nodeOutputGrad.Div((float)node->m_Consumers.size(), nodeOutputGrad);
+            if (inputGradsUsed == 0) // it must be one the loss nodes (gradient of loss w.r.t to loss is 1)
+                nodeOutputGrad.One();            
+            //else if (inputGradsUsed > 1) // average output grad
+            //    nodeOutputGrad.Div((float)inputGradsUsed, nodeOutputGrad);
 
             if (node->IsOp())
                 static_cast<Operation*>(node)->ComputeGradient(nodeOutputGrad);
         }
 
         return variables;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Graph::DebugLog()
+    {
+#ifdef DEBUG_LOG_ENABLED
+        for (auto node : m_Operations)
+        {
+            if (Debug::ShouldLogOutput(node->Name()))
+                node->Output().DebugDumpValues(Replace(node->Name() + "_step" + to_string(Debug::GetStep()) + ".log", "/", "_"));
+
+            if (Debug::ShouldLogGrad(node->Name()))
+            {
+                auto& inputGrads = static_cast<Operation*>(node)->InputsGrads();
+                for (size_t i = 0; i < inputGrads.size(); ++i)
+                    inputGrads[i].DebugDumpValues(Replace(node->Name() + "_grad" + to_string(i) + "_step" + to_string(Debug::GetStep()) + ".log", "/", "_"));
+            }
+        }
+
+        for (auto node : m_Variables)
+        {
+            if (Debug::ShouldLogGrad(node->Name()))
+                node->OutputGrad().DebugDumpValues(Replace(node->Name() + "_grad_step" + to_string(Debug::GetStep()) + ".log", "/", "_"));
+        }
+#endif
     }
 }

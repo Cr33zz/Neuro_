@@ -11,7 +11,7 @@ namespace Neuro
         for (auto param : params)
         {
             m_Grads.push_back(new Variable(Tensor(param->Output().GetShape()).FillWithValue(0)));
-            m_Grads.back()->AddInputNode(this);
+            m_Grads.back()->AddInputNode(this); // build one-way connection required for forward pass
         }
     }
 

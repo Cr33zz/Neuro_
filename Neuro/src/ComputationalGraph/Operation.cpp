@@ -29,6 +29,7 @@ namespace Neuro
     {
         m_Inputs = inputs;
         ComputeInternal();
+        m_LastComputeStep = m_Graph->CurrentStep();
         return m_Output;
     }
 

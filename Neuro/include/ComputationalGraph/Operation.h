@@ -11,6 +11,7 @@ namespace Neuro
     public:
         virtual bool IsOp() const override { return true; }
 
+        uint32_t LastComputeStep() const { return m_LastComputeStep; }
         vector<const Tensor*> GatherInputs() const;
 
         const Tensor& Compute(const vector<const Tensor*>& inputs);
@@ -26,6 +27,9 @@ namespace Neuro
 
         vector<const Tensor*> m_Inputs;
         vector<Tensor> m_InputsGrads;
-        vector<Tensor*> m_InputsGradsPtrs; // for performance
+        vector<Tensor*> m_InputsGradsPtrs; // for performance/convenience
+        // This is used during gradient computation to figure out which consumers we care about.
+        // We only care about computed ones in last forward pass
+        uint32_t m_LastComputeStep = 0;
     };
 }

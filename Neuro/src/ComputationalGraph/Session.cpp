@@ -1,7 +1,4 @@
-﻿#include <unordered_set>
-#include <list>
-
-#include "ComputationalGraph/Session.h"
+﻿#include "ComputationalGraph/Session.h"
 #include "ComputationalGraph/Graph.h"
 #include "ComputationalGraph/Operation.h"
 #include "ComputationalGraph/Placeholder.h"
@@ -33,7 +30,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<Tensor*> Session::Run(const vector<TensorLike*>& fetches, const map<Placeholder*, const Tensor*>& feeds)
     {
-        m_Graph->InitVariables();
         return RunInOrder(m_Graph->BuildForwardOrder(fetches), fetches, feeds);
     }
 
@@ -41,6 +37,7 @@ namespace Neuro
     vector<Tensor*> Session::RunInOrder(const vector<TensorLike*>& order, const vector<TensorLike*>& fetches, const map<Placeholder*, const Tensor*>& feeds)
     {
         m_Graph->InitVariables();
+        m_Graph->IncrementStep();
 
         for (auto feed : feeds)
             feed.first->m_Output = *feed.second;
