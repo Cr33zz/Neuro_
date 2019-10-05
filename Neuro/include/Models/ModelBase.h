@@ -16,7 +16,7 @@ namespace Neuro
     class OptimizerBase;
     class Trainer;
     class Predicter;
-    class Variable;
+    class Placeholder;
 
     class ModelBase : public LayerBase
     {
@@ -87,7 +87,7 @@ namespace Neuro
         vector<accuracy_func_t> m_AccuracyFuncs;
         bool m_ForceLearningPhase = false;
 
-        Variable* m_Training = nullptr;
+        Placeholder* m_Training = nullptr;
         Trainer* m_Trainer = nullptr;
         Predicter* m_Predicter = nullptr;
 

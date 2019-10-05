@@ -38,8 +38,9 @@ namespace Neuro
     void SGD::MinimizationOperation::ComputeInternal()
     {
         auto vars = Graph::Default()->ComputeGradients(m_InputNodes);
+        float batchSize = (float)m_Inputs[0]->Batch(); // assuming all inputs have the same batch size
 
         for (auto v : vars)
-            Tensor::ActiveOp()->SgdStep(v->Output(), v->OutputGrad(), (float)v->Output().Batch(), m_Owner->m_LearningRate);
+            Tensor::ActiveOp()->SgdStep(v->Output(), v->OutputGrad(), batchSize, m_Owner->m_LearningRate);
     }
 }

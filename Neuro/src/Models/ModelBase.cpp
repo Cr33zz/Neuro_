@@ -34,7 +34,8 @@ namespace Neuro
     ModelBase::ModelBase(const string& constructorName, const string& name, int seed)
         : LayerBase(constructorName, name)
     {
-        m_Training = new Variable(0);
+        NameScope scope(name);
+        m_Training = new Placeholder(Shape(1), "training_phase");
 
         // output shape will be established when layers are added
         if (seed > 0)
@@ -129,19 +130,16 @@ namespace Neuro
 
                 m_AccuracyFuncs[i] = outputsShapes[i].Length == 1 ? AccBinaryClassificationEquality : AccCategoricalClassificationEquality;
 
-                {//NameScope scope();
+                targetsOps.push_back(new Placeholder(Shape(outLayer->OutputShape()), "target" + to_string(i)));
+                auto loss = lossDict[outLayer->Name()]->Build(targetsOps.back(), outLayer->OutputOps()[0]);
 
-                    targetsOps.push_back(new Placeholder(Shape(outLayer->OutputShape()), "target"));
-                    auto loss = lossDict[outLayer->Name()]->Build(targetsOps.back(), outLayer->OutputOps()[0]);
+                losses.push_back(loss);
+                fetchOps.push_back(loss);
 
-                    losses.push_back(loss);
-                    fetchOps.push_back(loss);
-
-                    if (!totalLoss)
-                        totalLoss = mean(loss);
-                    else
-                        totalLoss = merge_sum({ totalLoss, mean(loss) });
-                }
+                if (!totalLoss)
+                    totalLoss = mean(loss);
+                else
+                    totalLoss = merge_sum({ totalLoss, mean(loss) });
             }
         }
 
