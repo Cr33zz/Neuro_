@@ -1213,7 +1213,8 @@ namespace Neuro
 
         m_Shape = shape;
         m_Values.resize(shape.Length);
-        m_GpuData.Release();
+        if (m_GpuData.Resize(shape.Length))
+            OverrideHost(); // data will have to be re-copied when necessary
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -1963,6 +1964,14 @@ namespace Neuro
         m_DropoutWorkspace = nullptr;
         delete(m_DropoutStates);
         m_DropoutStates = nullptr;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    bool Tensor::GPUData::Resize(size_t size)
+    {
+        if (m_DeviceVar)
+            return m_DeviceVar->Resize(size);
+        return false;
     }
 
     //////////////////////////////////////////////////////////////////////////

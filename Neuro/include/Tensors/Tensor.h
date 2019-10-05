@@ -281,6 +281,8 @@ namespace Neuro
             GPUData() {}
             ~GPUData();
             void Release();
+            // Returns true if GPU location has changed
+            bool Resize(size_t size);
 
             void UpdateWorkspace(CudaDeviceVariable<char>*& workspace, size_t size);
 

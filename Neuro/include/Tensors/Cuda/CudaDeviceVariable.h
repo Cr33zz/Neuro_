@@ -17,10 +17,10 @@ namespace Neuro
     public:
         CudaDeviceVariable(size_t length)
         {
-            m_Length = length;
+            m_AllocatedLength = m_Length = length;
             m_TypeSize = sizeof(T);
             m_IsOwner = true;
-            CUDA_CHECK(cudaMalloc(&m_DevPtr, GetSizeInBytes()));
+            CUDA_CHECK(cudaMalloc(&m_DevPtr, GetAllocatedSizeInBytes()));
         }
 
         CudaDeviceVariable(const CudaDeviceVariable<T>& var, size_t lengthOffset)
@@ -41,6 +41,22 @@ namespace Neuro
         {
             if (m_IsOwner)
                 CUDA_CHECK(cudaFree(m_DevPtr));
+        }
+
+        bool Resize(size_t length)
+        {
+            assert(m_IsOwner);
+
+            if (length <= m_AllocatedLength)
+            {
+                m_Length = length;
+                return false;            
+            }
+            
+            m_Length = m_AllocatedLength = length;
+            CUDA_CHECK(cudaFree(m_DevPtr));
+            CUDA_CHECK(cudaMalloc(&m_DevPtr, GetAllocatedSizeInBytes()));
+            return true;
         }
 
         void CopyToDevice(const T* source) const
@@ -80,10 +96,12 @@ namespace Neuro
 
         T* GetDevicePtr() const { return static_cast<T*>(m_DevPtr); }
         size_t GetSizeInBytes() const { return m_Length * m_TypeSize; }
+        size_t GetAllocatedSizeInBytes() const { return m_AllocatedLength * m_TypeSize; }
 
     private:
         void* m_DevPtr = nullptr;
         size_t m_Length = 0;
+        size_t m_AllocatedLength = 0;
         size_t m_TypeSize = 0;
         bool m_IsOwner = false;
     };
