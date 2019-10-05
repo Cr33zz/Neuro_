@@ -5,8 +5,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    GradientsOp::GradientsOp(TensorLike* y, vector<TensorLike*> params, const string& name)
-        : Operation({ y }, name.empty() ? "gradients" : name), m_Params(params)
+    GradientsOp::GradientsOp(TensorLike* y, vector<Variable*> params, const string& name)
+        : Operation({ y }, name.empty() ? "gradients" : name), m_Vars(params)
     {
         for (auto param : params)
         {
@@ -18,8 +18,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void GradientsOp::ComputeInternal()
     {
-        m_InputNodes[0]->GetGraph()->ComputeGradients(m_InputNodes/*, m_Params*/);
-        for (size_t i = 0; i < m_Params.size(); ++i)
-            m_Params[i]->OutputGrad().CopyTo(m_Grads[i]->Output());
+        m_InputNodes[0]->GetGraph()->ComputeGradients(m_InputNodes, m_Vars);
+        for (size_t i = 0; i < m_Vars.size(); ++i)
+            m_Vars[i]->OutputGrad().CopyTo(m_Grads[i]->Output());
     }
 }

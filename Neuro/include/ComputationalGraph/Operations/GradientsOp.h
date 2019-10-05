@@ -4,10 +4,12 @@
 
 namespace Neuro
 {
+    class Variable;
+
     class GradientsOp : public Operation
     {
     public:
-        GradientsOp(TensorLike* y, vector<TensorLike*> params, const string& name = "");
+        GradientsOp(TensorLike* y, vector<Variable*> vars, const string& name = "");
 
         vector<TensorLike*> Grads() { return m_Grads; }
 
@@ -16,18 +18,18 @@ namespace Neuro
         virtual void ComputeGradientInternal(const Tensor& grad) override {}
 
     private:
-        vector<TensorLike*> m_Params;
+        vector<Variable*> m_Vars;
         vector<TensorLike*> m_Grads;
     };
 
-    static vector<TensorLike*> gradients(TensorLike* y, vector<TensorLike*> params, const string& name = "")
+    static vector<TensorLike*> gradients(TensorLike* y, vector<Variable*> vars, const string& name = "")
     {
-        return (new GradientsOp(y, params, name))->Grads();
+        return (new GradientsOp(y, vars, name))->Grads();
     }
 
-    static vector<TensorLike*> gradients(TensorLike* y, TensorLike* param, const string& name = "")
+    static vector<TensorLike*> gradients(TensorLike* y, Variable* var, const string& name = "")
     {
-        vector<TensorLike*> params{ param };
-        return gradients(y, params, name);
+        vector<Variable*> vars{ var };
+        return gradients(y, vars, name);
     }
 }

@@ -19,7 +19,7 @@ namespace Neuro
 
         int Iteration() const { return (int)m_Iteration; }
 
-        virtual Operation* Minimize(const vector<TensorLike*>& losses) = 0;
+        virtual Operation* Minimize(const vector<TensorLike*>& losses, const vector<Variable*>& vars = {}) = 0;
         //virtual Operation* Maximize(const vector<TensorLike*>& losses) = 0;
 
 	protected:

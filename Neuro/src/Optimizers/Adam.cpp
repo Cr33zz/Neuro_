@@ -40,7 +40,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Adam::MinimizationOperation::ComputeInternal()
     {
-        auto vars = Graph::Default()->ComputeGradients(m_InputNodes);
+        auto vars = Graph::Default()->ComputeGradients(m_InputNodes, m_Vars);
         ++m_Owner->m_Iteration;
 
         float batchSize = (float)m_Inputs[0]->Batch(); // assuming all inputs have the same batch size
@@ -60,12 +60,12 @@ namespace Neuro
 
         for (auto i = 0; i < vars.size(); ++i)
         {
-            auto& parameter = vars[i]->Output();
+            auto& value = vars[i]->Output();
             auto& gradient = vars[i]->OutputGrad();
             auto& mGrad = m_MGradients[i];
             auto& vGrad = m_VGradients[i];
 
-            Tensor::ActiveOp()->AdamStep(parameter, gradient, mGrad, vGrad, batchSize, learningRate, m_Owner->m_Beta1, m_Owner->m_Beta2, m_Owner->m_Epsilon);
+            Tensor::ActiveOp()->AdamStep(value, gradient, mGrad, vGrad, batchSize, learningRate, m_Owner->m_Beta1, m_Owner->m_Beta2, m_Owner->m_Epsilon);
         }
     }
 }

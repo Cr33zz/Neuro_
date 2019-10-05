@@ -15,6 +15,8 @@ namespace Neuro
         Variable(float initValue, const string& name = "");
         Variable(const Shape& shape, InitializerBase* initializer = nullptr, const string& name = "");
 
+        virtual bool IsVar() const override { return true; }
+
         void Trainable(bool enabled) { m_Trainable = enabled; }
         bool Trainable() const { return m_Trainable; }
 

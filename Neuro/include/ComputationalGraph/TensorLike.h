@@ -29,6 +29,7 @@ namespace Neuro
 
         virtual bool IsOp() const { return false; }
         virtual bool IsPlaceholder() const { return false; }
+        virtual bool IsVar() const { return false; }
 
         void AddInputNode(TensorLike* node) { m_InputNodes.push_back(node); }
 

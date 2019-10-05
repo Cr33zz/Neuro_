@@ -91,7 +91,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> Graph::BuildBackwardOrder(const vector<TensorLike*>& endNodes, bool inludeEndNodes)
+    vector<TensorLike*> Graph::BuildBackwardOrder(const vector<TensorLike*>& endNodes, const vector<Variable*>& params, bool inludeEndNodes)
     {
         // we need to figure out which nodes were required to calculate end nodes
         // later on when check if all consumers were visited we will additionally check if
@@ -105,15 +105,16 @@ namespace Neuro
 
         vector<TensorLike*> result;
         unordered_set<TensorLike*> visited;
+        unordered_set<TensorLike*> visitedParams;
 
         for (auto node : endNodes)
-            ProcessBackwardNode(node, result, false, visited, required);
+            ProcessBackwardNode(node, result, params, false, visited, visitedParams, required);
 
         return result;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Graph::ProcessBackwardNode(TensorLike* node, vector<TensorLike*>& nodes, bool ignoreConsumersCheck, unordered_set<TensorLike*>& visited, const unordered_set<TensorLike*>& required)
+    void Graph::ProcessBackwardNode(TensorLike* node, vector<TensorLike*>& nodes, const vector<Variable*>& params, bool ignoreConsumersCheck, unordered_set<TensorLike*>& visited, unordered_set<TensorLike*>& visitedParams, const unordered_set<TensorLike*>& required)
     {
         bool allConsumersVisited = true;
 
@@ -143,23 +144,27 @@ namespace Neuro
         visited.insert(node);
         nodes.push_back(node);
 
+        // we can stop back propagation as soon as we have visited all desired parameters
+        if (!params.empty() && node->IsVar() && find(params.begin(), params.end(), node) != params.end())
+        {
+            visitedParams.insert(node);
+            if (visitedParams.size() == params.size())
+                return;
+        }
+
         for (auto inputNode : node->m_InputNodes)
-            ProcessBackwardNode(inputNode, nodes, false, visited, required);
+        {
+            ProcessBackwardNode(inputNode, nodes, params, false, visited, visitedParams, required);
+
+            if (!params.empty() && visitedParams.size() == params.size())
+                return;
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<Variable*> Graph::ComputeGradients(const vector<TensorLike*>& losses)
+    vector<Variable*> Graph::ComputeGradients(const vector<TensorLike*>& losses, const vector<Variable*>& params)
     {
-        auto order = BuildBackwardOrder(losses, false);
-        
-        /*for (auto loss : losses)
-        {
-            loss->OutputGrad().Resize(loss->GetShape());
-            loss->OutputGrad().One();
-            if (loss->IsOp())
-                static_cast<Operation*>(loss)->ComputeGradient(loss->OutputGrad());
-        }*/
-
+        auto order = BuildBackwardOrder(losses, params, false);
         return ComputeGradientsInOrder(order);
     }
 

@@ -37,7 +37,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void SGD::MinimizationOperation::ComputeInternal()
     {
-        auto vars = Graph::Default()->ComputeGradients(m_InputNodes);
+        auto vars = Graph::Default()->ComputeGradients(m_InputNodes, m_Vars);
         float batchSize = (float)m_Inputs[0]->Batch(); // assuming all inputs have the same batch size
 
         for (auto v : vars)

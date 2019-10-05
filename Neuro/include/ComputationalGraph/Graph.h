@@ -31,16 +31,16 @@ namespace Neuro
         // Builds nodes visitation order for forward pass
         vector<TensorLike*> BuildForwardOrder(const vector<TensorLike*>& endNodes);
         // Builds nodes visitation order for backward/gradients computation pass
-        vector<TensorLike*> BuildBackwardOrder(const vector<TensorLike*>& endNodes, bool inludeEndNodes = true);
+        vector<TensorLike*> BuildBackwardOrder(const vector<TensorLike*>& endNodes, const vector<Variable*>& params = {}, bool inludeEndNodes = true);
 
-        vector<Variable*> ComputeGradients(const vector<TensorLike*>& losses);
+        vector<Variable*> ComputeGradients(const vector<TensorLike*>& losses, const vector<Variable*>& params);
         vector<Variable*> ComputeGradientsInOrder(const vector<TensorLike*>& order);
 
         void DebugLog();
 
     private:
         void ProcessForwardNode(TensorLike* node, vector<TensorLike*>& nodes, unordered_set<TensorLike*>& visited);
-        void ProcessBackwardNode(TensorLike* node, vector<TensorLike*>& nodes, bool ignoreConsumersCheck, unordered_set<TensorLike*>& visited, const unordered_set<TensorLike*>& required);
+        void ProcessBackwardNode(TensorLike* node, vector<TensorLike*>& nodes, const vector<Variable*>& params, bool ignoreConsumersCheck, unordered_set<TensorLike*>& visited, unordered_set<TensorLike*>& visitedParams, const unordered_set<TensorLike*>& required);
 
         vector<Placeholder*> m_Placeholders;
         vector<Operation*> m_Operations;
