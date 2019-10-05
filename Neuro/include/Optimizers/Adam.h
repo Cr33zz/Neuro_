@@ -20,7 +20,7 @@ namespace Neuro
         class MinimizationOperation : public Operation
         {
         public:
-            MinimizationOperation(const vector<TensorLike*>& losses, const vector<Variable*>& vars, Adam* owner) : Operation(losses, "adam_minimize"), m_Owner(owner), m_Vars(vars) {}
+            MinimizationOperation(const vector<TensorLike*>& losses, const vector<Variable*>& vars, Adam* owner);
         protected:
             virtual void ComputeInternal();
             virtual void ComputeGradientInternal(const Tensor& grad) {}
@@ -29,6 +29,7 @@ namespace Neuro
             vector<Variable*> m_Vars;
             vector<Tensor> m_MGradients;
             vector<Tensor> m_VGradients;
+            vector<TensorLike*> m_Order;
         };
 
     private:

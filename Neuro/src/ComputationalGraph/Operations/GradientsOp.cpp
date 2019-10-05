@@ -8,6 +8,7 @@ namespace Neuro
     GradientsOp::GradientsOp(TensorLike* y, const vector<Variable*>& params, const string& name)
         : Operation({ y }, name.empty() ? "gradients" : name), m_Vars(params)
     {
+        m_Order = Graph::Default()->BuildBackwardOrder({ y }, params, false);
         for (auto param : params)
         {
             m_Grads.push_back(new Variable(zeros(param->Output().GetShape()), param->Name() + "_grad"));
@@ -18,7 +19,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void GradientsOp::ComputeInternal()
     {
-        m_InputNodes[0]->GetGraph()->ComputeGradients(m_InputNodes, m_Vars);
+        m_InputNodes[0]->GetGraph()->ComputeGradientsInOrder(m_Order, m_Vars);
         for (size_t i = 0; i < m_Vars.size(); ++i)
             m_Vars[i]->OutputGrad().CopyTo(m_Grads[i]->Output());
     }

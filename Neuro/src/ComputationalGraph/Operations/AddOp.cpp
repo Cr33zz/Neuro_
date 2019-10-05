@@ -20,22 +20,31 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void AddOp::ComputeGradientInternal(const Tensor& grad)
     {
-        auto& a = *m_Inputs[0];
-        auto& b = *m_Inputs[1];
-
-        auto gradWrtA = grad;
-        auto gradWrtB = grad;
-
-        for (int i = WidthAxis; i <= BatchAxis; ++i)
+        auto progressGrad = [&](size_t idx)
         {
-            if (gradWrtA.Len(i) != 1 && a.Len(i) == 1)
-                gradWrtA = sum(gradWrtA, (EAxis)i);
+            auto& gShape = grad.GetShape();
+            auto& iShape = m_Inputs[idx]->GetShape();
 
-            if (gradWrtB.Len(i) != 1 && b.Len(i) == 1)
-                gradWrtB = sum(gradWrtB, (EAxis)i);
-        }
+            if (gShape == iShape)
+                grad.CopyTo(m_InputsGrads[idx]);
+            // check common cases to utilize optimized sum for combinations of axes
+            else if (gShape.Width() == iShape.Width() && gShape.Height() == iShape.Height() && gShape.Depth() == iShape.Depth() && iShape.Batch() == 1)
+                grad.Sum(BatchAxis, m_InputsGrads[idx]); // used in case of biases in dense layers
+            else if (iShape.Width() == 1 && iShape.Height() == 1 && gShape.Depth() == iShape.Depth() && iShape.Batch() == 1)
+                grad.Sum(_013Axes, m_InputsGrads[idx]); // used in case of biases in convolutional layers
+            else
+            {
+                auto gradTemp = grad;
+                for (int i = WidthAxis; i <= BatchAxis; ++i)
+                {
+                    if (gradTemp.Len(i) != 1 && m_Inputs[idx]->Len(i) == 1)
+                        gradTemp = sum(gradTemp, (EAxis)i);
+                }
+                gradTemp.CopyTo(m_InputsGrads[idx]);
+            }
+        };
 
-        gradWrtA.CopyTo(m_InputsGrads[0]);
-        gradWrtB.CopyTo(m_InputsGrads[1]);
+        progressGrad(0);
+        progressGrad(1);
     }
 }

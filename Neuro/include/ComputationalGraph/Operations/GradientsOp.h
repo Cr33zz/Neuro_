@@ -20,6 +20,7 @@ namespace Neuro
     private:
         vector<Variable*> m_Vars;
         vector<TensorLike*> m_Grads;
+        vector<TensorLike*> m_Order;
     };
 
     static vector<TensorLike*> gradients(TensorLike* y, const vector<Variable*>& vars, const string& name = "")

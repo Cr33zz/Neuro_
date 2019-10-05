@@ -35,9 +35,16 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
+    SGD::MinimizationOperation::MinimizationOperation(const vector<TensorLike*>& losses, const vector<Variable*>& vars, SGD* owner)
+        : Operation(losses, "sgd_minimize"), m_Owner(owner), m_Vars(vars)
+    {
+        m_Order = Graph::Default()->BuildBackwardOrder(losses, vars, false);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void SGD::MinimizationOperation::ComputeInternal()
     {
-        auto vars = Graph::Default()->ComputeGradients(m_InputNodes, m_Vars);
+        auto vars = Graph::Default()->ComputeGradientsInOrder(m_Order, m_Vars);
         float batchSize = (float)m_Inputs[0]->Batch(); // assuming all inputs have the same batch size
 
         for (auto v : vars)

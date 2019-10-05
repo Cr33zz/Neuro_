@@ -18,13 +18,15 @@ namespace Neuro
         class MinimizationOperation : public Operation
         {
         public:
-            MinimizationOperation(const vector<TensorLike*>& losses, const vector<Variable*>& vars, SGD* owner) :Operation(losses, "sgd_minimize"), m_Owner(owner), m_Vars(vars) {}
+            MinimizationOperation(const vector<TensorLike*>& losses, const vector<Variable*>& vars, SGD* owner);
         protected:
             virtual void ComputeInternal();
             virtual void ComputeGradientInternal(const Tensor& grad) {}
 
+        private:
             SGD* m_Owner;
             vector<Variable*> m_Vars;
+            vector<TensorLike*> m_Order;
         };
 
         float m_LearningRate;
