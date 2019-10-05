@@ -6,12 +6,17 @@ namespace Neuro
     MergeOp::MergeOp(const vector<TensorLike*>& xs, EMergeMode mode, const string& name)
         : Operation(xs, name.empty() ? "merge" : name), m_Mode(mode)
     {
+        auto& shape0 = xs[0]->GetShape();
+        for (size_t i = 0; i < xs.size(); ++i)
+            assert(xs[i]->GetShape() == shape0);
+        
+        m_Output.Resize(shape0);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void MergeOp::ComputeInternal()
     {
-        m_Output.Resize(m_Inputs[0]->GetShape());
+        m_Output.ResizeBatch(m_Inputs[0]->Batch());
 
         switch (m_Mode)
         {

@@ -149,6 +149,7 @@ namespace Neuro
 
         // Changes shape and resizes values if neccessary.
         void Resize(const Shape& shape);
+        void ResizeBatch(uint32_t batch);
 
         // Create new tensor with different batch length and use current tensors values to fill the new tensor.
         // Number of batches will be the same as in source tensor.
@@ -367,6 +368,7 @@ namespace Neuro
 
     Tensor operator*(const Tensor& t1, const Tensor& t2);
     Tensor operator*(const Tensor& t, float v);
+    Tensor operator/(const Tensor& t1, const Tensor& t2);
     Tensor operator/(const Tensor& t, float v);
     Tensor operator/(float v, const Tensor& t);
     Tensor operator+(const Tensor& t1, const Tensor& t2);

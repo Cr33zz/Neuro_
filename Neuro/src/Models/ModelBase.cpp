@@ -147,9 +147,10 @@ namespace Neuro
         m_Metrics["loss"] = make_pair(totalLoss, fetchOps.size() - 1);
         // any additional metrics should go in here
 
-        //GetParams()
+        vector<Variable*> params;
+        Parameters(params);
 
-        fetchOps.push_back(optimizer->Minimize(losses));
+        fetchOps.push_back(optimizer->Minimize(losses, params));
 
         for (auto inLayer : ModelInputLayers())
         {

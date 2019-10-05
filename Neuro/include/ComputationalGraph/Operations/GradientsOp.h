@@ -9,20 +9,20 @@ namespace Neuro
     class GradientsOp : public Operation
     {
     public:
-        GradientsOp(TensorLike* y, vector<Variable*> vars, const string& name = "");
+        GradientsOp(TensorLike* y, const vector<Variable*>& vars, const string& name = "");
 
         vector<TensorLike*> Grads() { return m_Grads; }
 
     protected:
         virtual void ComputeInternal() override;
-        virtual void ComputeGradientInternal(const Tensor& grad) override {}
+        virtual void ComputeGradientInternal(const Tensor& grad) override { assert(false); }
 
     private:
         vector<Variable*> m_Vars;
         vector<TensorLike*> m_Grads;
     };
 
-    static vector<TensorLike*> gradients(TensorLike* y, vector<Variable*> vars, const string& name = "")
+    static vector<TensorLike*> gradients(TensorLike* y, const vector<Variable*>& vars, const string& name = "")
     {
         return (new GradientsOp(y, vars, name))->Grads();
     }

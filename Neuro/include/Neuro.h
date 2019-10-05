@@ -51,6 +51,7 @@
 #include "ComputationalGraph/Session.h"
 #include "ComputationalGraph/Variable.h"
 #include "ComputationalGraph/Constant.h"
+#include "ComputationalGraph/NameScope.h"
 
 #include "ComputationalGraph/Ops.h"
 

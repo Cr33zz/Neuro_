@@ -6,12 +6,13 @@ namespace Neuro
     SoftmaxOp::SoftmaxOp(TensorLike* x, const string& name)
         : Operation({ x }, name.empty() ? "softmax" : name)
     {
+        m_Output.Resize(x->GetShape());
     }
 
     //////////////////////////////////////////////////////////////////////////
     void SoftmaxOp::ComputeInternal()
     {
-        m_Output.Resize(m_Inputs[0]->GetShape());
+        m_Output.ResizeBatch(m_Inputs[0]->Batch());
         m_Inputs[0]->Softmax(m_Output);
     }
 

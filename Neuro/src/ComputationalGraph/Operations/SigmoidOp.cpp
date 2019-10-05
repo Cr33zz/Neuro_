@@ -6,12 +6,13 @@ namespace Neuro
     SigmoidOp::SigmoidOp(TensorLike* x, const string& name)
         : Operation({ x }, name.empty() ? "sigmoid" : name)
     {
+        m_Output.Resize(x->GetShape());
     }
 
     //////////////////////////////////////////////////////////////////////////
     void SigmoidOp::ComputeInternal()
     {
-        m_Output.Resize(m_Inputs[0]->GetShape());
+        m_Output.ResizeBatch(m_Inputs[0]->Batch());
         m_Inputs[0]->Sigmoid(m_Output);
     }
 

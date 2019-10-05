@@ -6,12 +6,13 @@ namespace Neuro
     ClipOp::ClipOp(TensorLike* x, float min, float max, const string& name)
         : Operation({ x }, name.empty() ? "clip" : name), m_Min(min), m_Max(max)
     {
+        m_Output.Resize(x->GetShape());
     }
 
     //////////////////////////////////////////////////////////////////////////
     void ClipOp::ComputeInternal()
     {
-        m_Output.Resize(m_Inputs[0]->GetShape());
+        m_Output.ResizeBatch(m_Inputs[0]->Batch());
         m_Inputs[0]->Clipped(m_Min, m_Max, m_Output);
     }
 

@@ -6,12 +6,13 @@ namespace Neuro
     EluOp::EluOp(TensorLike* x, float alpha, const string& name)
         : Operation({ x }, name.empty() ? "elu" : name), m_Alpha(alpha)
     {
+        m_Output.Resize(x->GetShape());
     }
 
     //////////////////////////////////////////////////////////////////////////
     void EluOp::ComputeInternal()
     {
-        m_Output.Resize(m_Inputs[0]->GetShape());
+        m_Output.ResizeBatch(m_Inputs[0]->Batch());
         m_Inputs[0]->Elu(m_Alpha, m_Output);
     }
 

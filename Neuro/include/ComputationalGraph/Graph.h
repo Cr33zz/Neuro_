@@ -24,6 +24,10 @@ namespace Neuro
         void AddPlaceholder(Placeholder* p);
         void AddOperation(Operation* op);
 
+        const vector<Variable*>& Variables() const { return m_Variables; }
+        const vector<Placeholder*>& Placeholders() const { return m_Placeholders; }
+        const vector<Operation*>& Operations() const { return m_Operations; }
+
         void InitVariables();
         void IncrementStep();
         uint32_t CurrentStep() const { return m_CurrentStep; }
@@ -34,7 +38,7 @@ namespace Neuro
         vector<TensorLike*> BuildBackwardOrder(const vector<TensorLike*>& endNodes, const vector<Variable*>& params = {}, bool inludeEndNodes = true);
 
         vector<Variable*> ComputeGradients(const vector<TensorLike*>& losses, const vector<Variable*>& params);
-        vector<Variable*> ComputeGradientsInOrder(const vector<TensorLike*>& order);
+        vector<Variable*> ComputeGradientsInOrder(const vector<TensorLike*>& order, const vector<Variable*>& params);
 
         void DebugLog();
 

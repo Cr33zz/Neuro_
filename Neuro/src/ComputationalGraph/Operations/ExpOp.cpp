@@ -6,12 +6,13 @@ namespace Neuro
     ExpOp::ExpOp(TensorLike* x, const string& name)
         : Operation({ x }, name.empty() ? "exp" : name)
     {
+        m_Output.Resize(x->GetShape());
     }
 
     //////////////////////////////////////////////////////////////////////////
     void ExpOp::ComputeInternal()
     {
-        m_Output.Resize(m_Inputs[0]->GetShape());
+        m_Output.ResizeBatch(m_Inputs[0]->Batch());
         m_Inputs[0]->Map([](float x) {return ::exp(x); }, m_Output);
     }
 

@@ -6,12 +6,13 @@ namespace Neuro
     LogOp::LogOp(TensorLike* x, const string& name)
         : Operation({ x }, name.empty() ? "log" : name)
     {
+        m_Output.Resize(x->GetShape());
     }
 
     //////////////////////////////////////////////////////////////////////////
     void LogOp::ComputeInternal()
     {
-        m_Output.Resize(m_Inputs[0]->GetShape());
+        m_Output.ResizeBatch(m_Inputs[0]->Batch());
         m_Inputs[0]->Map([](float x) {return ::log(x); }, m_Output);
     }
 

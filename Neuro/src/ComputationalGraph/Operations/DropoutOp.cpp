@@ -6,6 +6,7 @@ namespace Neuro
     DropoutOp::DropoutOp(TensorLike* x, float prob, TensorLike* training, const string& name)
         : Operation({ x, training }, name.empty() ? "dropout" : name), m_Prob(prob)
     {
+        m_Output.Resize(x->GetShape());
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -14,7 +15,7 @@ namespace Neuro
         auto& x = *m_Inputs[0];
         bool training = (*m_Inputs[1])(0) != 0;
 
-        m_Output.Resize(m_Inputs[0]->GetShape());
+        m_Output.ResizeBatch(m_Inputs[0]->Batch());
         if (training)
         {
             m_Mask.Resize(m_Inputs[0]->GetShape());

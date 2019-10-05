@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\ComputationalGraphTests.cpp" />
     <ClCompile Include="src\ModelTests.cpp" />
     <ClCompile Include="src\RandomTests.cpp" />
     <ClCompile Include="src\ShapeTests.cpp" />

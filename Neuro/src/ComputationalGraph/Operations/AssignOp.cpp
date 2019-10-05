@@ -6,18 +6,12 @@ namespace Neuro
     AssignOp::AssignOp(TensorLike* x, TensorLike* val, const string& name)
         : Operation({ x, val }, name.empty() ? "assign" : name)
     {
+        assert(x->GetShape() == val->GetShape());
     }
 
     //////////////////////////////////////////////////////////////////////////
     void AssignOp::ComputeInternal()
     {
-        m_Output.Resize(m_Inputs[0]->GetShape());
-        m_Inputs[0]->CopyTo(m_Output);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void AssignOp::ComputeGradientInternal(const Tensor& grad)
-    {
-        grad.CopyTo(m_InputsGrads[0]);
+        m_Inputs[1]->CopyTo(m_InputNodes[0]->Output());
     }
 }

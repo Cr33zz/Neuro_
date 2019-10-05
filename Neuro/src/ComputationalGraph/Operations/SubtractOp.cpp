@@ -7,19 +7,13 @@ namespace Neuro
     SubtractOp::SubtractOp(TensorLike* a, TensorLike* b, const string& name)
         : Operation({ a, b }, name.empty() ? "sub" : name)
     {
-        /*for (uint32_t i = 0; i < a->GetShape().NDim; ++i)
-            assert(max(a->GetShape().Len(i), b->GetShape().Len(i)) % min(a->GetShape().Len(i), b->GetShape().Len(i)) == 0);*/
+        m_Output.Resize(Shape(max(a->GetShape().Width(), b->GetShape().Width()), max(a->GetShape().Height(), b->GetShape().Height()), max(a->GetShape().Depth(), b->GetShape().Depth())));
     }
 
     //////////////////////////////////////////////////////////////////////////
     void SubtractOp::ComputeInternal()
     {
-        m_Output.Resize(Shape(
-            max(m_Inputs[0]->Len(0), m_Inputs[1]->Len(0)),
-            max(m_Inputs[0]->Len(1), m_Inputs[1]->Len(1)),
-            max(m_Inputs[0]->Len(2), m_Inputs[1]->Len(2)),
-            max(m_Inputs[0]->Len(3), m_Inputs[1]->Len(3))));
-
+        m_Output.ResizeBatch(max(m_Inputs[0]->Batch(), m_Inputs[1]->Batch()));
         return m_Inputs[0]->Sub(*m_Inputs[1], m_Output);
     }
 

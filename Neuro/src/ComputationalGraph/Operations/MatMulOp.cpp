@@ -7,8 +7,7 @@ namespace Neuro
     MatMulOp::MatMulOp(TensorLike* a, TensorLike* b, const string& name)
         : Operation({ a, b }, name.empty() ? "matmul" : name)
     {
-        /*assert(a->GetShape().Width() == b->GetShape().Height());
-        assert(a->GetShape().Depth() == b->GetShape().Depth());*/
+        m_Output.Resize(Shape(b->GetShape().Width(), a->GetShape().Height(), a->GetShape().Depth()));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -17,7 +16,7 @@ namespace Neuro
         auto& a = *m_Inputs[0];
         auto& b = *m_Inputs[1];
 
-        m_Output.Resize(Shape(b.Width(), a.Height(), a.Depth(), max(a.Batch(), b.Batch())));
+        m_Output.ResizeBatch(max(a.Batch(), b.Batch()));
         a.Mul(b, m_Output);
     }
 

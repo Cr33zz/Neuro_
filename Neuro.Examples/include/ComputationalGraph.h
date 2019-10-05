@@ -14,29 +14,89 @@ class ComputationalGraph
 public:
     void Run()
     {
-        auto x1 = new Placeholder(Shape(5));
-        auto x2 = new Placeholder(Shape(5));
+        GlobalRngSeed(100);
+        vector<TensorLike*> fetches;
+
+        auto x = new Placeholder(Shape(5));
         auto y = new Placeholder(Shape(2));
 
         auto w = new Variable(Tensor(Shape(2, 5)).FillWithRand());
         auto b = new Variable(Tensor(Shape(2)).FillWithRand());
 
-        auto o = concat({ x1, x2 }, BatchAxis);
-        o = sigmoid(add(matmul(o, w), b)); // dense layer
+        auto o = add(matmul(x, w), b); // dense layer
 
-        auto loss = mean(multiply(negative(y), log(o))); //cross-entropy loss
+        auto loss = multiply(square(subtract(o, y)), new Constant(0.5f));
+        fetches.push_back(loss);
 
-        auto minimizeOp = SGD(0.04f).Minimize({ loss });
+        /*auto minimizeOp = SGD(0.04f).Minimize({ loss });
+        fetches.push_back(minimizeOp);*/
 
-        auto input1 = Uniform::Random(-1, 1, x1->GetShape());
-        auto input2 = Uniform::Random(-1, 1, x2->GetShape());
-        auto output = Uniform::Random(0, 1, y->GetShape());
+        /*{NameScope scope("SGD");
+            auto variables = Graph::Default()->Variables();
+            auto grads = gradients(loss, variables);
+
+            auto learningRate = new Constant(0.04f, "learning_rate");
+                
+            for (size_t i = 0; i < grads.size(); ++i)
+            {
+                auto p = variables[i];
+                auto g = grads[i];
+                    
+                {NameScope scope(p->Name());
+                    auto p_t = sub(p, multiply(learningRate, g));
+                    fetches.push_back(assign(p, p_t));
+                }
+            }
+        }*/
+
+        auto minimizeOp = Adam(0.04f).Minimize({ loss });
+        fetches.push_back(minimizeOp);
+
+        /*{
+            NameScope scope("Adam");
+            auto variables = Graph::Default()->Variables();
+            auto grads = gradients(loss, variables);
+
+            auto learningRate = new Constant(0.04f, "learning_rate");
+            auto beta1 = new Constant(0.04f, "beta1");
+            auto beta2 = new Constant(0.04f, "beta2");
+            auto epsilon = new Constant(0.0001f, "epsilon");
+            auto iteration = new Variable(0, "iteration");
+
+            auto t = add(iteration, new Constant(1));
+            auto lr_t = multiply(learningRate, div(sqrt(sub(new Constant(1), pow(beta2, t))), sub(new Constant(1), pow(beta1, t))));
+
+            for (size_t i = 0; i < grads.size(); ++i)
+            {
+                auto p = variables[i];
+                auto g = grads[i];
+
+                auto m = new Variable(zeros(p->GetShape()), "m");
+                auto v = new Variable(zeros(p->GetShape()), "v");
+
+                {NameScope scope(p->Name());
+                auto m_t = add(multiply(beta1, m), multiply(sub(new Constant(1), beta1), g));
+                auto v_t = add(multiply(beta2, v), multiply(sub(new Constant(1), beta2), square(g)));
+                auto p_t = sub(p, div(multiply(lr_t, m_t), add(sqrt(v_t), epsilon)));
+
+                fetches.push_back(assign(m, m_t));
+                fetches.push_back(assign(v, v_t));
+                fetches.push_back(assign(p, p_t));
+                }
+            }
+        }*/
+
+        auto input = Uniform::Random(-1, 1, x->GetShape());
+        auto output = input.Mul(Tensor(Shape(2, 5)).FillWithRand());
 
         for (int step = 0; step < 200; ++step)
         {
-            auto result = Session::Default()->Run({ o, loss, minimizeOp }, { {x1, &input1}, {x2, &input2}, {y, &output} });
-
-            cout << "step: " << step << " loss: " << (*result[1])(0) << endl;
+            auto result = Session::Default()->Run({ fetches }, { {x, &input}, {y, &output} });
+            cout << "step: " << step << " loss: " << (*result[0])(0) << endl;
         }
+
+        auto result = Session::Default()->Run({ o }, { {x, &input} });
+
+        cin.get();
     }
 };

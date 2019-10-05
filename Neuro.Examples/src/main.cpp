@@ -40,7 +40,7 @@ int main()
 
 
     //ComputationalGraph().Run();
-    IrisNetwork().Run();
+    //IrisNetwork().Run();
     ConvNetwork().Run();
     FlowNetwork().Run();
     MnistConvNetwork().Run();

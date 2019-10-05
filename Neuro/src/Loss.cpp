@@ -34,7 +34,7 @@ namespace Neuro
     TensorLike* MeanSquareError::Build(TensorLike* targetOutput, TensorLike* output)
     {
         NameScope scope("mean_square_error");
-        return multiply(pow(subtract(output, targetOutput), 2), new Constant(0.5f));
+        return multiply(square(subtract(output, targetOutput)), new Constant(0.5f));
     }
 
 	//////////////////////////////////////////////////////////////////////////

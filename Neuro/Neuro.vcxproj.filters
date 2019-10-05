@@ -339,6 +339,9 @@
     <ClInclude Include="include\Debug.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\DivideOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -580,6 +583,9 @@
     </ClCompile>
     <ClCompile Include="src\Debug.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\DivideOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

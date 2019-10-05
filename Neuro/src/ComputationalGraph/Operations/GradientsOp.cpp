@@ -5,12 +5,12 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    GradientsOp::GradientsOp(TensorLike* y, vector<Variable*> params, const string& name)
+    GradientsOp::GradientsOp(TensorLike* y, const vector<Variable*>& params, const string& name)
         : Operation({ y }, name.empty() ? "gradients" : name), m_Vars(params)
     {
         for (auto param : params)
         {
-            m_Grads.push_back(new Variable(Tensor(param->Output().GetShape()).FillWithValue(0)));
+            m_Grads.push_back(new Variable(zeros(param->Output().GetShape()), param->Name() + "_grad"));
             m_Grads.back()->AddInputNode(this); // build one-way connection required for forward pass
         }
     }

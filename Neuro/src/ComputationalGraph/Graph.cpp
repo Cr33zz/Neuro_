@@ -168,11 +168,11 @@ namespace Neuro
     vector<Variable*> Graph::ComputeGradients(const vector<TensorLike*>& losses, const vector<Variable*>& params)
     {
         auto order = BuildBackwardOrder(losses, params, false);
-        return ComputeGradientsInOrder(order);
+        return ComputeGradientsInOrder(order, params);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<Variable*> Graph::ComputeGradientsInOrder(const vector<TensorLike*>& order)
+    vector<Variable*> Graph::ComputeGradientsInOrder(const vector<TensorLike*>& order, const vector<Variable*>& params)
     {
         vector<Variable*> variables;
         
@@ -180,8 +180,8 @@ namespace Neuro
         {
             auto node = order[n];
 
-            if (Variable* v = dynamic_cast<Variable*>(node))
-                variables.push_back(v);
+            if (node->IsVar() && (params.empty() || find(params.begin(), params.end(), node) != params.end()))
+                variables.push_back(static_cast<Variable*>(node));
 
             auto& nodeOutputGrad = node->m_OutputGrad;
             nodeOutputGrad.Resize(node->m_Output.GetShape());

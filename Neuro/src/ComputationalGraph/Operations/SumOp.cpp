@@ -6,12 +6,6 @@ namespace Neuro
     SumOp::SumOp(TensorLike* x, EAxis axis, const string& name)
         : Operation({ x }, name.empty() ? "sum" : name), m_Axis(axis)
     {
-        assert(axis <= BatchAxis);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void SumOp::ComputeInternal()
-    {
         if (m_Axis == GlobalAxis)
             m_Output.Resize(Shape(1, 1, 1, 1));
         else if (m_Axis == WidthAxis)
@@ -22,6 +16,15 @@ namespace Neuro
             m_Output.Resize(Shape(m_Inputs[0]->Len(0), m_Inputs[0]->Len(1), 1, m_Inputs[0]->Len(3)));
         else if (m_Axis == BatchAxis)
             m_Output.Resize(Shape(m_Inputs[0]->Len(0), m_Inputs[0]->Len(1), m_Inputs[0]->Len(2), 1));
+        else
+            assert(false);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void SumOp::ComputeInternal()
+    {
+        if (m_Axis == WidthAxis || m_Axis == HeightAxis || m_Axis == DepthAxis)
+            m_Output.ResizeBatch(m_Inputs[0]->Batch());
 
         m_Inputs[0]->Sum(m_Axis, m_Output);
     }

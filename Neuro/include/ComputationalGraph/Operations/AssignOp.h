@@ -11,7 +11,7 @@ namespace Neuro
 
     protected:
         virtual void ComputeInternal() override;
-        virtual void ComputeGradientInternal(const Tensor& grad) override;
+        virtual void ComputeGradientInternal(const Tensor& grad) override { assert(false); }
     };
 
     static Operation* assign(TensorLike* x, TensorLike* val, const string& name = "")

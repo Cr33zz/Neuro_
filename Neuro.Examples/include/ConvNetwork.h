@@ -27,7 +27,7 @@ public:
         cout << "Example: " << model.Name() << endl;
         cout << model.Summary();
 
-        model.Optimize(new Adam(), new Huber(1));
+        model.Optimize(new Adam(), new BinaryCrossEntropy());
 
         auto input = Tensor(Shape(64, 64, 4, 32)); input.FillWithRand();
         auto output = Tensor(Shape(3, 1, 1, 32));

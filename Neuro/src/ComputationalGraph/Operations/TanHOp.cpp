@@ -6,12 +6,13 @@ namespace Neuro
     TanHOp::TanHOp(TensorLike* x, const string& name)
         : Operation({ x }, name.empty() ? "tanh" : name)
     {
+        m_Output.Resize(x->GetShape());
     }
 
     //////////////////////////////////////////////////////////////////////////
     void TanHOp::ComputeInternal()
     {
-        m_Output.Resize(m_Inputs[0]->GetShape());
+        m_Output.ResizeBatch(m_Inputs[0]->Batch());
         m_Inputs[0]->Tanh(m_Output);
     }
 

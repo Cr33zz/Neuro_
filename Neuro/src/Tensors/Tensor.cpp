@@ -1217,6 +1217,15 @@ namespace Neuro
             OverrideHost(); // data will have to be re-copied when necessary
     }
 
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::ResizeBatch(uint32_t batch)
+    {
+        if (Batch() == batch)
+            return;
+
+        Resize(Shape::From(m_Shape, batch));
+    }
+
 	//////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::Resized(uint32_t width, uint32_t height, uint32_t depth) const
 	{
@@ -1997,6 +2006,12 @@ namespace Neuro
     Tensor operator*(const Tensor& t, float v)
     {
         return t.Mul(v);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor operator/(const Tensor& t1, const Tensor& t2)
+    {
+        return t1.Div(t2);
     }
 
     //////////////////////////////////////////////////////////////////////////

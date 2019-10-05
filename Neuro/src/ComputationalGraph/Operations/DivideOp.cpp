@@ -1,29 +1,29 @@
 #include <algorithm>
-#include "ComputationalGraph/Operations/MultiplyOp.h"
+#include "ComputationalGraph/Operations/DivideOp.h"
 
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    MultiplyOp::MultiplyOp(TensorLike* a, TensorLike* b, const string& name)
-        : Operation({ a, b }, name.empty() ? "multiply" : name)
+    DivideOp::DivideOp(TensorLike* a, TensorLike* b, const string& name)
+        : Operation({ a, b }, name.empty() ? "divide" : name)
     {
         m_Output.Resize(Shape(max(a->GetShape().Width(), b->GetShape().Width()), max(a->GetShape().Height(), b->GetShape().Height()), max(a->GetShape().Depth(), b->GetShape().Depth())));
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void MultiplyOp::ComputeInternal()
+    void DivideOp::ComputeInternal()
     {
         m_Output.ResizeBatch(max(m_Inputs[0]->Batch(), m_Inputs[1]->Batch()));
         return m_Inputs[0]->MulElem(*m_Inputs[1], m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void MultiplyOp::ComputeGradientInternal(const Tensor& grad)
+    void DivideOp::ComputeGradientInternal(const Tensor& grad)
     {
         auto& a = *m_Inputs[0];
         auto& b = *m_Inputs[1];
 
-        auto gradWrtA = grad * b;
+        auto gradWrtA = grad / b;
         auto gradWrtB = grad * a;
 
         for (int i = WidthAxis; i <= BatchAxis; ++i)
