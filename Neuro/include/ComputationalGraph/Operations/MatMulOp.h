@@ -12,6 +12,12 @@ namespace Neuro
     protected:
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
+
+    private:
+        Tensor m_TransTempA;
+        Tensor m_MulTempA;
+        Tensor m_TransTempB;
+        Tensor m_MulTempB;
     };
 
     static Operation* matmul(TensorLike* x1, TensorLike* x2, const string& name = "")
