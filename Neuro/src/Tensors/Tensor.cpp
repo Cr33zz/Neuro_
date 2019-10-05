@@ -323,6 +323,7 @@ namespace Neuro
 	{
 		assert((!transposeT && Width() == t.Height()) || (transposeT && Width() == t.Width()));
 		assert(t.Depth() == Depth());
+        assert(result.Batch() == max(Batch(), t.Batch()));
 
 		Op()->Mul(false, transposeT, *this, t, result);
 	}

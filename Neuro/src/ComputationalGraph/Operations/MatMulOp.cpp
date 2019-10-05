@@ -27,7 +27,14 @@ namespace Neuro
         auto& a = *m_Inputs[0];
         auto& b = *m_Inputs[1];
 
-        grad.Mul(b.Transposed(), m_InputsGrads[0]);
-        a.Transposed().Mul(grad, m_InputsGrads[1]);
+        if (m_InputsGrads[0].Batch() == grad.Batch())
+            grad.Mul(b.Transposed(), m_InputsGrads[0]);
+        else
+            grad.Mul(b.Transposed()).Sum(BatchAxis, m_InputsGrads[0]);
+
+        if (m_InputsGrads[1].Batch() == grad.Batch())
+            a.Transposed().Mul(grad, m_InputsGrads[1]);
+        else
+            a.Transposed().Mul(grad).Sum(BatchAxis, m_InputsGrads[1]);
     }
 }
