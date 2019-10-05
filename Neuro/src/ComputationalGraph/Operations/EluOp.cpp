@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    EluOp::EluOp(TensorLike* x, float alpha)
-        : Operation({ x }, "elu"), m_Alpha(alpha)
+    EluOp::EluOp(TensorLike* x, float alpha, const string& name)
+        : Operation({ x }, name.empty() ? "elu" : name), m_Alpha(alpha)
     {
     }
 

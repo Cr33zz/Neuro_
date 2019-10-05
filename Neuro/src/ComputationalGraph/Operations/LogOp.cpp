@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    LogOp::LogOp(TensorLike* x)
-        : Operation({x}, "log")
+    LogOp::LogOp(TensorLike* x, const string& name)
+        : Operation({ x }, name.empty() ? "log" : name)
     {
     }
 

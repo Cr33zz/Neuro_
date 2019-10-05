@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    DropoutOp::DropoutOp(TensorLike* x, float prob, TensorLike* training)
-        : Operation({ x, training }, "dropout"), m_Prob(prob)
+    DropoutOp::DropoutOp(TensorLike* x, float prob, TensorLike* training, const string& name)
+        : Operation({ x, training }, name.empty() ? "dropout" : name), m_Prob(prob)
     {
     }
 

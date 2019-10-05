@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    MergeOp::MergeOp(const vector<TensorLike*>& xs, EMergeMode mode)
-        : Operation(xs, "merge"), m_Mode(mode)
+    MergeOp::MergeOp(const vector<TensorLike*>& xs, EMergeMode mode, const string& name)
+        : Operation(xs, name.empty() ? "merge" : name), m_Mode(mode)
     {
     }
 

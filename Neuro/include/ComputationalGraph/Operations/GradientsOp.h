@@ -7,7 +7,7 @@ namespace Neuro
     class GradientsOp : public Operation
     {
     public:
-        GradientsOp(TensorLike* y, vector<TensorLike*> params);
+        GradientsOp(TensorLike* y, vector<TensorLike*> params, const string& name = "");
 
         vector<TensorLike*> Grads() { return m_Grads; }
 
@@ -20,14 +20,14 @@ namespace Neuro
         vector<TensorLike*> m_Grads;
     };
 
-    static vector<TensorLike*> gradients(TensorLike* y, vector<TensorLike*> params)
+    static vector<TensorLike*> gradients(TensorLike* y, vector<TensorLike*> params, const string& name = "")
     {
-        return (new GradientsOp(y, params))->Grads();
+        return (new GradientsOp(y, params, name))->Grads();
     }
 
-    static vector<TensorLike*> gradients(TensorLike* y, TensorLike* param)
+    static vector<TensorLike*> gradients(TensorLike* y, TensorLike* param, const string& name = "")
     {
         vector<TensorLike*> params{ param };
-        return gradients(y, params);
+        return gradients(y, params, name);
     }
 }

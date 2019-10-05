@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    ExpOp::ExpOp(TensorLike* x)
-        : Operation({x}, "exp")
+    ExpOp::ExpOp(TensorLike* x, const string& name)
+        : Operation({ x }, name.empty() ? "exp" : name)
     {
     }
 

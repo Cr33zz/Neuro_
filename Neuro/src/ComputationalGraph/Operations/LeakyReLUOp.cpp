@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    LeakyReLUOp::LeakyReLUOp(TensorLike* x, float alpha)
-        : Operation({ x }, "leaky_relu"), m_Alpha(alpha)
+    LeakyReLUOp::LeakyReLUOp(TensorLike* x, float alpha, const string& name)
+        : Operation({ x }, name.empty() ? "leaky_relu" : name), m_Alpha(alpha)
     {
     }
 

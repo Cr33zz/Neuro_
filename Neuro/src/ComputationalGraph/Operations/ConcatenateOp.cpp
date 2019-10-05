@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    ConcatenateOp::ConcatenateOp(const vector<TensorLike*>& xs, EAxis axis)
-        : Operation(xs, "concatenate"), m_Axis(axis)
+    ConcatenateOp::ConcatenateOp(const vector<TensorLike*>& xs, EAxis axis, const string& name)
+        : Operation(xs, name.empty() ? "concatenate" : name), m_Axis(axis)
     {
         /*if (m_Axis == WidthAxis)
             m_Output.Resize(Shape(xs[0]->GetShape().Width() * (uint32_t)xs.size(), xs[0]->GetShape().Height(), xs[0]->GetShape().Depth(), xs[0]->GetShape().Batch()));

@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    ClipOp::ClipOp(TensorLike* x, float min, float max)
-        : Operation({ x }, "clip"), m_Min(min), m_Max(max)
+    ClipOp::ClipOp(TensorLike* x, float min, float max, const string& name)
+        : Operation({ x }, name.empty() ? "clip" : name), m_Min(min), m_Max(max)
     {
     }
 

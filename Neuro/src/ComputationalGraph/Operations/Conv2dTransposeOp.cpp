@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Conv2dTransposeOp::Conv2dTransposeOp(TensorLike* x, TensorLike* kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat)
-        : Operation({ x, kernels }, "conv2dtranspose"), m_Stride(stride), m_Padding(padding), m_DataFormat(dataFormat)
+    Conv2dTransposeOp::Conv2dTransposeOp(TensorLike* x, TensorLike* kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, const string& name)
+        : Operation({ x, kernels }, name.empty() ? "conv2dtranspose" : name), m_Stride(stride), m_Padding(padding), m_DataFormat(dataFormat)
     {
     }
 

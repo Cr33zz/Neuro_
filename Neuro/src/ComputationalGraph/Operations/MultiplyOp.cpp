@@ -4,8 +4,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    MultiplyOp::MultiplyOp(TensorLike* a, TensorLike* b)
-        : Operation({a, b}, "multiply")
+    MultiplyOp::MultiplyOp(TensorLike* a, TensorLike* b, const string& name)
+        : Operation({ a, b }, name.empty() ? "multiply" : name)
     {
         /*for (uint32_t i = 0; i < a->GetShape().NDim; ++i)
             assert(max(a->GetShape().Len(i), b->GetShape().Len(i)) % min(a->GetShape().Len(i), b->GetShape().Len(i)) == 0);*/

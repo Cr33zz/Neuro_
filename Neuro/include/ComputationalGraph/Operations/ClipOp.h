@@ -7,7 +7,7 @@ namespace Neuro
     class ClipOp : public Operation
     {
     public:
-        ClipOp(TensorLike* x, float min, float max);
+        ClipOp(TensorLike* x, float min, float max, const string& name = "");
 
     protected:
         virtual void ComputeInternal() override;
@@ -18,8 +18,8 @@ namespace Neuro
         float m_Max;
     };
 
-    static Operation* clip(TensorLike* x, float min, float max)
+    static Operation* clip(TensorLike* x, float min, float max, const string& name = "")
     {
-        return new ClipOp(x, min, max);
+        return new ClipOp(x, min, max, name);
     }
 }

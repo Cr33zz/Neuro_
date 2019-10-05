@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    UpSample2dOp::UpSample2dOp(TensorLike* x, int scaleFactor)
-        : Operation({x}, "upsample2d"), m_ScaleFactor(scaleFactor)
+    UpSample2dOp::UpSample2dOp(TensorLike* x, int scaleFactor, const string& name)
+        : Operation({ x }, name.empty() ? "upsample2d" : name), m_ScaleFactor(scaleFactor)
     {
     }
 

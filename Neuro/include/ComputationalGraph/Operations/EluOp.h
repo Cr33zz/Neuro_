@@ -7,7 +7,7 @@ namespace Neuro
     class EluOp : public Operation
     {
     public:
-        EluOp(TensorLike* x, float alpha);
+        EluOp(TensorLike* x, float alpha, const string& name = "");
 
     protected:
         virtual void ComputeInternal() override;
@@ -17,8 +17,8 @@ namespace Neuro
         float m_Alpha;
     };
 
-    static Operation* elu(TensorLike* x, float alpha)
+    static Operation* elu(TensorLike* x, float alpha, const string& name = "")
     {
-        return new EluOp(x, alpha);
+        return new EluOp(x, alpha, name);
     }
 }

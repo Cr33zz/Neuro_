@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    PowOp::PowOp(TensorLike* x, float p)
-        : Operation({ x }, "pow"), m_Power(p)
+    PowOp::PowOp(TensorLike* x, float p, const string& name)
+        : Operation({ x }, name.empty() ? "pow" : name), m_Power(p)
     {
     }
 

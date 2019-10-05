@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    ReshapeOp::ReshapeOp(TensorLike* x, const Shape& shape)
-        : Operation({x}, "reshape"), m_Shape(shape)
+    ReshapeOp::ReshapeOp(TensorLike* x, const Shape& shape, const string& name)
+        : Operation({ x }, name.empty() ? "reshape" : name), m_Shape(shape)
     {
     }
 

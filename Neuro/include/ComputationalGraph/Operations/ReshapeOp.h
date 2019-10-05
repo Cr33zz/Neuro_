@@ -7,7 +7,7 @@ namespace Neuro
     class ReshapeOp : public Operation
     {
     public:
-        ReshapeOp(TensorLike* x, const Shape& shape);
+        ReshapeOp(TensorLike* x, const Shape& shape, const string& name = "");
 
     protected:
         virtual void ComputeInternal() override;
@@ -17,8 +17,8 @@ namespace Neuro
         Shape m_Shape;
     };
 
-    static Operation* reshape(TensorLike* x, const Shape& shape)
+    static Operation* reshape(TensorLike* x, const Shape& shape, const string& name = "")
     {
-        return new ReshapeOp(x, shape);
+        return new ReshapeOp(x, shape, name);
     }
 }

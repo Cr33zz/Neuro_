@@ -7,7 +7,7 @@ namespace Neuro
     class Conv2dTransposeOp : public Operation
     {
     public:
-        Conv2dTransposeOp(TensorLike* x, TensorLike* kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat = NCHW);
+        Conv2dTransposeOp(TensorLike* x, TensorLike* kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat = NCHW, const string& name = "");
 
     protected:
         virtual void ComputeInternal() override;
@@ -20,8 +20,8 @@ namespace Neuro
         EDataFormat m_DataFormat;
     };
 
-    static Operation* conv2d_transpose(TensorLike* x, TensorLike* kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat)
+    static Operation* conv2d_transpose(TensorLike* x, TensorLike* kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, const string& name = "")
     {
-        return new Conv2dTransposeOp(x, kernels, stride, padding, dataFormat);
+        return new Conv2dTransposeOp(x, kernels, stride, padding, dataFormat, name);
     }
 }

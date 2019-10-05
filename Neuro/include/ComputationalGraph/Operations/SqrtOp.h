@@ -7,15 +7,15 @@ namespace Neuro
     class SqrtOp : public Operation
     {
     public:
-        SqrtOp(TensorLike* x);
+        SqrtOp(TensorLike* x, const string& name = "");
 
     protected:
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
     };
 
-    static Operation* sqrt(TensorLike* x)
+    static Operation* sqrt(TensorLike* x, const string& name = "")
     {
-        return new SqrtOp(x);
+        return new SqrtOp(x, name);
     }
 }

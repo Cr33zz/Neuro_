@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    BatchNormalizeOp::BatchNormalizeOp(TensorLike* x, TensorLike* gamma, TensorLike* beta, TensorLike* runningMean, TensorLike* runningVar, float momentum, float epsilon, TensorLike* training)
-        : Operation({ x, gamma, beta, runningMean, runningVar, training }, "batch_normalize"), m_Epsilon(epsilon), m_Momentum(momentum)
+    BatchNormalizeOp::BatchNormalizeOp(TensorLike* x, TensorLike* gamma, TensorLike* beta, TensorLike* runningMean, TensorLike* runningVar, float momentum, float epsilon, TensorLike* training, const string& name)
+        : Operation({ x, gamma, beta, runningMean, runningVar, training }, name.empty() ? "batch_normalize" : name), m_Epsilon(epsilon), m_Momentum(momentum)
     {
     }
 

@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    AssignOp::AssignOp(TensorLike* x, TensorLike* val)
-        : Operation({ x, val }, "assign")
+    AssignOp::AssignOp(TensorLike* x, TensorLike* val, const string& name)
+        : Operation({ x, val }, name.empty() ? "assign" : name)
     {
     }
 

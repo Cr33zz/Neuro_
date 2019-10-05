@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    NegativeOp::NegativeOp(TensorLike* x)
-        : Operation({x}, "negative")
+    NegativeOp::NegativeOp(TensorLike* x, const string& name)
+        : Operation({ x }, name.empty() ? "negative" : name)
     {
     }
 

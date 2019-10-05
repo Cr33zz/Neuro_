@@ -7,7 +7,7 @@ namespace Neuro
     class DropoutOp : public Operation
     {
     public:
-        DropoutOp(TensorLike* x, float prob, TensorLike* training);
+        DropoutOp(TensorLike* x, float prob, TensorLike* training, const string& name = "");
 
     protected:
         virtual void ComputeInternal() override;
@@ -18,8 +18,8 @@ namespace Neuro
         Tensor m_Mask;
     };
 
-    static Operation* dropout(TensorLike* x, float prob, TensorLike* training)
+    static Operation* dropout(TensorLike* x, float prob, TensorLike* training, const string& name = "")
     {
-        return new DropoutOp(x, prob, training);
+        return new DropoutOp(x, prob, training, name);
     }
 }

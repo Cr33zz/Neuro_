@@ -7,7 +7,7 @@ namespace Neuro
     class PowOp : public Operation
     {
     public:
-        PowOp(TensorLike* x, float p);
+        PowOp(TensorLike* x, float p, const string& name = "");
 
     protected:
         virtual void ComputeInternal() override;
@@ -17,8 +17,8 @@ namespace Neuro
         float m_Power;
     };
     
-    static Operation* pow(TensorLike* x, float p)
+    static Operation* pow(TensorLike* x, float p, const string& name = "")
     {
-        return new PowOp(x, p);
+        return new PowOp(x, p, name);
     }
 }

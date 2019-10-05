@@ -5,8 +5,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    GradientsOp::GradientsOp(TensorLike* y, vector<TensorLike*> params)
-        : Operation({y}, "gradients"), m_Params(params)
+    GradientsOp::GradientsOp(TensorLike* y, vector<TensorLike*> params, const string& name)
+        : Operation({ y }, name.empty() ? "gradients" : name), m_Params(params)
     {
         for (auto param : params)
         {

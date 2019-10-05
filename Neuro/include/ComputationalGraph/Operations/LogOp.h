@@ -7,15 +7,15 @@ namespace Neuro
     class LogOp : public Operation
     {
     public:
-        LogOp(TensorLike* x);
+        LogOp(TensorLike* x, const string& name = "");
 
     protected:
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
     };
 
-    static Operation* log(TensorLike* x)
+    static Operation* log(TensorLike* x, const string& name = "")
     {
-        return new LogOp(x);
+        return new LogOp(x, name);
     }
 }

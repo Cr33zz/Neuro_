@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    SqrtOp::SqrtOp(TensorLike* x)
-        : Operation({ x }, "sqrt")
+    SqrtOp::SqrtOp(TensorLike* x, const string& name)
+        : Operation({ x }, name.empty() ? "sqrt" : name)
     {
     }
 

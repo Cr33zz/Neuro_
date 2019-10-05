@@ -7,7 +7,7 @@ namespace Neuro
     class LeakyReLUOp : public Operation
     {
     public:
-        LeakyReLUOp(TensorLike* x, float alpha);
+        LeakyReLUOp(TensorLike* x, float alpha, const string& name = "");
 
     protected:
         virtual void ComputeInternal() override;
@@ -17,8 +17,8 @@ namespace Neuro
         float m_Alpha;
     };
 
-    static Operation* leaky_relu(TensorLike* x, float alpha)
+    static Operation* leaky_relu(TensorLike* x, float alpha, const string& name = "")
     {
-        return new LeakyReLUOp(x, alpha);
+        return new LeakyReLUOp(x, alpha, name);
     }
 }

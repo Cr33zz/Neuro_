@@ -7,7 +7,7 @@ namespace Neuro
     class Pool2dOp : public Operation
     {
     public:
-        Pool2dOp(TensorLike* x, uint32_t filterSize, uint32_t stride, uint32_t padding, EPoolingMode mode, EDataFormat dataFormat);
+        Pool2dOp(TensorLike* x, uint32_t filterSize, uint32_t stride, uint32_t padding, EPoolingMode mode, EDataFormat dataFormat, const string& name = "");
 
     protected:
         virtual void ComputeInternal() override;
@@ -21,8 +21,8 @@ namespace Neuro
         EDataFormat m_DataFormat;
     };
 
-    static Operation* pool2d(TensorLike* x, uint32_t filterSize, uint32_t stride, uint32_t padding, EPoolingMode mode, EDataFormat dataFormat)
+    static Operation* pool2d(TensorLike* x, uint32_t filterSize, uint32_t stride, uint32_t padding, EPoolingMode mode, EDataFormat dataFormat, const string& name = "")
     {
-        return new Pool2dOp(x, filterSize, stride, padding, mode, dataFormat);
+        return new Pool2dOp(x, filterSize, stride, padding, mode, dataFormat, name);
     }
 }

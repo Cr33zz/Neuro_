@@ -7,7 +7,7 @@ namespace Neuro
     class UpSample2dOp : public Operation
     {
     public:
-        UpSample2dOp(TensorLike* x, int scaleFactor);
+        UpSample2dOp(TensorLike* x, int scaleFactor, const string& name = "");
 
     protected:
         virtual void ComputeInternal() override;
@@ -17,8 +17,8 @@ namespace Neuro
         int m_ScaleFactor;
     };
 
-    static Operation* upsample2d(TensorLike* x, int scaleFactor)
+    static Operation* upsample2d(TensorLike* x, int scaleFactor, const string& name = "")
     {
-        return new UpSample2dOp(x, scaleFactor);
+        return new UpSample2dOp(x, scaleFactor, name);
     }
 }
