@@ -773,7 +773,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::AdamStep(Tensor& parameter, Tensor& gradient, Tensor& mGrad, Tensor& vGrad, float batchSize, float lr, float beta1, float beta2, float epsilon) const
+    void TensorOpGpu::AdamStep(Tensor& parameter, const Tensor& gradient, Tensor& mGrad, Tensor& vGrad, float batchSize, float lr, float beta1, float beta2, float epsilon) const
     {
         parameter.CopyToDevice();
         gradient.CopyToDevice();
@@ -787,7 +787,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::SgdStep(Tensor& parameter, Tensor& gradient, float batchSize, float lr) const
+    void TensorOpGpu::SgdStep(Tensor& parameter, const Tensor& gradient, float batchSize, float lr) const
     {
         parameter.CopyToDevice();
         gradient.CopyToDevice();

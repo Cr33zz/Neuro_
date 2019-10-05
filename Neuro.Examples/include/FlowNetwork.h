@@ -13,6 +13,7 @@ public:
     void Run()
     {
         Tensor::SetDefaultOpMode(MultiCPU);
+        GlobalRngSeed(1337);
 
         auto input1 = new Dense(2, 2, new Sigmoid(), "input_1");
         auto upperStream1 = new Dense(input1, 2, new Linear(), "upperStream_1");
@@ -28,7 +29,7 @@ public:
         const_tensor_ptr_vec_t inputs = { new Tensor({ 0, 1 }, Shape(2)) };
         const_tensor_ptr_vec_t outputs = { new Tensor({ 0, 1 }, Shape(2)) };
 
-        model.Fit(inputs, outputs, 1, 60, nullptr, nullptr, 2, TrainError, false);
+        model.Fit(inputs, outputs, 1, 20, nullptr, nullptr, 2, TrainError, false);
 
         cout << model.TrainSummary();
         

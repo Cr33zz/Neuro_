@@ -249,19 +249,19 @@ template __global__ void sumTemplate<1, 1, 1, 0>(const float* __restrict input, 
 template __global__ void sumTemplate<1, 1, 0, 1>(const float* __restrict input, int width, int height, int depth, int batch, float* __restrict output);
 template __global__ void sumTemplate<0, 1, 1, 1>(const float* __restrict input, int width, int height, int depth, int batch, float* __restrict output);
 
-__global__ void adamStep(int inputLen, float* __restrict parameterDev, float* __restrict gradientDev, float* __restrict mGradDev, float* __restrict vGradDev, float batchSize, float lr, float beta1, float beta2, float epsilon)
+__global__ void adamStep(int inputLen, float* __restrict parameterDev, const float* __restrict gradientDev, float* __restrict mGradDev, float* __restrict vGradDev, float batchSize, float lr, float beta1, float beta2, float epsilon)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < inputLen)
     {
-        gradientDev[i] /= batchSize;
-        mGradDev[i] = beta1 * mGradDev[i] + (1 - beta1) * gradientDev[i];
-        vGradDev[i] = beta2 * vGradDev[i] + (1 - beta2) * gradientDev[i] * gradientDev[i];
+        float grad = gradientDev[i] / batchSize;
+        mGradDev[i] = beta1 * mGradDev[i] + (1 - beta1) * grad;
+        vGradDev[i] = beta2 * vGradDev[i] + (1 - beta2) * grad * grad;
         parameterDev[i] -= mGradDev[i] / (sqrt(vGradDev[i]) + epsilon) * lr;
     }
 }
 
-__global__ void sgdStep(int inputLen, float* __restrict parameterDev, float* __restrict gradientDev, float batchSize, float lr)
+__global__ void sgdStep(int inputLen, float* __restrict parameterDev, const float* __restrict gradientDev, float batchSize, float lr)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < inputLen)
@@ -337,13 +337,13 @@ namespace Neuro
         cudaDeviceSynchronize();
     }
 
-    void CudaKernels::AdamStep(const dim3& blocks, const dim3& threads, int inputLen, float* parameterDev, float* gradientDev, float* mGradDev, float* vGradDev, float batchSize, float lr, float beta1, float beta2, float epsilon)
+    void CudaKernels::AdamStep(const dim3& blocks, const dim3& threads, int inputLen, float* parameterDev, const float* gradientDev, float* mGradDev, float* vGradDev, float batchSize, float lr, float beta1, float beta2, float epsilon)
     {
         adamStep<<<blocks, threads>>>(inputLen, parameterDev, gradientDev, mGradDev, vGradDev, batchSize, lr, beta1, beta2, epsilon);
         cudaDeviceSynchronize();
     }
 
-    void CudaKernels::SgdStep(const dim3& blocks, const dim3& threads, int inputLen, float* parameterDev, float* gradientDev, float batchSize, float lr)
+    void CudaKernels::SgdStep(const dim3& blocks, const dim3& threads, int inputLen, float* parameterDev, const float* gradientDev, float batchSize, float lr)
     {
         sgdStep<<<blocks, threads>>>(inputLen, parameterDev, gradientDev, batchSize, lr);
         cudaDeviceSynchronize();

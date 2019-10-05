@@ -319,28 +319,28 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::AdamStep(Tensor& parameter, Tensor& gradient, Tensor& mGrad, Tensor& vGrad, float batchSize, float lr, float beta1, float beta2, float epsilon) const
+    void TensorOpCpu::AdamStep(Tensor& parameter, const Tensor& gradient, Tensor& mGrad, Tensor& vGrad, float batchSize, float lr, float beta1, float beta2, float epsilon) const
     {
         parameter.CopyToHost();
         gradient.CopyToHost();
         mGrad.CopyToHost();
         vGrad.CopyToHost();
 
-        gradient.Div(batchSize, gradient);
-
+        float gradScale = 1.f / batchSize;
+        float gradScale2 = gradScale * gradScale;
+        
         // mGrad = beta1 * mGrad + (1 - beta1) * gradient
-        mGrad.Add(beta1, 1 - beta1, gradient, mGrad);
+        mGrad.Add(beta1, (1 - beta1) * gradScale, gradient, mGrad);
         // vGrad = beta2 * vGrad + (1 - beta2) * sqr(gradient)
-        vGrad.Map([&](float v, float g) { return v * beta2 + (1 - beta2) * g * g; }, gradient, vGrad);
+        vGrad.Map([&](float v, float g) { return v * beta2 + (1 - beta2) * gradScale2 * g * g ; }, gradient, vGrad);
         // parameter = parameter - mGrad / (sqrt(vGrad) + epsilon) * lr
         parameter.Sub(mGrad.Div(vGrad.Map([&](float x) { return (float)::sqrt(x) + epsilon; })).Mul(lr), parameter);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::SgdStep(Tensor& parameter, Tensor& gradient, float batchSize, float lr) const
+    void TensorOpCpu::SgdStep(Tensor& parameter, const Tensor& gradient, float batchSize, float lr) const
     {
-        gradient.Mul(lr / batchSize, gradient);
-        parameter.Sub(gradient, parameter);
+        parameter.Add(1, -lr / batchSize, gradient, parameter);
     }
 
     //////////////////////////////////////////////////////////////////////////

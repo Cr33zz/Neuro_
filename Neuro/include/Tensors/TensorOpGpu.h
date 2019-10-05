@@ -43,8 +43,8 @@ namespace Neuro
         virtual void Softmax(const Tensor& input, Tensor& output) const override;
         virtual void SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const override;
 
-        virtual void AdamStep(Tensor& parameter, Tensor& gradient, Tensor& mGrad, Tensor& vGrad, float batchSize, float lr, float beta1, float beta2, float epsilon) const override;
-        virtual void SgdStep(Tensor& parameter, Tensor& gradient, float batchSize, float lr) const override;
+        virtual void AdamStep(Tensor& parameter, const Tensor& gradient, Tensor& mGrad, Tensor& vGrad, float batchSize, float lr, float beta1, float beta2, float epsilon) const override;
+        virtual void SgdStep(Tensor& parameter, const Tensor& gradient, float batchSize, float lr) const override;
 
     private:
         void Activation(const cudnnActivationMode_t& activationMode, const Tensor& input, Tensor& output, float coeff) const;
