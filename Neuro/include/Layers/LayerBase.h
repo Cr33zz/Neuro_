@@ -14,6 +14,7 @@ namespace Neuro
 	using namespace std;
 
     class TensorLike;
+    class Variable;
 
     // The concept of layer is that it is a 'block box' that supports forward and backward propagation.
     // Layer can have multiple inputs and outputs. Models are layers and can be combined with each other.
@@ -54,7 +55,7 @@ namespace Neuro
         bool Trainable() const { return m_Trainable; }
 
         virtual uint32_t ParamsNum() const { return 0; }
-        virtual void ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable = true) {}
+        virtual void Parameters(vector<Variable*>& params, bool onlyTrainable = true) {}
         virtual void SerializedParameters(vector<SerializedParameter>& params);
 
 		LayerBase* Clone();
@@ -62,7 +63,7 @@ namespace Neuro
 		
         const string& ClassName() const { return m_ClassName; }
 
-        vector<Tensor*> GetParams();
+        tensor_ptr_vec_t Weights();
 
         const string& Name() const { return m_Name; }
 

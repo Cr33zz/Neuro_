@@ -93,28 +93,28 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Conv2D::ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable)
+	void Conv2D::Parameters(vector<Variable*>& params, bool onlyTrainable)
 	{
         if (onlyTrainable && !m_Trainable)
             return;
 
-        paramsAndGrads.push_back({ &m_Kernels->Output(), nullptr });
+        params.push_back(m_Kernels);
 
 		if (m_UseBias)
-            paramsAndGrads.push_back({ &m_Bias->Output(), nullptr });
+            params.push_back(m_Bias);
 	}
 
     //////////////////////////////////////////////////////////////////////////
     void Conv2D::SerializedParameters(vector<SerializedParameter>& params)
     {
-        params.push_back({ &m_Kernels->Output(), { DepthAxis, BatchAxis, HeightAxis, WidthAxis } });
+        params.push_back({ m_Kernels, { DepthAxis, BatchAxis, HeightAxis, WidthAxis } });
 
         if (m_UseBias)
         {
             if (m_DataFormat == NCHW)
-                params.push_back({ &m_Bias->Output(), { DepthAxis, HeightAxis, WidthAxis } });
+                params.push_back({ m_Bias, { DepthAxis, HeightAxis, WidthAxis } });
             else
-                params.push_back({ &m_Bias->Output() });
+                params.push_back({ m_Bias });
         }
     }
 

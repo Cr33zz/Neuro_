@@ -42,13 +42,11 @@ namespace Neuro
         virtual const vector<LayerBase*>& ModelInputLayers() const = 0;
         virtual const vector<LayerBase*>& ModelOutputLayers() const = 0;
 
-        tensor_ptr_vec_t Weights();
-
         void SaveWeights(const string& filename) const;
         void LoadWeights(const string& filename);
         
         virtual uint32_t ParamsNum() const;
-        virtual void ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable = true) override;
+        virtual void Parameters(vector<Variable*>& params, bool onlyTrainable = true) override;
 
         virtual void SetTrainable(bool trainable) override;
         void ForceLearningPhase(bool force) { m_ForceLearningPhase = force; }

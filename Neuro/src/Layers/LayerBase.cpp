@@ -5,6 +5,7 @@
 #include "Tensors/Shape.h"
 #include "Tools.h"
 #include "Models/ModelBase.h"
+#include "ComputationalGraph/Variable.h"
 
 namespace Neuro
 {
@@ -32,13 +33,13 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void LayerBase::SerializedParameters(vector<SerializedParameter>& params)
+    void LayerBase::SerializedParameters(vector<SerializedParameter>& serializedParams)
     {
-        vector<ParameterAndGradient> paramsAndGrads;
-        ParametersAndGradients(paramsAndGrads, false);
+        vector<Variable*> params;
+        Parameters(params, false);
 
-        for (auto paramAndGrad : paramsAndGrads)
-            params.push_back({ paramAndGrad.param });
+        for (auto param : params)
+            serializedParams.push_back({ param });
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -106,15 +107,16 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    vector<Tensor*> LayerBase::GetParams()
+    tensor_ptr_vec_t LayerBase::Weights()
     {
-        vector<Tensor*> params;
-        vector<ParameterAndGradient> paramsAndGrads;
-        ParametersAndGradients(paramsAndGrads, false);
-        for (auto i = 0; i < paramsAndGrads.size(); ++i)
-            params.push_back(paramsAndGrads[i].param);
+        tensor_ptr_vec_t weights;
+        vector<Variable*> params;
 
-        return params;
+        Parameters(params, false);
+        for (auto param : params)
+            weights.push_back(param->OutputPtr());
+
+        return weights;
     }
 
     //////////////////////////////////////////////////////////////////////////

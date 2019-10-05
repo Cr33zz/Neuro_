@@ -5,6 +5,7 @@
 namespace Neuro
 {
 	class Tensor;
+    class Variable;
 
 	struct ParameterAndGradient
 	{
@@ -18,11 +19,11 @@ namespace Neuro
 
     struct SerializedParameter
     {
-        SerializedParameter(Tensor* parameter, const vector<EAxis>& tranposeAxesKeras = {})
+        SerializedParameter(Variable* parameter, const vector<EAxis>& tranposeAxesKeras = {})
             : param(parameter), transAxesKeras(tranposeAxesKeras)
         {}
 
-        Tensor* param;
+        Variable* param;
         vector<EAxis> transAxesKeras;
     };
 }

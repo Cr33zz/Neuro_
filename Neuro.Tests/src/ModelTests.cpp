@@ -41,11 +41,11 @@ namespace NeuroTests
             auto model2 = model->Clone();
             model->CopyParametersTo(*model2);
 
-            vector<ParameterAndGradient> modelParams; model->ParametersAndGradients(modelParams);
-            vector<ParameterAndGradient> model2Params; model2->ParametersAndGradients(model2Params);
+            vector<Tensor*> modelParams; model->Weights();
+            vector<Tensor*> model2Params; model2->Weights();
 
             for (auto i = 0; i < modelParams.size(); ++i)
-                Assert::IsTrue(modelParams[i].param->Equals(*model2Params[i].param));
+                Assert::IsTrue(modelParams[i]->Equals(*model2Params[i]));
         }
 
         TEST_METHOD(CopyParameters_Soft)
@@ -59,11 +59,11 @@ namespace NeuroTests
 
             model->CopyParametersTo(*model2, 0.1f);
 
-            vector<ParameterAndGradient> modelParams; model->ParametersAndGradients(modelParams);
-            vector<ParameterAndGradient> model2Params; model2->ParametersAndGradients(model2Params);
+            vector<Tensor*> modelParams; model->Weights();
+            vector<Tensor*> model2Params; model2->Weights();
 
             for (auto i = 0; i < modelParams.size(); ++i)
-                Assert::IsTrue(modelParams[i].param->Equals(*model2Params[i].param));
+                Assert::IsTrue(modelParams[i]->Equals(*model2Params[i]));
         }
 
         void TestDenseLayer(int inputsNum, int outputsNum, int samples, int batchSize, int epochs)
@@ -80,11 +80,10 @@ namespace NeuroTests
             model->Optimize(new SGD(0.07f), new MeanSquareError());
             model->Fit(inputs, outputs, batchSize, epochs, nullptr, nullptr, 0, ETrack::Nothing);
 
-            vector<ParameterAndGradient> paramsAndGrads;
-            model->LastLayer()->ParametersAndGradients(paramsAndGrads);
+            vector<Tensor*> params = model->LastLayer()->Weights();
 
             for (uint32_t i = 0; i < expectedWeights.Length(); ++i)
-                Assert::AreEqual((double)paramsAndGrads[0].param->GetFlat(i), (double)expectedWeights.GetFlat(i), 1e-2);
+                Assert::AreEqual((double)params[0]->GetFlat(i), (double)expectedWeights.GetFlat(i), 1e-2);
         }
 
         void TestDenseNetwork(int inputsNum, int samples, int batchSize, int epochs)

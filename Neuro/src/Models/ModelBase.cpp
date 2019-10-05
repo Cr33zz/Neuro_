@@ -147,6 +147,8 @@ namespace Neuro
         m_Metrics["loss"] = make_pair(totalLoss, fetchOps.size() - 1);
         // any additional metrics should go in here
 
+        //GetParams()
+
         fetchOps.push_back(optimizer->Minimize(losses));
 
         for (auto inLayer : ModelInputLayers())
@@ -224,19 +226,6 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    tensor_ptr_vec_t ModelBase::Weights()
-    {
-        tensor_ptr_vec_t params;
-        vector<ParameterAndGradient> paramsAndGrads;
-
-        ParametersAndGradients(paramsAndGrads, false);
-        for (auto paramAndGrad : paramsAndGrads)
-            params.push_back(paramAndGrad.param);
-
-        return params;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
     void ModelBase::SaveWeights(const string& filename) const
     {
         //https://github.com/keras-team/keras/blob/5be4ed3d9e7548dfa9d51d1d045a3f951d11c2b1/keras/engine/saving.py#L733
@@ -267,7 +256,7 @@ namespace Neuro
             
             for (auto i = 0; i < params.size(); ++i)
             {
-                auto w = params[i].param;
+                auto w = params[i].param->OutputGradPtr();
                 auto& wShape = w->GetShape();
                 
                 vector<hsize_t> dims;
@@ -280,10 +269,10 @@ namespace Neuro
         }
 
         /*ofstream stream(filename, ios::out | ios::binary);
-        vector<ParametersAndGradients> paramsAndGrads;
-        const_cast<ModelBase*>(this)->ParametersAndGradients(paramsAndGrads, false);
-        for (auto i = 0; i < paramsAndGrads.size(); ++i)
-            paramsAndGrads[i].Parameters->SaveBin(stream);
+        vector<ParametersAndGradients> params;
+        const_cast<ModelBase*>(this)->ParametersAndGradients(params, false);
+        for (auto i = 0; i < params.size(); ++i)
+            params[i].Parameters->SaveBin(stream);
         stream.close();*/
     }
 
@@ -380,7 +369,7 @@ namespace Neuro
             for (hsize_t i = 0; i < params.size(); ++i)
             {
                 auto& dataset = weightsDatasets[i];
-                auto w = params[i].param;
+                auto w = params[i].param->OutputPtr();
 
                 hsize_t weightNDims = dataset.getSpace().getSimpleExtentNdims();
                 hsize_t weightDims[5];
@@ -409,16 +398,16 @@ namespace Neuro
                 if (is_keras && !params[i].transAxesKeras.empty())
                 {
                     *params[i].param = w->Transposed(params[i].transAxesKeras);
-                    params[i].param->Name(kerasParam.Name());
+                    params[i].param->Output().Name(kerasParam.Name());
                 }
             }
         }
 
         /*ifstream stream(filename, ios::in | ios::binary);
-        vector<ParametersAndGradients> paramsAndGrads;
-        ParametersAndGradients(paramsAndGrads, false);
-        for (auto i = 0; i < paramsAndGrads.size(); ++i)
-            paramsAndGrads[i].Parameters->LoadBin(stream);
+        vector<ParametersAndGradients> params;
+        ParametersAndGradients(params, false);
+        for (auto i = 0; i < params.size(); ++i)
+            params[i].Parameters->LoadBin(stream);
         stream.close();*/
     }
 
@@ -432,13 +421,13 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::ParametersAndGradients(vector<ParameterAndGradient>& paramsAndGrads, bool onlyTrainable)
+    void ModelBase::Parameters(vector<Variable*>& params, bool onlyTrainable)
     {
         if (onlyTrainable && !m_Trainable)
             return;
 
         for (auto layer : Layers())
-            layer->ParametersAndGradients(paramsAndGrads, onlyTrainable);
+            layer->Parameters(params, onlyTrainable);
     }
 
     //////////////////////////////////////////////////////////////////////////
