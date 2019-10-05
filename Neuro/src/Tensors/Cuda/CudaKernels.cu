@@ -258,7 +258,6 @@ __global__ void adamStep(int inputLen, float* __restrict parameterDev, float* __
         mGradDev[i] = beta1 * mGradDev[i] + (1 - beta1) * gradientDev[i];
         vGradDev[i] = beta2 * vGradDev[i] + (1 - beta2) * gradientDev[i] * gradientDev[i];
         parameterDev[i] -= mGradDev[i] / (sqrt(vGradDev[i]) + epsilon) * lr;
-        gradientDev[i] = 0;
     }
 }
 
@@ -268,7 +267,6 @@ __global__ void sgdStep(int inputLen, float* __restrict parameterDev, float* __r
     if (i < inputLen)
     {
         parameterDev[i] -= gradientDev[i] / batchSize * lr;
-        gradientDev[i] = 0;
     }
 }
 

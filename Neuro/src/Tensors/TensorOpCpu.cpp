@@ -334,8 +334,6 @@ namespace Neuro
         vGrad.Map([&](float v, float g) { return v * beta2 + (1 - beta2) * g * g; }, gradient, vGrad);
         // parameter = parameter - mGrad / (sqrt(vGrad) + epsilon) * lr
         parameter.Sub(mGrad.Div(vGrad.Map([&](float x) { return (float)::sqrt(x) + epsilon; })).Mul(lr), parameter);
-
-        gradient.Zero();
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -343,7 +341,6 @@ namespace Neuro
     {
         gradient.Mul(lr / batchSize, gradient);
         parameter.Sub(gradient, parameter);
-        gradient.Zero();
     }
 
     //////////////////////////////////////////////////////////////////////////
