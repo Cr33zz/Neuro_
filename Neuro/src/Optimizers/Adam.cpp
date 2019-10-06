@@ -41,7 +41,7 @@ namespace Neuro
     Adam::MinimizationOperation::MinimizationOperation(const vector<TensorLike*>& losses, const vector<Variable*>& vars, Adam* owner)
         : Operation(losses, "adam_minimize"), m_Owner(owner), m_Vars(vars)
     {
-        m_Order = Graph::Default()->BuildBackwardOrder(losses, vars, false);
+        m_Order = Graph::Default()->BuildBackwardOrder(losses, vars);
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -92,8 +92,13 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void LayerBase::SetTrainable(bool trainable)
     {
-
         m_Trainable = trainable;
+
+        vector<Variable*> params;
+
+        Parameters(params, false);
+        for (auto param : params)
+            param->Trainable(trainable);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -117,26 +122,6 @@ namespace Neuro
             weights.push_back(param->OutputPtr());
 
         return weights;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    bool LayerBase::CanStopBackProp() const
-    {
-        if (m_Trainable)
-            return false;
-
-        auto& inputLayers = InputLayers();
-
-        if (inputLayers.empty())
-            return true;
-
-        for (auto inputLayer : inputLayers)
-        {
-            if (!inputLayer->CanStopBackProp())
-                return false;
-        }
-
-        return true;
     }
 
     //////////////////////////////////////////////////////////////////////////

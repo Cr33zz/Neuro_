@@ -38,7 +38,7 @@ namespace Neuro
     SGD::MinimizationOperation::MinimizationOperation(const vector<TensorLike*>& losses, const vector<Variable*>& vars, SGD* owner)
         : Operation(losses, "sgd_minimize"), m_Owner(owner), m_Vars(vars)
     {
-        m_Order = Graph::Default()->BuildBackwardOrder(losses, vars, false);
+        m_Order = Graph::Default()->BuildBackwardOrder(losses, vars);
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -53,16 +53,16 @@ namespace Neuro
         switch (m_MergeMode)
         {
         case MergeAvg:
-            m_OutputOps[0] = merge_avg(m_InputOps);
+            m_OutputNodes[0] = merge_avg(m_InputNodes);
             break;
         case MergeMax:
-            m_OutputOps[0] = merge_max(m_InputOps);
+            m_OutputNodes[0] = merge_max(m_InputNodes);
             break;
         case MergeMin:
-            m_OutputOps[0] = merge_min(m_InputOps);
+            m_OutputNodes[0] = merge_min(m_InputNodes);
             break;
         case MergeSum:
-            m_OutputOps[0] = merge_sum(m_InputOps);
+            m_OutputNodes[0] = merge_sum(m_InputNodes);
             break;
         }
     }

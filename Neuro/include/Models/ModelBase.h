@@ -65,14 +65,15 @@ namespace Neuro
         ModelBase() {}
         ModelBase(const string& constructorName, const string& name = "", int seed = 0);
 
-        virtual vector<TensorLike*>& InputOps() override { return m_InputOps; }
-        virtual vector<TensorLike*>& OutputOps() override { return m_OutputOps; }
+        virtual vector<TensorLike*>& InputNodes() override { return m_InputNodes; }
+        virtual vector<TensorLike*>& OutputNodes() override { return m_OutputNodes; }
 
         virtual void OnClone(const LayerBase& source) override;
         virtual void OnInit(TensorLike* training, bool initValues = true) override;
 
-        vector<TensorLike*> m_InputOps;
-        vector<TensorLike*> m_OutputOps;
+        vector<TensorLike*> m_InputNodes;
+        vector<Placeholder*> m_InputPlaceholders;
+        vector<TensorLike*> m_OutputNodes;
 
     private:
         // This is vectorized gradient descent
@@ -85,7 +86,7 @@ namespace Neuro
         vector<accuracy_func_t> m_AccuracyFuncs;
         bool m_ForceLearningPhase = false;
 
-        Placeholder* m_Training = nullptr;
+        Placeholder* m_TrainingPlaceholder = nullptr;
         Trainer* m_Trainer = nullptr;
         Predicter* m_Predicter = nullptr;
 

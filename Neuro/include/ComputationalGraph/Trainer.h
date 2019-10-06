@@ -13,14 +13,16 @@ namespace Neuro
     class Trainer
     {
     public:
-        Trainer(const vector<Placeholder*>& inputOps, const vector<Placeholder*>& targetOps, const vector<TensorLike*>& fetchOps);
+        Trainer(const vector<Placeholder*>& inputPlaceholders, const vector<Placeholder*>& targetPlaceholders, const vector<TensorLike*>& fetchOps, Placeholder* trainingPlaceholder);
 
         tensor_ptr_vec_t Train(const const_tensor_ptr_vec_t& inputs, const const_tensor_ptr_vec_t& outputs);
 
     private:
-        vector<Placeholder*> m_InputOps;
-        vector<Placeholder*> m_TargetOps;
+        vector<Placeholder*> m_InputPlaceholders;
+        Placeholder* m_TrainingPlaceholder;
+        vector<Placeholder*> m_TargetPlaceholders;
         vector<TensorLike*> m_FetchOps;
+        map<Placeholder*, const Tensor*> m_Feeds;
 
         vector<TensorLike*> m_Order;
     };

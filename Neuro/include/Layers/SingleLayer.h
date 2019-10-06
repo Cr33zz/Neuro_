@@ -35,8 +35,8 @@ namespace Neuro
         SingleLayer(const string& constructorName, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
         SingleLayer() {}
 
-        virtual vector<TensorLike*>& InputOps() override { return m_InputOps; }
-        virtual vector<TensorLike*>& OutputOps() override { return m_OutputOps; }
+        virtual vector<TensorLike*>& InputNodes() override { return m_InputNodes; }
+        virtual vector<TensorLike*>& OutputNodes() override { return m_OutputNodes; }
 
         virtual void OnClone(const LayerBase& source) override;
         virtual void OnInit(TensorLike* training, bool initValues = true) override;
@@ -46,8 +46,8 @@ namespace Neuro
         virtual void InitOps(TensorLike* training, bool initValues = true);
 
         Shape m_InputShape;
-        vector<TensorLike*> m_InputOps;
-        vector<TensorLike*> m_OutputOps;
+        vector<TensorLike*> m_InputNodes;
+        vector<TensorLike*> m_OutputNodes;
         vector<Tensor*> m_Outputs;
         vector<Shape> m_OutputsShapes;
         vector<LayerBase*> m_InputLayers;

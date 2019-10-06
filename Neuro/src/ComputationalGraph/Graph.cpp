@@ -91,7 +91,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> Graph::BuildBackwardOrder(const vector<TensorLike*>& endNodes, const vector<Variable*>& params, bool inludeEndNodes)
+    vector<TensorLike*> Graph::BuildBackwardOrder(const vector<TensorLike*>& endNodes, const vector<Variable*>& params)
     {
         // we need to figure out which nodes were required to calculate end nodes
         // later on when check if all consumers were visited we will additionally check if
@@ -167,7 +167,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<Variable*> Graph::ComputeGradients(const vector<TensorLike*>& losses, const vector<Variable*>& params)
     {
-        auto order = BuildBackwardOrder(losses, params, false);
+        auto order = BuildBackwardOrder(losses, params);
         return ComputeGradientsInOrder(order, params);
     }
 
@@ -186,6 +186,9 @@ namespace Neuro
             auto& nodeOutputGrad = node->m_OutputGrad;
             nodeOutputGrad.Resize(node->m_Output.GetShape());
             nodeOutputGrad.Zero(); // reset gradient
+
+            if (node->IsVar() && !static_cast<Variable*>(node)->Trainable())
+                continue;
 
             int inputGradsUsed = 0;
 
@@ -220,9 +223,7 @@ namespace Neuro
             }
 
             if (inputGradsUsed == 0) // it must be one the loss nodes (gradient of loss w.r.t to loss is 1)
-                nodeOutputGrad.One();            
-            //else if (inputGradsUsed > 1) // average output grad
-            //    nodeOutputGrad.Div((float)inputGradsUsed, nodeOutputGrad);
+                nodeOutputGrad.One();
 
             if (node->IsOp())
                 static_cast<Operation*>(node)->ComputeGradient(nodeOutputGrad);

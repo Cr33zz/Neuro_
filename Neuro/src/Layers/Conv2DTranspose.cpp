@@ -60,9 +60,9 @@ namespace Neuro
             m_Bias = new Variable(Shape(m_OutputDepth), initValues ? m_BiasInitializer : nullptr, "bias");
         }
 
-        m_OutputOps[0] = conv2d_transpose(m_InputOps[0], m_Kernels, m_Stride, m_Padding, m_DataFormat);
+        m_OutputNodes[0] = conv2d_transpose(m_InputNodes[0], m_Kernels, m_Stride, m_Padding, m_DataFormat);
         if (m_UseBias)
-            m_OutputOps[0] = add(m_OutputOps[0], m_Bias);
+            m_OutputNodes[0] = add(m_OutputNodes[0], m_Bias);
     }
 
     //////////////////////////////////////////////////////////////////////////

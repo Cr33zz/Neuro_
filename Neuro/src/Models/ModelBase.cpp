@@ -35,7 +35,7 @@ namespace Neuro
         : LayerBase(constructorName, name)
     {
         NameScope scope(name);
-        m_Training = new Placeholder(Shape(1), "training_phase");
+        m_TrainingPlaceholder = new Placeholder(Shape(1), "training_phase");
 
         // output shape will be established when layers are added
         if (seed > 0)
@@ -62,23 +62,32 @@ namespace Neuro
             layer->Init(training, initValues);
 
         for (auto inLayer : ModelInputLayers())
-            m_InputOps.insert(m_InputOps.end(), inLayer->InputOps().begin(), inLayer->InputOps().end());
+        {
+            m_InputNodes.insert(m_InputNodes.end(), inLayer->InputNodes().begin(), inLayer->InputNodes().end());
+            for (auto node : inLayer->InputNodes())
+            {
+                if (node->IsPlaceholder())
+                    m_InputPlaceholders.push_back(static_cast<Placeholder*>(node));
+            }
+        }
 
         for (auto outLayer : ModelOutputLayers())
-            m_OutputOps.insert(m_OutputOps.end(), outLayer->OutputOps().begin(), outLayer->OutputOps().end());
+            m_OutputNodes.insert(m_OutputNodes.end(), outLayer->OutputNodes().begin(), outLayer->OutputNodes().end());
+
+        m_Predicter = new Predicter(m_InputPlaceholders, m_OutputNodes, m_TrainingPlaceholder);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::ForceInitLayers(bool initValues)
     {
         for (auto layer : Layers())
-            layer->Init(m_Training, initValues);
+            layer->Init(m_TrainingPlaceholder, initValues);
     }
 
     //////////////////////////////////////////////////////////////////////////
     const tensor_ptr_vec_t& ModelBase::Predict(const const_tensor_ptr_vec_t& inputs)
     {
-        m_Training->Output()(0) = 0;
+        Init(m_TrainingPlaceholder);
         m_Predicter->Predict(inputs);
         return Outputs();
     }
@@ -103,7 +112,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::Optimize(OptimizerBase* optimizer, map<string, LossBase*> lossDict)
     {
-        Init(m_Training);
+        Init(m_TrainingPlaceholder);
 
         m_Optimizer = optimizer;
 
@@ -112,10 +121,8 @@ namespace Neuro
         auto& outputsShapes = OutputShapes();
         m_AccuracyFuncs.resize(outputsShapes.size());
 
-        vector<Placeholder*> inputOps;
-        vector<Placeholder*> targetsOps;
-        vector<TensorLike*> outputOps;
-        vector<TensorLike*> fetchOps;
+        vector<Placeholder*> targetsPlaceholders;
+        vector<TensorLike*> fetch;
 
         vector<TensorLike*> losses;
         TensorLike* totalLoss = nullptr;
@@ -126,15 +133,13 @@ namespace Neuro
             {
                 auto outLayer = ModelOutputLayers()[i];
 
-                outputOps.insert(outputOps.end(), outLayer->OutputOps().begin(), outLayer->OutputOps().end());
-
                 m_AccuracyFuncs[i] = outputsShapes[i].Length == 1 ? AccBinaryClassificationEquality : AccCategoricalClassificationEquality;
 
-                targetsOps.push_back(new Placeholder(Shape(outLayer->OutputShape()), "target" + to_string(i)));
-                auto loss = lossDict[outLayer->Name()]->Build(targetsOps.back(), outLayer->OutputOps()[0]);
+                targetsPlaceholders.push_back(new Placeholder(Shape(outLayer->OutputShape()), "target" + to_string(i)));
+                auto loss = lossDict[outLayer->Name()]->Build(targetsPlaceholders.back(), outLayer->OutputNodes()[0]);
 
                 losses.push_back(loss);
-                fetchOps.push_back(loss);
+                fetch.push_back(loss);
 
                 if (!totalLoss)
                     totalLoss = mean(loss);
@@ -143,26 +148,16 @@ namespace Neuro
             }
         }
 
-        fetchOps.push_back(totalLoss);
-        m_Metrics["loss"] = make_pair(totalLoss, fetchOps.size() - 1);
+        fetch.push_back(totalLoss);
+        m_Metrics["loss"] = make_pair(totalLoss, fetch.size() - 1);
         // any additional metrics should go in here
 
         vector<Variable*> params;
         Parameters(params);
 
-        fetchOps.push_back(optimizer->Minimize(losses, params));
+        fetch.push_back(optimizer->Minimize(losses, params));
 
-        for (auto inLayer : ModelInputLayers())
-        {
-            for (auto inputOp : inLayer->InputOps())
-            {
-                assert(dynamic_cast<Placeholder*>(inputOp));
-                inputOps.push_back(static_cast<Placeholder*>(inputOp));
-            }
-        }
-
-        m_Trainer = new Trainer(inputOps, targetsOps, fetchOps);
-        m_Predicter = new Predicter(inputOps, outputOps);
+        m_Trainer = new Trainer(m_InputPlaceholders, targetsPlaceholders, fetch, m_TrainingPlaceholder);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -204,11 +199,11 @@ namespace Neuro
 
         for (auto layer : Layers())
         {
-            ss << left << setw(29) << (layer->Name() + "(" + layer->ClassName() + ")").substr(0, 28);
+            /*ss << left << setw(29) << (layer->Name() + "(" + layer->ClassName() + ")").substr(0, 28);
             ss << setw(12) << layer->FeedForwardTime() * 0.001f;
             ss << setw(12) << layer->BackPropTime() * 0.001f;
             ss << setw(12) << layer->ActivationTime() * 0.001f;
-            ss << setw(12) << layer->ActivationBackPropTime() * 0.001f << "\n";
+            ss << setw(12) << layer->ActivationBackPropTime() * 0.001f << "\n";*/
             ss << "_____________________________________________________________________________\n";
         }
 
@@ -662,8 +657,6 @@ namespace Neuro
         for (auto i = 0; i < outputs.size(); ++i)
             assert(ModelOutputLayers()[i]->OutputShape().EqualsIgnoreBatch(outputs[i]->GetShape()));*/
 
-
-        m_Training->Output()(0) = 1;
         auto results = m_Trainer->Train(inputs, outputs);
 
         if (loss)

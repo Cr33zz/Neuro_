@@ -60,9 +60,9 @@ namespace Neuro
         m_Weights = new Variable(Shape(OutputShape().Length, InputShape().Length), initValues ? m_WeightsInitializer : nullptr, "weights");
         m_Bias = new Variable(OutputShape(), initValues ? m_BiasInitializer : nullptr, "bias");
 
-        m_OutputOps[0] = matmul(m_InputOps[0], m_Weights);
+        m_OutputNodes[0] = matmul(m_InputNodes[0], m_Weights);
         if (m_UseBias)
-            m_OutputOps[0] = add(m_OutputOps[0], m_Bias);
+            m_OutputNodes[0] = add(m_OutputNodes[0], m_Bias);
 	}
 
 	//////////////////////////////////////////////////////////////////////////

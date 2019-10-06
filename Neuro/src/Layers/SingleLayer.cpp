@@ -82,7 +82,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void SingleLayer::InitOps(TensorLike* training, bool initValues)
     {
-        m_OutputOps = m_InputOps;
+        m_OutputNodes = m_InputNodes;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -91,24 +91,24 @@ namespace Neuro
         NameScope scope(Name());
         if (m_InputLayers.empty())
         {
-            m_InputOps.push_back(new Placeholder(m_InputShape, "input"));
+            m_InputNodes.push_back(new Placeholder(m_InputShape, "input"));
         }
         else
         {
             for (auto inLayer : m_InputLayers)
-                m_InputOps.insert(m_InputOps.end(), inLayer->OutputOps().begin(), inLayer->OutputOps().end());
+                m_InputNodes.insert(m_InputNodes.end(), inLayer->OutputNodes().begin(), inLayer->OutputNodes().end());
         }
 
         m_Outputs.resize(m_OutputsShapes.size());
-        m_OutputOps.resize(m_Outputs.size());
+        m_OutputNodes.resize(m_Outputs.size());
 
         InitOps(training, initValues);
 
         for (size_t i = 0; i < m_Outputs.size(); ++i)
         {
             if (m_Activation)
-                m_OutputOps[i] = m_Activation->Build(m_OutputOps[i]);
-            m_Outputs[i] = &m_OutputOps[i]->Output();
+                m_OutputNodes[i] = m_Activation->Build(m_OutputNodes[i]);
+            m_Outputs[i] = &m_OutputNodes[i]->Output();
         }
     }
 }

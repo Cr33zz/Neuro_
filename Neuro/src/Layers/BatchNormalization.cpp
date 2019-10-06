@@ -82,7 +82,7 @@ namespace Neuro
         m_RunningMean = new Variable(zeros(paramsShape), "running_mean");
         m_RunningVar = new Variable(ones(paramsShape), "running_var");
 
-        m_OutputOps[0] = batch_norm(m_InputOps[0], m_Gamma, m_Beta, m_RunningMean, m_RunningVar, m_Momentum, m_Epsilon, training);
+        m_OutputNodes[0] = batch_norm(m_InputNodes[0], m_Gamma, m_Beta, m_RunningMean, m_RunningVar, m_Momentum, m_Epsilon, training);
     }
 
     //////////////////////////////////////////////////////////////////////////

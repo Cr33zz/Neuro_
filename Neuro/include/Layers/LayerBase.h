@@ -61,24 +61,18 @@ namespace Neuro
 		LayerBase* Clone();
 		void Init(TensorLike* training, bool initValues = true);
 		
-        const string& ClassName() const { return m_ClassName; }
-
         tensor_ptr_vec_t Weights();
 
+        const string& ClassName() const { return m_ClassName; }
         const string& Name() const { return m_Name; }
-
-        int FeedForwardTime() const { return (int)m_FeedForwardTimer.ElapsedMilliseconds(); }
-        int BackPropTime() const { return (int)m_BackPropTimer.ElapsedMilliseconds(); }
-        int ActivationTime() const { return (int)m_ActivationTimer.ElapsedMilliseconds(); }
-        int ActivationBackPropTime() const { return (int)m_ActivationBackPropTimer.ElapsedMilliseconds(); }
 
 	protected:
         LayerBase(const string& constructorName, const string& name = "");
 		// This constructor exists only for cloning purposes
         LayerBase() {}
 
-        virtual vector<TensorLike*>& InputOps() = 0;
-        virtual vector<TensorLike*>& OutputOps() = 0;
+        virtual vector<TensorLike*>& InputNodes() = 0;
+        virtual vector<TensorLike*>& OutputNodes() = 0;
 
         virtual LayerBase* LinkImpl(const vector<LayerBase*>& inputLayers);
 
@@ -87,8 +81,6 @@ namespace Neuro
         virtual void OnInit(TensorLike* training, bool initValues = true) {}
         virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) = 0;
         virtual void OnLinkOutput(LayerBase* outputLayer) = 0;
-        
-        bool CanStopBackProp() const;
         
 		string GenerateName() const;
 
