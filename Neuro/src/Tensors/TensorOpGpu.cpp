@@ -15,6 +15,8 @@ namespace Neuro
     cublasHandle_t TensorOpGpu::s_CublasHandle = nullptr;
     cudnnHandle_t TensorOpGpu::s_CudnnHandle = nullptr;
 
+    static const int INNER_KERNEL_LOOP_LENGTH = 5; // for simple per-element kernels
+
     //////////////////////////////////////////////////////////////////////////
     TensorOpGpu::TensorOpGpu()
     {
@@ -127,6 +129,46 @@ namespace Neuro
             MulGeneric(transposeT1, transposeT2, t1, t2, output);
     }
 
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::MulElem(const Tensor& t1, const Tensor& t2, Tensor& output) const
+    {
+        t1.CopyToDevice();
+        t2.CopyToDevice();
+        output.CopyToDevice();
+
+        dim3 blocks, threads;
+
+        if (t1.GetShape() == t2.GetShape())
+        {
+            GetKernelRunParams(t1.Length() / INNER_KERNEL_LOOP_LENGTH, blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
+            CudaKernels::MulElem(blocks, threads, t1.Length(), t1.GetDevicePtr(), t2.GetDevicePtr(), output.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);
+        }
+        else
+        {
+            GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
+
+            return CudaKernels::MulElemBroadcast(
+                blocks,
+                threads,
+                t1.GetDevicePtr(),
+                t1.Width(),
+                t1.Height(),
+                t1.Depth(),
+                t1.Batch(),
+                t2.GetDevicePtr(),
+                t2.Width(),
+                t2.Height(),
+                t2.Depth(),
+                t2.Batch(),
+                output.GetDevicePtr(),
+                output.Width(),
+                output.Height(),
+                output.Depth(),
+                output.Batch());
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Div(const Tensor& input, float v, Tensor& output) const
     {
         dim3 blocks, threads;
