@@ -23,7 +23,7 @@ namespace Neuro
         auto progressGrad = [&](size_t idx)
         {
             auto& gShape = grad.GetShape();
-            auto& iShape = m_Inputs[idx]->GetShape();
+            auto& iShape = m_InputsGrads[idx].GetShape();
 
             if (gShape == iShape)
                 grad.CopyTo(m_InputsGrads[idx]);

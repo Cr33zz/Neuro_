@@ -20,22 +20,27 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void MultiplyOp::ComputeGradientInternal(const Tensor& grad)
     {
-        auto& a = *m_Inputs[0];
-        auto& b = *m_Inputs[1];
-
-        auto gradWrtA = grad * b;
-        auto gradWrtB = grad * a;
-
-        for (int i = WidthAxis; i <= BatchAxis; ++i)
+        auto progressGrad = [&](size_t idx)
         {
-            if (gradWrtA.Len(i) != 1 && a.Len(i) == 1)
-                gradWrtA = sum(gradWrtA, (EAxis)i);
+            size_t idx2 = (idx + 1) % 2;
+            auto& gShape = grad.GetShape();
+            auto& iShape = m_InputsGrads[idx].GetShape();
 
-            if (gradWrtB.Len(i) != 1 && b.Len(i) == 1)
-                gradWrtB = sum(gradWrtB, (EAxis)i);
-        }
+            if (gShape == iShape)
+                grad.MulElem(*m_Inputs[idx2], m_InputsGrads[idx]);
+            else
+            {
+                auto gradTemp = grad.MulElem(*m_Inputs[idx2]);
+                for (int i = WidthAxis; i <= BatchAxis; ++i)
+                {
+                    if (gradTemp.Len(i) != 1 && m_Inputs[idx]->Len(i) == 1)
+                        gradTemp = sum(gradTemp, (EAxis)i);
+                }
+                gradTemp.CopyTo(m_InputsGrads[idx]);
+            }
+        };
 
-        gradWrtA.CopyTo(m_InputsGrads[0]);
-        gradWrtB.CopyTo(m_InputsGrads[1]);
+        progressGrad(0);
+        progressGrad(1);
     }
 }
