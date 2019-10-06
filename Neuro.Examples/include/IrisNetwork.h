@@ -13,9 +13,11 @@ class IrisNetwork
 public:
     void Run()
     {
-        Debug::LogAllGrads();
-
-        Tensor::SetDefaultOpMode(MultiCPU);
+        //Debug::LogAllGrads();
+        //Debug::LogAllOutputs();
+        //Debug::LogOutput("loss/cross_entropy/negative");
+        
+        Tensor::SetDefaultOpMode(GPU);
         GlobalRngSeed(1337);
 
         auto model = Sequential("iris");

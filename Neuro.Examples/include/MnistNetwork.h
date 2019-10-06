@@ -36,7 +36,7 @@ public:
         LoadMnistData("data/t10k-images.idx3-ubyte", "data/t10k-labels.idx1-ubyte", validationInput, validationOutput, true, false, -1);
         validationInput.Reshape(Shape(-1, 1, 1, validationInput.Batch()));
 
-        model.Fit(input, output, 128, 10, &validationInput, &validationOutput, 2, All);
+        model.Fit(input, output, 128, 4, &validationInput, &validationOutput, 2, All);
 
         cout << model.TrainSummary();
 

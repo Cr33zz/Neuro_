@@ -16,6 +16,9 @@ public:
         Tensor::SetDefaultOpMode(GPU);
         GlobalRngSeed(1337);
 
+        /*Debug::LogAllGrads();
+        Debug::LogAllOutputs();*/
+
         //Based on https://blog.keras.io/building-autoencoders-in-keras.html
 
         auto encoder = new Sequential("encoder");
@@ -43,7 +46,7 @@ public:
         Tensor input, output;
         LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, true);
 
-        model.Fit(input, input, 256, 20, nullptr, nullptr, 2, TrainError);
+        model.Fit(input, input, 256, 10, nullptr, nullptr, 2, TrainError);
 
         cout << model.TrainSummary();
 
