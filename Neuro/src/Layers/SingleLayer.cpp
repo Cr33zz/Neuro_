@@ -88,7 +88,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void SingleLayer::OnInit(TensorLike* training, bool initValues)
     {
-        NameScope scope(Name());
         if (m_InputLayers.empty())
         {
             m_InputNodes.push_back(new Placeholder(m_InputShape, "input"));

@@ -6,6 +6,7 @@
 #include "Tools.h"
 #include "Models/ModelBase.h"
 #include "ComputationalGraph/Variable.h"
+#include "ComputationalGraph/NameScope.h"
 
 namespace Neuro
 {
@@ -107,6 +108,7 @@ namespace Neuro
 		if (Initialized)
 			return;
 
+        NameScope scope(Name());
 		OnInit(training, initValues);
 		Initialized = true;
 	}

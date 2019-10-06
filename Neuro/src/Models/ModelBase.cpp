@@ -114,6 +114,8 @@ namespace Neuro
     {
         Init(m_TrainingPlaceholder);
 
+        NameScope scope(Name());
+
         m_Optimizer = optimizer;
 
         assert(lossDict.size() == ModelOutputLayers().size());
@@ -127,7 +129,8 @@ namespace Neuro
         vector<TensorLike*> losses;
         TensorLike* totalLoss = nullptr;
 
-        {NameScope scope("loss");
+        {
+            NameScope scope("loss");
 
             for (size_t i = 0; i < ModelOutputLayers().size(); ++i)
             {
