@@ -56,44 +56,24 @@ namespace Neuro
     }
     
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::OnInit(TensorLike* training, bool initValues)
+    void ModelBase::Build(const vector<Shape>& inputShapes)
     {
-        for (auto layer : Layers())
-            layer->Init(training, initValues);
-
-        for (auto inLayer : ModelInputLayers())
+        auto lastInputShapes = inputShapes;
+        for (auto layer : m_Layers)
         {
-            m_InputNodes.insert(m_InputNodes.end(), inLayer->InputNodes().begin(), inLayer->InputNodes().end());
-            for (auto node : inLayer->InputNodes())
-            {
-                if (node->IsPlaceholder())
-                    m_InputPlaceholders.push_back(static_cast<Placeholder*>(node));
-            }
+            layer->Build(lastInputShapes);
+            lastInputShapes = layer->OutputShapes();
         }
-
-        for (auto outLayer : ModelOutputLayers())
-            m_OutputNodes.insert(m_OutputNodes.end(), outLayer->OutputNodes().begin(), outLayer->OutputNodes().end());
-
-        m_Predicter = new Predicter(m_InputPlaceholders, m_OutputNodes, m_TrainingPlaceholder);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::ForceInitLayers(bool initValues)
+    tensor_ptr_vec_t ModelBase::Predict(const const_tensor_ptr_vec_t& inputs)
     {
-        for (auto layer : Layers())
-            layer->Init(m_TrainingPlaceholder, initValues);
+        return m_Predicter->Predict(inputs);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const tensor_ptr_vec_t& ModelBase::Predict(const const_tensor_ptr_vec_t& inputs)
-    {
-        Init(m_TrainingPlaceholder);
-        m_Predicter->Predict(inputs);
-        return Outputs();
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    const tensor_ptr_vec_t& ModelBase::Predict(const Tensor& input)
+    tensor_ptr_vec_t ModelBase::Predict(const Tensor& input)
     {
         const_tensor_ptr_vec_t inputs{ &input };
         return Predict(inputs);
@@ -112,8 +92,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::Optimize(OptimizerBase* optimizer, map<string, LossBase*> lossDict)
     {
-        Init(m_TrainingPlaceholder);
-
         NameScope scope(Name());
 
         m_Optimizer = optimizer;
@@ -138,7 +116,7 @@ namespace Neuro
 
                 m_AccuracyFuncs[i] = outputsShapes[i].Length == 1 ? AccBinaryClassificationEquality : AccCategoricalClassificationEquality;
 
-                targetsPlaceholders.push_back(new Placeholder(Shape(outLayer->OutputShape()), "target" + to_string(i)));
+                targetsPlaceholders.push_back(new Placeholder(Shape(outLayer->OutputShapes()[0]), "target" + to_string(i)));
                 auto loss = lossDict[outLayer->Name()]->Build(targetsPlaceholders.back(), outLayer->OutputNodes()[0]);
 
                 losses.push_back(loss);
@@ -176,13 +154,13 @@ namespace Neuro
         {
             totalParams += layer->ParamsNum();
             ss << left << setw(29) << (layer->Name() + "(" + layer->ClassName() + ")").substr(0, 28);
-            ss << setw(26) << layer->OutputShape().ToString();
+            ss << setw(26) << layer->OutputShapes()[0].ToString();
             ss << setw(13) << layer->ParamsNum() << "\n";
-            if (layer->InputLayers().size() > 1)
+            /*if (layer->InputLayers().size() > 1)
             {
                 for (int i = 0; i < (int)layer->InputLayers().size(); ++i)
                     ss << layer->InputLayers()[i]->Name() << "\n";
-            }
+            }*/
             ss << "_________________________________________________________________\n";
         }
 
@@ -214,7 +192,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-	const LayerBase* ModelBase::Layer(const string& name) const
+	LayerBase* ModelBase::Layer(const string& name)
 	{
 		for (auto layer : Layers())
 		{
@@ -278,7 +256,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::LoadWeights(const string& filename)
     {
-        ForceInitLayers(false);
+        Build();
 
         H5File file = H5File(filename, H5F_ACC_RDONLY);
 
@@ -587,7 +565,7 @@ namespace Neuro
                 float validationTotalLoss = 0;
                 float validationHits = 0;
 
-                auto& modelOutputs = Outputs();
+                //auto& modelOutputs = Outputs();
 
                 for (uint32_t b = 0; b < validationBatchesNum; ++b)
                 {

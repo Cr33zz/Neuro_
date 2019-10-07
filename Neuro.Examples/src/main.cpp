@@ -13,6 +13,20 @@
 
 int main()
 {
+    auto m1 = new Sequential("m1");
+    m1->AddLayer(new Input(Shape(2)));
+    m1->AddLayer(new Dense(3));    
+    
+    auto m2 = new Sequential("m2");
+    m2->AddLayer(new Input(Shape(3)));
+    m2->AddLayer(new Dense(2));
+    m2->Optimize(new SGD(), new MeanSquareError());
+
+    auto m3 = new Sequential("m3");
+    m3->AddLayer(m1);
+    m3->AddLayer(m2);
+    m3->Optimize(new SGD(), new MeanSquareError());
+
     /*Tensor t(Shape(2, 3, 4, 5));
     t.FillWithRange(1);*/
 
@@ -41,12 +55,12 @@ int main()
 
     //ComputationalGraph().Run();
     //IrisNetwork().Run();
-    ConvNetwork().Run();
-    FlowNetwork().Run();
-    MnistConvNetwork().Run();
-    MnistNetwork().Run();
-    AutoencoderNetwork().Run();
-    ConvAutoencoderNetwork().Run();
+    //ConvNetwork().Run();
+    //FlowNetwork().Run();
+    //MnistConvNetwork().Run();
+    //MnistNetwork().Run();
+    //AutoencoderNetwork().Run();
+    //ConvAutoencoderNetwork().Run();
     GAN().Run();
     //DeepConvGAN().Run();
     //CifarGAN().RunDiscriminatorTrainTest();

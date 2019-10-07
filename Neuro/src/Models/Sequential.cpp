@@ -2,8 +2,10 @@
 #include <iomanip>
 #include <sstream>
 
+#include "ComputationalGraph/Placeholder.h"
 #include "Layers/LayerBase.h"
 #include "Models/Sequential.h"
+#include "Layers/Input.h"
 
 namespace Neuro
 {
@@ -37,45 +39,25 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Sequential::OnLinkInput(const vector<LayerBase*>& inputLayers)
-    {
-        assert(inputLayers.size() == 1);
-        m_Layers.front()->OnLinkInput(inputLayers);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void Sequential::OnLinkOutput(LayerBase* outputLayer)
-    {
-        m_Layers.back()->OnLinkOutput(outputLayer);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    LayerBase* Sequential::LinkImpl(const vector<LayerBase*>& inputLayers)
-    {
-        assert(inputLayers.size() == 1);
-        OnLinkInput(inputLayers);
-        inputLayers[0]->OnLinkOutput(m_ModelInputLayers[0]);
-        return this;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
 	void Sequential::AddLayer(LayerBase* layer)
 	{
-        //assert(!m_Layers.empty() || layer->HasInputShape()); // first added layer must have input shape specified
-        assert(!layer->InputLayer() || layer->InputLayer() == m_Layers.back()); // if layer being added has input layer it must be the last one in the sequence
-
+        m_Built = false;
         if (m_Layers.empty())
         {
-            m_ModelInputLayers.resize(1);
-            m_ModelInputLayers[0] = layer;
+            LayerBase* firstLayer = layer;
+
+            // we have to dig through layer containers until we get the very first one
+            while (ModelBase* modelLayer = dynamic_cast<ModelBase*>(layer))
+                firstLayer = modelLayer->Layer(0);
+            
+            m_InputNodes = firstLayer->m_InputNodes;
+            
         }
-
-        if (!m_Layers.empty() && !layer->InputLayer())
-            layer->Link(m_Layers.back());
-		
-        m_ModelOutputLayers.resize(1);
-        m_ModelOutputLayers[0] = layer;
-
-		m_Layers.push_back(layer);
+        else
+        {
+            layer->Init(m_Layers.back()->OutputNodes(), m_TrainingPlaceholder);
+        }
+        
+        m_Layers.push_back(layer);
 	}
 }

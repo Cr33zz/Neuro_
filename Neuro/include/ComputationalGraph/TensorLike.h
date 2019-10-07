@@ -9,6 +9,7 @@ namespace Neuro
     using namespace std;
 
     class Graph;
+    class LayerBase;
 
     class TensorLike
     {
@@ -32,6 +33,15 @@ namespace Neuro
         virtual bool IsVar() const { return false; }
 
         void AddInputNode(TensorLike* node) { m_InputNodes.push_back(node); }
+
+        struct origin
+        {
+            LayerBase* layer;
+            size_t output_index;
+        };
+
+        // Origin is not used in case of pure computational graph networks but is required for layers abstraction
+        origin* m_Origin = nullptr;
 
     protected:
         TensorLike(const string& name = "");

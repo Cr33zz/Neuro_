@@ -19,37 +19,13 @@ namespace Neuro
         Flow(const vector<LayerBase*>& inputLayers, const vector<LayerBase*>& outputLayers, const string& name = "", int seed = 0);
         ~Flow();
 
-        virtual const Shape& InputShape() const override { return m_ModelInputLayers[0]->InputShape(); }
-        virtual const tensor_ptr_vec_t& Outputs() const override { return m_Outputs; }
-        virtual const vector<Shape>& OutputShapes() const override { return m_OutputsShapes; }
-        virtual const vector<LayerBase*>& InputLayers() const override { return m_ModelInputLayers[0]->InputLayers(); }
-        virtual const vector<LayerBase*>& OutputLayers() const override { return m_ModelOutputLayers[0]->OutputLayers(); }
-
-        virtual const vector<LayerBase*>& ModelInputLayers() const override { return m_ModelInputLayers; }
-        virtual const vector<LayerBase*>& ModelOutputLayers() const override { return m_ModelOutputLayers; }
-        virtual const vector<LayerBase*>& Layers() const override { return m_Order; }
-
     protected:
-        virtual LayerBase* LinkImpl(const vector<LayerBase*>& inputLayers) override;
         virtual LayerBase* GetCloneInstance() const override;
         virtual void OnClone(const LayerBase& source) override;
-        virtual void OnInit(TensorLike* training, bool initValues = true) override;
-        virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) override;
-        virtual void OnLinkOutput(LayerBase* outputLayer) override;
 
 	private:
 		Flow() {}
 
-        void ProcessLayer(LayerBase* layer, vector<LayerBase*>& visited);
-
-        vector<Tensor*> m_InputsGradient;
-        tensor_ptr_vec_t m_Outputs;
-        vector<Shape> m_OutputsShapes;
-        
-        vector<LayerBase*> m_ModelInputLayers;
-        vector<LayerBase*> m_ModelOutputLayers;
-
-        vector<LayerBase*> m_Order;
-        vector<LayerBase*> m_ReversedOrder;
+        void ProcessLayer(LayerBase* layer, unordered_set<LayerBase*>& visited);
 	};
 }

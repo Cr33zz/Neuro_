@@ -25,27 +25,12 @@ namespace Neuro
 	public:
         virtual ~LayerBase() {}
 
-        virtual const Shape& InputShape() const = 0;
-        virtual const tensor_ptr_vec_t& Outputs() const = 0;
-        virtual const vector<Shape>& OutputShapes() const = 0;
-        virtual const vector<LayerBase*>& InputLayers() const = 0;
-        virtual const vector<LayerBase*>& OutputLayers() const = 0;
+        virtual const vector<Shape>& InputShapes() const { return m_InputShapes; }
+        virtual const vector<TensorLike*>& InputNodes() const { return m_InputNodes; }
+        virtual const vector<Shape>& OutputShapes() const { return m_OutputShapes; }
+        virtual const vector<TensorLike*>& OutputNodes() const { return m_OutputNodes; }
 
-		//const Shape& InputShape() const { return InputShapes()[0]; }
-		//const Tensor* InputGradient() { return InputsGradient()[0]; }
-		const Tensor* Output() const { return Outputs()[0]; }
-		const Shape& OutputShape() const { return OutputShapes()[0]; }
-		const LayerBase* InputLayer() const { return InputLayers().empty() ? nullptr : InputLayers()[0]; }
-        const LayerBase* OutputLayer() const { return OutputLayers().empty() ? nullptr : OutputLayers()[0]; }
-
-        //bool HasInputShape() const { return !InputShapes().empty();  }
-        bool HasInputLayers() const { return !InputLayers().empty(); }
-
-        LayerBase* Link(LayerBase* inputLayer);
-        LayerBase* operator() (LayerBase* inputLayer);
-
-        LayerBase* Link(const vector<LayerBase*>& inputLayers);
-        LayerBase* operator() (const vector<LayerBase*>& inputLayers);
+        vector<LayerBase*> InputLayers() const;
 
         // Tau specifies the percentage of copied parameters to be applied on a target network, when less than 1 target's network
         // parameters will be updated as follows: this_parameters * tau + target_parameters * (1 - tau)
@@ -59,42 +44,45 @@ namespace Neuro
         virtual void SerializedParameters(vector<SerializedParameter>& params);
 
 		LayerBase* Clone();
-		void Init(TensorLike* training, bool initValues = true);
 		
         tensor_ptr_vec_t Weights();
 
         const string& ClassName() const { return m_ClassName; }
         const string& Name() const { return m_Name; }
 
+        //virtual Shape ComputeOutputShape(const vector<Shape>& inputShapes) = 0;
+        virtual bool CheckInputCompatibility(const vector<TensorLike*>& inputNodes) { return true; }
+
+        vector<TensorLike*> Init(const vector<TensorLike*>& inputNodes, TensorLike* training);
+
 	protected:
         LayerBase(const string& constructorName, const string& name = "");
 		// This constructor exists only for cloning purposes
         LayerBase() {}
 
-        virtual vector<TensorLike*>& InputNodes() = 0;
-        virtual vector<TensorLike*>& OutputNodes() = 0;
+        // Creates internal state tensors like weights, biases etc.
+        virtual void Build(const vector<Shape>& inputShapes) {}
 
-        virtual LayerBase* LinkImpl(const vector<LayerBase*>& inputLayers);
+        // Creates internal chain of operations based on input tensors and returns output tensors
+        virtual vector<TensorLike*> InitOps(const vector<TensorLike*>& inputNodes, TensorLike* training) = 0;
 
         virtual LayerBase* GetCloneInstance() const = 0;
         virtual void OnClone(const LayerBase& source);
-        virtual void OnInit(TensorLike* training, bool initValues = true) {}
-        virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) = 0;
-        virtual void OnLinkOutput(LayerBase* outputLayer) = 0;
         
 		string GenerateName() const;
 
 		bool m_Trainable = true;
 
-        Stopwatch m_FeedForwardTimer;
-        Stopwatch m_ActivationTimer;
-        Stopwatch m_BackPropTimer;
-        Stopwatch m_ActivationBackPropTimer;
+        vector<Shape> m_InputShapes;
+        vector<TensorLike*> m_InputNodes;
+        vector<Shape> m_OutputShapes;
+        vector<TensorLike*> m_OutputNodes;
 
 	private:
 		string m_Name;
         string m_ClassName;
-		bool Initialized = false;
+        bool m_Built = false;
+		bool m_Initialized = false;
 
 		static map<string, int> s_LayersCountPerType;
 

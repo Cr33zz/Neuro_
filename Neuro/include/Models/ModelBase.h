@@ -23,8 +23,6 @@ namespace Neuro
 	public:
         ~ModelBase();
 
-        void ForceInitLayers(bool initValues = true);
-
         void Optimize(OptimizerBase* optimizer, LossBase* loss);
         void Optimize(OptimizerBase* optimizer, map<string, LossBase*> lossDict);
 
@@ -35,12 +33,12 @@ namespace Neuro
         tuple<float, float> TrainOnBatch(const Tensor& input, const Tensor& output);
         tuple<float, float> TrainOnBatch(const const_tensor_ptr_vec_t& inputs, const const_tensor_ptr_vec_t& outputs);
 
-        const tensor_ptr_vec_t& Predict(const const_tensor_ptr_vec_t& inputs);
-        const tensor_ptr_vec_t& Predict(const Tensor& input);
+        tensor_ptr_vec_t Predict(const const_tensor_ptr_vec_t& inputs);
+        tensor_ptr_vec_t Predict(const Tensor& input);
 
-        virtual const vector<LayerBase*>& Layers() const = 0;
-        virtual const vector<LayerBase*>& ModelInputLayers() const = 0;
-        virtual const vector<LayerBase*>& ModelOutputLayers() const = 0;
+        virtual const vector<LayerBase*>& Layers() const { return m_Layers; }
+        virtual const vector<LayerBase*>& Inputs() const { return m_InputLayers; }
+        virtual const vector<LayerBase*>& Outputs() const { return m_OutputLayers; }
 
         void SaveWeights(const string& filename) const;
         void LoadWeights(const string& filename);
@@ -54,10 +52,8 @@ namespace Neuro
         string Summary() const;
         string TrainSummary() const;
 
-        ModelBase* Link(LayerBase* inputLayer) { return static_cast<ModelBase*>(__super::Link(inputLayer)); }
-        ModelBase* Link(const vector<LayerBase*>& inputLayers) { return static_cast<ModelBase*>(__super::Link(inputLayers)); }
-
-        const LayerBase* Layer(const string& name) const;
+        LayerBase* Layer(const string& name);
+        LayerBase* Layer(size_t idx) { return m_Layers[idx]; }
 
         float LastTrainError() const { return m_LastTrainError; }
 
@@ -65,15 +61,16 @@ namespace Neuro
         ModelBase() {}
         ModelBase(const string& constructorName, const string& name = "", int seed = 0);
 
-        virtual vector<TensorLike*>& InputNodes() override { return m_InputNodes; }
-        virtual vector<TensorLike*>& OutputNodes() override { return m_OutputNodes; }
-
         virtual void OnClone(const LayerBase& source) override;
-        virtual void OnInit(TensorLike* training, bool initValues = true) override;
 
-        vector<TensorLike*> m_InputNodes;
+        virtual void Build(const vector<Shape>& inputShapes) override;
+
+        vector<LayerBase*> m_Layers;
         vector<Placeholder*> m_InputPlaceholders;
-        vector<TensorLike*> m_OutputNodes;
+        Placeholder* m_TrainingPlaceholder = nullptr;
+
+        vector<LayerBase*> m_InputLayers;
+        vector<LayerBase*> m_OutputLayers;
 
     private:
         // This is vectorized gradient descent
@@ -86,7 +83,6 @@ namespace Neuro
         vector<accuracy_func_t> m_AccuracyFuncs;
         bool m_ForceLearningPhase = false;
 
-        Placeholder* m_TrainingPlaceholder = nullptr;
         Trainer* m_Trainer = nullptr;
         Predicter* m_Predicter = nullptr;
 
