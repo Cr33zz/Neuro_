@@ -37,7 +37,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Concatenate::InitOps(TensorLike* training, bool initValues)
+    void Concatenate::InternalCall(TensorLike* training, bool initValues)
     {
         m_OutputNodes[0] = concat(m_InputNodes, m_Axis);
     }

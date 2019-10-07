@@ -20,6 +20,6 @@ namespace Neuro
 
         virtual LayerBase* GetCloneInstance() const override;
 
-        virtual void InitOps(TensorLike* training, bool initValues = true);
+        virtual void InternalCall(TensorLike* training, bool initValues = true);
     };
 }

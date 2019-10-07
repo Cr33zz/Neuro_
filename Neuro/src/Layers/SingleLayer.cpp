@@ -15,14 +15,14 @@ namespace Neuro
     SingleLayer::SingleLayer(const string& constructorName, LayerBase* inputLayer, const Shape& outputShape, ActivationBase* activation, const string& name)
         : SingleLayer(constructorName, outputShape, activation, name)
     {
-        Link(inputLayer);
+        Call(inputLayer);
     }
 
     //////////////////////////////////////////////////////////////////////////
     SingleLayer::SingleLayer(const string& constructorName, const vector<LayerBase*>& inputLayers, const Shape& outputShape, ActivationBase* activation, const string& name)
         : SingleLayer(constructorName, outputShape, activation, name)
     {
-        Link(inputLayers);
+        Call(inputLayers);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -80,7 +80,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void SingleLayer::InitOps(TensorLike* training, bool initValues)
+    void SingleLayer::InternalCall(TensorLike* training, bool initValues)
     {
         m_OutputNodes = m_InputNodes;
     }
@@ -101,7 +101,7 @@ namespace Neuro
         m_Outputs.resize(m_OutputsShapes.size());
         m_OutputNodes.resize(m_Outputs.size());
 
-        InitOps(training, initValues);
+        InternalCall(training, initValues);
 
         for (size_t i = 0; i < m_Outputs.size(); ++i)
         {

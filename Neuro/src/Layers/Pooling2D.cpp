@@ -80,7 +80,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Pooling2D::InitOps(TensorLike* training, bool initValues)
+    void Pooling2D::InternalCall(TensorLike* training, bool initValues)
     {
         m_OutputNodes[0] = pool2d(m_InputNodes[0], m_FilterSize, m_Stride, m_Padding, m_Mode, m_DataFormat);
     }

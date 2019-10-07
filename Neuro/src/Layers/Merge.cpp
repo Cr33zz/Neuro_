@@ -48,7 +48,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Merge::InitOps(TensorLike* training, bool initValues)
+    void Merge::InternalCall(TensorLike* training, bool initValues)
     {
         switch (m_MergeMode)
         {

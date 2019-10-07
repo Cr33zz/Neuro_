@@ -13,7 +13,29 @@
 
 int main()
 {
-    auto m1 = new Sequential("m1");
+    auto m1In1 = new Input(Shape(32));
+    auto m1X = (new Dense(10, new Sigmoid()))->Call(m1In1);
+    auto m1 = new Flow({ m1In1 }, { m1In1, m1X });
+
+    auto m2In1 = new Input(Shape(32));
+    auto m2X = (new Dense(10, new Sigmoid()))->Call(m2In1);
+    auto m2 = new Flow({ m2In1 }, { m2X });
+
+    auto m3In1 = new Input(Shape(10));
+    auto m3In2 = new Input(Shape(10));
+    auto m3X = (new Merge(MergeSum, new Sigmoid()))->Call({ m3In1, m3In2 });
+    m3X = (new Dense(5, new Tanh()))->Link(m3X);
+    auto m3 = (new Flow({ m3In1, m3In2 }, { m3X }))->Link({ m1->ModelOutputLayers()[1], m2->ModelOutputLayers()[0] });
+
+    auto model = new Flow({ m1->ModelInputLayers()[0], m2->ModelInputLayers()[0] }, m3->ModelOutputLayers());
+    model->Optimize(new SGD(0.05f), new MeanSquareError());
+
+    const_tensor_ptr_vec_t inputs = { &(new Tensor(Shape(32)))->FillWithRand(), &(new Tensor(Shape(32)))->FillWithRand() };
+    const_tensor_ptr_vec_t outputs = { &(new Tensor(Shape(5)))->FillWithRand() };
+
+    model->Fit(inputs, outputs, 1, 200, nullptr, nullptr, 1, ETrack::TrainError, false);
+
+    /*auto m1 = new Sequential("m1");
     m1->AddLayer(new Input(Shape(2)));
     m1->AddLayer(new Dense(3));    
     
@@ -25,7 +47,7 @@ int main()
     auto m3 = new Sequential("m3");
     m3->AddLayer(m1);
     m3->AddLayer(m2);
-    m3->Optimize(new SGD(), new MeanSquareError());
+    m3->Optimize(new SGD(), new MeanSquareError());*/
 
     /*Tensor t(Shape(2, 3, 4, 5));
     t.FillWithRange(1);*/

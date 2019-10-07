@@ -70,7 +70,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void BatchNormalization::InitOps(TensorLike* training, bool initValues)
+    void BatchNormalization::InternalCall(TensorLike* training, bool initValues)
     {
         Shape paramsShape = Shape(InputShape().Width(), InputShape().Height(), InputShape().Depth(), 1); // PerActivation
         if (InputShape().Depth() > 1) 

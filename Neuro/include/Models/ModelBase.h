@@ -65,14 +65,26 @@ namespace Neuro
 
         virtual void Build(const vector<Shape>& inputShapes) override;
 
+        void InitGraph(const vector<TensorLike*>& inputs, const vector<TensorLike*>& outputs);
+
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override;
+
         vector<LayerBase*> m_Layers;
+        vector<TensorLike*> m_Inputs;
+        vector<TensorLike*> m_Outputs;
+        vector<LayerBase*> m_InputLayers;
+        vector<TensorLike::origin*> m_InputCoords;
+        vector<LayerBase*> m_OutputLayers;
+        vector<TensorLike::origin*> m_OutputCoords;
+
         vector<Placeholder*> m_InputPlaceholders;
         Placeholder* m_TrainingPlaceholder = nullptr;
 
-        vector<LayerBase*> m_InputLayers;
-        vector<LayerBase*> m_OutputLayers;
+        bool m_GraphNetwork = false;
 
     private:
+        void MapGraphNetwork(const vector<TensorLike*>& inputs, const vector<TensorLike*>& outputs);
+
         // This is vectorized gradient descent
         void TrainStep(const const_tensor_ptr_vec_t& inputs, const const_tensor_ptr_vec_t& outputs, float* trainError = nullptr, float* trainAcc = nullptr);
 

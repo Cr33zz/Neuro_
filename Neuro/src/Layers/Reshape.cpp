@@ -46,7 +46,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Reshape::InitOps(TensorLike* training, bool initValues)
+    void Reshape::InternalCall(TensorLike* training, bool initValues)
     {
         m_OutputNodes[0] = reshape(m_InputNodes[0], OutputShape());
     }

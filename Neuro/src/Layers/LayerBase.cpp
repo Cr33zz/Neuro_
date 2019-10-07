@@ -11,7 +11,8 @@
 
 namespace Neuro
 {
-	map<string, int> LayerBase::s_LayersCountPerType;
+
+    map<string, int> LayerBase::s_LayersCountPerType;
 
 	//////////////////////////////////////////////////////////////////////////
     LayerBase::LayerBase(const string& constructorName, const string& name)
@@ -46,6 +47,62 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
+    const vector<Shape>& LayerBase::InputShape() const
+    {
+        assert(m_InboundNodes.size() == 1);
+        return m_InboundNodes[0]->input_shapes;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    const vector<Shape>& LayerBase::InputShapeAt(size_t idx) const
+    {
+        assert(m_InboundNodes.size() > idx);
+        return m_InboundNodes[idx]->input_shapes;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    const vector<TensorLike*>& LayerBase::Input() const
+    {
+        assert(m_InboundNodes.size() == 1);
+        return m_InboundNodes[0]->input_tensors;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    const vector<TensorLike*>& LayerBase::InputAt(size_t idx) const
+    {
+        assert(m_InboundNodes.size() > idx);
+        return m_InboundNodes[idx]->input_tensors;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    const vector<Shape>& LayerBase::OutputShape() const
+    {
+        assert(m_InboundNodes.size() == 1);
+        return m_InboundNodes[0]->output_shapes;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    const vector<Shape>& LayerBase::OutputShapeAt(size_t idx) const
+    {
+        assert(m_InboundNodes.size() > idx);
+        return m_InboundNodes[idx]->output_shapes;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    const vector<TensorLike*>& LayerBase::Output() const
+    {
+        assert(m_InboundNodes.size() == 1);
+        return m_InboundNodes[0]->output_tensors;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    const vector<TensorLike*>& LayerBase::OutputAt(size_t idx) const
+    {
+        assert(m_InboundNodes.size() > idx);
+        return m_InboundNodes[idx]->output_tensors;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void LayerBase::CopyParametersTo(LayerBase& target, float tau) const
 	{
 	}
@@ -63,33 +120,37 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> LayerBase::Init(const vector<TensorLike*>& inputNodes, TensorLike* training)
+    const vector<TensorLike*>& LayerBase::Call(const vector<TensorLike*>& inputs, TensorLike* training)
     {
         NameScope scope(Name());
 
+        vector<Shape> inputShapes = CollectShapes(inputs);
+        CheckInputCompatibility(inputs);
+
         if (!m_Built)
         {
-            CheckInputCompatibility(inputNodes);
-
-            for_each(inputNodes.begin(), inputNodes.end(), [&](TensorLike* t) { m_InputShapes.push_back(t->GetShape()); });
-
-            Build(m_InputShapes);
+            Build(inputShapes);
             m_Built = true;
         }
 
-        CheckInputCompatibility(inputNodes);
+        auto outputs = InternalCall(inputs, training);
 
-        m_OutputNodes = InitOps(inputNodes, training);
+        AddInboundNode(inputs, outputs, inputShapes, CollectShapes(outputs));
 
-        for (size_t i = 0; i < m_OutputNodes.size(); ++i)
-        {
-            auto outNode = m_OutputNodes[i];
-            
-            outNode->m_Origin = new TensorLike::origin{ this, i };
-            m_OutputShapes.push_back(outNode->GetShape());
-        }
+        return m_InboundNodes.back()->output_tensors;
+    }
 
-        return m_OutputNodes;
+    //////////////////////////////////////////////////////////////////////////
+    const vector<TensorLike*>& LayerBase::Call(TensorLike* input, TensorLike* training)
+    {
+        vector<TensorLike*> inputs{ input };
+        return Call(inputs, training);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    const vector<TensorLike*>& LayerBase::operator()(const vector<TensorLike*>& inputs, TensorLike* training)
+    {
+        return Call(inputs, training);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -113,4 +174,63 @@ namespace Neuro
 		ss << classNameLower << "_" << (++s_LayersCountPerType[classNameLower]);
 		return ss.str();
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    void LayerBase::AddInboundNode(const vector<TensorLike*>& inputTensors, const vector<TensorLike*>& outputTensors, const vector<Shape>& inputShapes, const vector<Shape>& outputShapes)
+    {
+        vector<LayerBase*> inboundLayers;
+        vector<int> nodeIndices;
+        vector<int> tensorIndices;
+
+        for (auto t : inputTensors)
+        {
+            if (t->m_Origin)
+            {
+                inboundLayers.push_back(t->m_Origin->layer);
+                nodeIndices.push_back((int)t->m_Origin->node_index);
+                tensorIndices.push_back((int)t->m_Origin->tensor_index);
+            }
+            else
+            { 
+                inboundLayers.push_back(nullptr);
+                nodeIndices.push_back(-1);
+                tensorIndices.push_back(-1);
+            }
+        }
+
+        for (size_t i = 0; i < outputTensors.size(); ++i)
+            outputTensors[i]->m_Origin = new TensorLike::origin{ this, m_InboundNodes.size() - 1, i };
+        
+        new node(this, inboundLayers, nodeIndices, tensorIndices, inputTensors, outputTensors, inputShapes, outputShapes);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    vector<Shape> LayerBase::CollectShapes(const vector<TensorLike*>& tensorNodes) const
+    {
+        vector<Shape> shapes;
+        for_each(tensorNodes.begin(), tensorNodes.end(), [&](TensorLike* tensor) { shapes.push_back(tensor->GetShape()); });
+        return shapes;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    LayerBase::node::node(LayerBase* outboundLayer, const vector<LayerBase*>& inboundLayers, const vector<int>& nodeIndices, const vector<int>& tensorIndices, const vector<TensorLike*>& inputTensors, const vector<TensorLike*>& outputTensors, const vector<Shape>& inputShapes, const vector<Shape>& outputShapes)
+    {
+        outbound_layer = outboundLayer;
+        inbound_layers = inboundLayers;
+        node_indices = nodeIndices;
+        tensor_indices = tensorIndices;
+        input_tensors = inputTensors;
+        output_tensors = outputTensors;
+        input_shapes = inputShapes;
+        output_shapes = outputShapes;
+
+        shared_ptr<node> sharedPtr(this);
+
+        for (auto layer : inboundLayers)
+        {
+            if (layer)
+                layer->m_OutboundNodes.push_back(sharedPtr);
+        }
+        outbound_layer->m_InboundNodes.push_back(sharedPtr);
+    }
 }

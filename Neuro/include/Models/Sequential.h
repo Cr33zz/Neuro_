@@ -2,13 +2,13 @@
 
 #include <string>
 
-#include "Models/ModelBase.h"
+#include "Models/Flow.h"
 
 namespace Neuro
 {
 	using namespace std;
 
-    class Sequential : public ModelBase
+    class Sequential : public Flow
     {
 	public:
 		Sequential(const string& name = "", int seed = 0);

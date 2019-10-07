@@ -37,7 +37,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Dropout::InitOps(TensorLike* training, bool initValues)
+    void Dropout::InternalCall(TensorLike* training, bool initValues)
     {
         m_OutputNodes[0] = dropout(m_InputNodes[0], m_Prob, training);
     }

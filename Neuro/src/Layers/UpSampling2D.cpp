@@ -48,7 +48,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void UpSampling2D::InitOps(TensorLike* training, bool initValues)
+    void UpSampling2D::InternalCall(TensorLike* training, bool initValues)
     {
         m_OutputNodes[0] = upsample2d(m_InputNodes[0], m_ScaleFactor);
     }

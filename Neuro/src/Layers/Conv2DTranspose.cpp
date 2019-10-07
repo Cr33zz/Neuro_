@@ -47,7 +47,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Conv2DTranspose::InitOps(TensorLike* training, bool initValues)
+    void Conv2DTranspose::InternalCall(TensorLike* training, bool initValues)
     {
         if (m_DataFormat == NCHW)
         {

@@ -36,8 +36,9 @@ namespace Neuro
 
         struct origin
         {
-            LayerBase* layer;
-            size_t output_index;
+            LayerBase* layer; // layer which created this tensor
+            size_t node_index; // node index in inbound nodes list in layer
+            size_t tensor_index; // index in output tensors list
         };
 
         // Origin is not used in case of pure computational graph networks but is required for layers abstraction

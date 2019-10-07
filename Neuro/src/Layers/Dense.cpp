@@ -55,7 +55,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Dense::InitOps(TensorLike* training, bool initValues)
+	void Dense::InternalCall(TensorLike* training, bool initValues)
 	{
         m_Weights = new Variable(Shape(OutputShape().Length, InputShape().Length), initValues ? m_WeightsInitializer : nullptr, "weights");
         m_Bias = new Variable(OutputShape(), initValues ? m_BiasInitializer : nullptr, "bias");

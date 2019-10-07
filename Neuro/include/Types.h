@@ -1,6 +1,21 @@
 #pragma once
 
 #include <vector>
+#include <iostream>
+
+#ifndef NDEBUG
+#   define NEURO_ASSERT(condition, msg) \
+    do { \
+        if (! (condition)) { \
+            std::cerr << "Assert failed: " << msg << endl \
+                      << "Expected: " << #condition << endl \
+                      << "Source: " << __FILE__ << ", line " << __LINE__ << endl; \
+            __debugbreak; \
+        } \
+    } while (false)
+#else
+#   define NEURO_ASSERT(condition, message) do { } while (false)
+#endif
 
 namespace Neuro
 {
