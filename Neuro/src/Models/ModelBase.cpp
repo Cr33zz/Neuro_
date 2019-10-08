@@ -140,7 +140,29 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<TensorLike*> ModelBase::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
     {
-        NEURO_ASSERT(false, "Not implemented yet.");
+        NEURO_ASSERT(inputs.size() == m_Inputs.size(), "Number of inputs doesn't match. Expected " << m_Inputs.size() << " received " << inputs.size());
+
+        map<LayerBase*, vector<TensorLike*>> layerOutputs;
+        unordered_set<LayerBase*> calledLayers;
+
+        // all input layers are single tensor placeholders
+        for (size_t i = 0; i < m_InputLayers.size(); ++i)
+        {
+            auto layer = m_InputLayers[i];
+            layerOutputs[layer] = layer->Call(inputs[i]);
+            calledLayers.insert(layer);
+        }
+
+        //for (auto layer : m_Layers)
+        //{
+        //    if (calledLayers.find(layer) != calledLayers.end())
+        //        continue;
+
+        //    // gather inputs from inbound layers and call
+        //    vector<TensorLike*> layerInputs;
+        //    for ()
+        //}
+        
         return {};
     }
 
@@ -754,57 +776,136 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    //void ModelBase::MapGraphNetwork(const vector<TensorLike*>& inputs, const vector<TensorLike*>& outputs)
-    //{
-    //    auto makeNodeKey = [](const string& layerName, int nodeIndex)
-    //    {
-    //        return layerName + '_ib-' + to_string(nodeIndex);
-    //    };
+    void ModelBase::MapGraphNetwork(const vector<TensorLike*>& inputs, const vector<TensorLike*>& outputs)
+    {
+        auto makeNodeKey = [](const string& layerName, int nodeIndex)
+        {
+            return layerName + '_ib-' + to_string(nodeIndex);
+        };
 
-    //    unordered_set<string> networkNodes; // ids of all nodes relevant to the Network
-    //    map<node*, int> nodesDepths; // dict{ node: depth value }
-    //    map<LayerBase*, int> layers_depths;  // dict{ layer: depth value }
-    //    map<LayerBase*, int> layer_indices;  // dict{ layer: index in traversal }
-    //    vector<node*> nodes_in_decreasing_depth;
+        unordered_set<string> networkNodes; // ids of all nodes relevant to the Network
+        map<node*, int> nodes_depths; // dict{ node: depth value }
+        map<LayerBase*, int> layers_depths;  // dict{ layer: depth value }
+        map<LayerBase*, int> layer_indices;  // dict{ layer: index in traversal }
+        vector<node*> nodes_in_decreasing_depth;
 
-    //    auto buildMap = [&](TensorLike* tensor, unordered_set<node*> finishedNodes, list<node*> nodesInProgress, LayerBase* layer, int nodeIndex, int tensorIndex)
-    //    {
-    //        auto node = layer->m_InboundNodes[nodeIndex].get();
+        function<void(TensorLike*,unordered_set<node*>&,unordered_set<node*>&,LayerBase*,int,int)> buildMap;
+        buildMap = [&](TensorLike* tensor, unordered_set<node*>& finishedNodes, unordered_set<node*>& nodesInProgress, LayerBase* layer, int nodeIndex, int tensorIndex)
+        {
+            auto node = layer->m_InboundNodes[nodeIndex].get();
 
-    //        // Prevent cycles.
-    //        if (find(nodesInProgress.begin(), nodesInProgress.end(), node) != nodesInProgress.end())
-    //            NEURO_ASSERT(false, "The tensor " << tensor->Name() << " at layer '" << layer->Name() << "' is part of a cycle.");
+            // Prevent cycles.
+            if (find(nodesInProgress.begin(), nodesInProgress.end(), node) != nodesInProgress.end())
+                NEURO_ASSERT(false, "The tensor " << tensor->Name() << " at layer '" << layer->Name() << "' is part of a cycle.");
 
-    //        // Don't repeat work for shared subgraphs
-    //        if (finishedNodes.find(node) != finishedNodes.end())
-    //            return;
+            // Don't repeat work for shared subgraphs
+            if (finishedNodes.find(node) != finishedNodes.end())
+                return;
 
-    //        //auto node_key = _make_node_key(layer.name, node_index)
-    //        // Update network_nodes.
-    //        //network_nodes.add(node_key)
+            //auto node_key = _make_node_key(layer.name, node_index)
+            // Update network_nodes.
+            //network_nodes.add(node_key)
 
-    //        // Store the traversal order for layer sorting.
-    //        if (layer_indices.find(layer) == layer_indices.end())
-    //            layer_indices[layer] = layer_indices.size();
+            // Store the traversal order for layer sorting.
+            if (layer_indices.find(layer) == layer_indices.end())
+                layer_indices[layer] = layer_indices.size();
 
-    //        nodesInProgress.push_back(node);
+            nodesInProgress.insert(node);
 
-    //        // Propagate to all previous tensors connected to this node.
-    //        for (size_t i = 0; i < node->inbound_layers.size(); ++i)
-    //        {
-    //            auto x = node->input_tensors[i];
-    //            auto layer = node->inbound_layers[i];
-    //            auto node_index = node->node_indices[i];
-    //            auto tensor_index = node->tensor_indices[i];
-    //            buildMap(x, finishedNodes, nodesInProgress, layer, node_index, tensor_index);
-    //        }
-    //            
-    //        finishedNodes.insert(node);
-    //        node = nodesInProgress.front();
-    //        nodesInProgress.pop_front();
-    //        nodes_in_decreasing_depth.push_back(node);
-    //    };
-    //}
+            // Propagate to all previous tensors connected to this node.
+            for (size_t i = 0; i < node->inbound_layers.size(); ++i)
+            {
+                auto x = node->input_tensors[i];
+                auto layer = node->inbound_layers[i];
+                auto node_index = node->node_indices[i];
+                auto tensor_index = node->tensor_indices[i];
+                buildMap(x, finishedNodes, nodesInProgress, layer, node_index, tensor_index);
+            }
+                
+            finishedNodes.insert(node);
+            nodesInProgress.erase(node);
+            nodes_in_decreasing_depth.push_back(node);
+        };
+
+        unordered_set<node*> finished_nodes;
+        unordered_set<node*> nodes_in_progress;
+        
+        for (auto x : outputs)
+            buildMap(x, finished_nodes, nodes_in_progress, x->m_Metadata->layer, x->m_Metadata->node_index, x->m_Metadata->tensor_index);
+
+        for (auto nodeIt = nodes_in_decreasing_depth.rbegin(); nodeIt != nodes_in_decreasing_depth.rend(); ++nodeIt)
+        {
+            auto node = *nodeIt;
+
+            // If the depth is not set, the node has no outbound nodes(depth 0).
+            int depth = 0;
+            if (nodes_depths.find(node) == nodes_depths.end())
+                nodes_depths[node] = 0;
+
+            // Update the depth of the corresponding layer
+            int previous_depth = layers_depths[node->outbound_layer];
+            // If we've seen this layer before at a higher depth,
+            // we should use that depth instead of the node depth.
+            // This is necessary for shared layers that have inputs at different
+            // depth levels in the graph.
+            depth = max(depth, previous_depth);
+            layers_depths[node->outbound_layer] = depth;
+            nodes_depths[node] = depth;
+
+            // Update the depth of inbound nodes.
+            // The "depth" of a node is the max of the depths
+            // of all layers it is connected to.
+            for (size_t i = 0; i < node->inbound_layers.size(); ++i)
+            {
+                auto inbound_layer = node->inbound_layers[i];
+                auto node_index = node->node_indices[i];
+                auto inbound_node = inbound_layer->m_InboundNodes[node_index];
+                int previous_depth = nodes_depths[inbound_node.get()];
+                nodes_depths[inbound_node.get()] = max(depth + 1, previous_depth);
+            }
+        }
+        
+        // Build a dict{ depth: list of nodes with this depth }
+        map<int, vector<node*>> nodes_by_depth;
+        for (auto entry : nodes_depths)
+        {
+            auto node = entry.first;
+            auto depth = entry.second;
+
+            nodes_by_depth[depth].push_back(node);
+        }
+
+        // Build a dict{ depth: list of layers with this depth }
+        map<int, vector<node*>> layers_by_depth;
+        for (auto entry : layers_depths)
+        {
+            auto layer = entry.first;
+            auto depth = entry.second;
+
+            layers_by_depth[depth].push_back(layer);
+        }
+
+        // Get sorted list of layer depths.
+        vector<int> depth_keys;
+        for_each(layers_by_depth.begin(), layers_by_depth.end(), [&](const pair<int, vector<node*>>& entry) { depth_keys.push_back(entry.first); });
+        reverse(depth_keys.begin(), depth_keys.end());
+
+        // Set self.layers and self._layers_by_depth.
+            layers = []
+        for (auto depth : depth_keys)
+        {
+            layers_for_depth = layers_by_depth[depth]
+            // Network.layers needs to have a deterministic order :
+            // here we order them by traversal order.
+            layers_for_depth.sort(key = lambda x : layer_indices[x])
+            layers.extend(layers_for_depth)
+        }
+
+            // Get sorted list of node depths.
+            depth_keys = list(nodes_by_depth.keys())
+            depth_keys.sort(reverse = True)
+        */
+    }
 
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::ProcessLayer(LayerBase* layer, unordered_set<LayerBase*>& visited)

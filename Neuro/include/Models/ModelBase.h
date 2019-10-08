@@ -72,6 +72,7 @@ namespace Neuro
         virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs, TensorLike* training) override;
 
         vector<LayerBase*> m_Layers;
+        vector<node*> m_LayersNodes;
         vector<TensorLike*> m_Inputs;
         vector<TensorLike*> m_Outputs;
         vector<LayerBase*> m_InputLayers;
@@ -87,7 +88,7 @@ namespace Neuro
         vector<TensorLike*> GetSourceInputs(TensorLike* tensor, LayerBase* layer = nullptr, int nodeIndex = -1);
 
     private:
-        //void MapGraphNetwork(const vector<TensorLike*>& inputs, const vector<TensorLike*>& outputs);
+        void MapGraphNetwork(const vector<TensorLike*>& inputs, const vector<TensorLike*>& outputs);
         void ProcessLayer(LayerBase* layer, unordered_set<LayerBase*>& visited);
 
         // This is vectorized gradient descent
