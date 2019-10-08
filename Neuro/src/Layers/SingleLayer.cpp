@@ -13,7 +13,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     SingleLayer::SingleLayer(const string& constructorName, const Shape& inputShape, ActivationBase* activation, const string& name)
-        : LayerBase(constructorName, inputShape, name)
+        : LayerBase(constructorName, inputShape, name), m_Activation(activation)
     {
     }
 
@@ -21,7 +21,6 @@ namespace Neuro
     SingleLayer::SingleLayer(const string& constructorName, ActivationBase* activation, const string& name)
         : SingleLayer(constructorName, Shape(), activation, name)
     {
-        m_Activation = activation;
     }
 
     //////////////////////////////////////////////////////////////////////////

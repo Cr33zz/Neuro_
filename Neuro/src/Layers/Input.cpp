@@ -1,25 +1,24 @@
 ﻿#include "Layers/Input.h"
 #include "ComputationalGraph/TensorLike.h"
 #include "ComputationalGraph/Placeholder.h"
+#include "ComputationalGraph/NameScope.h"
 #include "ComputationalGraph/Ops.h"
 
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
 	Input::Input(const Shape& inputShape, const string& name)
-		: Input(new Placeholder(inputShape, "input_placeholder"), name)
+		: LayerBase(__FUNCTION__, inputShape, name)
 	{
+        NameScope scope(Name());
+        InitPlaceholder(new Placeholder(inputShape, "placeholder"));
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    Input::Input(Placeholder* tensor, const string& name)
-        : LayerBase(__FUNCTION__, tensor->GetShape(), name)
+    Input::Input(Placeholder* placeholder, const string& name)
+        : LayerBase(__FUNCTION__, placeholder->GetShape(), name)
     {
-        m_Placeholder = tensor;
-        m_Built = true;
-
-        tensor->m_Metadata = new TensorLike::metadata{this, 0, 0};
-        new node(this, {}, {}, {}, { tensor }, { tensor }, { m_ExpectedInputShape }, { m_ExpectedInputShape });
+        InitPlaceholder(placeholder);
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -44,5 +43,15 @@ namespace Neuro
     vector<TensorLike*> Input::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
     {
         return { assign(m_Placeholder, inputs[0]) };
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Input::InitPlaceholder(Placeholder* placeholder)
+    {
+        m_Placeholder = placeholder;
+        m_Built = true;
+
+        placeholder->m_Metadata = new TensorLike::metadata{ this, 0, 0 };
+        new node(this, {}, {}, {}, { placeholder }, { placeholder }, { m_ExpectedInputShape }, { m_ExpectedInputShape });
     }
 }

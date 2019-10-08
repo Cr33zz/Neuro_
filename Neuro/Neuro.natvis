@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="Neuro::LayerBase">
+    <DisplayString>{ m_Name }</DisplayString>    
+  </Type>
+  <Type Name="Neuro::TensorLike">
+    <DisplayString>{ m_Name }</DisplayString>
+    <Expand>
+      <Item Name="[shape]">{GetShape()}</Item>
+    </Expand>
+  </Type>
+  <Type Name="Neuro::Tensor">
+    <DisplayString>{ m_Name }</DisplayString>
+    <Expand>
+      <Item Name="[shape]">m_Shape</Item>
+      <Item Name="[values]">m_Values</Item>
+      <Item Name="[location]">m_CurrentLocation</Item>
+    </Expand>
+  </Type>
+  <Type Name="Neuro::Shape">
+    <DisplayString>{ ToString() }</DisplayString>
+    <Expand>
+      <Item Name="[ndim]">NDim</Item>
+      <Item Name="[length]">Length</Item>
+    </Expand>
+  </Type>
+</AutoVisualizer>

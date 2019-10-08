@@ -593,4 +593,7 @@
       <Filter>src\Tensors\Cuda</Filter>
     </CudaCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="Neuro.natvis" />
+  </ItemGroup>
 </Project>

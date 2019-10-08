@@ -5,6 +5,7 @@
 #include "Models/Sequential.h"
 #include "Layers/Input.h"
 #include "ComputationalGraph/Placeholder.h"
+#include "ComputationalGraph/NameScope.h"
 
 namespace Neuro
 {
@@ -40,6 +41,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
 	void Sequential::AddLayer(LayerBase* layer)
 	{
+        NameScope scope(Name());
+
         m_Built = false;
         if (m_Layers.empty())
         {
@@ -57,14 +60,14 @@ namespace Neuro
                 // we have to dig through layer containers until we get the very first one
                 while (ModelBase* modelLayer = dynamic_cast<ModelBase*>(firstLayer))
                 {
-                    NEURO_ASSERT(!modelLayer->Layers().empty(), "Cannot add an empty model to a `Sequential` model.");
+                    NEURO_ASSERT(!modelLayer->Layers().empty(), "Cannot add an empty model to a 'Sequential' model.");
                     firstLayer = modelLayer->Layer(0);
                 }
 
                 if (firstLayer->ExpectedInputShape().IsValid())
                 {
-                    auto inputLayer = new Input(firstLayer->ExpectedInputShape());
-                    layer->Call(inputLayer->Outputs());
+                    auto inputLayer = new Input(firstLayer->ExpectedInputShape(), "input");
+                    layer->Call(inputLayer->Outputs(), m_TrainingPlaceholder);
                     setInputs = true;
                 }
             }
@@ -94,12 +97,12 @@ namespace Neuro
     {
         if (!inputShapes.empty() && m_Inputs.empty())
         {
-            auto inputLayer = new Input(inputShapes[0]);
+            auto inputLayer = new Input(inputShapes[0], "input");
             auto x = inputLayer->Outputs();
             m_Inputs = x;
 
             for (auto layer : m_Layers)
-                x = layer->Call(x);
+                x = layer->Call(x, m_TrainingPlaceholder);
 
             m_Outputs = x;
         }

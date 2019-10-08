@@ -26,13 +26,13 @@ namespace Neuro
 
         const Shape& ExpectedInputShape() const { return m_ExpectedInputShape; }
         const vector<Shape>& InputShapes() const;
-        const vector<Shape>& InputShapesAt(size_t idx) const;
+        const vector<Shape>& InputShapesAt(int idx) const;
         const vector<TensorLike*>& Inputs() const;
-        const vector<TensorLike*>& InputsAt(size_t idx) const;
+        const vector<TensorLike*>& InputsAt(int idx) const;
         const vector<Shape>& OutputShapes() const;
-        const vector<Shape>& OutputShapesAt(size_t idx) const;
+        const vector<Shape>& OutputShapesAt(int idx) const;
         const vector<TensorLike*>& Outputs() const;
-        const vector<TensorLike*>& OutputsAt(size_t idx) const;
+        const vector<TensorLike*>& OutputsAt(int idx) const;
 
         // Tau specifies the percentage of copied parameters to be applied on a target network, when less than 1 target's network
         // parameters will be updated as follows: this_parameters * tau + target_parameters * (1 - tau)

@@ -302,6 +302,9 @@
   <ItemGroup>
     <CudaCompile Include="src\Tensors\Cuda\CudaKernels.cu" />
   </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="Neuro.natvis" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.0.targets" />

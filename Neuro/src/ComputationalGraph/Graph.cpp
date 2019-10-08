@@ -116,8 +116,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Graph::ProcessBackwardNode(TensorLike* node, vector<TensorLike*>& nodes, const vector<Variable*>& params, bool ignoreConsumersCheck, unordered_set<TensorLike*>& visited, unordered_set<TensorLike*>& visitedParams, const unordered_set<TensorLike*>& required)
     {
-        if (node->IsPlaceholder())
-            return;
+       /* if (node->IsPlaceholder())
+            return;*/
 
         bool allConsumersVisited = true;
 

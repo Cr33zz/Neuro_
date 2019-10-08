@@ -4,8 +4,11 @@
 void GAN::Run()
 {
     Tensor::SetDefaultOpMode(GPU);
-
     GlobalRngSeed(1337);
+
+    //Debug::LogAllGrads();
+    Debug::LogAllOutputs();
+    //Debug::LogOutput("loss/cross_entropy/negative");
 
     cout << "Example: " << Name() << endl;
 
@@ -24,20 +27,20 @@ void GAN::Run()
     LoadImages(images);
     m_ImageShape = Shape(images.Width(), images.Height(), images.Depth());
     images.Map([](float x) { return (x - 127.5f) / 127.5f; }, images);
-    images.Reshape(Shape::From(dModel->InputShapes()[0], images.Batch()));
+    images.Reshape(Shape::From(dModel->InputShapesAt(-1)[0], images.Batch()));
 
     const uint32_t BATCH_SIZE = 128;
     const uint32_t BATCHES_PER_EPOCH = images.Batch() / BATCH_SIZE;
     const uint32_t EPOCHS = 100;
 
-    Tensor testNoise(Shape::From(gModel->InputShapes()[0], 100)); testNoise.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
+    Tensor testNoise(Shape::From(gModel->InputShapesAt(-1)[0], 100)); testNoise.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
     
-    Tensor noise(Shape::From(gModel->InputShapes()[0], BATCH_SIZE));
-    Tensor real(Shape::From(dModel->OutputShapes()[0], BATCH_SIZE)); real.FillWithValue(1.f);
+    Tensor noise(Shape::From(gModel->InputShapesAt(-1)[0], BATCH_SIZE));
+    Tensor real(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE)); real.FillWithValue(1.f);
     
-    Tensor noiseHalf(Shape::From(gModel->InputShapes()[0], BATCH_SIZE / 2));
-    Tensor realHalf(Shape::From(dModel->OutputShapes()[0], BATCH_SIZE / 2)); realHalf.FillWithValue(1.f);
-    Tensor fakeHalf(Shape::From(dModel->OutputShapes()[0], BATCH_SIZE / 2)); fakeHalf.FillWithValue(0.f);
+    Tensor noiseHalf(Shape::From(gModel->InputShapesAt(-1)[0], BATCH_SIZE / 2));
+    Tensor realHalf(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE / 2)); realHalf.FillWithValue(1.f);
+    Tensor fakeHalf(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE / 2)); fakeHalf.FillWithValue(0.f);
 
     for (uint32_t e = 1; e <= EPOCHS; ++e)
     {

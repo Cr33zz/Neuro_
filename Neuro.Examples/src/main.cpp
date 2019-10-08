@@ -13,7 +13,7 @@
 
 int main()
 {
-    auto m1In1 = (new Input(Shape(32)))->Outputs();
+    /*auto m1In1 = (new Input(Shape(32)))->Outputs();
     auto m1X = (new Dense(10, new Sigmoid()))->Call(m1In1);
     auto m1 = new Flow(m1In1, { m1In1[0], m1X[0] });
 
@@ -23,7 +23,7 @@ int main()
 
     auto seq = new Sequential();
     seq->AddLayer(m2);
-    seq->AddLayer(new Dense(10));
+    seq->AddLayer(new Dense(10));*/
 
     
 

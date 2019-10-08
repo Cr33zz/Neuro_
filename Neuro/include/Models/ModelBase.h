@@ -72,7 +72,7 @@ namespace Neuro
         virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs, TensorLike* training) override;
 
         vector<LayerBase*> m_Layers;
-        vector<node*> m_LayersNodes;
+        vector<node*> m_LayerNodes;
         vector<TensorLike*> m_Inputs;
         vector<TensorLike*> m_Outputs;
         vector<LayerBase*> m_InputLayers;
@@ -80,7 +80,6 @@ namespace Neuro
         vector<LayerBase*> m_OutputLayers;
         vector<TensorLike::metadata*> m_OutputCoords;
 
-        vector<Placeholder*> m_InputPlaceholders;
         Placeholder* m_TrainingPlaceholder = nullptr;
 
         bool m_GraphNetwork = false;

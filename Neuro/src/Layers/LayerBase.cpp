@@ -63,9 +63,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const vector<Shape>& LayerBase::InputShapesAt(size_t idx) const
+    const vector<Shape>& LayerBase::InputShapesAt(int idx) const
     {
-        NEURO_ASSERT(m_InboundNodes.size() > idx, "");
+        if (idx < 0)
+            idx = (int)m_InboundNodes.size() + idx;
+
+        NEURO_ASSERT(idx >= 0 && idx < m_InboundNodes.size(), "");
         return m_InboundNodes[idx]->input_shapes;
     }
 
@@ -77,9 +80,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const vector<TensorLike*>& LayerBase::InputsAt(size_t idx) const
+    const vector<TensorLike*>& LayerBase::InputsAt(int idx) const
     {
-        NEURO_ASSERT(m_InboundNodes.size() > idx, "");
+        if (idx < 0)
+            idx = (int)m_InboundNodes.size() + idx;
+
+        NEURO_ASSERT(idx >= 0 && idx < m_InboundNodes.size(), "");
         return m_InboundNodes[idx]->input_tensors;
     }
 
@@ -91,9 +97,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const vector<Shape>& LayerBase::OutputShapesAt(size_t idx) const
+    const vector<Shape>& LayerBase::OutputShapesAt(int idx) const
     {
-        NEURO_ASSERT(m_InboundNodes.size() > idx, "");
+        if (idx < 0)
+            idx = (int)m_InboundNodes.size() + idx;
+
+        NEURO_ASSERT(idx >= 0 && idx < m_InboundNodes.size(), "");
         return m_InboundNodes[idx]->output_shapes;
     }
 
@@ -105,9 +114,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const vector<TensorLike*>& LayerBase::OutputsAt(size_t idx) const
+    const vector<TensorLike*>& LayerBase::OutputsAt(int idx) const
     {
-        NEURO_ASSERT(m_InboundNodes.size() > idx, "");
+        if (idx < 0)
+            idx = (int)m_InboundNodes.size() + idx;
+
+        NEURO_ASSERT(idx >= 0 && idx < m_InboundNodes.size(), "");
         return m_InboundNodes[idx]->output_tensors;
     }
 
@@ -208,7 +220,10 @@ namespace Neuro
         }
 
         for (size_t i = 0; i < outputTensors.size(); ++i)
+        {
+            NEURO_ASSERT(!outputTensors[i]->m_Metadata, "Tensor '" << outputTensors[i]->Name() << "' has already a metadata.");
             outputTensors[i]->m_Metadata = new TensorLike::metadata{ this, m_InboundNodes.size(), i };
+        }
         
         new node(this, inboundLayers, nodeIndices, tensorIndices, inputTensors, outputTensors, inputShapes, outputShapes);
     }

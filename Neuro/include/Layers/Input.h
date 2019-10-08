@@ -12,7 +12,7 @@ namespace Neuro
     {
 	public:
         Input(const Shape& inputShape, const string& name = "");
-        Input(Placeholder* tensor, const string& name = "");
+        Input(Placeholder* placeholder, const string& name = "");
 
 	protected:
         Input();
@@ -23,6 +23,8 @@ namespace Neuro
         virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override;
 
     private:
+        void InitPlaceholder(Placeholder* placeholder);
+
         Placeholder* m_Placeholder = nullptr;
 	};
 }
