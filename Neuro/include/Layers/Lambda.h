@@ -1,62 +1,21 @@
-﻿using Neuro.Tensors;
+﻿#pragma once
 
-namespace Neuro.Layers
+#include "Layers/LayerBase.h"
+
+namespace Neuro
 {
-    // This layer allows user to implement custom inputs mixing/processing
-    public class Lambda : LayerBase
+    // This layer should only be used when we want to combine raw input with output of another layer
+    // somewhere inside a network
+    /*class Lambda : public SingleLayer
     {
-        // Implement your custom algorithm for generating output from inputs
-        public delegate void LambdaFunc(Tensor[] inputs, Tensor output);
+    public:
+        Lambda(const Shape& inputShape, const string& name = "");
 
-        // In this function you need to say how each input was responsible for output error (gradient)
-        // For example: if you simply sum all inputs to produce output (each input has weight 1) then each input is equally responsible for error
-        // and gradient for each input should be the same as output gradient; in case of average weight for each input would be 1/number_of_inputs.
-        public delegate void LambdaBackpropFunc(Tensor outputGradient, Tensor[] inputsGradient);
+    protected:
+        Lambda();
 
-        public Lambda(LayerBase[] inputLayers, Shape outputShape, LambdaFunc processInputsFunc, LambdaBackpropFunc backPropOutputGradientFunc, ActivationBase activation = null)
-            : base(inputLayers, outputShape, activation)
-        {
-            ProcessInputsFunc = processInputsFunc;
-            BackPropOutputGradientFunc = backPropOutputGradientFunc;
-        }
+        virtual LayerBase* GetCloneInstance() const override;
 
-        // This constructor should only be used for input layer
-        public Lambda(Shape[] inputShapes, Shape outputShape, LambdaFunc processInputsFunc, LambdaBackpropFunc backPropOutputGradientFunc, ActivationBase activation = null)
-            : base(inputShapes, outputShape, activation)
-        {
-            ProcessInputsFunc = processInputsFunc;
-            BackPropOutputGradientFunc = backPropOutputGradientFunc;
-        }
-
-        protected Lambda()
-        {
-        }
-
-        protected override LayerBase GetCloneInstance()
-        {
-            return new Lambda();
-        }
-
-        protected override void OnClone(LayerBase source)
-        {
-            base.OnClone(source);
-
-            var sourceLambda = source as Lambda;
-            ProcessInputsFunc = sourceLambda.ProcessInputsFunc;
-            BackPropOutputGradientFunc = sourceLambda.BackPropOutputGradientFunc;
-        }
-
-        protected override void FeedForwardInternal()
-        {
-            ProcessInputsFunc(m_Inputs, m_Output);
-        }
-
-        protected override void BackPropInternal(Tensor outputGradient)
-        {
-            BackPropOutputGradientFunc(outputGradient, m_InputsGradient);
-        }
-
-        private LambdaFunc ProcessInputsFunc;
-        private LambdaBackpropFunc BackPropOutputGradientFunc;
-    }
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override;
+    };*/
 }

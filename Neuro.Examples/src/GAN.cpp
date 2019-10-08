@@ -24,20 +24,20 @@ void GAN::Run()
     LoadImages(images);
     m_ImageShape = Shape(images.Width(), images.Height(), images.Depth());
     images.Map([](float x) { return (x - 127.5f) / 127.5f; }, images);
-    images.Reshape(Shape::From(dModel->InputShape(), images.Batch()));
+    images.Reshape(Shape::From(dModel->InputShapes()[0], images.Batch()));
 
     const uint32_t BATCH_SIZE = 128;
     const uint32_t BATCHES_PER_EPOCH = images.Batch() / BATCH_SIZE;
     const uint32_t EPOCHS = 100;
 
-    Tensor testNoise(Shape::From(gModel->InputShape(), 100)); testNoise.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
+    Tensor testNoise(Shape::From(gModel->InputShapes()[0], 100)); testNoise.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
     
-    Tensor noise(Shape::From(gModel->InputShape(), BATCH_SIZE));
-    Tensor real(Shape::From(dModel->OutputShape(), BATCH_SIZE)); real.FillWithValue(1.f);
+    Tensor noise(Shape::From(gModel->InputShapes()[0], BATCH_SIZE));
+    Tensor real(Shape::From(dModel->OutputShapes()[0], BATCH_SIZE)); real.FillWithValue(1.f);
     
-    Tensor noiseHalf(Shape::From(gModel->InputShape(), BATCH_SIZE / 2));
-    Tensor realHalf(Shape::From(dModel->OutputShape(), BATCH_SIZE / 2)); realHalf.FillWithValue(1.f);
-    Tensor fakeHalf(Shape::From(dModel->OutputShape(), BATCH_SIZE / 2)); fakeHalf.FillWithValue(0.f);
+    Tensor noiseHalf(Shape::From(gModel->InputShapes()[0], BATCH_SIZE / 2));
+    Tensor realHalf(Shape::From(dModel->OutputShapes()[0], BATCH_SIZE / 2)); realHalf.FillWithValue(1.f);
+    Tensor fakeHalf(Shape::From(dModel->OutputShapes()[0], BATCH_SIZE / 2)); fakeHalf.FillWithValue(0.f);
 
     for (uint32_t e = 1; e <= EPOCHS; ++e)
     {
@@ -94,17 +94,17 @@ void GAN::RunDiscriminatorTrainTest()
     Tensor images;
     LoadImages(images);
     images.Map([](float x) { return x / 127.5f - 1.f; }, images);
-    images.Reshape(Shape::From(dModel->InputShape(), images.Batch()));
+    images.Reshape(Shape::From(dModel->InputShapes()[0], images.Batch()));
 
     const uint32_t BATCH_SIZE = 32;
     const uint32_t EPOCHS = 25;
 
-    Tensor real(Shape::From(dModel->OutputShape(), BATCH_SIZE)); real.FillWithValue(1.f);
-    Tensor fake(Shape::From(dModel->OutputShape(), BATCH_SIZE)); fake.FillWithValue(0.f);
+    Tensor real(Shape::From(dModel->OutputShapes()[0], BATCH_SIZE)); real.FillWithValue(1.f);
+    Tensor fake(Shape::From(dModel->OutputShapes()[0], BATCH_SIZE)); fake.FillWithValue(0.f);
 
     for (uint32_t e = 1; e <= EPOCHS; ++e)
     {
-        Tensor fakeImages(Shape::From(dModel->InputShape(), BATCH_SIZE)); fakeImages.FillWithFunc([]() { return Uniform::NextSingle(-1, 1); });
+        Tensor fakeImages(Shape::From(dModel->InputShapes()[0], BATCH_SIZE)); fakeImages.FillWithFunc([]() { return Uniform::NextSingle(-1, 1); });
         Tensor realImages = images.GetRandomBatches(BATCH_SIZE);
 
         auto realTrainData = dModel->TrainOnBatch(realImages, real);

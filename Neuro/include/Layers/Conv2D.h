@@ -33,9 +33,9 @@ namespace Neuro
 
 		virtual LayerBase* GetCloneInstance() const override;
 		virtual void OnClone(const LayerBase& source) override;
-        virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) override;
-		
-        virtual void InternalCall(TensorLike* training, bool initValues = true) override;
+        
+        virtual void Build(const vector<Shape>& inputShapes) override;
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override;
 
 	private:
         Variable * m_Kernels;

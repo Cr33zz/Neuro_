@@ -20,7 +20,9 @@ namespace Neuro
         virtual LayerBase* GetCloneInstance() const override;
         virtual void OnClone(const LayerBase& source) override;
 
+        virtual void Build(const vector<Shape>& inputShapes) override;
+
 	private:
-        Sequential(int) {}
+        //Sequential(int) {}
 	};
 }

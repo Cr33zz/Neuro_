@@ -4,16 +4,6 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Concatenate::Concatenate(const vector<LayerBase*>& inputLayers, EAxis axis, const string& name)
-        : SingleLayer(__FUNCTION__, inputLayers, Shape(), nullptr, name), m_Axis(axis)
-    {
-        int totalLen = 0;
-        for (auto input : inputLayers)
-            totalLen += input->OutputShape().Length;
-        m_OutputsShapes[0] = Shape(totalLen);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
     Concatenate::Concatenate(EAxis axis, const string& name)
         : SingleLayer(__FUNCTION__, Shape(), nullptr, name), m_Axis(axis)
     {
@@ -26,19 +16,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Concatenate::OnLinkInput(const vector<LayerBase*>& inputLayers)
+    vector<TensorLike*> Concatenate::InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training)
     {
-        __super::OnLinkInput(inputLayers);
-
-        int totalLen = 0;
-        for (auto input : InputLayers())
-            totalLen += input->OutputShape().Length;
-        m_OutputsShapes[0] = Shape(totalLen);
+        return { concat(inputNodes, m_Axis) };
     }
 
-    //////////////////////////////////////////////////////////////////////////
-    void Concatenate::InternalCall(TensorLike* training, bool initValues)
-    {
-        m_OutputNodes[0] = concat(m_InputNodes, m_Axis);
-    }
 }

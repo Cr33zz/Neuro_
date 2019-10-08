@@ -1,16 +1,11 @@
 #include "Layers/BatchNormalization.h"
-#include "Tools.h"
+#include "Activations.h"
 #include "ComputationalGraph/Variable.h"
 #include "ComputationalGraph/Ops.h"
+#include "Tools.h"
 
 namespace Neuro
 {
-    //////////////////////////////////////////////////////////////////////////
-    BatchNormalization::BatchNormalization(LayerBase* inputLayer, const string& name)
-        : SingleLayer(__FUNCTION__, inputLayer, inputLayer->OutputShape(), nullptr, name)
-    {
-    }
-
     //////////////////////////////////////////////////////////////////////////
     BatchNormalization::BatchNormalization(const string& name)
         : SingleLayer(__FUNCTION__, Shape(), nullptr, name)
@@ -19,7 +14,7 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     BatchNormalization::BatchNormalization(const Shape& inputShape, const string& name)
-        : SingleLayer(__FUNCTION__, inputShape, inputShape, nullptr, name)
+        : SingleLayer(__FUNCTION__, inputShape, nullptr, name)
     {
     }
 
@@ -38,7 +33,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     uint32_t BatchNormalization::ParamsNum() const
     {
-        return (InputShape().Depth() > 1 ? InputShape().Depth() : InputShape().Length) * 4;
+        return 0;// (InputShape().Depth() > 1 ? InputShape().Depth() : InputShape().Length) * 4;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -70,11 +65,13 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void BatchNormalization::InternalCall(TensorLike* training, bool initValues)
+    void BatchNormalization::Build(const vector<Shape>& inputShapes)
     {
-        Shape paramsShape = Shape(InputShape().Width(), InputShape().Height(), InputShape().Depth(), 1); // PerActivation
-        if (InputShape().Depth() > 1) 
-            paramsShape = Shape(1, 1, InputShape().Depth(), 1); // Spatial
+        NEURO_ASSERT(inputShapes.size() == 1, "Dense layer accepts single input.");
+
+        Shape paramsShape = Shape(inputShapes[0].Width(), inputShapes[0].Height(), inputShapes[0].Depth(), 1); // PerActivation
+        if (inputShapes[0].Depth() > 1)
+            paramsShape = Shape(1, 1, inputShapes[0].Depth(), 1); // Spatial
 
         m_Gamma = new Variable(ones(paramsShape), "gamma");
         m_Beta = new Variable(zeros(paramsShape), "beta");
@@ -82,14 +79,16 @@ namespace Neuro
         m_RunningMean = new Variable(zeros(paramsShape), "running_mean");
         m_RunningVar = new Variable(ones(paramsShape), "running_var");
 
-        m_OutputNodes[0] = batch_norm(m_InputNodes[0], m_Gamma, m_Beta, m_RunningMean, m_RunningVar, m_Momentum, m_Epsilon, training);
+        m_Built = true;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void BatchNormalization::OnLinkInput(const vector<LayerBase*>& inputLayers)
+    vector<TensorLike*> BatchNormalization::InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training)
     {
-        __super::OnLinkInput(inputLayers);
+        TensorLike* output = batch_norm(inputNodes[0], m_Gamma, m_Beta, m_RunningMean, m_RunningVar, m_Momentum, m_Epsilon, training);
+        if (m_Activation)
+            output = m_Activation->Build(output);
 
-        m_OutputsShapes[0] = m_InputShape;
+        return { output };
     }
 }

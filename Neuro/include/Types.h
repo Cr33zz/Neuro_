@@ -10,7 +10,7 @@
             std::cerr << "Assert failed: " << msg << endl \
                       << "Expected: " << #condition << endl \
                       << "Source: " << __FILE__ << ", line " << __LINE__ << endl; \
-            __debugbreak; \
+            __debugbreak(); \
         } \
     } while (false)
 #else

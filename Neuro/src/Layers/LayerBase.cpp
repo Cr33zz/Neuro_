@@ -15,8 +15,9 @@ namespace Neuro
     map<string, int> LayerBase::s_LayersCountPerType;
 
 	//////////////////////////////////////////////////////////////////////////
-    LayerBase::LayerBase(const string& constructorName, const string& name)
+    LayerBase::LayerBase(const string& constructorName, const Shape& expectedInputShape, const string& name)
 	{
+        m_ExpectedInputShape = expectedInputShape;
         m_ClassName = constructorName.substr(constructorName.find_last_of("::") + 1);
         m_Name = name.empty() ? GenerateName() : name;
 	}
@@ -32,13 +33,15 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-	LayerBase* LayerBase::Clone()
-	{
-		//Init(); // make sure parameter matrices are created
-		LayerBase* clone = GetCloneInstance();
-		clone->OnClone(*this);
-		return clone;
-	}
+	//LayerBase* LayerBase::Clone()
+	//{
+	//	//Init(); // make sure parameter matrices are created
+	//	/*LayerBase* clone = GetCloneInstance();
+	//	clone->OnClone(*this);
+	//	return clone;*/
+ //       assert(false);
+ //       return nullptr;
+	//}
 
 	//////////////////////////////////////////////////////////////////////////
 	void LayerBase::OnClone(const LayerBase& source)
@@ -47,58 +50,58 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    const vector<Shape>& LayerBase::InputShape() const
+    const vector<Shape>& LayerBase::InputShapes() const
     {
-        assert(m_InboundNodes.size() == 1);
+        NEURO_ASSERT(m_InboundNodes.size() == 1, "");
         return m_InboundNodes[0]->input_shapes;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const vector<Shape>& LayerBase::InputShapeAt(size_t idx) const
+    const vector<Shape>& LayerBase::InputShapesAt(size_t idx) const
     {
-        assert(m_InboundNodes.size() > idx);
+        NEURO_ASSERT(m_InboundNodes.size() > idx, "");
         return m_InboundNodes[idx]->input_shapes;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const vector<TensorLike*>& LayerBase::Input() const
+    const vector<TensorLike*>& LayerBase::Inputs() const
     {
-        assert(m_InboundNodes.size() == 1);
+        NEURO_ASSERT(m_InboundNodes.size() == 1, "");
         return m_InboundNodes[0]->input_tensors;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const vector<TensorLike*>& LayerBase::InputAt(size_t idx) const
+    const vector<TensorLike*>& LayerBase::InputsAt(size_t idx) const
     {
-        assert(m_InboundNodes.size() > idx);
+        NEURO_ASSERT(m_InboundNodes.size() > idx, "");
         return m_InboundNodes[idx]->input_tensors;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const vector<Shape>& LayerBase::OutputShape() const
+    const vector<Shape>& LayerBase::OutputShapes() const
     {
-        assert(m_InboundNodes.size() == 1);
+        NEURO_ASSERT(m_InboundNodes.size() == 1, "");
         return m_InboundNodes[0]->output_shapes;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const vector<Shape>& LayerBase::OutputShapeAt(size_t idx) const
+    const vector<Shape>& LayerBase::OutputShapesAt(size_t idx) const
     {
-        assert(m_InboundNodes.size() > idx);
+        NEURO_ASSERT(m_InboundNodes.size() > idx, "");
         return m_InboundNodes[idx]->output_shapes;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const vector<TensorLike*>& LayerBase::Output() const
+    const vector<TensorLike*>& LayerBase::Outputs() const
     {
-        assert(m_InboundNodes.size() == 1);
+        NEURO_ASSERT(m_InboundNodes.size() == 1, "");
         return m_InboundNodes[0]->output_tensors;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const vector<TensorLike*>& LayerBase::OutputAt(size_t idx) const
+    const vector<TensorLike*>& LayerBase::OutputsAt(size_t idx) const
     {
-        assert(m_InboundNodes.size() > idx);
+        NEURO_ASSERT(m_InboundNodes.size() > idx, "");
         return m_InboundNodes[idx]->output_tensors;
     }
 
@@ -184,11 +187,11 @@ namespace Neuro
 
         for (auto t : inputTensors)
         {
-            if (t->m_Origin)
+            if (t->m_Metadata)
             {
-                inboundLayers.push_back(t->m_Origin->layer);
-                nodeIndices.push_back((int)t->m_Origin->node_index);
-                tensorIndices.push_back((int)t->m_Origin->tensor_index);
+                inboundLayers.push_back(t->m_Metadata->layer);
+                nodeIndices.push_back((int)t->m_Metadata->node_index);
+                tensorIndices.push_back((int)t->m_Metadata->tensor_index);
             }
             else
             { 
@@ -199,7 +202,7 @@ namespace Neuro
         }
 
         for (size_t i = 0; i < outputTensors.size(); ++i)
-            outputTensors[i]->m_Origin = new TensorLike::origin{ this, m_InboundNodes.size() - 1, i };
+            outputTensors[i]->m_Metadata = new TensorLike::metadata{ this, m_InboundNodes.size() - 1, i };
         
         new node(this, inboundLayers, nodeIndices, tensorIndices, inputTensors, outputTensors, inputShapes, outputShapes);
     }

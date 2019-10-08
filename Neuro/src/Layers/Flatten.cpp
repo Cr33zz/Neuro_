@@ -1,14 +1,10 @@
 ﻿#include "Layers/Flatten.h"
+#include "ComputationalGraph/Ops.h"
+#include "ComputationalGraph/TensorLike.h"
 
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	Flatten::Flatten(LayerBase* inputLayer, const string& name)
-        : Reshape(__FUNCTION__, inputLayer, Shape(inputLayer->OutputShape().Length), name)
-	{
-	}
-
-    //////////////////////////////////////////////////////////////////////////
     Flatten::Flatten(const string& name)
         : Reshape(__FUNCTION__, Shape(), name)
     {
@@ -27,10 +23,8 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Flatten::OnLinkInput(const vector<LayerBase*>& inputLayers)
+    vector<TensorLike*> Flatten::InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training)
     {
-        __super::OnLinkInput(inputLayers);
-
-        m_OutputsShapes[0] = Shape(m_InputShape.Length);
+        return { reshape(inputNodes[0], Shape(inputNodes[0]->GetShape().Length)) };
     }
 }

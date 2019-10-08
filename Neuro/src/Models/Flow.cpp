@@ -10,15 +10,19 @@
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	Flow::Flow(const vector<LayerBase*>& inputLayers, const vector<LayerBase*>& outputLayers, const string& name, int seed)
+	Flow::Flow(const vector<TensorLike*>& inputs, const vector<TensorLike*>& outputs, const string& name, int seed)
         : ModelBase(__FUNCTION__, name, seed)
 	{
-        unordered_set<LayerBase*> visited;
-        for (auto layer : outputLayers)
-            ProcessLayer(layer, visited);
+        InitGraph(inputs, outputs);
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    Flow::Flow(const string& constructorName, const string& name, int seed)
+        : ModelBase(constructorName, name, seed)
+    {
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     Flow::~Flow()
     {
     }
@@ -29,25 +33,7 @@ namespace Neuro
         return new Flow();
     }
 
-    //////////////////////////////////////////////////////////////////////////
-	void Flow::ProcessLayer(LayerBase* layer, unordered_set<LayerBase*>& visited)
-	{
-		bool allInputLayersVisited = true;
-
-        auto& inputNodes = layer->InputNodes();
-
-        for (size_t i = 0; i < inputNodes.size(); ++i)
-		{
-            assert(inputNodes[i]->m_Origin);
-            ProcessLayer(inputNodes[i]->m_Origin->layer, visited);
-		}
-
-        if (visited.find(layer) != visited.end())
-            return;
-
-        visited.insert(layer);
-        m_Layers.push_back(layer);
-	}
+    
 
     //////////////////////////////////////////////////////////////////////////
 	void Flow::OnClone(const LayerBase& source)

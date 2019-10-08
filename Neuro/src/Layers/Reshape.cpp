@@ -4,8 +4,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Reshape::Reshape(LayerBase* inputLayer, const Shape& shape, const string& name)
-        : Reshape(__FUNCTION__, inputLayer, shape, name)
+    Reshape::Reshape(const Shape& shape, const string& name)
+        : Reshape(__FUNCTION__, shape, name)
     {
     }
 
@@ -16,26 +16,14 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Reshape::Reshape(const Shape& shape, const string& name)
-        : Reshape(__FUNCTION__, shape, name)
-    {
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    Reshape::Reshape(const string& constructorName, LayerBase* inputLayer, const Shape& shape, const string& name)
-        : SingleLayer(constructorName, inputLayer, shape, nullptr, name)
+    Reshape::Reshape(const string& constructorName, const Shape& shape, const string& name)
+        : SingleLayer(constructorName, shape, nullptr, name), m_Shape(shape)
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
     Reshape::Reshape(const string& constructorName, const Shape& inputShape, const Shape& shape, const string& name)
-        : SingleLayer(constructorName, inputShape, shape, nullptr, name)
-    {
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    Reshape::Reshape(const string& constructorName, const Shape& shape, const string& name)
-        : SingleLayer(constructorName, shape, nullptr, name)
+        : SingleLayer(constructorName, inputShape, nullptr, name), m_Shape(shape)
     {
     }
 
@@ -46,8 +34,8 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Reshape::InternalCall(TensorLike* training, bool initValues)
+    vector<TensorLike*> Reshape::InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training)
     {
-        m_OutputNodes[0] = reshape(m_InputNodes[0], OutputShape());
+        return { reshape(inputNodes[0], m_Shape) };
     }
 }

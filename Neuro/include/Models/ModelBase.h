@@ -2,10 +2,12 @@
 
 #include <string>
 #include <vector>
+#include <unordered_set>
 #include <fstream>
 
 #include "Layers/LayerBase.h"
 #include "ParameterAndGradient.h"
+#include "ComputationalGraph/TensorLike.h"
 
 namespace Neuro
 {
@@ -63,7 +65,7 @@ namespace Neuro
 
         virtual void OnClone(const LayerBase& source) override;
 
-        virtual void Build(const vector<Shape>& inputShapes) override;
+        //virtual void Build(const vector<Shape>& inputShapes) override;
 
         void InitGraph(const vector<TensorLike*>& inputs, const vector<TensorLike*>& outputs);
 
@@ -73,17 +75,20 @@ namespace Neuro
         vector<TensorLike*> m_Inputs;
         vector<TensorLike*> m_Outputs;
         vector<LayerBase*> m_InputLayers;
-        vector<TensorLike::origin*> m_InputCoords;
+        vector<TensorLike::metadata*> m_InputCoords;
         vector<LayerBase*> m_OutputLayers;
-        vector<TensorLike::origin*> m_OutputCoords;
+        vector<TensorLike::metadata*> m_OutputCoords;
 
         vector<Placeholder*> m_InputPlaceholders;
         Placeholder* m_TrainingPlaceholder = nullptr;
 
         bool m_GraphNetwork = false;
 
+        vector<TensorLike*> GetSourceInputs(TensorLike* tensor, LayerBase* layer = nullptr, int nodeIndex = -1);
+
     private:
-        void MapGraphNetwork(const vector<TensorLike*>& inputs, const vector<TensorLike*>& outputs);
+        //void MapGraphNetwork(const vector<TensorLike*>& inputs, const vector<TensorLike*>& outputs);
+        void ProcessLayer(LayerBase* layer, unordered_set<LayerBase*>& visited);
 
         // This is vectorized gradient descent
         void TrainStep(const const_tensor_ptr_vec_t& inputs, const const_tensor_ptr_vec_t& outputs, float* trainError = nullptr, float* trainAcc = nullptr);

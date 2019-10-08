@@ -25,14 +25,14 @@ namespace Neuro
         virtual ~LayerBase() {}
 
         const Shape& ExpectedInputShape() const { return m_ExpectedInputShape; }
-        const vector<Shape>& InputShape() const;
-        const vector<Shape>& InputShapeAt(size_t idx) const;
-        const vector<TensorLike*>& Input() const;
-        const vector<TensorLike*>& InputAt(size_t idx) const;
-        const vector<Shape>& OutputShape() const;
-        const vector<Shape>& OutputShapeAt(size_t idx) const;
-        const vector<TensorLike*>& Output() const;
-        const vector<TensorLike*>& OutputAt(size_t idx) const;
+        const vector<Shape>& InputShapes() const;
+        const vector<Shape>& InputShapesAt(size_t idx) const;
+        const vector<TensorLike*>& Inputs() const;
+        const vector<TensorLike*>& InputsAt(size_t idx) const;
+        const vector<Shape>& OutputShapes() const;
+        const vector<Shape>& OutputShapesAt(size_t idx) const;
+        const vector<TensorLike*>& Outputs() const;
+        const vector<TensorLike*>& OutputsAt(size_t idx) const;
 
         // Tau specifies the percentage of copied parameters to be applied on a target network, when less than 1 target's network
         // parameters will be updated as follows: this_parameters * tau + target_parameters * (1 - tau)
@@ -60,7 +60,7 @@ namespace Neuro
         const vector<TensorLike*>& operator()(const vector<TensorLike*>& inputs, TensorLike* training = nullptr);
 
 	protected:
-        LayerBase(const string& constructorName, const string& name = "");
+        LayerBase(const string& constructorName, const Shape& expectedInputShape, const string& name = "");
 		// This constructor exists only for cloning purposes
         LayerBase() {}
 
@@ -105,13 +105,13 @@ namespace Neuro
         vector<shared_ptr<node>> m_OutboundNodes;
 
         Shape m_ExpectedInputShape;
+        bool m_Built = false;
 
 	private:
         vector<Shape> CollectShapes(const vector<TensorLike*>& inputs) const;
 
 		string m_Name;
         string m_ClassName;
-        bool m_Built = false;
 		bool m_Initialized = false;
 
 		static map<string, int> s_LayersCountPerType;

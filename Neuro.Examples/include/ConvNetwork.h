@@ -18,11 +18,11 @@ public:
         Shape inputShape(64, 64, 4);
         auto model = Sequential("conv");
         model.AddLayer(new Conv2D(inputShape, 32, 8, 2, 0, new ELU(1)));
-        model.AddLayer(new Conv2D(model.LastLayer(), 64, 4, 2, 0, new ELU(1)));
-        model.AddLayer(new Conv2D(model.LastLayer(), 128, 4, 2, 0, new ELU(1)));
-        model.AddLayer(new Flatten(model.LastLayer()));
-        model.AddLayer(new Dense(model.LastLayer(), 512, new ELU(1)));
-        model.AddLayer(new Dense(model.LastLayer(), 3, new Softmax()));
+        model.AddLayer(new Conv2D(64, 4, 2, 0, new ELU(1)));
+        model.AddLayer(new Conv2D(128, 4, 2, 0, new ELU(1)));
+        model.AddLayer(new Flatten());
+        model.AddLayer(new Dense(512, new ELU(1)));
+        model.AddLayer(new Dense(3, new Softmax()));
 
         cout << "Example: " << model.Name() << endl;
         cout << model.Summary();

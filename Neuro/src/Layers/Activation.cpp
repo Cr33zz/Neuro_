@@ -1,13 +1,8 @@
 #include "Layers/Activation.h"
+#include "Activations.h"
 
 namespace Neuro
 {
-    //////////////////////////////////////////////////////////////////////////
-    Activation::Activation(LayerBase* inputLayer, ActivationBase* activation, const string& name)
-        : SingleLayer(__FUNCTION__, inputLayer, inputLayer->OutputShape(), activation, name)
-    {
-    }
-
     //////////////////////////////////////////////////////////////////////////
     Activation::Activation(ActivationBase* activation, const string& name)
         : SingleLayer(__FUNCTION__, Shape(), activation, name)
@@ -16,7 +11,7 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     Activation::Activation(const Shape& inputShape, ActivationBase* activation, const string& name)
-        : SingleLayer(__FUNCTION__, inputShape, inputShape, activation, name)
+        : SingleLayer(__FUNCTION__, inputShape, activation, name)
     {
     }
 
@@ -32,11 +27,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Activation::OnLinkInput(const vector<LayerBase*>& inputLayers)
+    vector<TensorLike*> Activation::InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training)
     {
-        assert(inputLayers.size() == 1);
-        __super::OnLinkInput(inputLayers);
-
-        m_OutputsShapes[0] = m_InputShape;
+        NEURO_ASSERT(m_Activation, "Activation is required.");
+        return { m_Activation->Build(inputNodes[0]) };
     }
 }

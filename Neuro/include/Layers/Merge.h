@@ -7,8 +7,6 @@ namespace Neuro
     class Merge : public SingleLayer
     {
     public:
-        Merge(const vector<LayerBase*>& inputLayers, EMergeMode mergeMode, ActivationBase* activation = nullptr, const string& name = "");
-        // Make sure to link this layer to input when using this constructor.
         Merge(EMergeMode mergeMode, ActivationBase* activation = nullptr, const string& name = "");
         // This constructor should only be used for input layer
         Merge(const Shape& inputsShape, EMergeMode mergeMode, ActivationBase* activation = nullptr, const string& name = "");
@@ -18,9 +16,8 @@ namespace Neuro
 
         virtual LayerBase* GetCloneInstance() const override;
         virtual void OnClone(const LayerBase& source) override;
-        virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) override;
-
-        virtual void InternalCall(TensorLike* training, bool initValues = true);
+        
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override;
 
     private:
         EMergeMode m_MergeMode;

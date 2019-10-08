@@ -16,16 +16,16 @@ namespace Neuro
     class Flow : public ModelBase
     {
 	public:
-        Flow(const vector<LayerBase*>& inputLayers, const vector<LayerBase*>& outputLayers, const string& name = "", int seed = 0);
+        Flow(const vector<TensorLike*>& inputs, const vector<TensorLike*>& outputs, const string& name = "", int seed = 0);
         ~Flow();
 
     protected:
+        Flow(const string& constructorName, const string& name = "", int seed = 0);
+
         virtual LayerBase* GetCloneInstance() const override;
         virtual void OnClone(const LayerBase& source) override;
 
 	private:
 		Flow() {}
-
-        void ProcessLayer(LayerBase* layer, unordered_set<LayerBase*>& visited);
 	};
 }

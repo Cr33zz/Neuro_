@@ -10,8 +10,6 @@ namespace Neuro
     class Conv2DTranspose : public SingleLayer
     {
     public:
-        Conv2DTranspose(LayerBase* inputLayer, uint32_t outputDepth, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, EDataFormat dataFormat = NCHW, const string& name = "");
-        // Make sure to link this layer to input when using this constructor.
         Conv2DTranspose(uint32_t outputDepth, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, EDataFormat dataFormat = NCHW, const string& name = "");
         // This constructor should only be used for input layer
         Conv2DTranspose(const Shape& inputShape, uint32_t outputDepth, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, EDataFormat dataFormat = NCHW, const string& name = "");
@@ -34,9 +32,9 @@ namespace Neuro
 
         virtual LayerBase* GetCloneInstance() const override;
         virtual void OnClone(const LayerBase& source) override;
-        virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) override;
         
-        virtual void InternalCall(TensorLike* training, bool initValues = true) override;
+        virtual void Build(const vector<Shape>& inputShapes) override;
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override;
 
     private:
         Variable* m_Kernels;

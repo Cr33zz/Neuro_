@@ -34,15 +34,15 @@ namespace Neuro
 
         void AddInputNode(TensorLike* node) { m_InputNodes.push_back(node); }
 
-        struct origin
+        struct metadata
         {
             LayerBase* layer; // layer which created this tensor
             size_t node_index; // node index in inbound nodes list in layer
             size_t tensor_index; // index in output tensors list
         };
 
-        // Origin is not used in case of pure computational graph networks but is required for layers abstraction
-        origin* m_Origin = nullptr;
+        // Metadata is not used in case of pure computational graph networks but is required for layers abstraction
+        metadata* m_Metadata = nullptr;
 
     protected:
         TensorLike(const string& name = "");

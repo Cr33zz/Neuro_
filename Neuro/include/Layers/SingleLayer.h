@@ -23,14 +23,13 @@ namespace Neuro
         virtual ~SingleLayer();
 
     protected:
-        SingleLayer(const string& constructorName, const Shape& inputShape, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
-        SingleLayer(const string& constructorName, const Shape& outputShape, ActivationBase* activation = nullptr, const string& name = "");
+        SingleLayer(const string& constructorName, const Shape& inputShape, ActivationBase* activation = nullptr, const string& name = "");
+        SingleLayer(const string& constructorName, ActivationBase* activation = nullptr, const string& name = "");
         SingleLayer() {}
 
         virtual void OnClone(const LayerBase& source) override;
-        virtual void InternalCall(TensorLike* training, bool initValues = true);
+        //virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override;
 
-    private:
         ActivationBase* m_Activation;
     };
 }

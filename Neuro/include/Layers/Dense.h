@@ -12,12 +12,9 @@ namespace Neuro
     class Dense : public SingleLayer
     {
 	public:
-        Dense(LayerBase* inputLayer, int outputs, ActivationBase* activation = nullptr, const string& name = "");
-        // Make sure to link this layer to input when using this constructor.
-        Dense(int outputs, ActivationBase* activation = nullptr, const string& name = "");
-        // Use this constructor for input layer only.
-        Dense(int inputs, int outputs, ActivationBase* activation = nullptr, const string& name = "");
-		~Dense();
+        Dense(uint32_t units, ActivationBase* activation = nullptr, const string& name = "");
+        Dense(uint32_t inputUnits, uint32_t units, ActivationBase* activation = nullptr, const string& name = "");
+        ~Dense();
 
 	    virtual void CopyParametersTo(LayerBase& target, float tau) const override;
 		virtual uint32_t ParamsNum() const override;
@@ -37,9 +34,11 @@ namespace Neuro
 		virtual LayerBase* GetCloneInstance() const override;
 		virtual void OnClone(const LayerBase& source) override;
 
-		virtual void InternalCall(TensorLike* training, bool initValues = true) override;
+        virtual void Build(const vector<Shape>& inputShapes) override;
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override;
 
 	private:
+        uint32_t m_Units;
         Variable* m_Weights;
         Variable* m_Bias;
         bool m_UseBias = true;

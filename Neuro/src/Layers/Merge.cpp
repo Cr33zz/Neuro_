@@ -4,13 +4,6 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Merge::Merge(const vector<LayerBase*>& inputLayers, EMergeMode mergeMode, ActivationBase* activation, const string& name)
-        : SingleLayer(__FUNCTION__, inputLayers, inputLayers[0]->OutputShape(), activation, name)
-    {
-        m_MergeMode = mergeMode;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
     Merge::Merge(EMergeMode mergeMode, ActivationBase* activation, const string& name)
         : SingleLayer(__FUNCTION__, Shape(), activation, name)
     {
@@ -19,7 +12,7 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     Merge::Merge(const Shape& inputsShape, EMergeMode mergeMode, ActivationBase* activation, const string& name)
-        : SingleLayer(__FUNCTION__, inputsShape, inputsShape, activation, name)
+        : SingleLayer(__FUNCTION__, inputsShape, activation, name)
     {
         m_MergeMode = mergeMode;
     }
@@ -40,30 +33,25 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Merge::OnLinkInput(const vector<LayerBase*>& inputLayers)
+    vector<TensorLike*> Merge::InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training)
     {
-        __super::OnLinkInput(inputLayers);
-
-        m_OutputsShapes[0] = m_InputShape;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void Merge::InternalCall(TensorLike* training, bool initValues)
-    {
+        TensorLike* output = nullptr;
         switch (m_MergeMode)
         {
         case MergeAvg:
-            m_OutputNodes[0] = merge_avg(m_InputNodes);
+            output = merge_avg(inputNodes);
             break;
         case MergeMax:
-            m_OutputNodes[0] = merge_max(m_InputNodes);
+            output = merge_max(inputNodes);
             break;
         case MergeMin:
-            m_OutputNodes[0] = merge_min(m_InputNodes);
+            output = merge_min(inputNodes);
             break;
         case MergeSum:
-            m_OutputNodes[0] = merge_sum(m_InputNodes);
+            output = merge_sum(inputNodes);
             break;
         }
+
+        return { output };
     }
 }

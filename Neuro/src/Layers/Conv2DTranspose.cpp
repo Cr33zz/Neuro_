@@ -3,20 +3,10 @@
 #include "Tensors/Tensor.h"
 #include "ComputationalGraph/Variable.h"
 #include "ComputationalGraph/Ops.h"
+#include "Activations.h"
 
 namespace Neuro
 {
-    //////////////////////////////////////////////////////////////////////////
-    Conv2DTranspose::Conv2DTranspose(LayerBase* inputLayer, uint32_t outputDepth, uint32_t filterSize, uint32_t stride, uint32_t padding, ActivationBase* activation, EDataFormat dataFormat, const string& name)
-        : SingleLayer(__FUNCTION__, inputLayer, Tensor::GetConvTransposeOutputShape(inputLayer->OutputShape(), outputDepth, filterSize, filterSize, stride, padding, padding, dataFormat), activation, name)
-    {
-        m_FilterSize = filterSize;
-        m_OutputDepth = outputDepth;
-        m_Stride = stride;
-        m_Padding = padding;
-        m_DataFormat = dataFormat;
-    }
-
     //////////////////////////////////////////////////////////////////////////
     Conv2DTranspose::Conv2DTranspose(uint32_t outputDepth, uint32_t filterSize, uint32_t stride, uint32_t padding, ActivationBase* activation, EDataFormat dataFormat, const string& name)
         : SingleLayer(__FUNCTION__, Shape(), activation, name)
@@ -30,7 +20,7 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     Conv2DTranspose::Conv2DTranspose(const Shape& inputShape, uint32_t outputDepth, uint32_t filterSize, uint32_t stride, uint32_t padding, ActivationBase* activation, EDataFormat dataFormat, const string& name)
-        : SingleLayer(__FUNCTION__, inputShape, Tensor::GetConvTransposeOutputShape(inputShape, outputDepth, filterSize, filterSize, stride, padding, padding, dataFormat), activation, name)
+        : SingleLayer(__FUNCTION__, inputShape, activation, name)
     {
         m_FilterSize = filterSize;
         m_OutputDepth = outputDepth;
@@ -47,30 +37,31 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Conv2DTranspose::InternalCall(TensorLike* training, bool initValues)
+    void Conv2DTranspose::Build(const vector<Shape>& inputShapes)
     {
         if (m_DataFormat == NCHW)
         {
-            m_Kernels = new Variable(Shape(m_FilterSize, m_FilterSize, m_OutputDepth, InputShape().Depth()), initValues ? m_KernelInitializer : nullptr, "kernels");
-            m_Bias = new Variable(Shape(1, 1, m_OutputDepth), initValues ? m_BiasInitializer : nullptr, "bias");
+            m_Kernels = new Variable(Shape(m_FilterSize, m_FilterSize, m_OutputDepth, inputShapes[0].Depth()), m_KernelInitializer, "kernels");
+            m_Bias = new Variable(Shape(1, 1, m_OutputDepth), m_BiasInitializer, "bias");
         }
         else
         {
-            m_Kernels = new Variable(Shape(m_FilterSize, m_FilterSize, m_OutputDepth, InputShape().Len(0)), initValues ? m_KernelInitializer : nullptr, "kernels");
-            m_Bias = new Variable(Shape(m_OutputDepth), initValues ? m_BiasInitializer : nullptr, "bias");
+            m_Kernels = new Variable(Shape(m_FilterSize, m_FilterSize, m_OutputDepth, inputShapes[0].Len(0)), m_KernelInitializer, "kernels");
+            m_Bias = new Variable(Shape(m_OutputDepth), m_BiasInitializer, "bias");
         }
 
-        m_OutputNodes[0] = conv2d_transpose(m_InputNodes[0], m_Kernels, m_Stride, m_Padding, m_DataFormat);
-        if (m_UseBias)
-            m_OutputNodes[0] = add(m_OutputNodes[0], m_Bias);
+        m_Built = true;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Conv2DTranspose::OnLinkInput(const vector<LayerBase*>& inputLayers)
+    vector<TensorLike*> Conv2DTranspose::InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training)
     {
-        __super::OnLinkInput(inputLayers);
-
-        m_OutputsShapes[0] = Tensor::GetConvTransposeOutputShape(inputLayers[0]->OutputShape(), m_OutputDepth, m_FilterSize, m_FilterSize, m_Stride, m_Padding, m_Padding, m_DataFormat);
+        TensorLike* output = conv2d_transpose(inputNodes[0], m_Kernels, m_Stride, m_Padding, m_DataFormat);
+        if (m_UseBias)
+            output = add(output, m_Bias);
+        if (m_Activation)
+            output = m_Activation->Build(output);
+        return { output };
     }
 
     //////////////////////////////////////////////////////////////////////////

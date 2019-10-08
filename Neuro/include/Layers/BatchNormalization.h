@@ -9,7 +9,6 @@ namespace Neuro
     class BatchNormalization : public SingleLayer
     {
     public:
-        BatchNormalization(LayerBase* inputLayer, const string& name = "");
         // Make sure to link this layer to input when using this constructor.
         BatchNormalization(const string& name = "");
         // This constructor should only be used for input layer
@@ -25,9 +24,9 @@ namespace Neuro
         BatchNormalization(bool) {}
 
         virtual LayerBase* GetCloneInstance() const override;
-        virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) override;
         
-        virtual void InternalCall(TensorLike* training, bool initValues = true) override;
+        virtual void Build(const vector<Shape>& inputShapes) override;
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override;
 
     private:
         Variable* m_Gamma;

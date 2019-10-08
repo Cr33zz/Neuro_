@@ -13,7 +13,11 @@
 
 int main()
 {
-    auto m1In1 = new Input(Shape(32));
+    auto seq = new Sequential();
+    seq->AddLayer(new Dense(5, 7));
+    seq->AddLayer(new Dense(10));
+
+    /*auto m1In1 = new Input(Shape(32));
     auto m1X = (new Dense(10, new Sigmoid()))->Call(m1In1);
     auto m1 = new Flow({ m1In1 }, { m1In1, m1X });
 
@@ -33,7 +37,7 @@ int main()
     const_tensor_ptr_vec_t inputs = { &(new Tensor(Shape(32)))->FillWithRand(), &(new Tensor(Shape(32)))->FillWithRand() };
     const_tensor_ptr_vec_t outputs = { &(new Tensor(Shape(5)))->FillWithRand() };
 
-    model->Fit(inputs, outputs, 1, 200, nullptr, nullptr, 1, ETrack::TrainError, false);
+    model->Fit(inputs, outputs, 1, 200, nullptr, nullptr, 1, ETrack::TrainError, false);*/
 
     /*auto m1 = new Sequential("m1");
     m1->AddLayer(new Input(Shape(2)));

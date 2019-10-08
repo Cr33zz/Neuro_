@@ -7,7 +7,6 @@ namespace Neuro
     class Concatenate : public SingleLayer
     {
     public:
-        Concatenate(const vector<LayerBase*>& inputLayers, EAxis axis, const string& name = "");
         // Make sure to link this layer to input when using this constructor.
         Concatenate(EAxis axis, const string& name = "");
 
@@ -15,9 +14,8 @@ namespace Neuro
         Concatenate() {}
 
         virtual LayerBase* GetCloneInstance() const override;
-        virtual void OnLinkInput(const vector<LayerBase*>& inputLayers) override;
-
-        virtual void InternalCall(TensorLike* training, bool initValues = true) override;
+        
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override;
 
     private:
         EAxis m_Axis;

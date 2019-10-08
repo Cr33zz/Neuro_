@@ -4,13 +4,6 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    UpSampling2D::UpSampling2D(LayerBase* inputLayer, uint32_t scaleFactor, const string& name)
-        : SingleLayer(__FUNCTION__, inputLayer, Shape(inputLayer->OutputShape().Width() * scaleFactor, inputLayer->OutputShape().Height() * scaleFactor, inputLayer->OutputShape().Depth(), inputLayer->OutputShape().Batch()), nullptr, name)
-    {
-        m_ScaleFactor = scaleFactor;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
     UpSampling2D::UpSampling2D(uint32_t scaleFactor, const string& name)
         : SingleLayer(__FUNCTION__, Shape(), nullptr, name)
     {
@@ -19,7 +12,7 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     UpSampling2D::UpSampling2D(const Shape& inputShape, uint32_t scaleFactor, const string& name)
-        : SingleLayer(__FUNCTION__, inputShape, Shape(inputShape.Width() * scaleFactor, inputShape.Height() * scaleFactor, inputShape.Depth(), inputShape.Batch()), nullptr, name)
+        : SingleLayer(__FUNCTION__, inputShape, nullptr, name)
     {
         m_ScaleFactor = scaleFactor;
     }
@@ -40,16 +33,8 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void UpSampling2D::OnLinkInput(const vector<LayerBase*>& inputLayers)
+    vector<TensorLike*> UpSampling2D::InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training)
     {
-        __super::OnLinkInput(inputLayers);
-
-        m_OutputsShapes[0] = Shape(InputShape().Width() * m_ScaleFactor, InputShape().Height() * m_ScaleFactor, InputShape().Depth(), InputShape().Batch());
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void UpSampling2D::InternalCall(TensorLike* training, bool initValues)
-    {
-        m_OutputNodes[0] = upsample2d(m_InputNodes[0], m_ScaleFactor);
+        return { upsample2d(inputNodes[0], m_ScaleFactor) };
     }
 }

@@ -1,5 +1,6 @@
 ﻿#include "Layers/Dense.h"
 #include "Tensors/Tensor.h"
+#include "Activations.h"
 #include "Initializers/GlorotUniform.h"
 #include "Initializers/Zeros.h"
 #include "ComputationalGraph/Variable.h"
@@ -8,24 +9,20 @@
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
-	Dense::Dense(LayerBase* inputLayer, int outputs, ActivationBase* activation, const string& name)
-        : SingleLayer(__FUNCTION__, inputLayer, Shape(outputs), activation, name)
-	{
-	}
-
-    //////////////////////////////////////////////////////////////////////////
-    Dense::Dense(int outputs, ActivationBase* activation, const string& name)
-        : SingleLayer(__FUNCTION__, Shape(outputs), activation, name)
+    Dense::Dense(uint32_t units, ActivationBase* activation, const string& name)
+        : SingleLayer(__FUNCTION__, activation, name)
     {
+        m_Units = units;
     }
 
     //////////////////////////////////////////////////////////////////////////
-	Dense::Dense(int inputs, int outputs, ActivationBase* activation, const string& name)
-		: SingleLayer(__FUNCTION__, Shape(inputs), Shape(outputs), activation, name)
-	{
-	}
+    Dense::Dense(uint32_t inputUnits, uint32_t units, ActivationBase* activation, const string& name)
+        : SingleLayer(__FUNCTION__, Shape(inputUnits), activation, name)
+    {
+        m_Units = units;
+    }
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
 	Dense::Dense()
 	{
 	}
@@ -54,18 +51,34 @@ namespace Neuro
 		m_UseBias = sourceDense.m_UseBias;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
-	void Dense::InternalCall(TensorLike* training, bool initValues)
-	{
-        m_Weights = new Variable(Shape(OutputShape().Length, InputShape().Length), initValues ? m_WeightsInitializer : nullptr, "weights");
-        m_Bias = new Variable(OutputShape(), initValues ? m_BiasInitializer : nullptr, "bias");
+    //////////////////////////////////////////////////////////////////////////
+    void Dense::Build(const vector<Shape>& inputShapes)
+    {
+        NEURO_ASSERT(inputShapes.size() == 1, "Dense layer accepts single input.");
+        NEURO_ASSERT(inputShapes[0].Batch() == 1, "");
 
-        m_OutputNodes[0] = matmul(m_InputNodes[0], m_Weights);
+        m_Weights = new Variable(Shape(m_Units, inputShapes[0].Length), m_WeightsInitializer, "weights");
+
         if (m_UseBias)
-            m_OutputNodes[0] = add(m_OutputNodes[0], m_Bias);
-	}
+            m_Bias = new Variable(Shape(m_Units), m_BiasInitializer, "bias");
 
-	//////////////////////////////////////////////////////////////////////////
+        m_Built = true;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    vector<TensorLike*> Dense::InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training)
+    {
+        NEURO_ASSERT(inputNodes.size() == 1, "Dense layer accepts single input.");
+
+        TensorLike* output = matmul(inputNodes[0], m_Weights);
+        if (m_UseBias)
+            output = add(output, m_Bias);
+        if (m_Activation)
+            output = m_Activation->Build(output);
+        return { output };
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void Dense::CopyParametersTo(LayerBase& target, float tau) const
 	{
 		__super::CopyParametersTo(target, tau);
@@ -78,7 +91,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	uint32_t Dense::ParamsNum() const
 	{
-		return InputShape().Length * OutputShape().Length + (m_UseBias ? OutputShape().Length : 0);
+        return 0;//  InputShape().Length * OutputShape().Length + (m_UseBias ? OutputShape().Length : 0);
 	}
 
 	//////////////////////////////////////////////////////////////////////////

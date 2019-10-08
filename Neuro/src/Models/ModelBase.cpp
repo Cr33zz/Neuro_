@@ -32,7 +32,7 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     ModelBase::ModelBase(const string& constructorName, const string& name, int seed)
-        : LayerBase(constructorName, name)
+        : LayerBase(constructorName, Shape(), name)
     {
         NameScope scope(name);
         m_TrainingPlaceholder = new Placeholder(Shape(1), "training_phase");
@@ -56,7 +56,7 @@ namespace Neuro
     }
     
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::Build(const vector<Shape>& inputShapes)
+    /*void ModelBase::Build(const vector<Shape>& inputShapes)
     {
         auto lastInputShapes = inputShapes;
         for (auto layer : m_Layers)
@@ -64,7 +64,7 @@ namespace Neuro
             layer->Build(lastInputShapes);
             lastInputShapes = layer->OutputShapes();
         }
-    }
+    }*/
 
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::InitGraph(const vector<TensorLike*>& inputs, const vector<TensorLike*>& outputs)
@@ -83,9 +83,9 @@ namespace Neuro
         {
             auto x = inputs[i];
             
-            NEURO_ASSERT(x->m_Origin, "Input tensors to a " << ClassName() << " " << "must come from `Input`. Received: " << x->Name() << " (missing previous layer metadata).");
+            NEURO_ASSERT(x->m_Metadata, "Input tensors to a " << ClassName() << " " << "must come from `Input`. Received: " << x->Name() << " (missing previous layer metadata).");
 
-            auto layer = x->m_Origin->layer;
+            auto layer = x->m_Metadata->layer;
 
             // check if origin points to input layer
             NEURO_ASSERT(layer->m_InboundNodes.size() > 1 || (!layer->m_InboundNodes.empty() && layer->m_InboundNodes[0]->inbound_layers.size() > 0),
@@ -97,7 +97,7 @@ namespace Neuro
         {
             auto x = outputs[i];
 
-            NEURO_ASSERT(x->m_Origin, "Output tensors to a " << ClassName() << " must be the output of a `LayerBase` (thus holding past layer metadata). Found: " << x->Name());
+            NEURO_ASSERT(x->m_Metadata, "Output tensors to a " << ClassName() << " must be the output of a `LayerBase` (thus holding past layer metadata). Found: " << x->Name());
         }
 
         m_Built = true; // no variables are stored in model itself
@@ -107,21 +107,24 @@ namespace Neuro
         {
             auto x = outputs[i];
 
-            m_OutputLayers.push_back(x->m_Origin->layer);
-            m_OutputCoords.push_back(x->m_Origin);
+            m_OutputLayers.push_back(x->m_Metadata->layer);
+            m_OutputCoords.push_back(x->m_Metadata);
         }
 
         for (size_t i = 0; i < inputs.size(); ++i)
         {
             auto x = inputs[i];
 
-            NEURO_ASSERT(x->m_Origin->node_index == 0, "");
-            NEURO_ASSERT(x->m_Origin->tensor_index == 0, "");
-            m_InputLayers.push_back(x->m_Origin->layer);
-            m_InputCoords.push_back(x->m_Origin);
+            NEURO_ASSERT(x->m_Metadata->node_index == 0, "");
+            NEURO_ASSERT(x->m_Metadata->tensor_index == 0, "");
+            m_InputLayers.push_back(x->m_Metadata->layer);
+            m_InputCoords.push_back(x->m_Metadata);
         }
 
-        MapGraphNetwork(m_Inputs, m_Outputs);
+        //MapGraphNetwork(m_Inputs, m_Outputs);
+        unordered_set<LayerBase*> visited;
+        for (auto layer : m_OutputLayers)
+            ProcessLayer(layer, visited);
 
         new node(this, {}, {}, {}, m_Inputs, m_Outputs, CollectShapes(m_Inputs), CollectShapes(m_Outputs));
     }
@@ -129,7 +132,57 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<TensorLike*> ModelBase::InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training)
     {
+        NEURO_ASSERT(false, "Not implemented yet.");
+        return {};
+    }
 
+    //////////////////////////////////////////////////////////////////////////
+    vector<TensorLike*> ModelBase::GetSourceInputs(TensorLike* tensor, LayerBase* layer, int nodeIndex)
+    {
+        if (!tensor->m_Metadata)
+            return { tensor };
+
+        if (!layer || nodeIndex)
+        {
+            layer = tensor->m_Metadata->layer;
+            nodeIndex = (int)tensor->m_Metadata->node_index;
+        }
+
+        if (layer->m_InboundNodes.empty())
+            return { tensor };
+        else
+        {
+            auto node = layer->m_InboundNodes[nodeIndex];
+
+            if (node->inbound_layers.empty())
+            {
+                // Reached an Input layer, stop recursion.
+                return node->input_tensors;
+            }
+            else
+            {
+                vector<TensorLike*> source_tensors;
+                unordered_set<TensorLike*> visitedTensors;
+                for (size_t i = 0; i < node->inbound_layers.size(); ++i)
+                {
+                    auto x = node->input_tensors[i];
+                    auto layer = node->inbound_layers[i];
+                    auto nodeIndex = node->node_indices[i];
+                    auto previousSources = GetSourceInputs(x, layer, nodeIndex);
+
+                    // Avoid input redundancy.
+                    for (auto x : previousSources)
+                    {
+                        if (visitedTensors.find(x) != visitedTensors.end())
+                        {
+                            source_tensors.push_back(x);
+                            visitedTensors.insert(x);
+                        }
+                    }
+                }
+                return source_tensors;
+            }
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -149,7 +202,7 @@ namespace Neuro
     void ModelBase::Optimize(OptimizerBase* optimizer, LossBase* loss)
     {
         map<string, LossBase*> lossDict;
-        for (auto outLayer : ModelOutputLayers())
+        for (auto outLayer : m_OutputLayers)
             lossDict[outLayer->Name()] = loss;
 
         Optimize(optimizer, lossDict);
@@ -162,10 +215,9 @@ namespace Neuro
 
         m_Optimizer = optimizer;
 
-        assert(lossDict.size() == ModelOutputLayers().size());
+        NEURO_ASSERT(lossDict.size() == m_OutputLayers.size(), "Each output layer must have a corresponding loss function provided.");
 
-        auto& outputsShapes = OutputShapes();
-        m_AccuracyFuncs.resize(outputsShapes.size());
+        //m_AccuracyFuncs.resize(outputsShapes.size());
 
         vector<Placeholder*> targetsPlaceholders;
         vector<TensorLike*> fetch;
@@ -176,14 +228,14 @@ namespace Neuro
         {
             NameScope scope("loss");
 
-            for (size_t i = 0; i < ModelOutputLayers().size(); ++i)
+            for (size_t i = 0; i < m_OutputLayers.size(); ++i)
             {
-                auto outLayer = ModelOutputLayers()[i];
+                auto layer = m_OutputLayers[i];
 
-                m_AccuracyFuncs[i] = outputsShapes[i].Length == 1 ? AccBinaryClassificationEquality : AccCategoricalClassificationEquality;
+                //m_AccuracyFuncs[i] = outputsShapes[i].Length == 1 ? AccBinaryClassificationEquality : AccCategoricalClassificationEquality;
 
-                targetsPlaceholders.push_back(new Placeholder(Shape(outLayer->OutputShapes()[0]), "target" + to_string(i)));
-                auto loss = lossDict[outLayer->Name()]->Build(targetsPlaceholders.back(), outLayer->OutputNodes()[0]);
+                targetsPlaceholders.push_back(new Placeholder(Shape(layer->OutputShapes()[0]), "target" + to_string(i)));
+                auto loss = lossDict[layer->Name()]->Build(targetsPlaceholders.back(), layer->Outputs()[0]);
 
                 losses.push_back(loss);
                 fetch.push_back(loss);
@@ -322,8 +374,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::LoadWeights(const string& filename)
     {
-        Build();
-
+        assert(false);
         H5File file = H5File(filename, H5F_ACC_RDONLY);
 
         bool is_keras = file.attrExists("layer_names");
@@ -496,7 +547,7 @@ namespace Neuro
 
         assert((validInputs && validOutputs) || (!validInputs && !validOutputs));
         //assert(inputs.size() == GetInputLayersCount());
-        assert(outputs.size() == OutputShapes().size());
+        assert(outputs.size() == m_OutputLayers.size());
 
         uint32_t trainSamplesCount = inputs[0]->Batch();
         uint32_t validationSamplesCount = validInputs ? (*validInputs)[0]->Batch() : 0;
@@ -695,56 +746,76 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::MapGraphNetwork(const vector<TensorLike*>& inputs, const vector<TensorLike*>& outputs)
+    //void ModelBase::MapGraphNetwork(const vector<TensorLike*>& inputs, const vector<TensorLike*>& outputs)
+    //{
+    //    auto makeNodeKey = [](const string& layerName, int nodeIndex)
+    //    {
+    //        return layerName + '_ib-' + to_string(nodeIndex);
+    //    };
+
+    //    unordered_set<string> networkNodes; // ids of all nodes relevant to the Network
+    //    map<node*, int> nodesDepths; // dict{ node: depth value }
+    //    map<LayerBase*, int> layers_depths;  // dict{ layer: depth value }
+    //    map<LayerBase*, int> layer_indices;  // dict{ layer: index in traversal }
+    //    vector<node*> nodes_in_decreasing_depth;
+
+    //    auto buildMap = [&](TensorLike* tensor, unordered_set<node*> finishedNodes, list<node*> nodesInProgress, LayerBase* layer, int nodeIndex, int tensorIndex)
+    //    {
+    //        auto node = layer->m_InboundNodes[nodeIndex].get();
+
+    //        // Prevent cycles.
+    //        if (find(nodesInProgress.begin(), nodesInProgress.end(), node) != nodesInProgress.end())
+    //            NEURO_ASSERT(false, "The tensor " << tensor->Name() << " at layer '" << layer->Name() << "' is part of a cycle.");
+
+    //        // Don't repeat work for shared subgraphs
+    //        if (finishedNodes.find(node) != finishedNodes.end())
+    //            return;
+
+    //        //auto node_key = _make_node_key(layer.name, node_index)
+    //        // Update network_nodes.
+    //        //network_nodes.add(node_key)
+
+    //        // Store the traversal order for layer sorting.
+    //        if (layer_indices.find(layer) == layer_indices.end())
+    //            layer_indices[layer] = layer_indices.size();
+
+    //        nodesInProgress.push_back(node);
+
+    //        // Propagate to all previous tensors connected to this node.
+    //        for (size_t i = 0; i < node->inbound_layers.size(); ++i)
+    //        {
+    //            auto x = node->input_tensors[i];
+    //            auto layer = node->inbound_layers[i];
+    //            auto node_index = node->node_indices[i];
+    //            auto tensor_index = node->tensor_indices[i];
+    //            buildMap(x, finishedNodes, nodesInProgress, layer, node_index, tensor_index);
+    //        }
+    //            
+    //        finishedNodes.insert(node);
+    //        node = nodesInProgress.front();
+    //        nodesInProgress.pop_front();
+    //        nodes_in_decreasing_depth.push_back(node);
+    //    };
+    //}
+
+    //////////////////////////////////////////////////////////////////////////
+    void ModelBase::ProcessLayer(LayerBase* layer, unordered_set<LayerBase*>& visited)
     {
-        auto makeNodeKey = [](const string& layerName, int nodeIndex)
+        bool allInputLayersVisited = true;
+
+        auto& inputTensors = layer->Inputs();
+
+        for (size_t i = 0; i < inputTensors.size(); ++i)
         {
-            return layerName + '_ib-' + to_string(nodeIndex);
-        };
+            assert(inputTensors[i]->m_Metadata);
+            ProcessLayer(inputTensors[i]->m_Metadata->layer, visited);
+        }
 
-        unordered_set<string> networkNodes; // ids of all nodes relevant to the Network
-        map<node*, int> nodesDepths; // dict{ node: depth value }
-        map<LayerBase*, int> layers_depths;  // dict{ layer: depth value }
-        map<LayerBase*, int> layer_indices;  // dict{ layer: index in traversal }
-        vector<node*> nodes_in_decreasing_depth;
+        if (visited.find(layer) != visited.end())
+            return;
 
-        auto buildMap = [&](TensorLike* tensor, unordered_set<node*> finishedNodes, list<node*> nodesInProgress, LayerBase* layer, int nodeIndex, int tensorIndex)
-        {
-            auto node = layer->m_InboundNodes[nodeIndex].get();
-
-            // Prevent cycles.
-            if (find(nodesInProgress.begin(), nodesInProgress.end(), node) != nodesInProgress.end())
-                NEURO_ASSERT(false, "The tensor " << tensor->Name() << " at layer '" << layer->Name() << "' is part of a cycle.");
-
-            // Don't repeat work for shared subgraphs
-            if (finishedNodes.find(node) != finishedNodes.end())
-                return;
-
-            //auto node_key = _make_node_key(layer.name, node_index)
-            // Update network_nodes.
-            //network_nodes.add(node_key)
-
-            // Store the traversal order for layer sorting.
-            if (layer_indices.find(layer) == layer_indices.end())
-                layer_indices[layer] = layer_indices.size();
-
-            nodesInProgress.push_back(node);
-
-            // Propagate to all previous tensors connected to this node.
-            for (size_t i = 0; i < node->inbound_layers.size(); ++i)
-            {
-                auto x = node->input_tensors[i];
-                auto layer = node->inbound_layers[i];
-                auto node_index = node->node_indices[i];
-                auto tensor_index = node->tensor_indices[i];
-                buildMap(x, finishedNodes, nodesInProgress, layer, node_index, tensor_index);
-            }
-                
-            finishedNodes.insert(node);
-            node = nodesInProgress.front();
-            nodesInProgress.pop_front();
-            nodes_in_decreasing_depth.push_back(node);
-        };
+        visited.insert(layer);
+        m_Layers.push_back(layer);
     }
 
     //////////////////////////////////////////////////////////////////////////

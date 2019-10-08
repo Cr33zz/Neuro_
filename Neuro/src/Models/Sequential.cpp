@@ -2,16 +2,15 @@
 #include <iomanip>
 #include <sstream>
 
-#include "ComputationalGraph/Placeholder.h"
-#include "Layers/LayerBase.h"
 #include "Models/Sequential.h"
 #include "Layers/Input.h"
+#include "ComputationalGraph/Placeholder.h"
 
 namespace Neuro
 {
 	//////////////////////////////////////////////////////////////////////////
 	Sequential::Sequential(const string& name, int seed)
-        : ModelBase(__FUNCTION__, name, seed)
+        : Flow(__FUNCTION__, name, seed)
 	{
 	}
 
@@ -25,7 +24,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     LayerBase* Sequential::GetCloneInstance() const
     {
-        return new Sequential(0);
+        return nullptr; // new Sequential(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -34,8 +33,8 @@ namespace Neuro
         __super::OnClone(source);
 
         auto& sourceSequence = static_cast<const Sequential&>(source);
-        for (auto layer : sourceSequence.m_Layers)
-            m_Layers.push_back(layer->Clone());
+        /*for (auto layer : sourceSequence.m_Layers)
+            m_Layers.push_back(layer->Clone());*/
 	}
 
     //////////////////////////////////////////////////////////////////////////
@@ -44,9 +43,12 @@ namespace Neuro
         m_Built = false;
         if (m_Layers.empty())
         {
+            bool setInputs = false;
+
             if (dynamic_cast<Input*>(layer))
             {
-
+                NEURO_ASSERT(layer->m_InboundNodes.back()->output_tensors.size() == 1, "");
+                setInputs = true;
             }
             else
             {
@@ -59,18 +61,53 @@ namespace Neuro
                     firstLayer = modelLayer->Layer(0);
                 }
 
-                if (!dynamic_cast<Input*>(layer) && )
+                if (!dynamic_cast<Input*>(layer) && layer->ExpectedInputShape().IsValid())
                 {
-                    Input x()
+                    auto inputLayer = new Input(layer->ExpectedInputShape());
+                    layer->Call(inputLayer->Outputs());
+                    setInputs = true;
                 }
             }
             
+            if (setInputs)
+            {
+                NEURO_ASSERT(layer->m_InboundNodes.back()->output_tensors.size() == 1, "All layers in a Sequential model should have a single output tensor. For multi-output layers, use the Flow.");
+                m_Outputs = layer->m_InboundNodes.back()->output_tensors;
+                m_Inputs = GetSourceInputs(m_Outputs[0]);
+            }
         }
-        else
+        else if (!m_Outputs.empty())
         {
-            layer->Call(m_Layers.back()->OutputNodes(), m_TrainingPlaceholder);
+            auto outputs = layer->Call(m_Outputs, m_TrainingPlaceholder);
+
+            NEURO_ASSERT(outputs.size() == 1, "All layers in a Sequential model should have a single output tensor. For multi-output layers, use Flow.");
+            m_Outputs = outputs;
         }
         
-        m_Layers.push_back(layer);
+        if (!m_Inputs.empty())
+            Build({});
+        else
+            m_Layers.push_back(layer);
 	}
+
+    void Sequential::Build(const vector<Shape>& inputShapes)
+    {
+        if (!inputShapes.empty() && m_Inputs.empty())
+        {
+            auto inputLayer = new Input(inputShapes[0]);
+            auto x = inputLayer->Outputs();
+            m_Inputs = x;
+
+            for (auto layer : m_Layers)
+                x = layer->Call(x);
+
+            m_Outputs = x;
+        }
+
+        if (!m_Inputs.empty())
+        {
+            InitGraph(m_Inputs, m_Outputs);
+            m_Built = true;
+        }
+    }
 }

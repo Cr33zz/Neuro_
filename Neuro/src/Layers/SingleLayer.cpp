@@ -12,33 +12,15 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    SingleLayer::SingleLayer(const string& constructorName, LayerBase* inputLayer, const Shape& outputShape, ActivationBase* activation, const string& name)
-        : SingleLayer(constructorName, outputShape, activation, name)
+    SingleLayer::SingleLayer(const string& constructorName, const Shape& inputShape, ActivationBase* activation, const string& name)
+        : LayerBase(constructorName, inputShape, name)
     {
-        Call(inputLayer);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    SingleLayer::SingleLayer(const string& constructorName, const vector<LayerBase*>& inputLayers, const Shape& outputShape, ActivationBase* activation, const string& name)
-        : SingleLayer(constructorName, outputShape, activation, name)
+    SingleLayer::SingleLayer(const string& constructorName, ActivationBase* activation, const string& name)
+        : SingleLayer(constructorName, Shape(), activation, name)
     {
-        Call(inputLayers);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    SingleLayer::SingleLayer(const string& constructorName, const Shape& inputShape, const Shape& outputShape, ActivationBase* activation, const string& name)
-        : SingleLayer(constructorName, outputShape, activation, name)
-    {
-        m_InputShape = inputShape;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    SingleLayer::SingleLayer(const string& constructorName, const Shape& outputShape, ActivationBase* activation, const string& name)
-        : LayerBase(constructorName, name)
-    {
-        m_Outputs.resize(1);
-        m_OutputsShapes.resize(1);
-        m_OutputsShapes[0] = outputShape;
         m_Activation = activation;
     }
 
@@ -53,61 +35,8 @@ namespace Neuro
         __super::OnClone(source);
         
         auto& sourceSingleLayer = static_cast<const SingleLayer&>(source);
-        m_InputShape = sourceSingleLayer.m_InputShape;
+        /*m_InputShape = sourceSingleLayer.m_InputShape;
         m_OutputsShapes = sourceSingleLayer.m_OutputsShapes;
-        m_Activation = sourceSingleLayer.m_Activation;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void SingleLayer::OnLinkInput(const vector<LayerBase*>& inputLayers)
-    {
-        // all output shapes must match
-        Shape firstShape = inputLayers[0]->OutputShape();
-        
-        assert(!m_InputShape.IsValid() || m_InputShape == firstShape);
-
-        for (size_t i = 1; i < inputLayers.size(); ++i)
-            assert(firstShape == inputLayers[i]->OutputShape());
-
-        m_InputShape = firstShape;
-        m_InputLayers.insert(m_InputLayers.end(), inputLayers.begin(), inputLayers.end());
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void SingleLayer::OnLinkOutput(LayerBase* outputLayer)
-    {
-        m_OutputLayers.push_back(outputLayer);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void SingleLayer::InternalCall(TensorLike* training, bool initValues)
-    {
-        m_OutputNodes = m_InputNodes;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void SingleLayer::OnInit(TensorLike* training, bool initValues)
-    {
-        if (m_InputLayers.empty())
-        {
-            m_InputNodes.push_back(new Placeholder(m_InputShape, "input"));
-        }
-        else
-        {
-            for (auto inLayer : m_InputLayers)
-                m_InputNodes.insert(m_InputNodes.end(), inLayer->OutputNodes().begin(), inLayer->OutputNodes().end());
-        }
-
-        m_Outputs.resize(m_OutputsShapes.size());
-        m_OutputNodes.resize(m_Outputs.size());
-
-        InternalCall(training, initValues);
-
-        for (size_t i = 0; i < m_Outputs.size(); ++i)
-        {
-            if (m_Activation)
-                m_OutputNodes[i] = m_Activation->Build(m_OutputNodes[i]);
-            m_Outputs[i] = &m_OutputNodes[i]->Output();
-        }
+        m_Activation = sourceSingleLayer.m_Activation;*/
     }
 }
