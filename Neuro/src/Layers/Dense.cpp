@@ -66,11 +66,11 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> Dense::InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training)
+    vector<TensorLike*> Dense::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
     {
-        NEURO_ASSERT(inputNodes.size() == 1, "Dense layer accepts single input.");
+        NEURO_ASSERT(inputs.size() == 1, "Dense layer accepts single input.");
 
-        TensorLike* output = matmul(inputNodes[0], m_Weights);
+        TensorLike* output = matmul(inputs[0], m_Weights);
         if (m_UseBias)
             output = add(output, m_Bias);
         if (m_Activation)

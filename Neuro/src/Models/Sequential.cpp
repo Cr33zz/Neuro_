@@ -55,15 +55,15 @@ namespace Neuro
                 LayerBase* firstLayer = layer;
 
                 // we have to dig through layer containers until we get the very first one
-                while (ModelBase* modelLayer = dynamic_cast<ModelBase*>(layer))
+                while (ModelBase* modelLayer = dynamic_cast<ModelBase*>(firstLayer))
                 {
                     NEURO_ASSERT(!modelLayer->Layers().empty(), "Cannot add an empty model to a `Sequential` model.");
                     firstLayer = modelLayer->Layer(0);
                 }
 
-                if (!dynamic_cast<Input*>(layer) && layer->ExpectedInputShape().IsValid())
+                if (firstLayer->ExpectedInputShape().IsValid())
                 {
-                    auto inputLayer = new Input(layer->ExpectedInputShape());
+                    auto inputLayer = new Input(firstLayer->ExpectedInputShape());
                     layer->Call(inputLayer->Outputs());
                     setInputs = true;
                 }

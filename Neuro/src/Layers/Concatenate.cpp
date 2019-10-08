@@ -16,9 +16,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> Concatenate::InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training)
+    vector<TensorLike*> Concatenate::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
     {
-        return { concat(inputNodes, m_Axis) };
+        return { concat(inputs, m_Axis) };
     }
 
 }

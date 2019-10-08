@@ -50,6 +50,8 @@ namespace Neuro
     // Loaded tensor is flat and internal data layout is NHWC, it should be transposed and normalized before use
     Tensor LoadImage(const string& filename, uint32_t targetSizeX = 0, uint32_t targetSizeY = 0);
 
+    //vector<TensorLike*> Merge(initializer_list<vector<TensorLike*>> )
+
     void ImageLibInit();
     extern bool g_ImageLibInitialized;
 

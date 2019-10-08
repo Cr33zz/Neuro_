@@ -54,9 +54,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> Conv2DTranspose::InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training)
+    vector<TensorLike*> Conv2DTranspose::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
     {
-        TensorLike* output = conv2d_transpose(inputNodes[0], m_Kernels, m_Stride, m_Padding, m_DataFormat);
+        TensorLike* output = conv2d_transpose(inputs[0], m_Kernels, m_Stride, m_Padding, m_DataFormat);
         if (m_UseBias)
             output = add(output, m_Bias);
         if (m_Activation)

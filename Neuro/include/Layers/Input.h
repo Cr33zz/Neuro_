@@ -12,13 +12,14 @@ namespace Neuro
     {
 	public:
         Input(const Shape& inputShape, const string& name = "");
+        Input(Placeholder* tensor, const string& name = "");
 
 	protected:
         Input();
 
 		virtual LayerBase* GetCloneInstance() const override;
 
-        virtual void Build(const vector<Shape>& inputShapes) override;
+        //virtual void Build(const vector<Shape>& inputShapes) override;
         virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override;
 
     private:

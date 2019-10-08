@@ -34,8 +34,8 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> Reshape::InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training)
+    vector<TensorLike*> Reshape::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
     {
-        return { reshape(inputNodes[0], m_Shape) };
+        return { reshape(inputs[0], m_Shape) };
     }
 }

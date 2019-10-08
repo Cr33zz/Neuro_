@@ -83,9 +83,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> BatchNormalization::InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training)
+    vector<TensorLike*> BatchNormalization::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
     {
-        TensorLike* output = batch_norm(inputNodes[0], m_Gamma, m_Beta, m_RunningMean, m_RunningVar, m_Momentum, m_Epsilon, training);
+        TensorLike* output = batch_norm(inputs[0], m_Gamma, m_Beta, m_RunningMean, m_RunningVar, m_Momentum, m_Epsilon, training);
         if (m_Activation)
             output = m_Activation->Build(output);
 

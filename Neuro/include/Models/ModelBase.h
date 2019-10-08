@@ -69,7 +69,7 @@ namespace Neuro
 
         void InitGraph(const vector<TensorLike*>& inputs, const vector<TensorLike*>& outputs);
 
-        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override;
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs, TensorLike* training) override;
 
         vector<LayerBase*> m_Layers;
         vector<TensorLike*> m_Inputs;

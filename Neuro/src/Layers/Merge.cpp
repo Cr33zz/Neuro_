@@ -33,22 +33,22 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> Merge::InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training)
+    vector<TensorLike*> Merge::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
     {
         TensorLike* output = nullptr;
         switch (m_MergeMode)
         {
         case MergeAvg:
-            output = merge_avg(inputNodes);
+            output = merge_avg(inputs);
             break;
         case MergeMax:
-            output = merge_max(inputNodes);
+            output = merge_max(inputs);
             break;
         case MergeMin:
-            output = merge_min(inputNodes);
+            output = merge_min(inputs);
             break;
         case MergeSum:
-            output = merge_sum(inputNodes);
+            output = merge_sum(inputs);
             break;
         }
 

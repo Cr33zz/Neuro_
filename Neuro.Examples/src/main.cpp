@@ -13,19 +13,21 @@
 
 int main()
 {
+    auto m1In1 = (new Input(Shape(32)))->Outputs();
+    auto m1X = (new Dense(10, new Sigmoid()))->Call(m1In1);
+    auto m1 = new Flow(m1In1, { m1In1[0], m1X[0] });
+
+    auto m2In1 = (new Input(Shape(32)))->Outputs();
+    auto m2X = (new Dense(10, new Sigmoid()))->Call(m2In1);
+    auto m2 = new Flow({ m2In1[0] }, { m2X[0] });
+
     auto seq = new Sequential();
-    seq->AddLayer(new Dense(5, 7));
+    seq->AddLayer(m2);
     seq->AddLayer(new Dense(10));
 
-    /*auto m1In1 = new Input(Shape(32));
-    auto m1X = (new Dense(10, new Sigmoid()))->Call(m1In1);
-    auto m1 = new Flow({ m1In1 }, { m1In1, m1X });
+    
 
-    auto m2In1 = new Input(Shape(32));
-    auto m2X = (new Dense(10, new Sigmoid()))->Call(m2In1);
-    auto m2 = new Flow({ m2In1 }, { m2X });
-
-    auto m3In1 = new Input(Shape(10));
+    /*auto m3In1 = new Input(Shape(10));
     auto m3In2 = new Input(Shape(10));
     auto m3X = (new Merge(MergeSum, new Sigmoid()))->Call({ m3In1, m3In2 });
     m3X = (new Dense(5, new Tanh()))->Link(m3X);

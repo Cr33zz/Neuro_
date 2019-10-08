@@ -23,6 +23,12 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
+    vector<TensorLike*> LayerBase::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
+    {
+        return inputs;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void LayerBase::SerializedParameters(vector<SerializedParameter>& serializedParams)
     {
         vector<Variable*> params;
@@ -202,7 +208,7 @@ namespace Neuro
         }
 
         for (size_t i = 0; i < outputTensors.size(); ++i)
-            outputTensors[i]->m_Metadata = new TensorLike::metadata{ this, m_InboundNodes.size() - 1, i };
+            outputTensors[i]->m_Metadata = new TensorLike::metadata{ this, m_InboundNodes.size(), i };
         
         new node(this, inboundLayers, nodeIndices, tensorIndices, inputTensors, outputTensors, inputShapes, outputShapes);
     }

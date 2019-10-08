@@ -68,16 +68,14 @@ namespace Neuro
         virtual void Build(const vector<Shape>& inputShapes) {}
 
         // Creates internal chain of operations based on input tensors and returns output tensors
-        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) = 0;
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs, TensorLike* training);
 
         virtual LayerBase* GetCloneInstance() const = 0;
         virtual void OnClone(const LayerBase& source);
         
 		string GenerateName() const;
 
-		bool m_Trainable = true;
-
-        // Represents a connection between layers. Instance will be created by output_layer and added to its inbound nodes list.
+		// Represents a connection between layers. Instance will be created by output_layer and added to its inbound nodes list.
         struct node
         {
             node(LayerBase* outboundLayer,
@@ -106,13 +104,13 @@ namespace Neuro
 
         Shape m_ExpectedInputShape;
         bool m_Built = false;
+        bool m_Trainable = true;
 
 	private:
         vector<Shape> CollectShapes(const vector<TensorLike*>& inputs) const;
 
 		string m_Name;
         string m_ClassName;
-		bool m_Initialized = false;
 
 		static map<string, int> s_LayersCountPerType;
 
