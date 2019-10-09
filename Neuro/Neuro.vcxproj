@@ -133,6 +133,7 @@
     <ClInclude Include="include\ComputationalGraph\Operations\DropoutOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\DumpOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\GradientsOp.h" />
+    <ClInclude Include="include\ComputationalGraph\Operations\IdentityOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\LeakyReLUOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\MergeOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\Pool2dOp.h" />
@@ -230,6 +231,7 @@
     <ClCompile Include="src\ComputationalGraph\Operations\DropoutOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\DumpOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\GradientsOp.cpp" />
+    <ClCompile Include="src\ComputationalGraph\Operations\IdentityOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\LeakyReLUOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\MergeOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\Pool2dOp.cpp" />
@@ -301,9 +303,6 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\Tensors\Cuda\CudaKernels.cu" />
-  </ItemGroup>
-  <ItemGroup>
-    <Natvis Include="Neuro.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -42,7 +42,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<TensorLike*> Input::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
     {
-        return { assign(m_Placeholder, inputs[0]) };
+        NEURO_ASSERT(inputs.size() == 1, "Input layer accepts single input.");
+        return { identity(inputs[0]) };
     }
 
     //////////////////////////////////////////////////////////////////////////
