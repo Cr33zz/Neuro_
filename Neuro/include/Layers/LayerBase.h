@@ -65,7 +65,7 @@ namespace Neuro
         LayerBase() {}
 
         // Creates internal state tensors like weights, biases etc.
-        virtual void Build(const vector<Shape>& inputShapes) {}
+        virtual void Build(const vector<Shape>& inputShapes = {}) {}
 
         // Creates internal chain of operations based on input tensors and returns output tensors
         virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs, TensorLike* training);

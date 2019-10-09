@@ -50,7 +50,6 @@ namespace Neuro
         vector<Operation*> m_Operations;
         vector<Variable*> m_Variables;
         vector<TensorLike*> m_Nodes;
-        bool m_VariablesInitialized = false;
         uint32_t m_CurrentStep = 0;
 
         static Graph* s_Default;

@@ -47,13 +47,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Graph::InitVariables()
     {
-        if (m_VariablesInitialized)
-            return;
-
         for (auto var : m_Variables)
-            var->Init();
-
-        m_VariablesInitialized = true;
+            var->Initialize();
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -11,12 +11,7 @@ namespace Neuro
     class Constant : public TensorLike
     {
     public:
-        Constant(const Tensor& value, const string& name = "");
-        Constant(float value, const string& name = "");
-
-        const string& Name() const { return m_Name; }
-
-    private:
-        string m_Name;
+        explicit Constant(const Tensor& value, const string& name = "");
+        explicit Constant(float value, const string& name = "");
     };
 }

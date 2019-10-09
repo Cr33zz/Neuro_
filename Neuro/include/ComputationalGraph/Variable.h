@@ -11,19 +11,22 @@ namespace Neuro
     class Variable : public TensorLike
     {
     public:
-        Variable(const Tensor& initValue, const string& name = "");
-        Variable(float initValue, const string& name = "");
-        Variable(const Shape& shape, InitializerBase* initializer = nullptr, const string& name = "");
+        explicit Variable(const Tensor& initValue, const string& name = "");
+        explicit Variable(float initValue, const string& name = "");
+        explicit Variable(const Shape& shape, InitializerBase* initializer = nullptr, const string& name = "");
+        virtual ~Variable();
 
         virtual bool IsVar() const override { return true; }
 
         void Trainable(bool enabled) { m_Trainable = enabled; }
         bool Trainable() const { return m_Trainable; }
 
-        void Init();
+        void Initialize();
+        void ForceInitialized() { m_Initialized = true; }
 
     private:
         bool m_Trainable = true;
+        bool m_Initialized = false;
         InitializerBase* m_Initializer = nullptr;
     };
 }

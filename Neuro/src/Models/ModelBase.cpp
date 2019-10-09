@@ -432,7 +432,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::LoadWeights(const string& filename)
     {
-        assert(false);
+        if (!m_Built)
+            Build();
+
         H5File file = H5File(filename, H5F_ACC_RDONLY);
 
         bool is_keras = file.attrExists("layer_names");
@@ -442,13 +444,13 @@ namespace Neuro
         vector<SerializedParameter> params;
         static char buffer[1024];
 
-        auto& layers = Layers();
+        auto layers = Layers();
+        layers.erase(layers.begin()); // remove input layer from the list
 
         hsize_t layerGroupsNum;
         H5Gget_num_objs(file.getId(), &layerGroupsNum);
 
-        // make sure number of parameters tensors match
-        assert((size_t)layerGroupsNum == layers.size());
+        NEURO_ASSERT((size_t)layerGroupsNum == layers.size(), "Number of saved layers doesn't match number of layers in the model. Found " << layerGroupsNum << " expected " << layers.size() << ".");
 
         vector<hsize_t> layersOrder(layers.size());
         iota(layersOrder.begin(), layersOrder.end(), 0); // creation order by default
@@ -463,7 +465,7 @@ namespace Neuro
             Attribute att(file.openAttribute("layer_names"));
             hsize_t layersNamesNum = 0;
             att.getSpace().getSimpleExtentDims(&layersNamesNum);
-            assert(layersNamesNum == layerGroupsNum);
+            NEURO_ASSERT(layersNamesNum == layerGroupsNum, "Number of layer names doesn't match number of layers' groups. Found " << layersNamesNum << " expected " << layerGroupsNum << ".");
             hsize_t strLen = att.getDataType().getSize();
             att.read(att.getDataType(), buffer);
 
@@ -502,7 +504,7 @@ namespace Neuro
                 Attribute att(g.openAttribute("weight_names"));
                 hsize_t weightsNamesNum = 0;
                 att.getSpace().getSimpleExtentDims(&weightsNamesNum);
-                assert(weightsNamesNum == params.size());
+                NEURO_ASSERT(weightsNamesNum == params.size(), "Number of saved parameters doesn't match number of parameters in layer '" << layer->Name() << "'. Found " << weightsNamesNum << " expected " << params.size() << ".");
                 hsize_t strLen = att.getDataType().getSize();
                 att.read(att.getDataType(), buffer);
 
@@ -527,7 +529,7 @@ namespace Neuro
                 hsize_t weightDims[5];
                 dataset.getSpace().getSimpleExtentDims(nullptr, weightDims);
 
-                assert(w->GetShape().Length == dataset.getSpace().getSimpleExtentNpoints());
+                NEURO_ASSERT(w->GetShape().Length == dataset.getSpace().getSimpleExtentNpoints(), "Number of values in parameter '" << w->Name() << "' doesn't match saved parameter. Found " << dataset.getSpace().getSimpleExtentNpoints() << " expected " << w->GetShape().Length  << ".");
 
                 if (is_keras && !params[i].transAxesKeras.empty())
                 {
@@ -541,17 +543,19 @@ namespace Neuro
 
                 auto wShape = w->GetShape();
 
-                assert(wShape.NDim == dataset.getSpace().getSimpleExtentNdims());
+                NEURO_ASSERT(wShape.NDim == dataset.getSpace().getSimpleExtentNdims(), "Number of dimensions of parameter '" << w->Name() << "' doesn't match saved parameter. Found " << dataset.getSpace().getSimpleExtentNdims() << " expected " << wShape.NDim << ".");
                 for (int i = wShape.NDim - 1, n = 0; i >= 0; --i, ++n)
-                    assert(weightDims[n] == wShape.Dimensions[i]);
+                    NEURO_ASSERT(weightDims[n] == wShape.Dimensions[i], "Dimension " << i << " of parameter '" << w->Name() << "' doesn't match corresponding dimension of saved parameter. Found " << weightDims[i] << " expected " << wShape.Dimensions[i] << ".");
 
                 dataset.read(&w->GetValues()[0], PredType::NATIVE_FLOAT);
 
                 if (is_keras && !params[i].transAxesKeras.empty())
                 {
-                    *params[i].param = w->Transposed(params[i].transAxesKeras);
+                    params[i].param->Output() = w->Transposed(params[i].transAxesKeras);
                     params[i].param->Output().Name(kerasParam.Name());
                 }
+
+                params[i].param->ForceInitialized();
             }
         }
 

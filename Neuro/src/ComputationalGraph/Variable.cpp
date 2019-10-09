@@ -10,6 +10,7 @@ namespace Neuro
     {
         m_Output = initValue;
         Graph::Default()->AddVariable(this);
+        m_Initialized = true;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -27,8 +28,19 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Variable::Init()
+    Variable::~Variable()
     {
+        delete m_Initializer;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Variable::Initialize()
+    {
+        if (m_Initialized)
+            return;
+
+        m_Initialized = true;
+
         if (m_Initializer)
             m_Initializer->Init(m_Output);
     }
