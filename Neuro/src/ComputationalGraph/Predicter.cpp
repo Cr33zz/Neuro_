@@ -2,6 +2,7 @@
 
 #include "ComputationalGraph/Predicter.h"
 #include "ComputationalGraph/Session.h"
+#include "ComputationalGraph/Graph.h"
 #include "Tensors/Tensor.h"
 
 namespace Neuro
@@ -13,6 +14,7 @@ namespace Neuro
         m_InputPlaceholders = inputPlaceholders;
         m_OutputOps = outputOps;
 
+        m_Order = Graph::Default()->BuildForwardOrder(m_OutputOps);
 
         for (size_t i = 0; i < m_InputPlaceholders.size(); ++i)
             m_Feeds[m_InputPlaceholders[i]] = nullptr;
@@ -27,6 +29,6 @@ namespace Neuro
         for (size_t i = 0; i < m_InputPlaceholders.size(); ++i)
             m_Feeds[m_InputPlaceholders[i]] = inputs[i];
 
-        return Session::Default()->Run(m_OutputOps, m_Feeds);
+        return Session::Default()->RunInOrder(m_Order, m_OutputOps, m_Feeds);
     }
 }

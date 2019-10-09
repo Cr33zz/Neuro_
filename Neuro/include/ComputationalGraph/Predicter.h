@@ -22,5 +22,7 @@ namespace Neuro
         Placeholder* m_TrainingPlaceholder;
         vector<TensorLike*> m_OutputOps;
         map<Placeholder*, const Tensor*> m_Feeds;
+
+        vector<TensorLike*> m_Order;
     };
 }
