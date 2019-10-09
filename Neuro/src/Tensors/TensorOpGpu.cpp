@@ -94,8 +94,11 @@ namespace Neuro
             return;
         }
 
-        for (uint32_t n = 0; n < t1.Batch(); ++n)
+        for (uint32_t n = 0; n < output.Batch(); ++n)
         {
+            uint32_t t1N = min(n, t1.Batch() - 1);
+            uint32_t t2N = min(n, t2.Batch() - 1);
+
             CUDA_CHECK(cublasSgeam(
                 s_CublasHandle,
                 CUBLAS_OP_N,
@@ -103,10 +106,10 @@ namespace Neuro
                 t1.BatchLength(),
                 1,
                 &alpha,
-                CudaDeviceVariable<float>(t1.GetDeviceVar(), n * t1.BatchLength()).GetDevicePtr(),
+                CudaDeviceVariable<float>(t1.GetDeviceVar(), t1N * t1.BatchLength()).GetDevicePtr(),
                 t1.BatchLength(),
                 &beta,
-                t2.GetDevicePtr(),
+                CudaDeviceVariable<float>(t2.GetDeviceVar(), t2N * t2.BatchLength()).GetDevicePtr(),
                 t2.BatchLength(),
                 CudaDeviceVariable<float>(output.GetDeviceVar(), n * output.BatchLength()).GetDevicePtr(),
                 output.BatchLength()));
@@ -589,6 +592,7 @@ namespace Neuro
     {
         input.CopyToDevice();
         output.CopyToDevice();
+        prob = 1 - prob;
 
         cudnnTensorDescriptor_t inputOutputDesc; cudnnCreateTensorDescriptor(&inputOutputDesc);
         cudnnDropoutDescriptor_t dropoutDesc; cudnnCreateDropoutDescriptor(&dropoutDesc);
