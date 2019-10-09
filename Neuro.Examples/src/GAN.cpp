@@ -57,7 +57,7 @@ void GAN::Run()
             // generate fake images from noise
             Tensor fakeImages = *gModel->Predict(noiseHalf)[0];
             // grab random batch of real images
-            Tensor realImages = images.GetRandomBatches(BATCH_SIZE / 2);
+            Tensor realImages = images.GetRandomBatch(BATCH_SIZE / 2);
 
             // perform step of training discriminator to distinguish fake from real images
             dModel->SetTrainable(true);
@@ -97,17 +97,17 @@ void GAN::RunDiscriminatorTrainTest()
     Tensor images;
     LoadImages(images);
     images.Map([](float x) { return x / 127.5f - 1.f; }, images);
-    images.Reshape(Shape::From(dModel->InputShapes()[0], images.Batch()));
+    images.Reshape(Shape::From(dModel->InputShapesAt(-1)[0], images.Batch()));
 
     const uint32_t BATCH_SIZE = 32;
     const uint32_t EPOCHS = 25;
 
-    Tensor real(Shape::From(dModel->OutputShapes()[0], BATCH_SIZE)); real.FillWithValue(1.f);
-    Tensor fake(Shape::From(dModel->OutputShapes()[0], BATCH_SIZE)); fake.FillWithValue(0.f);
+    Tensor real(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE)); real.FillWithValue(1.f);
+    Tensor fake(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE)); fake.FillWithValue(0.f);
 
     for (uint32_t e = 1; e <= EPOCHS; ++e)
     {
-        Tensor fakeImages(Shape::From(dModel->InputShapes()[0], BATCH_SIZE)); fakeImages.FillWithFunc([]() { return Uniform::NextSingle(-1, 1); });
+        Tensor fakeImages(Shape::From(dModel->InputShapesAt(-1)[0], BATCH_SIZE)); fakeImages.FillWithFunc([]() { return Uniform::NextSingle(-1, 1); });
         Tensor realImages = images.GetRandomBatches(BATCH_SIZE);
 
         auto realTrainData = dModel->TrainOnBatch(realImages, real);
