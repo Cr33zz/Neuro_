@@ -41,8 +41,10 @@ namespace Neuro
         virtual void SetTrainable(bool trainable);
         bool Trainable() const { return m_Trainable; }
 
-        virtual uint32_t ParamsNum() const { return 0; }
-        virtual void Parameters(vector<Variable*>& params, bool onlyTrainable = true) {}
+        uint32_t ParamsNum() const;
+        uint32_t TrainableParamsNum() const;
+        uint32_t NonTrainableParamsNum() const;
+        virtual void Parameters(vector<Variable*>& params, bool onlyTrainable = true) const {}
         virtual void SerializedParameters(vector<SerializedParameter>& params);
 
 		//LayerBase* Clone();

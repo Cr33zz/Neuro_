@@ -45,8 +45,7 @@ namespace Neuro
         void SaveWeights(const string& filename) const;
         void LoadWeights(const string& filename);
         
-        virtual uint32_t ParamsNum() const;
-        virtual void Parameters(vector<Variable*>& params, bool onlyTrainable = true) override;
+        virtual void Parameters(vector<Variable*>& params, bool onlyTrainable = true) const override;
 
         virtual void SetTrainable(bool trainable) override;
         void ForceLearningPhase(bool force) { m_ForceLearningPhase = force; }

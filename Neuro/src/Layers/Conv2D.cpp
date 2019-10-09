@@ -84,7 +84,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-	void Conv2D::Parameters(vector<Variable*>& params, bool onlyTrainable)
+	void Conv2D::Parameters(vector<Variable*>& params, bool onlyTrainable) const
 	{
         if (onlyTrainable && !m_Trainable)
             return;
@@ -132,12 +132,6 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	uint32_t Conv2D::ParamsNum() const
-	{
-        return 0;// m_FilterSize * m_FilterSize * (m_DataFormat == NCHW ? InputShape().Depth() : InputShape().Len(0)) * m_FiltersNum + (m_UseBias ? m_FiltersNum : 0);
-	}
-
-    //////////////////////////////////////////////////////////////////////////
     Conv2D* Conv2D::KernelInitializer(InitializerBase* initializer)
     {
         delete m_KernelInitializer;

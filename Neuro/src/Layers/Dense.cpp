@@ -89,13 +89,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	uint32_t Dense::ParamsNum() const
-	{
-        return 0;//  InputShape().Length * OutputShape().Length + (m_UseBias ? OutputShape().Length : 0);
-	}
-
-	//////////////////////////////////////////////////////////////////////////
-	void Dense::Parameters(vector<Variable*>& params, bool onlyTrainable)
+	void Dense::Parameters(vector<Variable*>& params, bool onlyTrainable) const
 	{
         if (onlyTrainable && !m_Trainable)
             return;

@@ -141,6 +141,42 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    uint32_t LayerBase::ParamsNum() const
+    {
+        vector<Variable*> params;
+        Parameters(params, false);
+
+        uint32_t paramsNum = 0;
+        for_each(params.begin(), params.end(), [&](Variable* var) { paramsNum += var->GetShape().Length; });
+
+        return paramsNum;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    uint32_t LayerBase::TrainableParamsNum() const
+    {
+        vector<Variable*> params;
+        Parameters(params);
+
+        uint32_t paramsNum = 0;
+        for_each(params.begin(), params.end(), [&](Variable* var) { paramsNum += var->GetShape().Length; });
+
+        return paramsNum;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    uint32_t LayerBase::NonTrainableParamsNum() const
+    {
+        vector<Variable*> params;
+        Parameters(params, false);
+
+        uint32_t paramsNum = 0;
+        for_each(params.begin(), params.end(), [&](Variable* var) { paramsNum += var->Trainable() ? 0 : var->GetShape().Length; });
+
+        return paramsNum;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     const vector<TensorLike*>& LayerBase::Call(const vector<TensorLike*>& inputs, TensorLike* training)
     {
         NameScope scope(Name());

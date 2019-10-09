@@ -86,7 +86,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Conv2DTranspose::Parameters(vector<Variable*>& params, bool onlyTrainable)
+    void Conv2DTranspose::Parameters(vector<Variable*>& params, bool onlyTrainable) const
     {
         if (onlyTrainable && !m_Trainable)
             return;
@@ -131,12 +131,6 @@ namespace Neuro
         auto& targetConv = static_cast<Conv2DTranspose&>(target);
         m_Kernels->Output().CopyTo(targetConv.m_Kernels->Output(), tau);
         m_Bias->Output().CopyTo(targetConv.m_Bias->Output(), tau);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    uint32_t Conv2DTranspose::ParamsNum() const
-    {
-        return m_FilterSize * m_FilterSize * m_OutputDepth + (m_UseBias ? m_OutputDepth : 0);
     }
 
     //////////////////////////////////////////////////////////////////////////

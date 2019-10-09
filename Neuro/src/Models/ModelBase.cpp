@@ -321,26 +321,27 @@ namespace Neuro
     string ModelBase::Summary() const
     {
         stringstream ss;
-        int totalParams = 0;
         ss << "_________________________________________________________________\n";
         ss << "Layer                        Output Shape              Param #   \n";
         ss << "=================================================================\n";
 
         for (auto layer : Layers())
         {
-            totalParams += layer->ParamsNum();
             ss << left << setw(29) << (layer->Name() + "(" + layer->ClassName() + ")").substr(0, 28);
             ss << setw(26) << layer->OutputShapes()[0].ToString();
             ss << setw(13) << layer->ParamsNum() << "\n";
-            /*if (layer->InputLayers().size() > 1)
+            auto& inboundLayers = layer->m_InboundNodes.back()->inbound_layers;
+            if (inboundLayers.size() > 1)
             {
-                for (int i = 0; i < (int)layer->InputLayers().size(); ++i)
-                    ss << layer->InputLayers()[i]->Name() << "\n";
-            }*/
+                for (int i = 0; i < (int)inboundLayers.size(); ++i)
+                    ss << inboundLayers[i]->Name() << "\n";
+            }
             ss << "_________________________________________________________________\n";
         }
 
-        ss << "Total params: " << totalParams << "\n";
+        ss << "Total params: " << ParamsNum() << endl;
+        ss << "Total trainable params: " << TrainableParamsNum() << endl;
+        ss << "Total non-trainable params: " << NonTrainableParamsNum() << endl;
         return ss.str();
     }
 
@@ -484,17 +485,8 @@ namespace Neuro
 
             Group g(file.openGroup(file.getObjnameByIdx(layersOrder[l])));
 
-            /*if (is_keras)
-                datasetsGroup = new Group(g.openGroup(g.getObjnameByIdx(0)));*/
-
             params.clear();
             layer->SerializedParameters(params);
-
-            //hsize_t layerDatasetsNum;
-            //H5Gget_num_objs(datasetsGroup->getId(), &layerDatasetsNum);
-
-            //// make sure number of parameters tensors match
-            //assert((size_t)layerDatasetsNum == params.size());
 
             vector<DataSet> weightsDatasets;
 
@@ -568,16 +560,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    uint32_t ModelBase::ParamsNum() const
-    {
-        uint32_t paramsNum = 0;
-        for (auto layer : Layers())
-            paramsNum += layer->ParamsNum();
-        return paramsNum;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void ModelBase::Parameters(vector<Variable*>& params, bool onlyTrainable)
+    void ModelBase::Parameters(vector<Variable*>& params, bool onlyTrainable) const
     {
         if (onlyTrainable && !m_Trainable)
             return;

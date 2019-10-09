@@ -17,8 +17,7 @@ namespace Neuro
         ~Dense();
 
 	    virtual void CopyParametersTo(LayerBase& target, float tau) const override;
-		virtual uint32_t ParamsNum() const override;
-		virtual void Parameters(vector<Variable*>& params, bool onlyTrainable = true) override;
+		virtual void Parameters(vector<Variable*>& params, bool onlyTrainable = true) const override;
 		
         Tensor& Weights();
         Tensor& Bias();

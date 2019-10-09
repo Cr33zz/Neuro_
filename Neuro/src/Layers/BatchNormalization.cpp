@@ -31,13 +31,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    uint32_t BatchNormalization::ParamsNum() const
-    {
-        return 0;// (InputShape().Depth() > 1 ? InputShape().Depth() : InputShape().Length) * 4;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void BatchNormalization::Parameters(vector<Variable*>& params, bool onlyTrainable)
+    void BatchNormalization::Parameters(vector<Variable*>& params, bool onlyTrainable) const
     {
         if (onlyTrainable && !m_Trainable)
             return;
