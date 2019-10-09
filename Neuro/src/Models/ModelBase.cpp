@@ -296,9 +296,9 @@ namespace Neuro
                 fetches.push_back(loss);
 
                 if (!totalLoss)
-                    totalLoss = mean(loss);
+                    totalLoss = mean(loss, GlobalAxis, "mean_loss" + to_string(i));
                 else
-                    totalLoss = merge_sum({ totalLoss, mean(loss) });
+                    totalLoss = merge_sum({ totalLoss, mean(loss) }, "total_loss");
             }
         }
 
