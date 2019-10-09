@@ -7,7 +7,7 @@ void GAN::Run()
     GlobalRngSeed(1337);
 
     //Debug::LogAllGrads();
-    Debug::LogAllOutputs();
+    //Debug::LogAllOutputs();
     //Debug::LogOutput("loss/cross_entropy/negative");
 
     cout << "Example: " << Name() << endl;
