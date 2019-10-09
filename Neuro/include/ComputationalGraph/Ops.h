@@ -31,4 +31,5 @@
 #include "ComputationalGraph/Operations/SubtractOp.h"
 #include "ComputationalGraph/Operations/SumOp.h"
 #include "ComputationalGraph/Operations/TanHOp.h"
+#include "ComputationalGraph/Operations/TransposeOp.h"
 #include "ComputationalGraph/Operations/UpSample2dOp.h"

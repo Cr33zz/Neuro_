@@ -21,4 +21,9 @@ namespace Neuro
     {
         return new ConcatenateOp(elements, axis, name);
     }
+
+    static Operation* concatenate(const vector<TensorLike*>& elements, EAxis axis = BatchAxis, const string& name = "")
+    {
+        return new ConcatenateOp(elements, axis, name);
+    }
 }

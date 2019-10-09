@@ -345,6 +345,9 @@
     <ClInclude Include="include\ComputationalGraph\Operations\IdentityOp.h">
       <Filter>include\ComputationalGraph\Operations</Filter>
     </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\TransposeOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -593,10 +596,16 @@
     <ClCompile Include="src\ComputationalGraph\Operations\IdentityOp.cpp">
       <Filter>src\ComputationalGraph\Operations</Filter>
     </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\TransposeOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\Tensors\Cuda\CudaKernels.cu">
       <Filter>src\Tensors\Cuda</Filter>
     </CudaCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="Neuro.natvis" />
   </ItemGroup>
 </Project>

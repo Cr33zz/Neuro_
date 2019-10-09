@@ -137,7 +137,7 @@ namespace Neuro
 
         Parameters(params, false);
         for (auto param : params)
-            param->Trainable(trainable);
+            param->SetTrainable(trainable);
     }
 
     //////////////////////////////////////////////////////////////////////////

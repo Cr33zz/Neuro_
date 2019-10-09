@@ -138,6 +138,7 @@
     <ClInclude Include="include\ComputationalGraph\Operations\MergeOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\Pool2dOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\ReshapeOp.h" />
+    <ClInclude Include="include\ComputationalGraph\Operations\TransposeOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\UpSample2dOp.h" />
     <ClInclude Include="include\ComputationalGraph\TensorLike.h" />
     <ClInclude Include="include\ComputationalGraph\Operation.h" />
@@ -236,6 +237,7 @@
     <ClCompile Include="src\ComputationalGraph\Operations\MergeOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\Pool2dOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\ReshapeOp.cpp" />
+    <ClCompile Include="src\ComputationalGraph\Operations\TransposeOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\UpSample2dOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\TensorLike.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operation.cpp" />
@@ -303,6 +305,9 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\Tensors\Cuda\CudaKernels.cu" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="Neuro.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -38,9 +38,9 @@ namespace Neuro
         tensor_ptr_vec_t Predict(const const_tensor_ptr_vec_t& inputs);
         tensor_ptr_vec_t Predict(const Tensor& input);
 
-        virtual const vector<LayerBase*>& Layers() const { return m_Layers; }
-        virtual const vector<LayerBase*>& Inputs() const { return m_InputLayers; }
-        virtual const vector<LayerBase*>& Outputs() const { return m_OutputLayers; }
+        const vector<LayerBase*>& Layers() const { return m_Layers; }
+        const vector<LayerBase*>& InputLayers() const { return m_InputLayers; }
+        const vector<LayerBase*>& OutputLayers() const { return m_OutputLayers; }
 
         void SaveWeights(const string& filename) const;
         void LoadWeights(const string& filename);

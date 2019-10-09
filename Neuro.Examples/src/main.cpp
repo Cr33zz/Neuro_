@@ -10,6 +10,7 @@
 #include "CifarGAN.h"
 #include "VGG16.h"
 #include "ComputationalGraph.h"
+#include "NeuralStyleTransfer.h"
 
 int main()
 {
@@ -89,11 +90,12 @@ int main()
     //MnistNetwork().Run();
     //AutoencoderNetwork().Run();
     //ConvAutoencoderNetwork().Run();
-    GAN().Run();
+    //GAN().Run();
     //DeepConvGAN().Run();
     //CifarGAN().RunDiscriminatorTrainTest();
     //CifarGAN().Run();
     //VGG16().Run();
+    NeuralStyleTransfer().Run();
 
     cin.get();
     return 0;

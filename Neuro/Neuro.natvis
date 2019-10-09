@@ -1,16 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
   <Type Name="Neuro::LayerBase">
-    <DisplayString>{ m_Name }</DisplayString>    
+    <DisplayString>{ m_Name }</DisplayString>
+    <Expand>
+      <Item Name="[built]">m_Built</Item>
+      <Item Name="[trainable]">m_Trainable</Item>
+      <Item Name="[exp_input_shape]">m_ExpectedInputShape</Item>
+    </Expand>
   </Type>
   <Type Name="Neuro::TensorLike">
     <DisplayString>{ m_Name }</DisplayString>
     <Expand>
-      <Item Name="[shape]">{GetShape()}</Item>
+      <Item Name="[shape]">{m_Output.m_Shape}</Item>
     </Expand>
   </Type>
   <Type Name="Neuro::Tensor">
-    <DisplayString>{ m_Name }</DisplayString>
+    <DisplayString>{ m_Name values={m_Values._Mylast - m_Values._Myfirst} }</DisplayString>
     <Expand>
       <Item Name="[shape]">m_Shape</Item>
       <Item Name="[values]">m_Values</Item>
@@ -18,7 +23,7 @@
     </Expand>
   </Type>
   <Type Name="Neuro::Shape">
-    <DisplayString>{ ToString() }</DisplayString>
+    <DisplayString>{ w={Dimensions[0]} h={Dimensions[1]} d={Dimensions[2]} n={Dimensions[3]} }</DisplayString>
     <Expand>
       <Item Name="[ndim]">NDim</Item>
       <Item Name="[length]">Length</Item>
