@@ -48,7 +48,7 @@ namespace Neuro
     void LoadCSVData(const string& filename, int outputsNum, Tensor& inputs, Tensor& outputs, bool outputsOneHotEncoded = false, int maxLines = -1);
 
     // Loaded tensor is flat and internal data layout is NHWC, it should be transposed and normalized before use
-    Tensor LoadImage(const string& filename, uint32_t targetSizeX = 0, uint32_t targetSizeY = 0);
+    Tensor LoadImage(const string& filename, uint32_t targetSizeX = 0, uint32_t targetSizeY = 0, EDataFormat targetFormat = NHWC);
 
     template<typename T>
     vector<T> MergeVectors(initializer_list<vector<T>> vectors);

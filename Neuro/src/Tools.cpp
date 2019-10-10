@@ -468,7 +468,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor LoadImage(const string& filename, uint32_t targetSizeX, uint32_t targetSizeY)
+    Tensor LoadImage(const string& filename, uint32_t targetSizeX, uint32_t targetSizeY, EDataFormat targetFormat)
     {
         ImageLibInit();
 
@@ -505,7 +505,7 @@ namespace Neuro
 
         FreeImage_Unload(image);
 
-        return result;
+        return targetFormat == NCHW ? result.ToNCHW() : result;
     }
 
     //////////////////////////////////////////////////////////////////////////
