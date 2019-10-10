@@ -25,6 +25,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<TensorLike*> Flatten::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
     {
+        NEURO_ASSERT(inputs[0]->GetShape().Batch() == 1, "");
         return { reshape(inputs[0], Shape(inputs[0]->GetShape().Length)) };
     }
 }

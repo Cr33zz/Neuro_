@@ -3,6 +3,7 @@
 #include "ComputationalGraph/Operations/AddOp.h"
 #include "ComputationalGraph/Operations/AssignOp.h"
 #include "ComputationalGraph/Operations/BatchNormalizeOp.h"
+#include "ComputationalGraph/Operations/BatchFlattenOp.h"
 #include "ComputationalGraph/Operations/ClipOp.h"
 #include "ComputationalGraph/Operations/ConcatenateOp.h"
 #include "ComputationalGraph/Operations/Conv2dOp.h"

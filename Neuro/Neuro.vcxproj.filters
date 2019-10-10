@@ -348,6 +348,9 @@
     <ClInclude Include="include\ComputationalGraph\Operations\TransposeOp.h">
       <Filter>include\ComputationalGraph\Operations</Filter>
     </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\BatchFlattenOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -597,6 +600,9 @@
       <Filter>src\ComputationalGraph\Operations</Filter>
     </ClCompile>
     <ClCompile Include="src\ComputationalGraph\Operations\TransposeOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\BatchFlattenOp.cpp">
       <Filter>src\ComputationalGraph\Operations</Filter>
     </ClCompile>
   </ItemGroup>

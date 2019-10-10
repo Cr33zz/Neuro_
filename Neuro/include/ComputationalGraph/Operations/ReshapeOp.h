@@ -21,10 +21,4 @@ namespace Neuro
     {
         return new ReshapeOp(x, shape, name);
     }
-
-    static Operation* flatten(TensorLike* x, const string& name = "")
-    {
-        NEURO_ASSERT(x->GetShape().Batch() == 1, "");
-        return new ReshapeOp(x, Shape(x->GetShape().Length), name);
-    }
 }
