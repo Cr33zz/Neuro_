@@ -22,12 +22,12 @@ public:
     {
         Tensor::SetForcedOpMode(GPU);
         
-        Tensor contentImage = LoadImage("data/content.jpg", IMAGE_WIDTH, IMAGE_HEIGHT);
+        Tensor contentImage = LoadImage("data/content.jpg", IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
         VGG16::PreprocessImage(contentImage);
-        Tensor styleImage = LoadImage("data/style.jpg", IMAGE_WIDTH, IMAGE_HEIGHT);
+        Tensor styleImage = LoadImage("data/style.jpg", IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
         VGG16::PreprocessImage(styleImage);
         
-        auto vgg16Model = VGG16::CreateModel();
+        auto vgg16Model = VGG16::CreateModel(NCHW);
         vgg16Model->LoadWeights("data/vgg16_weights_tf_dim_ordering_tf_kernels.h5");
         vgg16Model->SetTrainable(false);
 
@@ -64,7 +64,7 @@ public:
         // ... and style losses from remaining outputs
         assert(outputs.size() == styles.size());
         for (size_t i = 0; i < outputs.size(); ++i)
-            styleLosses.push_back(StyleLoss(styles[i], outputs[i], i));
+            styleLosses.push_back(StyleLoss(styles[i], outputs[i], (int)i));
 
         auto totalLoss = add(contentLoss, merge_avg(styleLosses, "mean_style_loss"), "total_loss");
 
@@ -92,9 +92,9 @@ public:
         NameScope scope(x->Name() + "_gram_matrix" + to_string(index));
         assert(x->GetShape().Batch() == 1);
 
-        //assuming NHWC format
-        auto features = flatten(x);
-        return matmul(features, transpose(features));
+        
+        auto features = batch_flatten(reshape(x, Shape(x->GetShape().Width(), x->GetShape().Height(), 1, x->GetShape().Depth())));
+        return mean(matmul(features, transpose(features)), BatchAxis);
     }
 
     TensorLike* StyleLoss(TensorLike* style, TensorLike* gen, int index)
