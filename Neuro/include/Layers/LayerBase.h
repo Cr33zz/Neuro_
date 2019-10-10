@@ -60,6 +60,7 @@ namespace Neuro
         const vector<TensorLike*>& Call(TensorLike* input, TensorLike* training = nullptr);
         const vector<TensorLike*>& Call(const vector<TensorLike*>& inputs, TensorLike* training = nullptr);
         const vector<TensorLike*>& operator()(const vector<TensorLike*>& inputs, TensorLike* training = nullptr);
+        const vector<TensorLike*>& operator()(TensorLike* input, TensorLike* training = nullptr);
 
 	protected:
         LayerBase(const string& constructorName, const Shape& expectedInputShape, const string& name = "");

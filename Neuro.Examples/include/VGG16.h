@@ -17,10 +17,10 @@ class VGG16
 public:
     void Run()
     {
+        Tensor::SetForcedOpMode(GPU);
+
         Tensor image = LoadImage("data/mug.jpg", 224, 224);
         image.Sub(Tensor({ 103.939f, 116.779f, 123.68f }, Shape(3)), image);
-        
-        Tensor::SetForcedOpMode(GPU);
 
         auto model = CreateModel();
 
@@ -31,6 +31,18 @@ public:
         auto prediction = model->Predict(image)[0];
 
         cout << prediction->ArgMax(WidthAxis)(0) << " " << prediction->Max(WidthAxis)(0) * 100 << "%" <<  endl;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    static void PreprocessImage(Tensor& image)
+    {
+        image.Sub(Tensor({ 103.939f, 116.779f, 123.68f }, Shape(3)), image);
+    }
+
+    static void UnprocessImage(Tensor& image)
+    {
+        image.Add(Tensor({ 103.939f, 116.779f, 123.68f }, Shape(3)), image);
+        image.Clipped(0, 255, image);
     }
 
     //////////////////////////////////////////////////////////////////////////

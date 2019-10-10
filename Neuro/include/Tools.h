@@ -50,7 +50,8 @@ namespace Neuro
     // Loaded tensor is flat and internal data layout is NHWC, it should be transposed and normalized before use
     Tensor LoadImage(const string& filename, uint32_t targetSizeX = 0, uint32_t targetSizeY = 0);
 
-    //vector<TensorLike*> Merge(initializer_list<vector<TensorLike*>> )
+    template<typename T>
+    vector<T> MergeVectors(initializer_list<vector<T>> vectors);
 
     void ImageLibInit();
     extern bool g_ImageLibInitialized;
@@ -101,5 +102,14 @@ namespace Neuro
             int k = GlobalRng().Next(n + 1);
             swap(list[k], list[n]);
         }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    template<typename T>
+    vector<T> MergeVectors(initializer_list<vector<T>> vectors)
+    {
+        vector<T> merged;
+        for_each(vectors.begin(), vectors.end(), [&](const vector<T>& v) { merged.insert(merged.end(), v.begin(), v.end()); });
+        return merged;
     }
 }

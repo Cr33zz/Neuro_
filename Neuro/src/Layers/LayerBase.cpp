@@ -211,6 +211,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    const vector<TensorLike*>& LayerBase::operator()(TensorLike* input, TensorLike* training)
+    {
+        return Call(input, training);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     tensor_ptr_vec_t LayerBase::Weights()
     {
         tensor_ptr_vec_t weights;

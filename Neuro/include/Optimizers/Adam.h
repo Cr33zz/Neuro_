@@ -8,7 +8,7 @@ namespace Neuro
     class Adam : public OptimizerBase
     {
 	public:
-        Adam(float lr = 0.001f, float beta1 = 0.9f, float beta2 = 0.999f);
+        Adam(float lr = 0.001f, float beta1 = 0.9f, float beta2 = 0.999f, float epsilon = 1e-8f);
 
         virtual OptimizerBase* Clone() const override;
         virtual string ToString() override;
@@ -36,7 +36,7 @@ namespace Neuro
         float m_LearningRate;
         float m_Beta1;
         float m_Beta2;
-        float m_Epsilon = 1e-8f;
+        float m_Epsilon;
 
         friend class MinimizationOperation;
 	};

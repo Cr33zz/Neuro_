@@ -57,7 +57,7 @@ void GAN::Run()
             // generate fake images from noise
             Tensor fakeImages = *gModel->Predict(noiseHalf)[0];
             // grab random batch of real images
-            Tensor realImages = images.GetRandomBatch(BATCH_SIZE / 2);
+            Tensor realImages = images.GetRandomBatches(BATCH_SIZE / 2);
 
             // perform step of training discriminator to distinguish fake from real images
             dModel->SetTrainable(true);

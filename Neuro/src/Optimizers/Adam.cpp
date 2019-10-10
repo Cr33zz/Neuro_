@@ -10,11 +10,9 @@
 namespace Neuro
 {    
 	//////////////////////////////////////////////////////////////////////////
-    Adam::Adam(float lr, float beta1, float beta2)
+    Adam::Adam(float lr, float beta1, float beta2, float epsilon)
+        : m_LearningRate(lr), m_Beta1(beta1), m_Beta2(beta2), m_Epsilon(epsilon)
 	{
-		m_LearningRate = lr;
-        m_Beta1 = beta1;
-        m_Beta2 = beta2;
 	}
 
     //////////////////////////////////////////////////////////////////////////
