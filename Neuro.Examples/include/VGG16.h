@@ -22,7 +22,7 @@ public:
         Tensor image = LoadImage("data/mug.jpg", 224, 224);
         image.Sub(Tensor({ 103.939f, 116.779f, 123.68f }, Shape(3)), image);
 
-        auto model = CreateModel();
+        auto model = CreateModel(NHWC);
 
         cout << model->Summary();
 
@@ -46,27 +46,31 @@ public:
     }
 
     //////////////////////////////////////////////////////////////////////////
-    static ModelBase* CreateModel()
+    static ModelBase* CreateModel(EDataFormat dataFormat)
     {
+        Shape inputShape(224, 224, 3);
+        if (dataFormat == NHWC)
+            inputShape = Shape(3, 224, 224);
+
         auto model = new Sequential("vgg16");
-        model->AddLayer(new Conv2D(Shape(3, 224, 224), 64, 3, 1, 1, new ReLU(), NHWC, "block1_conv1"));
-        model->AddLayer(new Conv2D(64, 3, 1, 1, new ReLU(), NHWC, "block1_conv2"));
-        model->AddLayer(new MaxPooling2D(2, 2, 0, NHWC, "block1_pool"));
-        model->AddLayer(new Conv2D(128, 3, 1, 1, new ReLU(), NHWC, "block2_conv1"));
-        model->AddLayer(new Conv2D(128, 3, 1, 1, new ReLU(), NHWC, "block2_conv2"));
-        model->AddLayer(new MaxPooling2D(2, 2, 0, NHWC, "block2_pool"));
-        model->AddLayer(new Conv2D(256, 3, 1, 1, new ReLU(), NHWC, "block3_conv1"));
-        model->AddLayer(new Conv2D(256, 3, 1, 1, new ReLU(), NHWC, "block3_conv2"));
-        model->AddLayer(new Conv2D(256, 3, 1, 1, new ReLU(), NHWC, "block3_conv3"));
-        model->AddLayer(new MaxPooling2D(2, 2, 0, NHWC, "block3_pool"));
-        model->AddLayer(new Conv2D(512, 3, 1, 1, new ReLU(), NHWC, "block4_conv1"));
-        model->AddLayer(new Conv2D(512, 3, 1, 1, new ReLU(), NHWC, "block4_conv2"));
-        model->AddLayer(new Conv2D(512, 3, 1, 1, new ReLU(), NHWC, "block4_conv3"));
-        model->AddLayer(new MaxPooling2D(2, 2, 0, NHWC, "block4_pool"));
-        model->AddLayer(new Conv2D(512, 3, 1, 1, new ReLU(), NHWC, "block5_conv1"));
-        model->AddLayer(new Conv2D(512, 3, 1, 1, new ReLU(), NHWC, "block5_conv2"));
-        model->AddLayer(new Conv2D(512, 3, 1, 1, new ReLU(), NHWC, "block5_conv3"));
-        model->AddLayer(new MaxPooling2D(2, 2, 0, NHWC, "block5_pool"));
+        model->AddLayer(new Conv2D(inputShape, 64, 3, 1, 1, new ReLU(), dataFormat, "block1_conv1"));
+        model->AddLayer(new Conv2D(64, 3, 1, 1, new ReLU(), dataFormat, "block1_conv2"));
+        model->AddLayer(new MaxPooling2D(2, 2, 0, dataFormat, "block1_pool"));
+        model->AddLayer(new Conv2D(128, 3, 1, 1, new ReLU(), dataFormat, "block2_conv1"));
+        model->AddLayer(new Conv2D(128, 3, 1, 1, new ReLU(), dataFormat, "block2_conv2"));
+        model->AddLayer(new MaxPooling2D(2, 2, 0, dataFormat, "block2_pool"));
+        model->AddLayer(new Conv2D(256, 3, 1, 1, new ReLU(), dataFormat, "block3_conv1"));
+        model->AddLayer(new Conv2D(256, 3, 1, 1, new ReLU(), dataFormat, "block3_conv2"));
+        model->AddLayer(new Conv2D(256, 3, 1, 1, new ReLU(), dataFormat, "block3_conv3"));
+        model->AddLayer(new MaxPooling2D(2, 2, 0, dataFormat, "block3_pool"));
+        model->AddLayer(new Conv2D(512, 3, 1, 1, new ReLU(), dataFormat, "block4_conv1"));
+        model->AddLayer(new Conv2D(512, 3, 1, 1, new ReLU(), dataFormat, "block4_conv2"));
+        model->AddLayer(new Conv2D(512, 3, 1, 1, new ReLU(), dataFormat, "block4_conv3"));
+        model->AddLayer(new MaxPooling2D(2, 2, 0, dataFormat, "block4_pool"));
+        model->AddLayer(new Conv2D(512, 3, 1, 1, new ReLU(), dataFormat, "block5_conv1"));
+        model->AddLayer(new Conv2D(512, 3, 1, 1, new ReLU(), dataFormat, "block5_conv2"));
+        model->AddLayer(new Conv2D(512, 3, 1, 1, new ReLU(), dataFormat, "block5_conv3"));
+        model->AddLayer(new MaxPooling2D(2, 2, 0, dataFormat, "block5_pool"));
         model->AddLayer(new Flatten("flatten"));
         model->AddLayer(new Dense(4096, new ReLU(), "fc1"));
         model->AddLayer(new Dense(4096, new ReLU(), "fc2"));
