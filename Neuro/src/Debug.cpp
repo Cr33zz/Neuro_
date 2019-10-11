@@ -6,7 +6,7 @@ namespace Neuro
 {
     int Debug::g_Step = 0;
     vector<string> Debug::g_LogOutputs;
-    unordered_set<string> Debug::g_LogGrads;
+    vector<string> Debug::g_LogGrads;
     bool Debug::g_LogAllOutputs = false;
     bool Debug::g_LogAllGrads = false;
 
@@ -41,9 +41,9 @@ namespace Neuro
     void Debug::LogGrad(const string& name, bool enable)
     {
         if (enable)
-            g_LogGrads.insert(name);
+            g_LogGrads.push_back(name);
         else
-            g_LogGrads.erase(name);
+            g_LogGrads.erase(find(g_LogGrads.begin(), g_LogGrads.end(), name));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -68,6 +68,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     bool Debug::ShouldLogGrad(const string& name)
     {
-        return g_LogAllGrads || g_LogGrads.find(name) != g_LogGrads.end();
+        return g_LogAllGrads || find_if(g_LogGrads.begin(), g_LogGrads.end(), [&](const string& str) { return name.find(str, 0) != string::npos; }) != g_LogGrads.end();
     }
 }

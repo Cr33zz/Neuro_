@@ -40,6 +40,7 @@ namespace Neuro
         vector<Variable*> ComputeGradients(const vector<TensorLike*>& losses, const vector<Variable*>& params);
         vector<Variable*> ComputeGradientsInOrder(const vector<TensorLike*>& order, const vector<Variable*>& params);
 
+        TensorLike* GetNode(const string& name);
         void DebugLog();
 
     private:

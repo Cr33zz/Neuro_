@@ -283,6 +283,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     Tensor Tensor::ToNCHW() const
     {
+        CopyToHost();
         Tensor result(GetShape());
 
         uint32_t i = 0;
@@ -449,6 +450,8 @@ namespace Neuro
 	void Tensor::Add(float v, Tensor& result) const
 	{
 		CopyToHost();
+        result.OverrideHost();
+
 		for (uint32_t i = 0; i < m_Values.size(); ++i)
 			result.m_Values[i] = m_Values[i] + v;
 	}
@@ -479,6 +482,8 @@ namespace Neuro
 	void Tensor::Sub(float v, Tensor& result) const
 	{
 		CopyToHost();
+        result.OverrideHost();
+
 		for (uint32_t i = 0; i < m_Values.size(); ++i)
 			result.m_Values[i] = m_Values[i] - v;
 	}
@@ -494,6 +499,8 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Negated(Tensor& result) const
 	{
+        result.OverrideHost();
+
 		for (uint32_t i = 0; i < m_Values.size(); ++i)
 			result.m_Values[i] = -m_Values[i];
 	}
@@ -523,6 +530,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::DiagFlat() const
 	{
+        CopyToHost();
 		Tensor result(Shape(BatchLength(), BatchLength(), 1, Batch()));
 
         uint32_t batchLen = BatchLength();
@@ -814,6 +822,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::MergeMin(const const_tensor_ptr_vec_t& inputs, Tensor& result)
 	{
+        result.OverrideHost();
 		inputs[0]->CopyTo(result);
 		for (uint32_t i = 1; i < inputs.size(); ++i)
 		for (uint32_t j = 0; j < result.Length(); ++j)
@@ -823,6 +832,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::MergeMax(const const_tensor_ptr_vec_t& inputs, Tensor& result)
 	{
+        result.OverrideHost();
 		inputs[0]->CopyTo(result);
 		for (uint32_t i = 1; i < inputs.size(); ++i)
 		for (uint32_t j = 0; j < result.Length(); ++j)
@@ -851,6 +861,7 @@ namespace Neuro
 	{
 		for (uint32_t i = 0; i < inputs.size(); ++i)
 		{
+            inputs[i]->CopyToHost();
             results[i]->OverrideHost();
 			results[i]->Zero();
 			for (uint32_t j = 0; j < output.Length(); ++j)
@@ -1166,6 +1177,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Transpose(const vector<EAxis>& axes, Tensor& result) const
     {
+        result.OverrideHost();
+
         vector<EAxis> permutation = FillUpTranposeAxis(axes);
 
         result.Resize(Shape(m_Shape.Dimensions[permutation[0]], m_Shape.Dimensions[permutation[1]], m_Shape.Dimensions[permutation[2]], m_Shape.Dimensions[permutation[3]]));
@@ -1851,8 +1864,8 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::CopyToDevice() const
 	{
-		if (m_CurrentLocation == ELocation::Device)
-			return;
+        if (m_CurrentLocation == ELocation::Device)
+            return;
         
 		GetDeviceVar().CopyToDevice(m_Values);
 		m_CurrentLocation = ELocation::Device;

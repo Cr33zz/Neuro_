@@ -4,6 +4,7 @@
 #include <debugapi.h>
 #include <assert.h>
 
+#include "Types.h"
 #include "Tensors/Cuda/CudaErrorCheck.h"
 
 namespace Neuro
@@ -60,6 +61,6 @@ namespace Neuro
         stringstream ss;
         ss << "CUDA error: " << error << endl;
         OutputDebugString(ss.str().c_str());
-        assert(false);
+        NEURO_ASSERT(false, ss.str().c_str());
     }
 }

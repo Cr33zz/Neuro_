@@ -262,6 +262,7 @@ namespace Neuro
 
         void CopyToDevice() const;
         void CopyToHost() const;
+        void Prefer(ELocation location) { m_PreferredLocation = location;  }
         void OverrideHost() const;
         bool IsOnHost() const { return m_CurrentLocation == ELocation::Host; }
         bool IsOnDevice() const { return m_CurrentLocation == ELocation::Device; }
@@ -301,7 +302,8 @@ namespace Neuro
 
         mutable GPUData m_GpuData;
 		TensorOpCpu* m_Op;
-        mutable ELocation m_CurrentLocation;
+        ELocation m_PreferredLocation = ELocation::Host;
+        mutable ELocation m_CurrentLocation = ELocation::Host;
 		Shape m_Shape;
         mutable vector<float> m_Values;
         string m_Name;

@@ -25,7 +25,7 @@ public:
         Tensor contentImage = LoadImage("data/content.jpg", IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
         contentImage.SaveAsImage("content.jpg", false);
         VGG16::PreprocessImage(contentImage, NCHW);
-        Tensor styleImage = LoadImage("data/style3.jpg", IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
+        Tensor styleImage = LoadImage("data/style.jpg", IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
         styleImage.SaveAsImage("style.jpg", false);
         VGG16::PreprocessImage(styleImage, NCHW);
 
@@ -77,7 +77,7 @@ public:
         for (size_t i = 0; i < outputs.size(); ++i)
             styleLosses.push_back(StyleLoss(styleGrams[i], outputs[i], (int)i));
         //auto styleLoss = merge_avg(styleLosses, "style_loss");
-        auto styleLoss = multiply(merge_avg(styleLosses, "style_loss"), styleLossWeight);
+        auto styleLoss = multiply(merge_avg(styleLosses, "mean_style_loss"), styleLossWeight, "style_loss");
 
         auto totalLoss = add(contentLoss, styleLoss, "total_loss");
 
@@ -87,7 +87,13 @@ public:
         /*Debug::LogOutput("content_loss");
         Debug::LogOutput("style_loss");
         Debug::LogOutput("total_loss");
-        Debug::LogOutput("mean_style_loss");*/
+        Debug::LogOutput("mean_style_loss");
+        Debug::LogOutput("style_loss");*/
+        /*Debug::LogGrad("content_loss");
+        Debug::LogGrad("style_loss");
+        Debug::LogGrad("total_loss");
+        Debug::LogGrad("mean_style_loss");
+        Debug::LogGrad("style_loss");*/
 
         const int EPOCHS = 1000;
         Tqdm progress(EPOCHS, 0);
@@ -99,7 +105,7 @@ public:
             extString << setprecision(4) << fixed << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - total_l: " << (*results[3])(0);
             progress.SetExtraString(extString.str());
 
-            if (e % 10 == 0)
+            if (e % 20 == 0)
             {
                 auto genImage = *results[0];
                 VGG16::UnprocessImage(genImage, NCHW);
@@ -138,7 +144,6 @@ public:
     //////////////////////////////////////////////////////////////////////////
     TensorLike* ContentLoss(TensorLike* content, TensorLike* gen)
     {
-        NameScope scope("content_loss");
-        return mean(square(sub(gen, content)));
+        return mean(square(sub(gen, content)), GlobalAxis, "content_loss");
     }
 };

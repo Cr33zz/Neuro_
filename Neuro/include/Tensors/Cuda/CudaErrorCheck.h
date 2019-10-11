@@ -12,7 +12,7 @@ namespace Neuro
     void CudaAssert(const char* error);
 }
 
-#ifdef _DEBUG
+#ifndef NDEBUG
 #   define CUDA_CHECK(op) CudaAssert(op)
 #else
 #   define CUDA_CHECK(op) op

@@ -20,7 +20,14 @@ namespace Neuro
             m_AllocatedLength = m_Length = length;
             m_TypeSize = sizeof(T);
             m_IsOwner = true;
-            CUDA_CHECK(cudaMalloc(&m_DevPtr, GetAllocatedSizeInBytes()));
+            //CUDA_CHECK(cudaMalloc(&m_DevPtr, GetAllocatedSizeInBytes()));
+            cudaMalloc(&m_DevPtr, GetAllocatedSizeInBytes());
+            if (m_AllocatedLength > 0 && !m_DevPtr)
+            {
+                m_IsHostAlloc = true;
+                CUDA_CHECK(cudaHostAlloc(&m_DevPtr, GetAllocatedSizeInBytes(), cudaHostAllocMapped));
+            }
+            NEURO_ASSERT(m_AllocatedLength == 0 || m_DevPtr, "Failed to allocate GPU memory.");
         }
 
         CudaDeviceVariable(const CudaDeviceVariable<T>& var, size_t lengthOffset)
@@ -40,7 +47,12 @@ namespace Neuro
         ~CudaDeviceVariable()
         {
             if (m_IsOwner)
-                CUDA_CHECK(cudaFree(m_DevPtr));
+            {
+                if (m_IsHostAlloc)
+                    CUDA_CHECK(cudaFreeHost(m_DevPtr));
+                else
+                    CUDA_CHECK(cudaFree(m_DevPtr));
+            }
         }
 
         bool Resize(size_t length)
@@ -56,6 +68,7 @@ namespace Neuro
             m_Length = m_AllocatedLength = length;
             CUDA_CHECK(cudaFree(m_DevPtr));
             CUDA_CHECK(cudaMalloc(&m_DevPtr, GetAllocatedSizeInBytes()));
+            NEURO_ASSERT(m_AllocatedLength == 0 || m_DevPtr, "Failed to allocate GPU memory.");
             return true;
         }
 
@@ -104,5 +117,6 @@ namespace Neuro
         size_t m_AllocatedLength = 0;
         size_t m_TypeSize = 0;
         bool m_IsOwner = false;
+        bool m_IsHostAlloc = false;
     };
 }

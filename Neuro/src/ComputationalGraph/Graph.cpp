@@ -228,6 +228,17 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    TensorLike* Graph::GetNode(const string& name)
+    {
+        for (auto node : m_Nodes)
+        {
+            if (node->Name() == name)
+                return node;
+        }
+        return nullptr;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void Graph::DebugLog()
     {
 #ifdef DEBUG_LOG_ENABLED
