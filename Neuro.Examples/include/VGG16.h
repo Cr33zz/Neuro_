@@ -46,11 +46,12 @@ public:
     }
 
     //////////////////////////////////////////////////////////////////////////
-    static ModelBase* CreateModel(EDataFormat dataFormat)
+    static ModelBase* CreateModel(EDataFormat dataFormat, Shape inputShape = Shape(), bool includeTop = true)
     {
-        Shape inputShape(224, 224, 3);
-        if (dataFormat == NHWC)
-            inputShape = Shape(3, 224, 224);
+        if (!inputShape.IsValid())
+            inputShape = dataFormat == NHWC ? Shape(3, 224, 224) : Shape(224, 224, 3);
+
+        //NEURO_ASSERT(dataFormat == NHWC) // check number of channels
 
         auto model = new Sequential("vgg16");
         model->AddLayer(new Conv2D(inputShape, 64, 3, 1, 1, new ReLU(), dataFormat, "block1_conv1"));
@@ -71,10 +72,13 @@ public:
         model->AddLayer(new Conv2D(512, 3, 1, 1, new ReLU(), dataFormat, "block5_conv2"));
         model->AddLayer(new Conv2D(512, 3, 1, 1, new ReLU(), dataFormat, "block5_conv3"));
         model->AddLayer(new MaxPooling2D(2, 2, 0, dataFormat, "block5_pool"));
-        model->AddLayer(new Flatten("flatten"));
-        model->AddLayer(new Dense(4096, new ReLU(), "fc1"));
-        model->AddLayer(new Dense(4096, new ReLU(), "fc2"));
-        model->AddLayer(new Dense(1000, new Softmax(), "predictions"));
+        if (includeTop)
+        {
+            model->AddLayer(new Flatten("flatten"));
+            model->AddLayer(new Dense(4096, new ReLU(), "fc1"));
+            model->AddLayer(new Dense(4096, new ReLU(), "fc2"));
+            model->AddLayer(new Dense(1000, new Softmax(), "predictions"));
+        }
         return model;
     }
 };

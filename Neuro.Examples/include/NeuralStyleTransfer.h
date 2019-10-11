@@ -11,8 +11,8 @@
 using namespace std;
 using namespace Neuro;
 
-const size_t IMAGE_WIDTH = 224;
-const size_t IMAGE_HEIGHT = 224;
+const size_t IMAGE_WIDTH = 400;
+const size_t IMAGE_HEIGHT = 300;
 
 //https://medium.com/tensorflow/neural-style-transfer-creating-art-with-deep-learning-using-tf-keras-and-eager-execution-7d541ac31398
 class NeuralStyleTransfer
@@ -28,9 +28,11 @@ public:
         Tensor styleImage = LoadImage("data/style3.jpg", IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
         styleImage.SaveAsImage("style.jpg", false);
         VGG16::PreprocessImage(styleImage, NCHW);
+
+        assert(contentImage.GetShape() == styleImage.GetShape());
         
-        auto vgg16Model = VGG16::CreateModel(NCHW);
-        vgg16Model->LoadWeights("data/vgg16_weights_tf_dim_ordering_tf_kernels.h5");
+        auto vgg16Model = VGG16::CreateModel(NCHW, contentImage.GetShape(), false);
+        vgg16Model->LoadWeights("data/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5");
         vgg16Model->SetTrainable(false);
 
         vector<TensorLike*> contentOutputs = { vgg16Model->Layer("block5_conv2")->Outputs()[0] };
