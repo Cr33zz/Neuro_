@@ -33,7 +33,7 @@ namespace Neuro
 
     private:
         static int g_Step;
-        static unordered_set<string> g_LogOutputs;
+        static vector<string> g_LogOutputs;
         static unordered_set<string> g_LogGrads;
         static bool g_LogAllOutputs;
         static bool g_LogAllGrads;

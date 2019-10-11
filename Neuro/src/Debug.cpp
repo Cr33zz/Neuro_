@@ -1,9 +1,11 @@
+#include <algorithm>
+
 #include "Debug.h"
 
 namespace Neuro
 {
     int Debug::g_Step = 0;
-    unordered_set<string> Debug::g_LogOutputs;
+    vector<string> Debug::g_LogOutputs;
     unordered_set<string> Debug::g_LogGrads;
     bool Debug::g_LogAllOutputs = false;
     bool Debug::g_LogAllGrads = false;
@@ -24,9 +26,9 @@ namespace Neuro
     void Debug::LogOutput(const string& name, bool enable)
     {
         if (enable)
-            g_LogOutputs.insert(name);
+            g_LogOutputs.push_back(name);
         else
-            g_LogOutputs.erase(name);
+            g_LogOutputs.erase(find(g_LogOutputs.begin(), g_LogOutputs.end(), name));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -60,7 +62,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     bool Debug::ShouldLogOutput(const string& name)
     {
-        return g_LogAllOutputs || g_LogOutputs.find(name) != g_LogOutputs.end();
+        return g_LogAllOutputs || find_if(g_LogOutputs.begin(), g_LogOutputs.end(), [&](const string& str) { return name.find(str, 0) != string::npos; }) != g_LogOutputs.end();
     }
 
     //////////////////////////////////////////////////////////////////////////
