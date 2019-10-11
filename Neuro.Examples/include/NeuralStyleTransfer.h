@@ -59,7 +59,11 @@ public:
         // generate beginning of the computational graph for processing output image
         auto outputs = model(outputImg);
 
+        float contentLossWeight = 1.f;
+        float styleLossWeight = 1.f;
+
         // compute content loss from first output...
+        //auto contentLoss = multiply(ContentLoss(content, outputs[0]), new Constant(contentLossWeight));
         auto contentLoss = ContentLoss(content, outputs[0]);
         outputs.erase(outputs.begin());
 
@@ -68,11 +72,12 @@ public:
         assert(outputs.size() == styles.size());
         for (size_t i = 0; i < outputs.size(); ++i)
             styleLosses.push_back(StyleLoss(styleGrams[i], outputs[i], (int)i));
+        //auto styleLoss = merge_avg(styleLosses, "style_loss");
+        auto styleLoss = multiply(merge_avg(styleLosses, "style_loss"), styleLossWeight);
 
-        auto totalLoss = add(contentLoss, merge_avg(styleLosses, "mean_style_loss"), "total_loss");
+        auto totalLoss = add(contentLoss, styleLoss, "total_loss");
 
-        auto optimizer = Adam(5.f, 0.99f, 0.999f, 0.1f);
-
+        auto optimizer = Adam(100.f, 0.99f, 0.999f, 0.1f);
         auto minimize = optimizer.Minimize({ totalLoss }, { outputImg });
 
         /*Debug::LogOutput("content_loss");
@@ -84,12 +89,15 @@ public:
         Tqdm progress(EPOCHS, 0);
         for (int e = 1; e < EPOCHS; ++e, progress.NextStep())
         {
-            auto results = Session::Default()->Run({ totalLoss, outputImg, minimize }, {});
-            progress.SetExtraString(" - loss: " + to_string((*results[0])(0)));
+            auto results = Session::Default()->Run({ outputImg, contentLoss, styleLoss, totalLoss, minimize }, {});
+
+            stringstream extString;
+            extString << setprecision(4) << fixed << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - total_l: " << (*results[3])(0);
+            progress.SetExtraString(extString.str());
 
             if (e % 10 == 0)
             {
-                auto genImage = *results[1];
+                auto genImage = *results[0];
                 VGG16::UnprocessImage(genImage, NCHW);
                 genImage.SaveAsImage("neural_transfer_" + to_string(e) + ".png", false);
             }
@@ -101,8 +109,10 @@ public:
     {
         assert(x->GetShape().Batch() == 1);
 
-        auto features = reshape(x, Shape(x->GetShape().Width() * x->GetShape().Height(), x->GetShape().Depth()));
-        return matmul(features, transpose(features), name + "_gram_matrix");
+        uint32_t elementsPerFeature = x->GetShape().Width() * x->GetShape().Height();
+        auto features = reshape(x, Shape(elementsPerFeature, x->GetShape().Depth()));
+        //return multiply(matmul(features, transpose(features)), 1.f / (float)elementsPerFeature, name + "_gram_matrix");
+        return matmul(features, transpose(features));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -113,11 +123,12 @@ public:
         //auto s = GramMatrix(style, index);
         auto genGram = GramMatrix(gen, "gen_style_" + to_string(index));
 
-        const float channels = 3;
-        const float size = (float)(IMAGE_WIDTH * IMAGE_HEIGHT);
+        float channels = (float)gen->GetShape().Depth();
+        float size = (float)(gen->GetShape().Height() * gen->GetShape().Width());
 
-        return div(mean(square(sub(styleGram, genGram))), new Constant(4.f * (channels * channels) * (size * size)), "style_loss_" + to_string(index));
-        //return mean(square(sub(styleGram, genGram)), GlobalAxis);
+        return multiply(mean(square(sub(styleGram, genGram))), 1.f / (4.f * (channels * channels) * (size * size)), "style_loss_" + to_string(index));
+        //return div(mean(square(sub(styleGram, genGram))), new Constant(4.f * (channels * channels) * (size * size)), "style_loss_" + to_string(index));
+        //return mean(square(sub(styleGram, genGram)));
     }
 
     //////////////////////////////////////////////////////////////////////////
