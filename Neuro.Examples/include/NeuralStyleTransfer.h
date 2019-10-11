@@ -23,8 +23,10 @@ public:
         Tensor::SetForcedOpMode(GPU);
         
         Tensor contentImage = LoadImage("data/content.jpg", IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
+        contentImage.SaveAsImage("content.jpg", false);
         VGG16::PreprocessImage(contentImage, NCHW);
-        Tensor styleImage = LoadImage("data/style.jpg", IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
+        Tensor styleImage = LoadImage("data/style3.jpg", IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
+        styleImage.SaveAsImage("style.jpg", false);
         VGG16::PreprocessImage(styleImage, NCHW);
         
         auto vgg16Model = VGG16::CreateModel(NCHW);
