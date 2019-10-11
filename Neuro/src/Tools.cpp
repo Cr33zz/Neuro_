@@ -505,7 +505,7 @@ namespace Neuro
 
         FreeImage_Unload(image);
 
-        return targetFormat == NCHW ? result.ToNCHW() : result;
+        return targetFormat == NCHW ? result.Transposed({HeightAxis, DepthAxis, WidthAxis, BatchAxis}) : result;
     }
 
     //////////////////////////////////////////////////////////////////////////
