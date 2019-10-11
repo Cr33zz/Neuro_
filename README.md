@@ -15,6 +15,82 @@ Supported layers:
 * Activation
 
 ## Code examples
+#### Neural Style Transfer
+This neural network is given style image and any image we want to stylize.  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/computation-graph/Neuro.Examples/content.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/computation-graph/Neuro.Examples/style.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/computation-graph/Neuro.Examples/neural_transfer3.jpg)  
+```cpp
+Tensor contentImage = LoadImage("data/content.jpg", 224, 224, NCHW);
+VGG16::PreprocessImage(contentImage, NCHW);
+Tensor styleImage = LoadImage("data/style3.jpg", 224, 224, NCHW);
+VGG16::PreprocessImage(styleImage, NCHW);
+
+auto vgg16Model = VGG16::CreateModel(NCHW);
+vgg16Model->LoadWeights("data/vgg16_weights_tf_dim_ordering_tf_kernels.h5");
+vgg16Model->SetTrainable(false);
+
+vector<TensorLike*> contentOutputs = { vgg16Model->Layer("block5_conv2")->Outputs()[0] };
+vector<TensorLike*> styleOutputs = { vgg16Model->Layer("block1_conv1")->Outputs()[0], 
+                                     vgg16Model->Layer("block2_conv1")->Outputs()[0], 
+                                     vgg16Model->Layer("block3_conv1")->Outputs()[0], 
+                                     vgg16Model->Layer("block4_conv1")->Outputs()[0],
+                                     vgg16Model->Layer("block5_conv1")->Outputs()[0] };
+
+auto outputImg = new Variable(contentImage, "output_image");
+
+auto model = Flow(vgg16Model->InputsAt(-1), MergeVectors({ contentOutputs, styleOutputs }));
+
+// pre-compute content features of content image (we only need to do it once since that image won't change)
+auto contentFeatures = model.Predict(contentImage)[0];
+Constant* content = new Constant(*contentFeatures, "content");
+
+// pre-compute style features of style image (we only need to do it once since that image won't change either)
+auto styleFeatures = model.Predict(styleImage);
+styleFeatures.erase(styleFeatures.begin()); //get rid of content feature
+vector<Constant*> styles;
+for (size_t i = 0; i < styleFeatures.size(); ++i)
+    styles.push_back(new Constant(*styleFeatures[i], "style_" + to_string(i)));
+vector<TensorLike*> styleGrams;
+for (size_t i = 0; i < styleFeatures.size(); ++i)
+    styleGrams.push_back(GramMatrix(styles[i], "style_" + to_string(i)));
+
+// generate beginning of the computational graph for processing output image
+auto outputs = model(outputImg);
+
+float contentLossWeight = 1.f;
+float styleLossWeight = 1.f;
+
+// compute content loss from first output...
+auto contentLoss = multiply(ContentLoss(content, outputs[0]), contentLossWeight);
+outputs.erase(outputs.begin());
+
+vector<TensorLike*> styleLosses;
+// ... and style losses from remaining outputs
+for (size_t i = 0; i < outputs.size(); ++i)
+    styleLosses.push_back(StyleLoss(styleGrams[i], outputs[i], (int)i));
+auto styleLoss = multiply(merge_avg(styleLosses, "style_loss"), styleLossWeight);
+
+auto totalLoss = add(contentLoss, styleLoss, "total_loss");
+
+auto optimizer = Adam(100.f, 0.99f, 0.999f, 0.1f);
+auto minimize = optimizer.Minimize({ totalLoss }, { outputImg });
+
+const int EPOCHS = 1000;
+Tqdm progress(EPOCHS, 0);
+for (int e = 1; e < EPOCHS; ++e, progress.NextStep())
+{
+    auto results = Session::Default()->Run({ outputImg, contentLoss, styleLoss, totalLoss, minimize }, {});
+
+    stringstream extString;
+    extString << setprecision(4) << fixed 
+              << " - content_l: " << (*results[1])(0) 
+              << " - style_l: " << (*results[2])(0) 
+              << " - total_l: " << (*results[3])(0);
+    progress.SetExtraString(extString.str());
+}
+
+```
 #### Deep Autoencoder
 Deep autoencoder is trying to reduce input to small set of numbers (encode) and then try to recover the original input (decode). In the case below we go from 784 down to 392 and back to 784.
 ```cpp
