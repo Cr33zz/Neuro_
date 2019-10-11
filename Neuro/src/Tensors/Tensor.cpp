@@ -1527,7 +1527,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::CopyTo(Tensor& result, float tau) const
 	{
-		assert(m_Shape.Length == result.m_Shape.Length);
+        NEURO_ASSERT(m_Shape.Length == result.m_Shape.Length, "");
 
         if (tau <= 0 && IsOnDevice() && result.IsOnDevice())
         {

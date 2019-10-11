@@ -6,16 +6,17 @@ namespace Neuro
     MeanOp::MeanOp(TensorLike* x, EAxis axis, const string& name)
         : Operation({ x }, name.empty() ? "mean" : name), m_Axis(axis)
     {
+        Shape inputShape = x->GetShape();
         if (m_Axis == GlobalAxis)
             m_Output.Resize(Shape(1, 1, 1, 1));
         else if (m_Axis == WidthAxis)
-            m_Output.Resize(Shape(1, m_Inputs[0]->Len(1), m_Inputs[0]->Len(2), m_Inputs[0]->Len(3)));
+            m_Output.Resize(Shape(1, inputShape.Height(), inputShape.Depth(), inputShape.Batch()));
         else if (m_Axis == HeightAxis)
-            m_Output.Resize(Shape(m_Inputs[0]->Len(0), 1, m_Inputs[0]->Len(2), m_Inputs[0]->Len(3)));
+            m_Output.Resize(Shape(inputShape.Width(), 1, inputShape.Depth(), inputShape.Batch()));
         else if (m_Axis == DepthAxis)
-            m_Output.Resize(Shape(m_Inputs[0]->Len(0), m_Inputs[0]->Len(1), 1, m_Inputs[0]->Len(3)));
+            m_Output.Resize(Shape(inputShape.Width(), inputShape.Height(), 1, inputShape.Batch()));
         else if (m_Axis == BatchAxis)
-            m_Output.Resize(Shape(m_Inputs[0]->Len(0), m_Inputs[0]->Len(1), m_Inputs[0]->Len(2), 1));
+            m_Output.Resize(Shape(inputShape.Width(), inputShape.Height(), inputShape.Depth(), 1));
         else
             assert(false);
     }

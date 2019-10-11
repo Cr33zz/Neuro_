@@ -1,24 +1,24 @@
-#include "ComputationalGraph/Operations/BatchFlattenOp.h"
+#include "ComputationalGraph/Operations/BatchReshapeOp.h"
 
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    BatchFlattenOp::BatchFlattenOp(TensorLike* x, const string& name)
-        : Operation({ x }, name.empty() ? "batch_flatten" : name)
+    BatchReshapeOp::BatchReshapeOp(TensorLike* x, const Shape& shape, const string& name)
+        : Operation({ x }, name.empty() ? "batch_reshape" : name), m_Shape(shape)
     {
-        Shape shapeNoBatch = Shape::From(x->GetShape(), 1);
-        m_Output.Resize(Shape(shapeNoBatch.Length));
+        NEURO_ASSERT(shape.Batch() == 1, "");
+        m_Output.Resize(shape);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void BatchFlattenOp::ComputeInternal()
+    void BatchReshapeOp::ComputeInternal()
     {
         m_Output.ResizeBatch(m_Inputs[0]->Batch());
         m_Inputs[0]->CopyTo(m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void BatchFlattenOp::ComputeGradientInternal(const Tensor& grad)
+    void BatchReshapeOp::ComputeGradientInternal(const Tensor& grad)
     {
         grad.CopyTo(m_InputsGrads[0]);
     }

@@ -14,7 +14,7 @@ namespace Neuro
     void DivideOp::ComputeInternal()
     {
         m_Output.ResizeBatch(max(m_Inputs[0]->Batch(), m_Inputs[1]->Batch()));
-        return m_Inputs[0]->MulElem(*m_Inputs[1], m_Output);
+        m_Inputs[0]->Div(*m_Inputs[1], m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -23,19 +23,32 @@ namespace Neuro
         auto& a = *m_Inputs[0];
         auto& b = *m_Inputs[1];
 
-        auto gradWrtA = grad / b;
-        auto gradWrtB = grad * a;
-
-        for (int i = WidthAxis; i <= BatchAxis; ++i)
+        auto& gShape = grad.GetShape();
+        
+        if (gShape == m_InputsGrads[0].GetShape())
+            grad.Div(b, m_InputsGrads[0]);
+        else
         {
-            if (gradWrtA.Len(i) != 1 && a.Len(i) == 1)
-                gradWrtA = sum(gradWrtA, (EAxis)i);
-
-            if (gradWrtB.Len(i) != 1 && b.Len(i) == 1)
-                gradWrtB = sum(gradWrtB, (EAxis)i);
+            auto gradTemp = grad.Div(b);
+            for (int i = WidthAxis; i <= BatchAxis; ++i)
+            {
+                if (gradTemp.Len(i) != 1 && a.Len(i) == 1)
+                    gradTemp = sum(gradTemp, (EAxis)i);
+            }
+            gradTemp.CopyTo(m_InputsGrads[0]);
         }
 
-        gradWrtA.CopyTo(m_InputsGrads[0]);
-        gradWrtB.CopyTo(m_InputsGrads[1]);
+        if (gShape == m_InputsGrads[1].GetShape())
+            grad.MulElem(a, m_InputsGrads[1]);
+        else
+        {
+            auto gradTemp = grad.MulElem(a);
+            for (int i = WidthAxis; i <= BatchAxis; ++i)
+            {
+                if (gradTemp.Len(i) != 1 && a.Len(i) == 1)
+                    gradTemp = sum(gradTemp, (EAxis)i);
+            }
+            gradTemp.CopyTo(m_InputsGrads[1]);
+        }
     }
 }
