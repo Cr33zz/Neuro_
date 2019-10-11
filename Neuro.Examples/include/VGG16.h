@@ -20,7 +20,7 @@ public:
         Tensor::SetForcedOpMode(GPU);
 
         Tensor image = LoadImage("data/mug.jpg", 224, 224);
-        image.Sub(Tensor({ 103.939f, 116.779f, 123.68f }, Shape(3)), image);
+        PreprocessImage(image, NHWC);
 
         auto model = CreateModel(NHWC);
 
@@ -34,14 +34,14 @@ public:
     }
 
     //////////////////////////////////////////////////////////////////////////
-    static void PreprocessImage(Tensor& image)
+    static void PreprocessImage(Tensor& image, EDataFormat dataFormat)
     {
-        image.Sub(Tensor({ 103.939f, 116.779f, 123.68f }, Shape(3)), image);
+        image.Sub(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1,1,3)), image);
     }
 
-    static void UnprocessImage(Tensor& image)
+    static void UnprocessImage(Tensor& image, EDataFormat dataFormat)
     {
-        image.Add(Tensor({ 103.939f, 116.779f, 123.68f }, Shape(3)), image);
+        image.Add(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1,1,3)), image);
         image.Clipped(0, 255, image);
     }
 
