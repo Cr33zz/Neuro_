@@ -564,7 +564,8 @@ namespace Neuro
             m_Stream << ']';
         }
 
-        m_Stream << ' ' << right << setw(to_string(m_MaxIterations).length()) << m_Iteration << "/" << m_MaxIterations;
+        if (m_ShowStep)
+            m_Stream << ' ' << right << setw(to_string(m_MaxIterations).length()) << m_Iteration << "/" << m_MaxIterations;
 
         if (m_Iteration > 0)
         {
