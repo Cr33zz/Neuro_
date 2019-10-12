@@ -111,9 +111,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Graph::ProcessBackwardNode(TensorLike* node, vector<TensorLike*>& nodes, const vector<Variable*>& params, bool ignoreConsumersCheck, unordered_set<TensorLike*>& visited, unordered_set<TensorLike*>& visitedParams, const unordered_set<TensorLike*>& required)
     {
-       /* if (node->IsPlaceholder())
-            return;*/
-
         bool allConsumersVisited = true;
 
         if (!ignoreConsumersCheck)
@@ -175,8 +172,12 @@ namespace Neuro
         {
             auto node = order[n];
 
-            if (node->IsVar() && (params.empty() || find(params.begin(), params.end(), node) != params.end()))
-                variables.push_back(static_cast<Variable*>(node));
+            if (node->IsVar())
+            {
+                Variable* var = static_cast<Variable*>(node);
+                if (var->Trainable() && (params.empty() || find(params.begin(), params.end(), node) != params.end()))
+                    variables.push_back(var);
+            }
 
             auto& nodeOutputGrad = node->m_OutputGrad;
             nodeOutputGrad.Resize(node->m_Output.GetShape());

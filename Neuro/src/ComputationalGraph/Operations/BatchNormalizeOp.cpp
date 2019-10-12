@@ -20,6 +20,8 @@ namespace Neuro
         bool training = (*m_Inputs[5])(0) != 0;
 
         m_Output.ResizeBatch(m_Inputs[0]->Batch());
+        m_SaveMean.Resize(gamma.GetShape());
+        m_SaveInvVar.Resize(gamma.GetShape());
 
         if (training)
             m_Inputs[0]->BatchNormTrain(gamma, beta, m_Momentum, m_Epsilon, runningMean, runningVar, m_SaveMean, m_SaveInvVar, m_Output);

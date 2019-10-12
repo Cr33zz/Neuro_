@@ -42,12 +42,14 @@ namespace Neuro
         if (m_DataFormat == NCHW)
         {
             m_Kernels = new Variable(Shape(m_FilterSize, m_FilterSize, m_OutputDepth, inputShapes[0].Depth()), m_KernelInitializer, "kernels");
-            m_Bias = new Variable(Shape(1, 1, m_OutputDepth), m_BiasInitializer, "bias");
+            if (m_UseBias)
+                m_Bias = new Variable(Shape(1, 1, m_OutputDepth), m_BiasInitializer, "bias");
         }
         else
         {
             m_Kernels = new Variable(Shape(m_FilterSize, m_FilterSize, m_OutputDepth, inputShapes[0].Len(0)), m_KernelInitializer, "kernels");
-            m_Bias = new Variable(Shape(m_OutputDepth), m_BiasInitializer, "bias");
+            if (m_UseBias)
+                m_Bias = new Variable(Shape(m_OutputDepth), m_BiasInitializer, "bias");
         }
 
         m_Built = true;

@@ -55,3 +55,9 @@ Neuro::ModelBase* VGG16::CreateModel(EDataFormat dataFormat, Shape inputShape, b
 
     return model;
 }
+
+//////////////////////////////////////////////////////////////////////////
+TensorLike* VGG16::Preprocess(TensorLike* image, EDataFormat dataFormat)
+{
+    return sub(image, new Constant(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3))));
+}

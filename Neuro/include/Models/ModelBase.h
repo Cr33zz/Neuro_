@@ -38,6 +38,8 @@ namespace Neuro
         tensor_ptr_vec_t Predict(const const_tensor_ptr_vec_t& inputs);
         tensor_ptr_vec_t Predict(const Tensor& input);
 
+        tensor_ptr_vec_t Eval(const vector<TensorLike*>& fetches, const map<Placeholder*, const Tensor*>& feeds);
+
         const vector<LayerBase*>& Layers() const { return m_Layers; }
         const vector<LayerBase*>& InputLayers() const { return m_InputLayers; }
         const vector<LayerBase*>& OutputLayers() const { return m_OutputLayers; }
@@ -101,6 +103,7 @@ namespace Neuro
 
         Trainer* m_Trainer = nullptr;
         Predicter* m_Predicter = nullptr;
+        map<size_t, Predicter*> m_EvalPredicters;
 
         map<string, pair<TensorLike*, size_t>> m_Metrics;
 

@@ -11,8 +11,8 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    MultiplyOp::MultiplyOp(TensorLike* x, float factor, const string& name)
-        : Operation({ x }, name.empty() ? "multiply" : name), m_Factor(factor)
+    MultiplyOp::MultiplyOp(TensorLike* x, float val, const string& name)
+        : Operation({ x }, name.empty() ? "multiply" : name), m_Val(val)
     {
         m_Output.Resize(x->GetShape());
     }
@@ -20,10 +20,10 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void MultiplyOp::ComputeInternal()
     {
-        if (m_Factor)
+        if (m_Val)
         {
             m_Output.ResizeBatch(m_Inputs[0]->Batch());
-            m_Inputs[0]->Mul(m_Factor, m_Output);
+            m_Inputs[0]->Mul(m_Val, m_Output);
         }
         else
         {
@@ -35,9 +35,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void MultiplyOp::ComputeGradientInternal(const Tensor& grad)
     {
-        if (m_Factor)
+        if (m_Val)
         {
-            grad.Mul(m_Factor, m_InputsGrads[0]);
+            grad.Mul(m_Val, m_InputsGrads[0]);
         }
         else
         {

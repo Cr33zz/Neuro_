@@ -4,100 +4,130 @@
 #include <string>
 #include <vector>
 #include <numeric>
+#include <experimental/filesystem>
 
 #include "Neuro.h"
 #include "VGG19.h"
 
 using namespace std;
 using namespace Neuro;
-
-const size_t IMAGE_WIDTH = 400;
-const size_t IMAGE_HEIGHT = 300;
-
-const string STYLE_FILE = "style2.jpg";
-const string CONTENT_FILE_DIR = "content";
+namespace fs = std::experimental::filesystem;
 
 class FastNeuralStyleTransfer
 {
 public:
     void Run()
     {
+        const uint32_t IMAGE_WIDTH = 256;
+        const uint32_t IMAGE_HEIGHT = 256;
+
+        const float CONTENT_WEIGHT = 7.5e0f;
+        const float STYLE_WEIGHT = 1e2f;
+
+        const float LEARNING_RATE = 1e-3f;
+        const int NUM_EPOCHS = 2;
+        const uint32_t BATCH_SIZE = 4;
+
+        const string STYLE_FILE = "data/style.jpg";
+        const string CONTENT_FILES_DIR = "e:/Downloads/coco14";
+
         Tensor::SetForcedOpMode(GPU);
 
-        //Tensor styleImage = LoadImage("data/" + STYLE_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
-        //styleImage.SaveAsImage(STYLE_FILE, false);
-        //VGG16::PreprocessImage(styleImage, NCHW);
+        // build content files list
+        vector<string> contentFiles;
+        for (const auto & entry : fs::directory_iterator(CONTENT_FILES_DIR))
+            contentFiles.push_back(entry.path().generic_string());
 
-        //auto vggModel = VGG19::CreateModel(NCHW, contentImage.GetShape(), false);
-        //vggModel->SetTrainable(false);
+        auto vggModel = VGG16::CreateModel(NCHW, Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), false);
+        vggModel->SetTrainable(false);
 
-        //vector<TensorLike*> contentOutputs = { vggModel->Layer("block5_conv2")->Outputs()[0] };
-        //vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv1")->Outputs()[0],
-        //                                     vggModel->Layer("block2_conv1")->Outputs()[0],
-        //                                     vggModel->Layer("block3_conv1")->Outputs()[0],
-        //                                     vggModel->Layer("block4_conv1")->Outputs()[0],
-        //                                     vggModel->Layer("block5_conv1")->Outputs()[0] };
+        vector<TensorLike*> contentOutputs = { vggModel->Layer("block4_conv2")->Outputs()[0] };
+        vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv1")->Outputs()[0],
+                                             vggModel->Layer("block2_conv1")->Outputs()[0],
+                                             vggModel->Layer("block3_conv1")->Outputs()[0],
+                                             vggModel->Layer("block4_conv1")->Outputs()[0],
+                                             vggModel->Layer("block5_conv1")->Outputs()[0] };
+
+        auto vggContentFeaturesModel = Flow(vggModel->InputsAt(-1), contentOutputs);
+        auto vggFeaturesModel = Flow(vggModel->InputsAt(-1), MergeVectors({ contentOutputs, styleOutputs }));
+        
+        // pre-compute style features of style image (we only need to do it once since that image won't change either)
+        Tensor styleImage = LoadImage(STYLE_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
+        styleImage.SaveAsImage("_style.jpg", false);
+        VGG16::PreprocessImage(styleImage, NCHW);
+
+        auto styleFeatures = vggFeaturesModel.Eval(styleOutputs, { { (Placeholder*)(vggFeaturesModel.Inputs()[0]), &styleImage } });
+        vector<Constant*> styleGrams;
+        for (size_t i = 0; i < styleFeatures.size(); ++i)
+        {
+            Tensor* x = styleFeatures[i];
+            uint32_t elementsPerFeature = x->GetShape().Width() * x->GetShape().Height();
+            auto features = x->Reshaped(Shape(elementsPerFeature, x->GetShape().Depth()));
+            styleGrams.push_back(new Constant(features.Mul(features.Transposed()).Mul(1.f / (float)elementsPerFeature), "style_" + to_string(i) + "_gram"));
+        }
+
+        // generate final computational graph
+        auto content = new Placeholder(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), "content");
+        auto contentPre = VGG16::Preprocess(content, NCHW);
+
+        auto targetContentFeatures = vggContentFeaturesModel(contentPre);
 
         //auto outputImg = new Variable(contentImage, "output_image");
+        auto stylizedContent = CreateTransformerNet(multiply(content, 1.f / 255.f), new Constant(1.f)); // normalize input images
+        auto stylizedContentPre = VGG16::Preprocess(stylizedContent, NCHW);
 
-        //auto model = Flow(vggModel->InputsAt(-1), MergeVectors({ contentOutputs, styleOutputs }));
+        auto stylizedFeatures = vggFeaturesModel(stylizedContentPre);
 
-        //// pre-compute content features of content image (we only need to do it once since that image won't change)
-        //auto contentFeatures = model.Predict(contentImage)[0];
-        //Constant* content = new Constant(*contentFeatures, "content");
+        float contentLossWeight = 1e3f;
+        float styleLossWeight = 1e-2f;
 
-        //// pre-compute style features of style image (we only need to do it once since that image won't change either)
-        //auto styleFeatures = model.Predict(styleImage);
-        //styleFeatures.erase(styleFeatures.begin()); //get rid of content feature
-        //vector<Constant*> styles;
-        //for (size_t i = 0; i < styleFeatures.size(); ++i)
-        //    styles.push_back(new Constant(*styleFeatures[i], "style_" + to_string(i)));
-        //vector<TensorLike*> styleGrams;
-        //for (size_t i = 0; i < styleFeatures.size(); ++i)
-        //    styleGrams.push_back(GramMatrix(styles[i], "style_" + to_string(i)));
+        // compute content loss from first output...
+        auto contentLoss = multiply(ContentLoss(targetContentFeatures[0], stylizedFeatures[0]), contentLossWeight);
+        stylizedFeatures.erase(stylizedFeatures.begin());
 
-        //// generate beginning of the computational graph for processing output image
-        //auto outputs = model(outputImg);
+        vector<TensorLike*> styleLosses;
+        // ... and style losses from remaining outputs
+        assert(stylizedFeatures.size() == styleGrams.size());
+        for (size_t i = 0; i < stylizedFeatures.size(); ++i)
+            styleLosses.push_back(StyleLoss(styleGrams[i], stylizedFeatures[i], (int)i));
+        auto styleLoss = multiply(merge_avg(styleLosses, "mean_style_loss"), styleLossWeight, "style_loss");
 
-        //float contentLossWeight = 1e3f;
-        //float styleLossWeight = 1e-2f;
+        auto totalLoss = add(contentLoss, styleLoss, "total_loss");
 
-        //// compute content loss from first output...
-        //auto contentLoss = multiply(ContentLoss(content, outputs[0]), contentLossWeight);
-        ////auto contentLoss = ContentLoss(content, outputs[0]);
-        //outputs.erase(outputs.begin());
+        auto optimizer = Adam(5.f, 0.99f, 0.999f, 0.1f);
+        auto minimize = optimizer.Minimize({ totalLoss });
 
-        //vector<TensorLike*> styleLosses;
-        //// ... and style losses from remaining outputs
-        //assert(outputs.size() == styles.size());
-        //for (size_t i = 0; i < outputs.size(); ++i)
-        //    styleLosses.push_back(StyleLoss(styleGrams[i], outputs[i], (int)i));
-        ////auto styleLoss = merge_avg(styleLosses, "style_loss");
-        //auto styleLoss = multiply(merge_avg(styleLosses, "mean_style_loss"), styleLossWeight, "style_loss");
+        Tensor contentBatch(Shape::From(content->GetShape(), BATCH_SIZE));
 
-        //auto totalLoss = add(contentLoss, styleLoss, "total_loss");
+        size_t samples = contentFiles.size();
+        size_t steps = samples / BATCH_SIZE;
 
-        //auto optimizer = Adam(5.f, 0.99f, 0.999f, 0.1f);
-        //auto minimize = optimizer.Minimize({ totalLoss }, { outputImg });
+        for (int e = 1; e <= NUM_EPOCHS; ++e)
+        {
+            cout << "Epoch " << e << endl;
 
-        //const int EPOCHS = 1000;
-        //Tqdm progress(EPOCHS, 10);
-        //progress.ShowStep(false).ShowElapsed(false);
-        //for (int e = 1; e <= EPOCHS; ++e, progress.NextStep())
-        //{
-        //    auto results = Session::Default()->Run({ outputImg, contentLoss, styleLoss, totalLoss, minimize }, {});
+            Tqdm progress(steps, 10);
+            progress.ShowStep(true).ShowElapsed(false);
+            for (int i = 0; i < steps; ++i, progress.NextStep())
+            {
+                contentBatch.OverrideHost();
+                //load images
+                for (int j = 0; j < BATCH_SIZE; ++j)
+                    LoadImage(contentFiles[i * BATCH_SIZE + j], &contentBatch.GetValues()[0] + j * contentBatch.BatchLength(), content->GetShape().Width(), content->GetShape().Height(), NCHW);
+        
+                auto results = Session::Default()->Run({ stylizedContent, contentLoss, styleLoss, totalLoss, minimize }, { { content, &contentBatch } });
 
-        //    stringstream extString;
-        //    extString << setprecision(4) << fixed << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - total_l: " << (*results[3])(0);
-        //    progress.SetExtraString(extString.str());
+                stringstream extString;
+                extString << setprecision(4) << fixed << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - total_l: " << (*results[3])(0);
+                progress.SetExtraString(extString.str());
 
-        //    if (e % 20 == 0)
-        //    {
-        //        auto genImage = *results[0];
-        //        VGG16::UnprocessImage(genImage, NCHW);
-        //        genImage.SaveAsImage("neural_transfer_" + to_string(e) + ".png", false);
-        //    }
-        //}
+                if (i % 10 == 0)
+                {
+                    auto genImage = *results[0];
+                    genImage.SaveAsImage("fnst_e" + PadLeft(to_string(e), 4, '0') + "_b" + PadLeft(to_string(i), 4, '0') + ".png", false);
+                }
+            }
+        }
 
         //auto results = Session::Default()->Run({ outputImg }, {});
         //auto genImage = *results[0];
@@ -106,12 +136,12 @@ public:
     }
 
     //////////////////////////////////////////////////////////////////////////
-    TensorLike* CreateTransformerNet(Placeholder* input)
+    TensorLike* CreateTransformerNet(TensorLike* input, TensorLike* training)
     {
         auto convLayer = [&](TensorLike* input, uint32_t filtersNum, uint32_t filterSize, uint32_t stride, bool includeReLU = true)
         {
-            input = (new Conv2D(filtersNum, filterSize, stride, Tensor::GetPadding(Same, filterSize)))->Call(input);
-            input = (new InstanceNormalization())->Call(input);
+            input = (new Conv2D(filtersNum, filterSize, stride, Tensor::GetPadding(Same, filterSize)))->Call(input)[0];
+            input = (new InstanceNormalization())->Call(input, training)[0];
             if (includeReLU)
                 input = relu(input);
             return input;
@@ -126,7 +156,7 @@ public:
         auto upsampleLayer = [&](TensorLike* input, uint32_t filtersNum, uint32_t filterSize, uint32_t stride, uint32_t upsampleFactor)
         {
             input = upsample2d(input, upsampleFactor);
-            input = (new Conv2D(filtersNum, filterSize, stride, Tensor::GetPadding(Same, filterSize)))->Call(input);
+            input = (new Conv2D(filtersNum, filterSize, stride, Tensor::GetPadding(Same, filterSize)))->Call(input)[0];
             return input;
         };
 
@@ -141,7 +171,7 @@ public:
         auto up1 = upsampleLayer(resid5, 64, 3, 2, 2);
         auto up2 = upsampleLayer(up1, 32, 3, 2, 2);
         auto up3 = convLayer(up2, 3, 9, 1, false);
-        return add(multiply(tanh(up3), 150.f), 127.5f);
+        return add(multiply(tanh(up3), 127.5f), 127.5f); // de-normalize
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -172,8 +202,8 @@ public:
     }
 
     //////////////////////////////////////////////////////////////////////////
-    TensorLike* ContentLoss(TensorLike* content, TensorLike* gen)
+    TensorLike* ContentLoss(TensorLike* target, TensorLike* gen)
     {
-        return mean(square(sub(gen, content)), GlobalAxis, "content_loss");
+        return mean(square(sub(target, gen)), GlobalAxis, "content_loss");
     }
 };

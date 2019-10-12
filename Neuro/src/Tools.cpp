@@ -468,7 +468,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor LoadImage(const string& filename, uint32_t targetSizeX, uint32_t targetSizeY, EDataFormat targetFormat)
+    FIBITMAP* LoadResizedImage(const string& filename, uint32_t targetSizeX, uint32_t targetSizeY, uint32_t& sizeX, uint32_t& sizeY)
     {
         ImageLibInit();
 
@@ -488,24 +488,58 @@ namespace Neuro
             image = resizedImage;
         }
 
-        Tensor result(Shape(3, WIDTH, HEIGHT));
-        auto& values = result.GetValues();
+        sizeX = WIDTH;
+        sizeY = HEIGHT;
+        return image;
+    }
 
+    //////////////////////////////////////////////////////////////////////////
+    void LoadImageInternal(FIBITMAP* image, const Shape& shape, EDataFormat targetFormat, float* buffer)
+    {
+        NEURO_ASSERT((targetFormat == NCHW && shape.Depth() == 3) || (targetFormat == NHWC && shape.Width() == 3), "Mismatched depth.");
         RGBQUAD color;
 
         uint32_t idx = 0;
-        for (uint32_t h = 0; h < HEIGHT; ++h)
-        for (uint32_t w = 0; w < WIDTH; ++w)
+        for (uint32_t h = 0; h < shape.Height(); ++h)
+        for (uint32_t w = 0; w < shape.Width(); ++w)
         {
-            FreeImage_GetPixelColor(image, (unsigned int)w, HEIGHT - (unsigned int)h - 1, &color);
-            values[idx++] = (float)color.rgbRed;
-            values[idx++] = (float)color.rgbGreen;
-            values[idx++] = (float)color.rgbBlue;
+            FreeImage_GetPixelColor(image, (unsigned int)w, shape.Height() - (unsigned int)h - 1, &color);
+
+            if (targetFormat == NCHW)
+            {
+                buffer[shape.GetIndex(w, h, 0u)] = (float)color.rgbRed;
+                buffer[shape.GetIndex(w, h, 1u)] = (float)color.rgbGreen;
+                buffer[shape.GetIndex(w, h, 2u)] = (float)color.rgbBlue;
+            }
+            else
+            {
+                buffer[idx++] = (float)color.rgbRed;
+                buffer[idx++] = (float)color.rgbGreen;
+                buffer[idx++] = (float)color.rgbBlue;
+            }
         }
+    }
 
+    //////////////////////////////////////////////////////////////////////////
+    void LoadImage(const string& filename, float* buffer, uint32_t targetSizeX, uint32_t targetSizeY, EDataFormat targetFormat)
+    {
+        uint32_t sizeX, sizeY;
+        FIBITMAP* image = LoadResizedImage(filename, targetSizeX, targetSizeY, sizeX, sizeY);
+        Shape imageShape = targetFormat == NCHW ? Shape(sizeX, sizeY, 3) : Shape(3, sizeX, sizeY);
+        LoadImageInternal(image, imageShape, targetFormat, buffer);
         FreeImage_Unload(image);
+    }
 
-        return targetFormat == NCHW ? result.Transposed({HeightAxis, DepthAxis, WidthAxis, BatchAxis}) : result;
+    //////////////////////////////////////////////////////////////////////////
+    Tensor LoadImage(const string& filename, uint32_t targetSizeX, uint32_t targetSizeY, EDataFormat targetFormat)
+    {
+        uint32_t sizeX, sizeY;
+        FIBITMAP* image = LoadResizedImage(filename, targetSizeX, targetSizeY, sizeX, sizeY);
+        Shape imageShape = targetFormat == NCHW ? Shape(sizeX, sizeY, 3) : Shape(3, sizeX, sizeY);
+        Tensor result(imageShape);
+        LoadImageInternal(image, imageShape, targetFormat, &result.GetValues()[0]);
+        FreeImage_Unload(image);
+        return result;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -519,7 +553,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tqdm::Tqdm(uint32_t maxIterations, size_t barLength)
+    Tqdm::Tqdm(size_t maxIterations, size_t barLength)
         : m_MaxIterations(maxIterations), m_BarLength(barLength)
     {
         m_Timer.Start();
@@ -527,13 +561,13 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tqdm::NextStep(uint32_t iterations)
+    void Tqdm::NextStep(size_t iterations)
     {        
         const char BLANK_SYMBOL = (char)176;
         const char FULL_SYMBOL = (char)219;
         const char ACTIVE_SYMBOL = (char)176;
 
-        m_Iteration += iterations;
+        m_Iteration += (int)iterations;
 
         float pct = m_Iteration / (float)m_MaxIterations * 100;
 

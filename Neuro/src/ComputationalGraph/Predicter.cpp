@@ -31,4 +31,12 @@ namespace Neuro
 
         return Session::Default()->RunInOrder(m_Order, m_OutputOps, m_Feeds);
     }
+
+    //////////////////////////////////////////////////////////////////////////
+    tensor_ptr_vec_t Predicter::Eval(const map<Placeholder*, const Tensor*>& feeds)
+    {
+        auto localFeeds = feeds;
+        localFeeds[m_TrainingPlaceholder] = m_Feeds[m_TrainingPlaceholder];
+        return Session::Default()->RunInOrder(m_Order, m_OutputOps, localFeeds);
+    }
 }

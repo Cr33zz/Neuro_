@@ -48,6 +48,7 @@ namespace Neuro
     void LoadCSVData(const string& filename, int outputsNum, Tensor& inputs, Tensor& outputs, bool outputsOneHotEncoded = false, int maxLines = -1);
 
     // Loaded tensor is flat and internal data layout is NHWC, it should be transposed and normalized before use
+    void LoadImage(const string& filename, float* buffer, uint32_t targetSizeX = 0, uint32_t targetSizeY = 0, EDataFormat targetFormat = NHWC);
     Tensor LoadImage(const string& filename, uint32_t targetSizeX = 0, uint32_t targetSizeY = 0, EDataFormat targetFormat = NHWC);
 
     template<typename T>
@@ -59,7 +60,7 @@ namespace Neuro
     class Tqdm
     {
     public:
-        Tqdm(uint32_t maxIterations, size_t barLen = 30);
+        Tqdm(size_t maxIterations, size_t barLen = 30);
         Tqdm& ShowElapsed(bool show) { m_ShowElapsed = show; return *this; }
         Tqdm& ShowEta(bool show) { m_ShowEta = show; return *this; }
         Tqdm& ShowStep(bool show) { m_ShowStep = show; return *this; }
@@ -67,13 +68,13 @@ namespace Neuro
         Tqdm& EnableSeparateLines(bool enable) { m_SeparateLinesEnabled = enable; return *this; }
         void SetExtraString(const string& str) { m_ExtraString = str; }
 
-        void NextStep(uint32_t iterations = 1);
+        void NextStep(size_t iterations = 1);
         string Str() const { return m_Stream.str(); }
         __int64 ElapsedMilliseconds() const { return m_Timer.ElapsedMilliseconds(); }
 
     private:
         int m_Iteration = -1;
-        uint32_t m_MaxIterations;
+        size_t m_MaxIterations;
         size_t m_BarLength;
         Stopwatch m_Timer;
         stringstream m_Stream;

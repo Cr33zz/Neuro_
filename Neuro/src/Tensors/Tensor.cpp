@@ -355,7 +355,6 @@ namespace Neuro
 		Op()->MulElem(*this, t, result);
 	}
 
-
 	//////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::MulElem(const Tensor& t) const
 	{
@@ -1212,6 +1211,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::Reshaped(const Shape& shape) const
 	{
+        CopyToHost();
 		return Tensor(m_Values, m_Shape.Reshaped((int)shape.Width(), (int)shape.Height(), (int)shape.Depth(), (int)shape.Batch()));
 	}
 

@@ -17,6 +17,7 @@
 #include "Layers/Reshape.h"
 #include "Layers/Dropout.h"
 #include "Layers/BatchNormalization.h"
+#include "Layers/InstanceNormalization.h"
 #include "Layers/Input.h"
 #include "Layers/Pooling2D.h"
 #include "Layers/UpSampling2D.h"

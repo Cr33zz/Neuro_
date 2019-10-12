@@ -253,6 +253,26 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    tensor_ptr_vec_t ModelBase::Eval(const vector<TensorLike*>& fetches, const map<Placeholder*, const Tensor*>& feeds)
+    {
+        size_t fetchesHash = 0;
+        std::hash<TensorLike*> hasher;
+        for (size_t i = 0; i < fetches.size(); ++i)
+            fetchesHash = fetchesHash * 31 + hasher(fetches[i]);
+
+        auto predicter = m_EvalPredicters[fetchesHash];
+
+        if (!predicter)
+        {
+            vector<TensorLike*> outputs;
+            for_each(fetches.begin(), fetches.end(), [&](TensorLike* output) { outputs.push_back(output); });
+            predicter = m_EvalPredicters[fetchesHash] = new Predicter({}, outputs, m_TrainingPlaceholder);
+        }
+
+        return predicter->Eval(feeds);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void ModelBase::Optimize(OptimizerBase* optimizer, LossBase* loss)
     {
         map<string, LossBase*> lossDict;

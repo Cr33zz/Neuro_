@@ -11,6 +11,7 @@
 #include "VGG16.h"
 #include "ComputationalGraph.h"
 #include "NeuralStyleTransfer.h"
+#include "FastNeuralStyleTransfer.h"
 
 int main()
 {
@@ -96,6 +97,7 @@ int main()
     //CifarGAN().Run();
     //VGG16().Run();
     NeuralStyleTransfer().Run();
+    //FastNeuralStyleTransfer().Run();
 
     cin.get();
     return 0;

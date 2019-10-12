@@ -11,16 +11,16 @@
 using namespace std;
 using namespace Neuro;
 
-const size_t IMAGE_WIDTH = 400;
-const size_t IMAGE_HEIGHT = 300;
-
-const string CONTENT_FILE = "content2.jpg";
-const string STYLE_FILE = "style.jpg";
-
 //https://medium.com/tensorflow/neural-style-transfer-creating-art-with-deep-learning-using-tf-keras-and-eager-execution-7d541ac31398
 class NeuralStyleTransfer
 {
 public:
+    const uint32_t IMAGE_WIDTH = 400;
+    const uint32_t IMAGE_HEIGHT = 300;
+
+    const string CONTENT_FILE = "content3.jpg";
+    const string STYLE_FILE = "style9.jpg";
+
     void Run()
     {
         Tensor::SetForcedOpMode(GPU);
