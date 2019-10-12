@@ -25,8 +25,8 @@ public:
         Tensor contentImage = LoadImage("data/content.jpg", IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
         contentImage.SaveAsImage("content.jpg", false);
         VGG16::PreprocessImage(contentImage, NCHW);
-        Tensor styleImage = LoadImage("data/style.jpg", IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
-        styleImage.SaveAsImage("style.jpg", false);
+        Tensor styleImage = LoadImage("data/style3.jpg", IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
+        styleImage.SaveAsImage("style3.jpg", false);
         VGG16::PreprocessImage(styleImage, NCHW);
 
         assert(contentImage.GetShape() == styleImage.GetShape());
@@ -64,7 +64,7 @@ public:
         auto outputs = model(outputImg);
 
         float contentLossWeight = 1.f;
-        float styleLossWeight = 1.f;
+        float styleLossWeight = 0.001f;
 
         // compute content loss from first output...
         //auto contentLoss = multiply(ContentLoss(content, outputs[0]), new Constant(contentLossWeight));
@@ -81,23 +81,13 @@ public:
 
         auto totalLoss = add(contentLoss, styleLoss, "total_loss");
 
-        auto optimizer = Adam(100.f, 0.99f, 0.999f, 0.1f);
+        auto optimizer = Adam(5.f, 0.99f, 0.999f, 0.1f);
         auto minimize = optimizer.Minimize({ totalLoss }, { outputImg });
 
-        /*Debug::LogOutput("content_loss");
-        Debug::LogOutput("style_loss");
-        Debug::LogOutput("total_loss");
-        Debug::LogOutput("mean_style_loss");
-        Debug::LogOutput("style_loss");*/
-        /*Debug::LogGrad("content_loss");
-        Debug::LogGrad("style_loss");
-        Debug::LogGrad("total_loss");
-        Debug::LogGrad("mean_style_loss");
-        Debug::LogGrad("style_loss");*/
-
         const int EPOCHS = 1000;
-        Tqdm progress(EPOCHS, 0);
-        for (int e = 1; e < EPOCHS; ++e, progress.NextStep())
+        Tqdm progress(EPOCHS, 10);
+        progress.ShowStep(false).ShowElapsed(false);
+        for (int e = 1; e <= EPOCHS; ++e, progress.NextStep())
         {
             auto results = Session::Default()->Run({ outputImg, contentLoss, styleLoss, totalLoss, minimize }, {});
 
@@ -121,8 +111,8 @@ public:
 
         uint32_t elementsPerFeature = x->GetShape().Width() * x->GetShape().Height();
         auto features = reshape(x, Shape(elementsPerFeature, x->GetShape().Depth()));
-        //return multiply(matmul(features, transpose(features)), 1.f / (float)elementsPerFeature, name + "_gram_matrix");
-        return matmul(features, transpose(features));
+        return multiply(matmul(features, transpose(features)), 1.f / (float)elementsPerFeature, name + "_gram_matrix");
+        //return matmul(features, transpose(features));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -136,9 +126,9 @@ public:
         float channels = (float)gen->GetShape().Depth();
         float size = (float)(gen->GetShape().Height() * gen->GetShape().Width());
 
-        return multiply(mean(square(sub(styleGram, genGram))), 1.f / (4.f * (channels * channels) * (size * size)), "style_loss_" + to_string(index));
+        //return multiply(mean(square(sub(styleGram, genGram))), 1.f / (4.f * (channels * channels) * (size * size)), "style_loss_" + to_string(index));
         //return div(mean(square(sub(styleGram, genGram))), new Constant(4.f * (channels * channels) * (size * size)), "style_loss_" + to_string(index));
-        //return mean(square(sub(styleGram, genGram)));
+        return mean(square(sub(styleGram, genGram)));
     }
 
     //////////////////////////////////////////////////////////////////////////
