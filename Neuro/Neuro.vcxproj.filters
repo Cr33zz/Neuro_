@@ -354,6 +354,12 @@
     <ClInclude Include="include\ComputationalGraph\Operations\BatchReshapeOp.h">
       <Filter>include\ComputationalGraph\Operations</Filter>
     </ClInclude>
+    <ClInclude Include="include\Layers\InstanceNormalization.h">
+      <Filter>include\Layers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\InstanceNormalizeOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -609,6 +615,12 @@
       <Filter>src\ComputationalGraph\Operations</Filter>
     </ClCompile>
     <ClCompile Include="src\ComputationalGraph\Operations\BatchReshapeOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Layers\InstanceNormalization.cpp">
+      <Filter>src\Layers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\InstanceNormalizeOp.cpp">
       <Filter>src\ComputationalGraph\Operations</Filter>
     </ClCompile>
   </ItemGroup>

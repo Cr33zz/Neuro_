@@ -136,6 +136,7 @@
     <ClInclude Include="include\ComputationalGraph\Operations\DumpOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\GradientsOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\IdentityOp.h" />
+    <ClInclude Include="include\ComputationalGraph\Operations\InstanceNormalizeOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\LeakyReLUOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\MergeOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\Pool2dOp.h" />
@@ -190,6 +191,7 @@
     <ClInclude Include="include\Layers\Dropout.h" />
     <ClInclude Include="include\Layers\Flatten.h" />
     <ClInclude Include="include\Layers\Input.h" />
+    <ClInclude Include="include\Layers\InstanceNormalization.h" />
     <ClInclude Include="include\Layers\Lambda.h" />
     <ClInclude Include="include\Layers\LayerBase.h" />
     <ClInclude Include="include\Layers\Merge.h" />
@@ -237,6 +239,7 @@
     <ClCompile Include="src\ComputationalGraph\Operations\DumpOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\GradientsOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\IdentityOp.cpp" />
+    <ClCompile Include="src\ComputationalGraph\Operations\InstanceNormalizeOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\LeakyReLUOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\MergeOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\Pool2dOp.cpp" />
@@ -283,6 +286,7 @@
     <ClCompile Include="src\Layers\Dropout.cpp" />
     <ClCompile Include="src\Layers\Flatten.cpp" />
     <ClCompile Include="src\Layers\Input.cpp" />
+    <ClCompile Include="src\Layers\InstanceNormalization.cpp" />
     <ClCompile Include="src\Layers\LayerBase.cpp" />
     <ClCompile Include="src\Layers\Merge.cpp" />
     <ClCompile Include="src\Layers\Pooling2D.cpp" />

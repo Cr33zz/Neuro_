@@ -66,6 +66,7 @@ namespace Neuro
     {
         PerActivation, // separate mean,variance,etc values for each CHW (should be used after non-convolution-like operation)
         Spatial, // separate mean,variance,etc values for each C (should be used after convolution-like operation)
+        Instance,
     };
 
     enum ENormMode
@@ -87,6 +88,7 @@ namespace Neuro
         HeightAxis = 1, // reduces height dimension to size 1, equivalent to axis(1)
         DepthAxis = 2, // reduces depth dimension to size 1, equivalent to axis(2)
         BatchAxis = 3, // reduces batch dimension to size 1, equivalent to axis(3)
+        _01Axes, // reduces width and height dimensions to size 1, equivalent to axis (0, 1)
         _012Axes, // reduces width, height and depth dimensions to size 1, equivalent to axis (0, 1, 2)
         _013Axes, // reduces width, height and batch dimensions to size 1, equivalent to axis (0, 1, 3)
         _123Axes, // reduces height depth and batch dimensions to size 1, equivalent to axis (1, 2, 3)

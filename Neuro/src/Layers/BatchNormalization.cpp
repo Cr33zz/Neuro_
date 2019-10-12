@@ -19,6 +19,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    BatchNormalization::BatchNormalization(const string& constructorName, const Shape& inputShape, const string& name)
+        : SingleLayer(constructorName, inputShape, nullptr, name)
+    {
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void BatchNormalization::CopyParametersTo(LayerBase& target, float tau) const
     {
         __super::CopyParametersTo(target, tau);

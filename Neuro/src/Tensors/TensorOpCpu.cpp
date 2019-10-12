@@ -156,6 +156,8 @@ namespace Neuro
             return SumTemplate<0, 0, 1, 0>(input, output);
         else if (axis == EAxis::BatchAxis)
             return SumTemplate<0, 0, 0, 1>(input, output);
+        else if (axis == EAxis::_01Axes)
+            return SumTemplate<1, 1, 0, 0>(input, output);
         else if (axis == EAxis::_012Axes)
             return SumTemplate<1, 1, 1, 0>(input, output);
         else if (axis == EAxis::_013Axes)
@@ -712,7 +714,24 @@ namespace Neuro
         saveInvVariance.CopyToHost();
         output.OverrideHost();
 
-        EAxis axis = mode == PerActivation ? BatchAxis : _013Axes; // for NHWC format it must be _123Axes
+        EAxis axis;
+        float m;
+        
+        if (mode == PerActivation)
+        {
+            axis = BatchAxis; // mean is of shape WxHxDx1
+            m = (float)input.Batch();
+        }
+        else if (mode == Spatial)
+        {
+            axis = _013Axes; // mean is of shape 1x1xDx1 // for NHWC format it must be _123Axes
+            m = (float)(input.Width() * input.Height() * input.Batch());
+        }
+        else if (mode == Instance)
+        {
+            axis = _01Axes; // output is (1x1xDxN)
+            m = (float)(input.Width() * input.Height());
+        }
 
         input.Mean(axis, saveMean);
         Tensor xMu = input - saveMean;
@@ -724,7 +743,6 @@ namespace Neuro
 
         runningMean.Add(1 - momentum, momentum, saveMean, runningMean);
 
-        float m = (float)(mode == PerActivation ? input.Batch() : (input.Width() * input.Height() * input.Batch()));
         Tensor tempVar = var * m / (m - 1); // according to the original BN paper
         runningVar.Add(1 - momentum, momentum, tempVar, runningVar);
     }
@@ -741,9 +759,24 @@ namespace Neuro
         betaGradient.OverrideHost();
         inputGradient.OverrideHost();
 
-        EAxis axis = mode == PerActivation ? BatchAxis : _013Axes; // for NHWC format it must be _123Axes
+        EAxis axis;
+        float m;
 
-        float m = (float)(mode == PerActivation ? input.Batch() : (input.Width() * input.Height() * input.Batch()));
+        if (mode == PerActivation)
+        {
+            axis = BatchAxis; // mean is of shape WxHxDx1
+            m = (float)input.Batch();
+        }
+        else if (mode == Spatial)
+        {
+            axis = _013Axes; // mean is of shape 1x1xDx1 // for NHWC format it must be _123Axes
+            m = (float)(input.Width() * input.Height() * input.Batch());
+        }
+        else if (mode == Instance)
+        {
+            axis = _01Axes; // output is (1x1xDxN)
+            m = (float)(input.Width() * input.Height());
+        }
 
         Tensor xMu = input - savedMean;
         Tensor xNorm = xMu * savedInvVariance;

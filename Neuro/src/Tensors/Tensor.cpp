@@ -592,6 +592,8 @@ namespace Neuro
             return SumTemplate<0, 0, 1, 0>(*this, axis);
         if (axis == BatchAxis)
             return SumTemplate<0, 0, 0, 1>(*this, axis);
+        if (axis == _01Axes)
+            return SumTemplate<1, 1, 0, 0>(*this, axis);
         if (axis == _012Axes)
             return SumTemplate<1, 1, 1, 0>(*this, axis);
         if (axis == _013Axes)
@@ -631,6 +633,8 @@ namespace Neuro
             return MeanTemplate<0, 0, 1, 0>(*this, axis);
         if (axis == BatchAxis)
             return MeanTemplate<0, 0, 0, 1>(*this, axis);
+        if (axis == _01Axes)
+            return MeanTemplate<1, 1, 0, 0>(*this, axis);
         if (axis == _012Axes)
             return MeanTemplate<1, 1, 1, 0>(*this, axis);
         if (axis == _013Axes)
@@ -657,6 +661,8 @@ namespace Neuro
             output.Div((float)Depth(), output);
         if (axis == BatchAxis)
             output.Div((float)Batch(), output);
+        if (axis == _01Axes)
+            output.Div((float)(Len(0)*Len(1)), output);
         if (axis == _012Axes)
             output.Div((float)(Len(0)*Len(1)*Len(2)), output);
         if (axis == _013Axes)
@@ -1122,6 +1128,8 @@ namespace Neuro
             maxIndex.Resize(Shape(Width(), Height(), 1, Batch()));
         else if (axis == BatchAxis)
             maxIndex.Resize(Shape(Width(), Height(), Depth(), 1));
+        else if (axis == _01Axes)
+            maxIndex.Resize(Shape(1, 1, Len(2), Len(3)));
         else if (axis == _012Axes)
             maxIndex.Resize(Shape(1, 1, 1, Len(3)));
         else if (axis == _013Axes)
@@ -1147,6 +1155,8 @@ namespace Neuro
             minIndex.Resize(Shape(Width(), Height(), 1, Batch()));
         else if (axis == BatchAxis)
             minIndex.Resize(Shape(Width(), Height(), Depth(), 1));
+        else if (axis == _01Axes)
+            minIndex.Resize(Shape(1, 1, Len(2), Len(3)));
         else if (axis == _012Axes)
             minIndex.Resize(Shape(1, 1, 1, Len(3)));
         else if (axis == _013Axes)
@@ -1384,21 +1394,39 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::BatchNormalization(const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor& runningMean, const Tensor& runningVar, Tensor& result) const
+    void Tensor::BatchNorm(const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor& runningMean, const Tensor& runningVar, Tensor& result) const
     {
         Op()->BatchNormalization(*this, m_Shape.Depth() > 1 ? Spatial : PerActivation, gamma, beta, epsilon, runningMean, runningVar, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::BatchNormalizationTrain(const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const
+    void Tensor::BatchNormTrain(const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const
     {
         Op()->BatchNormalizationTrain(*this, m_Shape.Depth() > 1 ? Spatial : PerActivation, gamma, beta, momentum, epsilon, runningMean, runningVar, saveMean, saveInvVariance, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::BatchNormalizationGradient(const Tensor& input, const Tensor& gamma, float epsilon, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const
+    void Tensor::BatchNormGradient(const Tensor& input, const Tensor& gamma, float epsilon, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const
     {
         Op()->BatchNormalizationGradient(input, input.m_Shape.Depth() > 1 ? Spatial : PerActivation, gamma, epsilon, outputGradient, savedMean, savedInvVariance, gammaGradient, betaGradient, trainable, inputGradient);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::InstanceNorm(const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor& runningMean, const Tensor& runningVar, Tensor& result) const
+    {
+        Op()->BatchNormalization(*this, Instance, gamma, beta, epsilon, runningMean, runningVar, result);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::InstanceNormTrain(const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const
+    {
+        Op()->BatchNormalizationTrain(*this, Instance, gamma, beta, momentum, epsilon, runningMean, runningVar, saveMean, saveInvVariance, result);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::InstanceNormGradient(const Tensor& input, const Tensor& gamma, float epsilon, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const
+    {
+        Op()->BatchNormalizationGradient(input, Instance, gamma, epsilon, outputGradient, savedMean, savedInvVariance, gammaGradient, betaGradient, trainable, inputGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1709,6 +1737,8 @@ namespace Neuro
             return MaxTemplate<0, 0, 1, 0>(*this, maxIndex);
         if (axis == BatchAxis)
             return MaxTemplate<0, 0, 0, 1>(*this, maxIndex);
+        if (axis == _01Axes)
+            return MaxTemplate<1, 1, 0, 0>(*this, maxIndex);
         if (axis == _012Axes)
             return MaxTemplate<1, 1, 1, 0>(*this, maxIndex);
         if (axis == _013Axes)
@@ -1778,6 +1808,8 @@ namespace Neuro
             return MinTemplate<0, 0, 1, 0>(*this, minIndex);
         if (axis == BatchAxis)
             return MinTemplate<0, 0, 0, 1>(*this, minIndex);
+        if (axis == _01Axes)
+            return MinTemplate<1, 1, 0, 0>(*this, minIndex);
         if (axis == _012Axes)
             return MinTemplate<1, 1, 1, 0>(*this, minIndex);
         if (axis == _013Axes)

@@ -234,6 +234,20 @@ __global__ void sumTemplate(const float* __restrict input, int width, int height
             output[idx] = tsum;
         }
     }
+    else if (W && H && !D && !N)
+    {
+        size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+        if (idx < depth * batch)
+        {
+            size_t tidx = idx * (width * height);
+            float tsum = 0;
+            for (size_t i = 0; i < width * height; i++)
+            {
+                tsum += input[tidx + i];
+            }
+            output[idx] = tsum;
+        }
+    }
     else if (W && H && D && !N)
     {
         size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -288,6 +302,7 @@ template __global__ void sumTemplate<1, 0, 0, 0>(const float* __restrict input, 
 template __global__ void sumTemplate<0, 1, 0, 0>(const float* __restrict input, int width, int height, int depth, int batch, float* __restrict output);
 template __global__ void sumTemplate<0, 0, 1, 0>(const float* __restrict input, int width, int height, int depth, int batch, float* __restrict output);
 template __global__ void sumTemplate<0, 0, 0, 1>(const float* __restrict input, int width, int height, int depth, int batch, float* __restrict output);
+template __global__ void sumTemplate<1, 1, 0, 0>(const float* __restrict input, int width, int height, int depth, int batch, float* __restrict output);
 template __global__ void sumTemplate<1, 1, 1, 0>(const float* __restrict input, int width, int height, int depth, int batch, float* __restrict output);
 template __global__ void sumTemplate<1, 1, 0, 1>(const float* __restrict input, int width, int height, int depth, int batch, float* __restrict output);
 template __global__ void sumTemplate<0, 1, 1, 1>(const float* __restrict input, int width, int height, int depth, int batch, float* __restrict output);
@@ -365,11 +380,13 @@ namespace Neuro
             sumTemplate<0, 0, 1, 0><<<blocks, threads>>>(inputDev, inputWidth, inputHeight, inputDepth, inputBatch, outputDev);
         else if (axis == 3) // batch
             sumTemplate<0, 0, 0, 1><<<blocks, threads>>>(inputDev, inputWidth, inputHeight, inputDepth, inputBatch, outputDev);
-        else if (axis == 4) // 012
+        else if (axis == 4) // 01
+            sumTemplate<1, 1, 0, 0> << <blocks, threads >> > (inputDev, inputWidth, inputHeight, inputDepth, inputBatch, outputDev);
+        else if (axis == 5) // 012
             sumTemplate<1, 1, 1, 0><<<blocks, threads>>>(inputDev, inputWidth, inputHeight, inputDepth, inputBatch, outputDev);
-        else if (axis == 5) // 013
+        else if (axis == 6) // 013
             sumTemplate<1, 1, 0, 1><<<blocks, threads>>>(inputDev, inputWidth, inputHeight, inputDepth, inputBatch, outputDev);
-        else if (axis == 6) // 123
+        else if (axis == 7) // 123
             sumTemplate<0, 1, 1, 1><<<blocks, threads>>>(inputDev, inputWidth, inputHeight, inputDepth, inputBatch, outputDev);
         cudaDeviceSynchronize();
     }

@@ -32,6 +32,8 @@ namespace Neuro
                 grad.Sum(BatchAxis, m_InputsGrads[idx]); // used in case of biases in dense layers
             else if (iShape.Width() == 1 && iShape.Height() == 1 && gShape.Depth() == iShape.Depth() && iShape.Batch() == 1)
                 grad.Sum(_013Axes, m_InputsGrads[idx]); // used in case of biases in convolutional layers
+            else if (iShape.Width() == 1 && iShape.Height() == 1 && gShape.Depth() == iShape.Depth() && gShape.Batch() == iShape.Batch())
+                grad.Sum(_01Axes, m_InputsGrads[idx]);
             else
             {
                 auto gradTemp = grad;

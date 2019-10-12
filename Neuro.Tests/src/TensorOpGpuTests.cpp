@@ -300,6 +300,19 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
+        TEST_METHOD(Sum_01Axes_CompareWithCpuResult)
+        {
+            Tensor t(Shape(20, 30, 40, 50)); t.FillWithRand();
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r = t.Sum(_01Axes);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = t.Sum(_01Axes);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
         TEST_METHOD(Sum_012Axes_CompareWithCpuResult)
         {
             Tensor t(Shape(20, 30, 40, 50)); t.FillWithRand();
@@ -700,7 +713,7 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
-        TEST_METHOD(BatchNormalizationGradient_PerActivation_CompareWithCpuResult)
+        TEST_METHOD(BatchNormGradient_PerActivation_CompareWithCpuResult)
         {
             Tensor input(Shape(3, 4, 1, 3)); input.FillWithRand(5);
             Tensor gamma(Shape(3, 4, 1, 1)); gamma.FillWithRand(6);
@@ -715,11 +728,11 @@ namespace NeuroTests
             Tensor runningVariance(gamma.GetShape()); runningVariance.FillWithRand(11, 0, 1);
             Tensor saveMean(runningMean.GetShape());
             Tensor saveInvVariance(runningVariance.GetShape());
-            input.BatchNormalizationTrain(gamma, beta, momentum, epsilon, runningMean, runningVariance, saveMean, saveInvVariance, result);
+            input.BatchNormTrain(gamma, beta, momentum, epsilon, runningMean, runningVariance, saveMean, saveInvVariance, result);
             Tensor gammaGradient(gamma.GetShape());
             Tensor betaGradient(beta.GetShape());
             Tensor inputGradient(input.GetShape());
-            NEURO_PROFILE("CPU", input.BatchNormalizationGradient(input, gamma, epsilon, outputGradient, saveMean, saveInvVariance, gammaGradient, betaGradient, true, inputGradient);)
+            NEURO_PROFILE("CPU", input.BatchNormGradient(input, gamma, epsilon, outputGradient, saveMean, saveInvVariance, gammaGradient, betaGradient, true, inputGradient);)
 
             Tensor::SetForcedOpMode(GPU);
             Tensor result2(input.GetShape());
@@ -727,11 +740,11 @@ namespace NeuroTests
             Tensor runningVariance2(gamma.GetShape()); runningVariance2.FillWithRand(11, 0, 1);
             Tensor saveMean2(runningMean.GetShape());
             Tensor saveInvVariance2(runningVariance.GetShape());
-            input.BatchNormalizationTrain(gamma, beta, momentum, epsilon, runningMean2, runningVariance2, saveMean2, saveInvVariance2, result2);
+            input.BatchNormTrain(gamma, beta, momentum, epsilon, runningMean2, runningVariance2, saveMean2, saveInvVariance2, result2);
             Tensor gammaGradient2(gamma.GetShape());
             Tensor betaGradient2(beta.GetShape());
             Tensor inputGradient2(input.GetShape());
-            NEURO_PROFILE("GPU", input.BatchNormalizationGradient(input, gamma, epsilon, outputGradient, saveMean2, saveInvVariance2, gammaGradient2, betaGradient2, true, inputGradient2);)
+            NEURO_PROFILE("GPU", input.BatchNormGradient(input, gamma, epsilon, outputGradient, saveMean2, saveInvVariance2, gammaGradient2, betaGradient2, true, inputGradient2);)
 
             // sanity check
             Assert::IsTrue(runningMean.Equals(runningMean2));
@@ -752,7 +765,7 @@ namespace NeuroTests
             Logger::WriteMessage("Input grad passed.");
         }
 
-        TEST_METHOD(BatchNormalizationGradient_Spatial_CompareWithCpuResult)
+        TEST_METHOD(BatchNormGradient_Spatial_CompareWithCpuResult)
         {
             Tensor input(Shape(3, 4, 5, 6)); input.FillWithRand(5);
             Tensor gamma(Shape(1, 1, 5, 1)); gamma.FillWithRand(6);
@@ -767,11 +780,11 @@ namespace NeuroTests
             Tensor runningVariance(gamma.GetShape()); runningVariance.FillWithRand(11, 0, 1);
             Tensor saveMean(runningMean.GetShape());
             Tensor saveInvVariance(runningVariance.GetShape());
-            input.BatchNormalizationTrain(gamma, beta, momentum, epsilon, runningMean, runningVariance, saveMean, saveInvVariance, result);
+            input.BatchNormTrain(gamma, beta, momentum, epsilon, runningMean, runningVariance, saveMean, saveInvVariance, result);
             Tensor gammaGradient(gamma.GetShape());
             Tensor betaGradient(beta.GetShape());
             Tensor inputGradient(input.GetShape());
-            NEURO_PROFILE("CPU", input.BatchNormalizationGradient(input, gamma, epsilon, outputGradient, saveMean, saveInvVariance, gammaGradient, betaGradient, true, inputGradient);)
+            NEURO_PROFILE("CPU", input.BatchNormGradient(input, gamma, epsilon, outputGradient, saveMean, saveInvVariance, gammaGradient, betaGradient, true, inputGradient);)
 
             Tensor::SetForcedOpMode(GPU);
             Tensor result2(input.GetShape());
@@ -779,11 +792,11 @@ namespace NeuroTests
             Tensor runningVariance2(gamma.GetShape()); runningVariance2.FillWithRand(11, 0, 1);
             Tensor saveMean2(runningMean.GetShape());
             Tensor saveInvVariance2(runningVariance.GetShape());
-            input.BatchNormalizationTrain(gamma, beta, momentum, epsilon, runningMean2, runningVariance2, saveMean2, saveInvVariance2, result2);
+            input.BatchNormTrain(gamma, beta, momentum, epsilon, runningMean2, runningVariance2, saveMean2, saveInvVariance2, result2);
             Tensor gammaGradient2(gamma.GetShape());
             Tensor betaGradient2(beta.GetShape());
             Tensor inputGradient2(input.GetShape());
-            NEURO_PROFILE("GPU", input.BatchNormalizationGradient(input, gamma, epsilon, outputGradient, saveMean2, saveInvVariance2, gammaGradient2, betaGradient2, true, inputGradient2);)
+            NEURO_PROFILE("GPU", input.BatchNormGradient(input, gamma, epsilon, outputGradient, saveMean2, saveInvVariance2, gammaGradient2, betaGradient2, true, inputGradient2);)
 
             // sanity check
             Assert::IsTrue(runningMean.Equals(runningMean2));
@@ -804,7 +817,7 @@ namespace NeuroTests
             Logger::WriteMessage("Input grad passed.");
         }
 
-        TEST_METHOD(BatchNormalization_PerActivation_CompareWithCpuResult)
+        TEST_METHOD(BatchNorm_PerActivation_CompareWithCpuResult)
         {
             Tensor input(Shape(3, 4, 1, 3)); input.FillWithRand();
             Tensor gamma(Shape(3, 4, 1, 1)); gamma.FillWithValue(1);//gamma.FillWithRand();
@@ -815,16 +828,16 @@ namespace NeuroTests
 
             Tensor::SetForcedOpMode(CPU);
             Tensor result(input.GetShape());
-            NEURO_PROFILE("CPU", input.BatchNormalization(gamma, beta, epsilon, runningMean, runningVariance, result);)
+            NEURO_PROFILE("CPU", input.BatchNorm(gamma, beta, epsilon, runningMean, runningVariance, result);)
 
             Tensor::SetForcedOpMode(GPU);
             Tensor result2(input.GetShape());
-            NEURO_PROFILE("GPU", input.BatchNormalization(gamma, beta, epsilon, runningMean, runningVariance, result2);)
+            NEURO_PROFILE("GPU", input.BatchNorm(gamma, beta, epsilon, runningMean, runningVariance, result2);)
 
             Assert::IsTrue(result.Equals(result2));
         }
 
-        TEST_METHOD(BatchNormalization_Spatial_CompareWithCpuResult)
+        TEST_METHOD(BatchNorm_Spatial_CompareWithCpuResult)
         {
             Tensor input(Shape(3, 4, 5, 6)); input.FillWithRand();
             Tensor gamma(Shape(1, 1, 5, 1)); gamma.FillWithValue(1);//gamma.FillWithRand();
@@ -835,16 +848,16 @@ namespace NeuroTests
 
             Tensor::SetForcedOpMode(CPU);
             Tensor result(input.GetShape());
-            NEURO_PROFILE("CPU", input.BatchNormalization(gamma, beta, epsilon, runningMean, runningVariance, result);)
+            NEURO_PROFILE("CPU", input.BatchNorm(gamma, beta, epsilon, runningMean, runningVariance, result);)
 
             Tensor::SetForcedOpMode(GPU);
             Tensor result2(input.GetShape());
-            NEURO_PROFILE("GPU", input.BatchNormalization(gamma, beta, epsilon, runningMean, runningVariance, result2);)
+            NEURO_PROFILE("GPU", input.BatchNorm(gamma, beta, epsilon, runningMean, runningVariance, result2);)
 
             Assert::IsTrue(result.Equals(result2));
         }
 
-        TEST_METHOD(BatchNormalizationTrain_PerActivation_CompareWithCpuResult)
+        TEST_METHOD(BatchNormTrain_PerActivation_CompareWithCpuResult)
         {
             Tensor input(Shape(3, 4, 1, 3)); input.FillWithRand(5);
             Tensor gamma(Shape(3, 4, 1, 1)); gamma.FillWithRand(6);
@@ -858,7 +871,7 @@ namespace NeuroTests
             Tensor result(input.GetShape());
             Tensor saveMean(runningMean.GetShape());
             Tensor saveInvVariance(runningVariance.GetShape());
-            NEURO_PROFILE("CPU", input.BatchNormalizationTrain(gamma, beta, momentum, epsilon, runningMean, runningVariance, saveMean, saveInvVariance, result);)
+            NEURO_PROFILE("CPU", input.BatchNormTrain(gamma, beta, momentum, epsilon, runningMean, runningVariance, saveMean, saveInvVariance, result);)
 
             Tensor::SetForcedOpMode(GPU);
             Tensor runningMean2(gamma.GetShape()); runningMean2.FillWithRand(10);
@@ -866,7 +879,7 @@ namespace NeuroTests
             Tensor result2(input.GetShape());
             Tensor saveMean2(runningMean.GetShape());
             Tensor saveInvVariance2(runningVariance.GetShape());
-            NEURO_PROFILE("GPU", input.BatchNormalizationTrain(gamma, beta, momentum, epsilon, runningMean2, runningVariance2, saveMean2, saveInvVariance2, result2);)
+            NEURO_PROFILE("GPU", input.BatchNormTrain(gamma, beta, momentum, epsilon, runningMean2, runningVariance2, saveMean2, saveInvVariance2, result2);)
 
             Assert::IsTrue(runningMean.Equals(runningMean2));
             Logger::WriteMessage("Running mean passed.");
@@ -880,7 +893,7 @@ namespace NeuroTests
             Logger::WriteMessage("Result passed.");
         }
 
-        TEST_METHOD(BatchNormalizationTrain_Spatial_CompareWithCpuResult)
+        TEST_METHOD(BatchNormTrain_Spatial_CompareWithCpuResult)
         {
             Tensor input(Shape(3, 4, 5, 6)); input.FillWithRand(5);
             Tensor gamma(Shape(1, 1, 5, 1)); gamma.FillWithRand(6);
@@ -894,7 +907,7 @@ namespace NeuroTests
             Tensor result(input.GetShape());
             Tensor saveMean(runningMean.GetShape());
             Tensor saveInvVariance(runningVariance.GetShape());
-            NEURO_PROFILE("CPU", input.BatchNormalizationTrain(gamma, beta, momentum, epsilon, runningMean, runningVariance, saveMean, saveInvVariance, result);)
+            NEURO_PROFILE("CPU", input.BatchNormTrain(gamma, beta, momentum, epsilon, runningMean, runningVariance, saveMean, saveInvVariance, result);)
 
             Tensor::SetForcedOpMode(GPU);
             Tensor runningMean2(gamma.GetShape()); runningMean2.FillWithRand(10);
@@ -902,7 +915,7 @@ namespace NeuroTests
             Tensor result2(input.GetShape());
             Tensor saveMean2(runningMean.GetShape());
             Tensor saveInvVariance2(runningVariance.GetShape());
-            NEURO_PROFILE("GPU", input.BatchNormalizationTrain(gamma, beta, momentum, epsilon, runningMean2, runningVariance2, saveMean2, saveInvVariance2, result2);)
+            NEURO_PROFILE("GPU", input.BatchNormTrain(gamma, beta, momentum, epsilon, runningMean2, runningVariance2, saveMean2, saveInvVariance2, result2);)
 
             Assert::IsTrue(runningMean.Equals(runningMean2));
             Logger::WriteMessage("Running mean passed.");

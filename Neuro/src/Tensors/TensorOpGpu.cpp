@@ -476,6 +476,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::BatchNormalization(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor& runningMean, const Tensor& runningVar, Tensor& output) const
     {
+        if (mode == Instance)
+            return __super::BatchNormalization(input, mode, gamma, beta, epsilon, runningMean, runningVar, output);
+
         input.CopyToDevice();
         gamma.CopyToDevice();
         beta.CopyToDevice();
@@ -510,6 +513,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::BatchNormalizationTrain(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& output) const
     {
+        if (mode == Instance)
+            return __super::BatchNormalizationTrain(input, mode, gamma, beta, momentum, epsilon, runningMean, runningVar, saveMean, saveInvVariance, output);
+
         input.CopyToDevice();
         gamma.CopyToDevice();
         beta.CopyToDevice();
@@ -549,6 +555,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::BatchNormalizationGradient(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, float epsilon, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const
     {
+        if (mode == Instance)
+            return __super::BatchNormalizationGradient(input, mode, gamma, epsilon, outputGradient, savedMean, savedInvVariance, gammaGradient, betaGradient, trainable, inputGradient);
+
         input.CopyToDevice();
         gamma.CopyToDevice();
         outputGradient.CopyToDevice();
