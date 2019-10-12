@@ -6,7 +6,7 @@
 #include <numeric>
 
 #include "Neuro.h"
-#include "VGG16.h"
+#include "VGG19.h"
 
 using namespace std;
 using namespace Neuro;
@@ -24,27 +24,27 @@ public:
         
         Tensor contentImage = LoadImage("data/content.jpg", IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
         contentImage.SaveAsImage("content.jpg", false);
-        VGG16::PreprocessImage(contentImage, NCHW);
-        Tensor styleImage = LoadImage("data/style3.jpg", IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
-        styleImage.SaveAsImage("style3.jpg", false);
-        VGG16::PreprocessImage(styleImage, NCHW);
+        VGG19::PreprocessImage(contentImage, NCHW);
+        Tensor styleImage = LoadImage("data/style5.jpg", IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
+        styleImage.SaveAsImage("style5.jpg", false);
+        VGG19::PreprocessImage(styleImage, NCHW);
 
         assert(contentImage.GetShape() == styleImage.GetShape());
         
-        auto vgg16Model = VGG16::CreateModel(NCHW, contentImage.GetShape(), false);
-        vgg16Model->LoadWeights("data/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5");
-        vgg16Model->SetTrainable(false);
+        auto vggModel = VGG19::CreateModel(NCHW, contentImage.GetShape(), false);
+        vggModel->LoadWeights("data/vgg19_weights_tf_dim_ordering_tf_kernels_notop.h5", false);
+        vggModel->SetTrainable(false);
 
-        vector<TensorLike*> contentOutputs = { vgg16Model->Layer("block5_conv2")->Outputs()[0] };
-        vector<TensorLike*> styleOutputs = { vgg16Model->Layer("block1_conv1")->Outputs()[0], 
-                                             vgg16Model->Layer("block2_conv1")->Outputs()[0], 
-                                             vgg16Model->Layer("block3_conv1")->Outputs()[0], 
-                                             vgg16Model->Layer("block4_conv1")->Outputs()[0],
-                                             vgg16Model->Layer("block5_conv1")->Outputs()[0] };
+        vector<TensorLike*> contentOutputs = { vggModel->Layer("block5_conv2")->Outputs()[0] };
+        vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv1")->Outputs()[0], 
+                                             vggModel->Layer("block2_conv1")->Outputs()[0], 
+                                             vggModel->Layer("block3_conv1")->Outputs()[0], 
+                                             vggModel->Layer("block4_conv1")->Outputs()[0],
+                                             vggModel->Layer("block5_conv1")->Outputs()[0] };
 
         auto outputImg = new Variable(contentImage, "output_image");
 
-        auto model = Flow(vgg16Model->InputsAt(-1), MergeVectors({ contentOutputs, styleOutputs }));
+        auto model = Flow(vggModel->InputsAt(-1), MergeVectors({ contentOutputs, styleOutputs }));
 
         // pre-compute content features of content image (we only need to do it once since that image won't change)
         auto contentFeatures = model.Predict(contentImage)[0];
@@ -63,12 +63,12 @@ public:
         // generate beginning of the computational graph for processing output image
         auto outputs = model(outputImg);
 
-        float contentLossWeight = 1.f;
-        float styleLossWeight = 0.001f;
+        float contentLossWeight = 1e3f;
+        float styleLossWeight = 1e-2f;
 
         // compute content loss from first output...
-        //auto contentLoss = multiply(ContentLoss(content, outputs[0]), new Constant(contentLossWeight));
-        auto contentLoss = ContentLoss(content, outputs[0]);
+        auto contentLoss = multiply(ContentLoss(content, outputs[0]), contentLossWeight);
+        //auto contentLoss = ContentLoss(content, outputs[0]);
         outputs.erase(outputs.begin());
 
         vector<TensorLike*> styleLosses;
