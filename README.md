@@ -17,9 +17,13 @@ Supported layers:
 ## Code examples
 #### Neural Style Transfer
 This neural network is given style image and any image we want to stylize.  
-![alt text](https://github.com/Cr33zz/Neuro_/blob/computation-graph/Neuro.Examples/content.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/computation-graph/Neuro.Examples/content.jpg)  
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/computation-graph/Neuro.Examples/style.jpg)
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/computation-graph/Neuro.Examples/neural_transfer.jpg)  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/computation-graph/Neuro.Examples/style3.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/computation-graph/Neuro.Examples/neural_transfer3.jpg)  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/computation-graph/Neuro.Examples/style4.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/computation-graph/Neuro.Examples/neural_transfer4.jpg)  
 ```cpp
 Tensor contentImage = LoadImage("data/content.jpg", 224, 224, NCHW);
 VGG16::PreprocessImage(contentImage, NCHW);
