@@ -74,5 +74,8 @@
     <ClInclude Include="include\VGG19.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\FastNeuralStyleTransfer.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

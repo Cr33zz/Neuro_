@@ -20,8 +20,6 @@ public:
 
         cout << model->Summary();
 
-        model->LoadWeights("data/vgg16_weights_tf_dim_ordering_tf_kernels.h5");
-
         auto prediction = model->Predict(image)[0];
 
         cout << prediction->ArgMax(WidthAxis)(0) << " " << prediction->Max(WidthAxis)(0) * 100 << "%" << endl;

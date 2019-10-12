@@ -14,6 +14,9 @@ using namespace Neuro;
 const size_t IMAGE_WIDTH = 400;
 const size_t IMAGE_HEIGHT = 300;
 
+const string CONTENT_FILE = "content2.jpg";
+const string STYLE_FILE = "style.jpg";
+
 //https://medium.com/tensorflow/neural-style-transfer-creating-art-with-deep-learning-using-tf-keras-and-eager-execution-7d541ac31398
 class NeuralStyleTransfer
 {
@@ -22,17 +25,16 @@ public:
     {
         Tensor::SetForcedOpMode(GPU);
         
-        Tensor contentImage = LoadImage("data/content.jpg", IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
-        contentImage.SaveAsImage("content.jpg", false);
-        VGG19::PreprocessImage(contentImage, NCHW);
-        Tensor styleImage = LoadImage("data/style5.jpg", IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
-        styleImage.SaveAsImage("style5.jpg", false);
-        VGG19::PreprocessImage(styleImage, NCHW);
+        Tensor contentImage = LoadImage("data/" + CONTENT_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
+        contentImage.SaveAsImage(CONTENT_FILE, false);
+        VGG16::PreprocessImage(contentImage, NCHW);
+        Tensor styleImage = LoadImage("data/" + STYLE_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
+        styleImage.SaveAsImage(STYLE_FILE, false);
+        VGG16::PreprocessImage(styleImage, NCHW);
 
         assert(contentImage.GetShape() == styleImage.GetShape());
         
         auto vggModel = VGG19::CreateModel(NCHW, contentImage.GetShape(), false);
-        vggModel->LoadWeights("data/vgg19_weights_tf_dim_ordering_tf_kernels_notop.h5", false);
         vggModel->SetTrainable(false);
 
         vector<TensorLike*> contentOutputs = { vggModel->Layer("block5_conv2")->Outputs()[0] };
@@ -102,6 +104,11 @@ public:
                 genImage.SaveAsImage("neural_transfer_" + to_string(e) + ".png", false);
             }
         }
+
+        auto results = Session::Default()->Run({ outputImg }, {});
+        auto genImage = *results[0];
+        VGG16::UnprocessImage(genImage, NCHW);
+        genImage.SaveAsImage("_neural_transfer.jpg", false);
     }
 
     //////////////////////////////////////////////////////////////////////////

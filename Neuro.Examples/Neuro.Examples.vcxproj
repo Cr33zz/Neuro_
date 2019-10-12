@@ -154,6 +154,7 @@
     <ClInclude Include="include\ConvAutoencoderNetwork.h" />
     <ClInclude Include="include\ConvNetwork.h" />
     <ClInclude Include="include\DeepConvGAN.h" />
+    <ClInclude Include="include\FastNeuralStyleTransfer.h" />
     <ClInclude Include="include\GAN.h" />
     <ClInclude Include="include\IrisNetwork.h" />
     <ClInclude Include="include\FlowNetwork.h" />
