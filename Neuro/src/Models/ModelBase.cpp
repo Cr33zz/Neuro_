@@ -431,7 +431,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::LoadWeights(const string& filename)
+    void ModelBase::LoadWeights(const string& filename, bool ignoreInputLayer)
     {
         if (!m_Built)
             Build();
@@ -446,7 +446,8 @@ namespace Neuro
         static char buffer[1024];
 
         auto layers = Layers();
-        layers.erase(layers.begin()); // remove input layer from the list
+        if (ignoreInputLayer)
+            layers.erase(layers.begin()); // remove input layer from the list
 
         hsize_t layerGroupsNum;
         H5Gget_num_objs(file.getId(), &layerGroupsNum);

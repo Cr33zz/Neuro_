@@ -21,6 +21,12 @@
     <ClCompile Include="src\GAN.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\VGG16.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\VGG19.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\IrisNetwork.h">
@@ -63,6 +69,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\ComputationalGraph.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\VGG19.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

@@ -43,7 +43,7 @@ namespace Neuro
         const vector<LayerBase*>& OutputLayers() const { return m_OutputLayers; }
 
         void SaveWeights(const string& filename) const;
-        void LoadWeights(const string& filename);
+        void LoadWeights(const string& filename, bool ignoreInputLayer = true);
         
         virtual void Parameters(vector<Variable*>& params, bool onlyTrainable = true) const override;
 

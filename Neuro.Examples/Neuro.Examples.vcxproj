@@ -143,6 +143,8 @@
     <ClCompile Include="src\DeepConvGAN.cpp" />
     <ClCompile Include="src\GAN.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\VGG16.cpp" />
+    <ClCompile Include="src\VGG19.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AutoencoderNetwork.h" />
@@ -159,6 +161,7 @@
     <ClInclude Include="include\MnistNetwork.h" />
     <ClInclude Include="include\NeuralStyleTransfer.h" />
     <ClInclude Include="include\VGG16.h" />
+    <ClInclude Include="include\VGG19.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Neuro\Neuro.vcxproj">
