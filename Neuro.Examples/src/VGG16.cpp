@@ -14,7 +14,7 @@ void VGG16::UnprocessImage(Tensor& image, EDataFormat dataFormat)
 }
 
 //////////////////////////////////////////////////////////////////////////
-Neuro::ModelBase* VGG16::CreateModel(EDataFormat dataFormat, Shape inputShape /*= Shape()*/, bool includeTop /*= true*/)
+Neuro::ModelBase* VGG16::CreateModel(EDataFormat dataFormat, Shape inputShape, bool includeTop)
 {
     if (!inputShape.IsValid())
         inputShape = dataFormat == NHWC ? Shape(3, 224, 224) : Shape(224, 224, 3);
@@ -47,5 +47,11 @@ Neuro::ModelBase* VGG16::CreateModel(EDataFormat dataFormat, Shape inputShape /*
         model->AddLayer(new Dense(4096, new ReLU(), "fc2"));
         model->AddLayer(new Dense(1000, new Softmax(), "predictions"));
     }
+
+    if (includeTop)
+        model->LoadWeights("data/vgg16_weights_tf_dim_ordering_tf_kernels.h5");
+    else
+        model->LoadWeights("data/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5");
+
     return model;
 }

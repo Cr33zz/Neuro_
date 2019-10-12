@@ -37,6 +37,12 @@ ModelBase* VGG19::CreateModel(EDataFormat dataFormat, Shape inputShape, bool inc
         model->AddLayer(new Dense(4096, new ReLU(), "fc2"));
         model->AddLayer(new Dense(1000, new Softmax(), "predictions"));
     }
+
+    if (includeTop)
+        model->LoadWeights("data/vgg19_weights_tf_dim_ordering_tf_kernels.h5", false);
+    else
+        model->LoadWeights("data/vgg19_weights_tf_dim_ordering_tf_kernels_notop.h5", false);
+
     return model;
 }
 
