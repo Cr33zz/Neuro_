@@ -34,8 +34,16 @@ namespace Neuro
                 cudaGetDeviceProperties(&s_CudaDevProp, 0);
 
                 //cudnnSetCallback(CUDNN_SEV_INFO_EN, nullptr, CudnnLog);
+                size_t freeBytes, totalBytes;
+                cudaMemGetInfo(&freeBytes, &totalBytes);
+
+                size_t reservedBytes = (size_t)(freeBytes * 0.8);
+
+                CUDA_CHECK(MemoryManager::Default().Reserve(reservedBytes));
+
                 stringstream ss;
                 ss << "GPU: " << s_CudaDevProp.name << "(threads_per_block: " << s_CudaDevProp.maxThreadsPerBlock << ")\n";
+                ss << "Reserved memory: " << reservedBytes << "B\n";
                 OutputDebugString(ss.str().c_str());
             }
         }

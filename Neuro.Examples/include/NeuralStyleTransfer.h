@@ -18,8 +18,8 @@ public:
     const uint32_t IMAGE_WIDTH = 400;
     const uint32_t IMAGE_HEIGHT = 300;
 
-    const string CONTENT_FILE = "content3.jpg";
-    const string STYLE_FILE = "style9.jpg";
+    const string CONTENT_FILE = "content.jpg";
+    const string STYLE_FILE = "style7.jpg";
 
     void Run()
     {

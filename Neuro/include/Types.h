@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <iostream>
+#include <cassert>
 
 #ifndef NDEBUG
 #   define NEURO_ASSERT(condition, msg) \

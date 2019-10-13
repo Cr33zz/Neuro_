@@ -71,7 +71,7 @@
     </ClCompile>
     <Lib>
       <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\h5cpp\lib;$(CudaToolkitLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>cudart_static.lib;cudnn.lib;cublas.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib</AdditionalDependencies>
+      <AdditionalDependencies>cuda.lib;cudart_static.lib;cudnn.lib;cublas.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Lib>
     <CudaCompile>
@@ -105,7 +105,7 @@
     </Link>
     <Lib>
       <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\h5cpp\lib;$(CudaToolkitLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>cudart_static.lib;cudnn.lib;cublas.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib</AdditionalDependencies>
+      <AdditionalDependencies>cuda.lib;cudart_static.lib;cudnn.lib;cublas.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Lib>
     <CudaCompile>
@@ -200,6 +200,7 @@
     <ClInclude Include="include\Layers\SingleLayer.h" />
     <ClInclude Include="include\Layers\UpSampling2D.h" />
     <ClInclude Include="include\Loss.h" />
+    <ClInclude Include="include\Memory\MemoryManager.h" />
     <ClInclude Include="include\Models\Flow.h" />
     <ClInclude Include="include\Models\ModelBase.h" />
     <ClInclude Include="include\Models\Sequential.h" />
@@ -294,6 +295,7 @@
     <ClCompile Include="src\Layers\SingleLayer.cpp" />
     <ClCompile Include="src\Layers\UpSampling2D.cpp" />
     <ClCompile Include="src\Loss.cpp" />
+    <ClCompile Include="src\Memory\MemoryManager.cpp" />
     <ClCompile Include="src\Models\Flow.cpp" />
     <ClCompile Include="src\Models\ModelBase.cpp" />
     <ClCompile Include="src\Models\Sequential.cpp" />

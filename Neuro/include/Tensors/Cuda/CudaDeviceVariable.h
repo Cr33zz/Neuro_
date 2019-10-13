@@ -5,7 +5,16 @@
 #include <cuda_runtime.h>
 
 #include "Types.h"
+#include "Memory/MemoryManager.h"
 #include "Tensors/Cuda/CudaErrorCheck.h"
+
+#if 1
+#define ALLOC MemoryManager::Default().Allocate
+#define FREE MemoryManager::Default().Release
+#else
+#define ALLOC cudaMalloc
+#define FREE cudaFree
+#endif
 
 namespace Neuro
 {
@@ -20,8 +29,7 @@ namespace Neuro
             m_AllocatedLength = m_Length = length;
             m_TypeSize = sizeof(T);
             m_IsOwner = true;
-            //CUDA_CHECK(cudaMalloc(&m_DevPtr, GetAllocatedSizeInBytes()));
-            cudaMalloc(&m_DevPtr, GetAllocatedSizeInBytes());
+            CUDA_CHECK(ALLOC(&m_DevPtr, GetAllocatedSizeInBytes()));
             if (m_AllocatedLength > 0 && !m_DevPtr)
             {
                 m_IsHostAlloc = true;
@@ -51,7 +59,7 @@ namespace Neuro
                 if (m_IsHostAlloc)
                     CUDA_CHECK(cudaFreeHost(m_DevPtr));
                 else
-                    CUDA_CHECK(cudaFree(m_DevPtr));
+                    CUDA_CHECK(FREE(m_DevPtr));
             }
         }
 
@@ -66,8 +74,8 @@ namespace Neuro
             }
             
             m_Length = m_AllocatedLength = length;
-            CUDA_CHECK(cudaFree(m_DevPtr));
-            CUDA_CHECK(cudaMalloc(&m_DevPtr, GetAllocatedSizeInBytes()));
+            CUDA_CHECK(FREE(m_DevPtr));
+            CUDA_CHECK(ALLOC(&m_DevPtr, GetAllocatedSizeInBytes()));
             NEURO_ASSERT(m_AllocatedLength == 0 || m_DevPtr, "Failed to allocate GPU memory.");
             return true;
         }
