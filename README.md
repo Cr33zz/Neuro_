@@ -16,7 +16,7 @@ Supported layers:
 
 ## Code examples
 #### Neural Style Transfer
-This neural network is given style image and any image we want to stylize.  
+This neural network is given style image and any image we want to stylize. Model is using pre-trained VGG16/19 network to extract feature maps from style and content image and uses them to compute style and content loss. The only trainable element of the whole model is input image itself.  
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/computation-graph/Neuro.Examples/content.jpg)  
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/computation-graph/Neuro.Examples/style.jpg)
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/computation-graph/Neuro.Examples/neural_transfer.jpg)  
