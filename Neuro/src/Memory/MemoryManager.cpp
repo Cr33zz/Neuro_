@@ -33,10 +33,22 @@
 //https://docs.nvidia.com/cuda/cuda-driver-api/group__CUDA__UNIFIED.html
 namespace Neuro
 {
+    static void PrintSize(stringstream& ss, size_t size)
+    {
+        ss << size << "B";
+        if (size > 1024)
+        {
+            if (size < 1024 * 1024)
+                ss << "(~" << size / 1024 << "KB)";
+            else
+                ss << "(~" << size / (1024 * 1024) << "MB)";
+        }
+    }
+
     //////////////////////////////////////////////////////////////////////////
     MemoryManager::MemoryManager()
     {
-        cudaStreamCreate(&m_Stream);
+        cudaStreamCreate(&m_MemoryStream);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -58,7 +70,7 @@ namespace Neuro
 
         // If the client is not blocking, we have to explicitly synchronize before giving one buffer.
         if (!isBlocking)
-            CUDA_CHECK(cudaStreamSynchronize(m_Stream));
+            CUDA_CHECK(cudaStreamSynchronize(m_MemoryStream));
 
         // Find the best fit.
         Block *best = nullptr, *prev = nullptr;
@@ -82,22 +94,14 @@ namespace Neuro
         best->SetNext(m_UsedBlocks);
         m_UsedBlocks = best;
 
-#ifdef ENABLE_GPU_MEMORY_LOGS
-        auto printSize = [&](stringstream& ss, size_t size)
-        {
-            ss << size << "B";
-            if (size > 1024)
-            {
-                if (size < 1024 * 1024)
-                    ss << "(~" << size / 1024 << "KB)";
-                else
-                    ss << "(~" << size / (1024 * 1024) << "MB)";
-            }
-        };
+        m_AllocatedMemSize += size;
 
+#ifdef ENABLE_GPU_MEMORY_LOGS
         stringstream ss;
         ss << "Alloc 0x" << hex << (__int64)m_UsedBlocks->GetData() << dec << " size ";
-        printSize(ss, size);
+        PrintSize(ss, size);
+        ss << " total_allocated ";
+        PrintSize(ss, m_AllocatedMemSize);
         ss << endl;
         OutputDebugString(ss.str().c_str());
 #endif
@@ -122,28 +126,20 @@ namespace Neuro
         if (!curr)
             return MEM_STATUS_INVALID_ARGUMENT;
 
-#ifdef ENABLE_GPU_MEMORY_LOGS
-        auto printSize = [&](stringstream& ss, size_t size)
-        {
-            ss << size << "B";
-            if (size > 1024)
-            {
-                if (size < 1024 * 1024)
-                    ss << "(~" << size / 1024 << "KB)";
-                else
-                    ss << "(~" << size / (1024 * 1024) << "MB)";
-            }
-        };
+        m_AllocatedMemSize -= curr->GetSize();
 
+#ifdef ENABLE_GPU_MEMORY_LOGS
         stringstream ss;
         ss << "Release 0x" << hex << (__int64)ptr << dec << " size ";
-        printSize(ss, curr->GetSize());
+        PrintSize(ss, curr->GetSize());
+        ss << " total_allocated ";
+        PrintSize(ss, m_AllocatedMemSize);
         ss << endl;
         OutputDebugString(ss.str().c_str());
 #endif
 
         // We have the node so release it.
-        EMemStatus result = ReleaseBlockUnsafe(curr, prev);
+        EMemStatus result = ReleaseBlockUnsafe(curr, prev);        
         return result;
     }
 
@@ -344,14 +340,63 @@ namespace Neuro
         return MEM_STATUS_SUCCESS;
     }
 
+    //////////////////////////////////////////////////////////////////////////
+    EMemStatus MemoryManager::AllocateForOffload(void** ptr, size_t size)
+    {
+        CUDA_CHECK(cudaMallocHost(ptr, size));
+        if (ptr)
+            return MEM_STATUS_SUCCESS;
+        return MEM_STATUS_OUT_OF_MEMORY;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    EMemStatus MemoryManager::ReleaseForOffload(void* ptr)
+    {
+        if (!ptr)
+            return MEM_STATUS_SUCCESS;
+
+        CUDA_CHECK(cudaFreeHost(ptr));
+        return MEM_STATUS_SUCCESS;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    EMemStatus MemoryManager::Offload(void* dst, void* src, size_t size, cudaEvent_t memEvent)
+    {
+        NEURO_ASSERT(dst, "Host pinned memory is not allocated.");
+        NEURO_ASSERT(cudaEventQuery(memEvent) == cudaSuccess, "Memory sync event is not ready.");
+        CUDA_CHECK(cudaMemcpyAsync(dst, src, size, cudaMemcpyDeviceToHost, m_MemoryStream));
+        CUDA_CHECK(cudaEventRecord(memEvent, m_MemoryStream));
+        return MEM_STATUS_SUCCESS;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    EMemStatus MemoryManager::Prefetch(void* dst, void* src, size_t size, cudaEvent_t memEvent)
+    {
+        NEURO_ASSERT(src, "Host pinned memory is not allocated.");
+        NEURO_ASSERT(cudaEventQuery(memEvent) == cudaSuccess, "Memory sync event is not ready.");
+        CUDA_CHECK(cudaMemcpyAsync(dst, src, size, cudaMemcpyHostToDevice, m_MemoryStream));
+        CUDA_CHECK(cudaEventRecord(memEvent, m_MemoryStream));
+        return MEM_STATUS_SUCCESS;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Neuro::EMemStatus MemoryManager::WaitForMemEvent(cudaEvent_t memEvent)
+    {
+        if (!memEvent)
+            return MEM_STATUS_SUCCESS;
+
+        CUDA_CHECK(cudaEventSynchronize(memEvent));
+        return MEM_STATUS_SUCCESS;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     EMemStatus MemoryManager::AddCudaBlockUnsafe(void* ptr, size_t size)
     {
         m_CudaBlocks.push_back({ ptr, size });
         return MEM_STATUS_SUCCESS;
     }
 
-    ///////////////////////////////////////////////////////////////////////////////////////////////////
-
+    //////////////////////////////////////////////////////////////////////////
     EMemStatus MemoryManager::RemoveCudaBlockUnsafe(void *ptr)
     {
         bool found = false;

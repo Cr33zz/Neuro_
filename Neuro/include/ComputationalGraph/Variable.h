@@ -24,6 +24,8 @@ namespace Neuro
         void Initialize();
         void ForceInitialized() { m_Initialized = true; }
 
+        void SetOffloadMode(EOffloadMode mode);
+
     private:
         bool m_Trainable = true;
         bool m_Initialized = false;

@@ -10,7 +10,7 @@
 
 #if 1
 #define ALLOC MemoryManager::Default().Allocate
-#define FREE MemoryManager::Default().Release
+#define FREE 
 #else
 #define ALLOC cudaMalloc
 #define FREE cudaFree
@@ -24,27 +24,28 @@ namespace Neuro
     class CudaDeviceVariable
     {
     public:
-        CudaDeviceVariable(size_t length)
+        CudaDeviceVariable(size_t length, EOffloadMode offloadMode)
         {
+            m_OffloadMode = offloadMode;
             m_AllocatedLength = m_Length = length;
             m_TypeSize = sizeof(T);
             m_IsOwner = true;
-            CUDA_CHECK(ALLOC(&m_DevPtr, GetAllocatedSizeInBytes()));
-            if (m_AllocatedLength > 0 && !m_DevPtr)
+            Allocate();
+            if (m_OffloadMode == Offload_Enabled)
             {
-                m_IsHostAlloc = true;
-                CUDA_CHECK(cudaHostAlloc(&m_DevPtr, GetAllocatedSizeInBytes(), cudaHostAllocMapped));
+                CUDA_CHECK(MemoryManager::Default().AllocateForOffload(&m_HostPtr, GetAllocatedSizeInBytes()));
+                CUDA_CHECK(cudaEventCreate(&m_OffloadEvent));
+                CUDA_CHECK(cudaEventCreate(&m_PrefetchEvent));
             }
-            NEURO_ASSERT(m_AllocatedLength == 0 || m_DevPtr, "Failed to allocate GPU memory.");
         }
 
         CudaDeviceVariable(const CudaDeviceVariable<T>& var, size_t lengthOffset)
         {
             m_DevPtr = (T*)var.m_DevPtr + lengthOffset;
             m_TypeSize = var.m_TypeSize;
-            assert(var.m_Length > lengthOffset);
+            NEURO_ASSERT(var.m_Length > lengthOffset, "");
             m_Length = var.m_Length - lengthOffset;
-            m_IsOwner = false;
+            m_IsOwner = false;            
         }
 
         CudaDeviceVariable(const CudaDeviceVariable<T>* var, size_t lengthOffset)
@@ -56,16 +57,39 @@ namespace Neuro
         {
             if (m_IsOwner)
             {
-                if (m_IsHostAlloc)
-                    CUDA_CHECK(cudaFreeHost(m_DevPtr));
-                else
-                    CUDA_CHECK(FREE(m_DevPtr));
+                Release();
+
+                if (m_HostPtr)
+                {
+                    CUDA_CHECK(MemoryManager::Default().ReleaseForOffload(m_HostPtr));
+                    CUDA_CHECK(cudaEventDestroy(m_OffloadEvent));
+                    CUDA_CHECK(cudaEventDestroy(m_PrefetchEvent));
+                }
             }
+        }
+
+        void Allocate() const
+        {
+            if (m_DevPtr)
+                return;
+
+            CUDA_CHECK(MemoryManager::Default().Allocate(&m_DevPtr, GetAllocatedSizeInBytes()));            
+        }
+
+        void Release()
+        {
+            NEURO_ASSERT(m_IsOwner, "Trying to release CUDA variable when not being owner.");
+            if (!m_DevPtr)
+                return;
+
+            MemoryManager::Default().WaitForMemEvent(m_OffloadEvent);
+            CUDA_CHECK(MemoryManager::Default().Release(m_DevPtr));
+            m_DevPtr = nullptr;
         }
 
         bool Resize(size_t length)
         {
-            assert(m_IsOwner);
+            NEURO_ASSERT(m_IsOwner, "Trying to resize CUDA variable when not being owner.");
 
             if (length <= m_AllocatedLength)
             {
@@ -74,15 +98,48 @@ namespace Neuro
             }
             
             m_Length = m_AllocatedLength = length;
-            CUDA_CHECK(FREE(m_DevPtr));
-            CUDA_CHECK(ALLOC(&m_DevPtr, GetAllocatedSizeInBytes()));
+            CUDA_CHECK(MemoryManager::Default().Release(m_DevPtr));
+            CUDA_CHECK(MemoryManager::Default().Allocate(&m_DevPtr, GetAllocatedSizeInBytes()));
+            if (m_OffloadMode == Offload_Enabled)
+            {
+                CUDA_CHECK(MemoryManager::Default().ReleaseForOffload(m_HostPtr));
+                CUDA_CHECK(MemoryManager::Default().AllocateForOffload(&m_HostPtr, GetAllocatedSizeInBytes()));
+            }
             NEURO_ASSERT(m_AllocatedLength == 0 || m_DevPtr, "Failed to allocate GPU memory.");
             return true;
         }
 
+        bool IsOffloaded()
+        {
+            return m_OffloadMode == Offload_Enabled && !m_DevPtr && cudaEventQuery(m_OffloadEvent) == cudaSuccess;
+        }
+
+        void Offload()
+        {
+            if (m_OffloadMode == Offload_Enabled)
+                CUDA_CHECK(MemoryManager::Default().Offload(m_HostPtr, m_DevPtr, GetSizeInBytes(), m_OffloadEvent));
+        }
+
+        void Prefetch()
+        {
+            if (m_OffloadMode == Offload_Enabled)
+            {
+                Allocate();
+                CUDA_CHECK(MemoryManager::Default().Prefetch(m_DevPtr, m_HostPtr, GetSizeInBytes(), m_PrefetchEvent));
+            }
+        }
+
         void CopyToDevice(const T* source) const
         {
-            CUDA_CHECK(cudaMemcpy(m_DevPtr, source, GetSizeInBytes(), cudaMemcpyHostToDevice));
+            Allocate();
+
+            if (m_OffloadMode == Offload_Enabled)
+            {
+                MemoryManager::Default().WaitForMemEvent(m_OffloadEvent);
+                MemoryManager::Default().WaitForMemEvent(m_PrefetchEvent);
+            }
+            else
+                CUDA_CHECK(cudaMemcpy(m_DevPtr, source, GetSizeInBytes(), cudaMemcpyHostToDevice));
         }
 
         void CopyToDevice(const vector<T>& source) const
@@ -92,7 +149,13 @@ namespace Neuro
 
         void CopyToHost(T* dest) const
         {
-            CUDA_CHECK(cudaMemcpy(dest, m_DevPtr, GetSizeInBytes(), cudaMemcpyDeviceToHost));
+            if (m_OffloadMode == Offload_Enabled)
+            {
+                MemoryManager::Default().WaitForMemEvent(m_PrefetchEvent);
+                CUDA_CHECK(cudaMemcpy(dest, m_HostPtr, GetSizeInBytes(), cudaMemcpyDeviceToHost));
+            }
+            else
+                CUDA_CHECK(cudaMemcpy(dest, m_DevPtr, GetSizeInBytes(), cudaMemcpyDeviceToHost));
         }
 
         void CopyToHost(vector<T>& dest) const
@@ -120,11 +183,14 @@ namespace Neuro
         size_t GetAllocatedSizeInBytes() const { return m_AllocatedLength * m_TypeSize; }
 
     private:
-        void* m_DevPtr = nullptr;
+        mutable void* m_DevPtr = nullptr;
+        void* m_HostPtr = nullptr;
+        cudaEvent_t m_OffloadEvent = nullptr;
+        cudaEvent_t m_PrefetchEvent = nullptr;
         size_t m_Length = 0;
         size_t m_AllocatedLength = 0;
         size_t m_TypeSize = 0;
         bool m_IsOwner = false;
-        bool m_IsHostAlloc = false;
+        EOffloadMode m_OffloadMode;
     };
 }

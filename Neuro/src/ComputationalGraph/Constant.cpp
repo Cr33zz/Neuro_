@@ -9,6 +9,7 @@ namespace Neuro
         : TensorLike(name)
     {
         m_Output = value;
+        m_Output.SetOffloadMode(Offload_KeepAllocated);
     }
 
     //////////////////////////////////////////////////////////////////////////

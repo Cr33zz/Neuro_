@@ -1914,6 +1914,39 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
+    void Tensor::TryDeviceAllocate()
+    {
+        if (!m_GpuData.m_DeviceVar)
+            m_GpuData.m_DeviceVar = new CudaDeviceVariable<float>(m_Values.size(), m_OffloadMode);
+        m_GpuData.m_DeviceVar->Allocate();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::DeviceRelease()
+    {
+        //NEURO_ASSERT(m_OffloadMode != Offload_KeepAllocated, "");
+        if (m_GpuData.m_DeviceVar && m_OffloadMode != Offload_KeepAllocated)
+            m_GpuData.m_DeviceVar->Release();
+
+        if (m_OffloadMode == Offload_Disabled) // at this point the only place where values are stored is host memory (hopefully we didn't have to copy them from device...)
+            m_CurrentLocation = Host;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Prefetch() const
+    {
+        if (m_OffloadMode == Offload_Enabled && m_GpuData.m_DeviceVar)
+            m_GpuData.m_DeviceVar->Prefetch();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Offload() const
+    {
+        if (m_OffloadMode == Offload_Enabled && m_GpuData.m_DeviceVar)
+            m_GpuData.m_DeviceVar->Offload();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void Tensor::OverrideHost() const
     {
         m_CurrentLocation = ELocation::Host;
@@ -1923,7 +1956,7 @@ namespace Neuro
     const Neuro::CudaDeviceVariable<float>& Tensor::GetDeviceVar() const
     {
         if (!m_GpuData.m_DeviceVar)
-            m_GpuData.m_DeviceVar = new CudaDeviceVariable<float>(m_Values.size());
+            m_GpuData.m_DeviceVar = new CudaDeviceVariable<float>(m_Values.size(), m_OffloadMode);
         return *m_GpuData.m_DeviceVar;
     }
 
@@ -2038,7 +2071,7 @@ namespace Neuro
         }
 
         if (!workspace)
-            workspace = new CudaDeviceVariable<char>(size);
+            workspace = new CudaDeviceVariable<char>(size, Offload_Disabled);
     }
 
     //////////////////////////////////////////////////////////////////////////

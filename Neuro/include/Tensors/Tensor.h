@@ -266,7 +266,13 @@ namespace Neuro
 
         void CopyToDevice() const;
         void CopyToHost() const;
-        void Prefer(ELocation location) { m_PreferredLocation = location;  }
+        void SetOffloadMode(EOffloadMode mode) { m_OffloadMode = mode; }
+        bool OffloadMode() const { return m_OffloadMode; }
+        bool Offloadable() const { return m_OffloadMode == Offload_Enabled; }
+        void TryDeviceAllocate();
+        void DeviceRelease();
+        void Prefetch() const;
+        void Offload() const;
         void OverrideHost() const;
         bool IsOnHost() const { return m_CurrentLocation == ELocation::Host; }
         bool IsOnDevice() const { return m_CurrentLocation == ELocation::Device; }
@@ -306,7 +312,7 @@ namespace Neuro
 
         mutable GPUData m_GpuData;
 		TensorOpCpu* m_Op;
-        ELocation m_PreferredLocation = ELocation::Host;
+        EOffloadMode m_OffloadMode = Offload_Disabled;
         mutable ELocation m_CurrentLocation = ELocation::Host;
 		Shape m_Shape;
         mutable vector<float> m_Values;

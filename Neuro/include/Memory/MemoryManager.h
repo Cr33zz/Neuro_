@@ -68,9 +68,18 @@ namespace Neuro
         MemoryManager();
         static MemoryManager& Default();
 
+        EMemStatus Reserve(size_t size);
+
         EMemStatus Allocate(void** ptr, size_t size, bool isBlocking = true);
         EMemStatus Release(void* ptr);
-        EMemStatus Reserve(size_t size);
+
+        EMemStatus AllocateForOffload(void** ptr, size_t size);
+        EMemStatus ReleaseForOffload(void* ptr);
+
+        EMemStatus Offload(void* dst, void* src, size_t size, cudaEvent_t memEvent);
+        EMemStatus Prefetch(void* dst, void* src, size_t size, cudaEvent_t memEvent);
+
+        EMemStatus WaitForMemEvent(cudaEvent_t memEvent);
         
         //void SetFlags(uint32_t flags) { m_Flags = flags; }
     
@@ -84,13 +93,14 @@ namespace Neuro
         EMemStatus AddCudaBlockUnsafe(void* ptr, size_t size);
         EMemStatus RemoveCudaBlockUnsafe(void* ptr);
         
-        cudaStream_t m_Stream = nullptr;
+        cudaStream_t m_MemoryStream = nullptr;
         bool m_IsStreamBlocking = false;
         Block* m_UsedBlocks = nullptr;
         Block* m_FreeBlocks = nullptr;
         list<CudaBlock> m_CudaBlocks;
         size_t m_Size = 0;
         uint32_t m_Flags = MEM_FLAGS_CANNOT_GROW;
+        size_t m_AllocatedMemSize = 0;
     };
 
     //////////////////////////////////////////////////////////////////////////

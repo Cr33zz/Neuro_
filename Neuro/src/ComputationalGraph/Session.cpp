@@ -42,6 +42,7 @@ namespace Neuro
         for (auto feed : feeds)
             feed.first->m_Output = *feed.second;
 
+
         for (auto node : order)
         {
             if (node->IsOp())

@@ -42,6 +42,13 @@ namespace Neuro
         Device
     };
 
+    enum EOffloadMode
+    {
+        Offload_KeepAllocated, // will never automatically deallocate device memory
+        Offload_Enabled, // offload is enabled can be streamed between host pinned memory and device deallocating device memory when not used
+        Offload_Disabled, // offload disabled all memory migration and device memory management has to be done manually
+    };
+
     enum EPaddingMode
     {
         Valid, // output matrix's size will be decreased (depending on kernel size)
