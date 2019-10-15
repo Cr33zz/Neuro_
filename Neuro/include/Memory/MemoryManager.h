@@ -44,13 +44,16 @@ namespace Neuro
         inline void SetSize(size_t size) { m_Size = size; }
         inline void SetHeadFlag(bool isHead) { m_IsHead = isHead; }
 
+        /// Debug annotation
+        const char* m_Annotation = nullptr;
+
     private:
         /// The pointer to the memory region on the device. 
         char* m_Data;
         /// The size of the memory buffer.
         size_t m_Size;
         /// The prev/next blocks in the linked list of blocks.
-        Block* m_Next;
+        Block* m_Next;        
         /// Is it a head node (i.e. a node obtained from parent->allocate or cudaMalloc).
         bool m_IsHead;
     };
@@ -70,7 +73,7 @@ namespace Neuro
 
         EMemStatus Reserve(size_t size);
 
-        EMemStatus Allocate(void** ptr, size_t size, bool isBlocking = true);
+        EMemStatus Allocate(void** ptr, size_t size, const char* annotation = nullptr);
         EMemStatus Release(void* ptr);
 
         EMemStatus AllocateForOffload(void** ptr, size_t size);
@@ -80,8 +83,8 @@ namespace Neuro
         EMemStatus Prefetch(void* dst, void* src, size_t size, cudaEvent_t memEvent);
 
         EMemStatus WaitForMemEvent(cudaEvent_t memEvent);
-        
-        //void SetFlags(uint32_t flags) { m_Flags = flags; }
+
+        EMemStatus PrintMemoryState(const string& filename) const;
     
     private:
         EMemStatus AllocateBlockUnsafe(Block*& curr, Block*& prev, size_t size);
@@ -97,7 +100,6 @@ namespace Neuro
         inline EMemStatus GetFreeMemoryUnsafe(size_t& freeMemory) const;
         EMemStatus GetMemoryUnsafe(std::size_t &size, const Block *head) const;
         EMemStatus PrintListUnsafe(FILE *file, const char *name, const Block *head) const;
-        EMemStatus PrintMemoryState(FILE *file) const;
 
         cudaStream_t m_MemoryStream = nullptr;
         bool m_IsStreamBlocking = false;

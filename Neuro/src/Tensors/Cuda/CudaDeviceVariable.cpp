@@ -81,7 +81,7 @@ namespace Neuro
             return;
         }
         CUDA_VAR_DEBUG_INFO("<<< allocating.\n");
-        CUDA_CHECK(MemoryManager::Default().Allocate(&m_DevPtr, GetAllocatedSizeInBytes()));
+        CUDA_CHECK(MemoryManager::Default().Allocate(&m_DevPtr, GetAllocatedSizeInBytes(), m_Name.c_str()));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -116,7 +116,7 @@ namespace Neuro
 
         m_Length = m_AllocatedLength = length;
         CUDA_CHECK(MemoryManager::Default().Release(m_DevPtr));
-        CUDA_CHECK(MemoryManager::Default().Allocate(&m_DevPtr, GetAllocatedSizeInBytes()));
+        CUDA_CHECK(MemoryManager::Default().Allocate(&m_DevPtr, GetAllocatedSizeInBytes(), m_Name.c_str()));
         if (m_OffloadMode == Offload_Enabled)
         {
             CUDA_CHECK(MemoryManager::Default().ReleaseForOffload(m_HostPtr));

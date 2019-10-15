@@ -63,13 +63,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    EMemStatus MemoryManager::Allocate(void** ptr, size_t size, bool isBlocking)
+    EMemStatus MemoryManager::Allocate(void** ptr, size_t size, const char* annotation)
     {
         size = ceilInt(size, MEM_GRANULARITY);
-
-        // If the client is not blocking, we have to explicitly synchronize before giving one buffer.
-        if (!isBlocking)
-            CUDA_CHECK(cudaStreamSynchronize(m_MemoryStream));
 
         // Find the best fit.
         Block *best = nullptr, *prev = nullptr;
@@ -83,9 +79,7 @@ namespace Neuro
         if (!best)
         {
             *ptr = nullptr;
-            auto file = fopen("memory_manager.log", "w");
-            PrintMemoryState(file);
-            fclose(file);
+            PrintMemoryState("memory_manager.log");
             return MEM_STATUS_OUT_OF_MEMORY;
         }
 
@@ -95,13 +89,14 @@ namespace Neuro
         // Push the node to the list of used nodes.
         best->SetNext(m_UsedBlocks);
         m_UsedBlocks = best;
+        best->m_Annotation = annotation;
 
         m_AllocatedMemSize += size;
         m_AllocatedMemSizePeak = max(m_AllocatedMemSize, m_AllocatedMemSizePeak);
 
 #ifdef ENABLE_GPU_MEMORY_LOGS
         stringstream ss;
-        ss << "Alloc 0x" << hex << (__int64)m_UsedBlocks->GetData() << dec << " size ";
+        ss << "Alloc '" << (annotation ? annotation : "") << "' 0x" << hex << (__int64)m_UsedBlocks->GetData() << dec << " size ";
         PrintSize(ss, size);
         ss << " total ";
         PrintSize(ss, m_AllocatedMemSize);
@@ -135,7 +130,7 @@ namespace Neuro
 
 #ifdef ENABLE_GPU_MEMORY_LOGS
         stringstream ss;
-        ss << "Release 0x" << hex << (__int64)ptr << dec << " size ";
+        ss << "Release '" << (curr->m_Annotation ? curr->m_Annotation : "") << "' 0x" << hex << (__int64)ptr << dec << " size ";
         PrintSize(ss, curr->GetSize());
         ss << " total ";
         PrintSize(ss, m_AllocatedMemSize);
@@ -421,17 +416,19 @@ namespace Neuro
             return MEM_STATUS_SUCCESS;
     }
 
-    /// The amount of used memory.
-    inline EMemStatus MemoryManager::GetUsedMemoryUnsafe(size_t& usedMemory) const
+    //////////////////////////////////////////////////////////////////////////
+    EMemStatus MemoryManager::GetUsedMemoryUnsafe(size_t& usedMemory) const
     {
         return GetMemoryUnsafe(usedMemory, m_UsedBlocks);
     }
-    /// The amount of used memory.
-    inline EMemStatus MemoryManager::GetFreeMemoryUnsafe(size_t& freeMemory) const
+
+    //////////////////////////////////////////////////////////////////////////
+    EMemStatus MemoryManager::GetFreeMemoryUnsafe(size_t& freeMemory) const
     {
         return GetMemoryUnsafe(freeMemory, m_FreeBlocks);
     }
 
+    //////////////////////////////////////////////////////////////////////////
     EMemStatus MemoryManager::GetMemoryUnsafe(size_t &size, const Block *head) const
     {
         size = 0;
@@ -440,6 +437,7 @@ namespace Neuro
         return MEM_STATUS_SUCCESS;
     }
 
+    //////////////////////////////////////////////////////////////////////////
     EMemStatus MemoryManager::PrintListUnsafe(FILE* file, const char* name, const Block* head) const
     {
         size_t size = 0;
@@ -448,13 +446,15 @@ namespace Neuro
         
         fprintf(file, "| list=\"%s\", size=%zu\n", name, size);
         for (Block *curr = (Block*)head; curr; curr = curr->GetNext())
-            fprintf(file, "| | node=0x%016zx, data=0x%016zx, size=%zu, next=0x%016zx, head=%2zu\n", (size_t)curr, (size_t)curr->GetData(), (size_t)curr->GetSize(), (size_t)curr->GetNext(), (size_t)curr->IsHead());
+            fprintf(file, "| | node=0x%016zx, data=0x%016zx, size=%zu, next=0x%016zx, head=%2zu, annotation:'%s'\n", (size_t)curr, (size_t)curr->GetData(), (size_t)curr->GetSize(), (size_t)curr->GetNext(), (size_t)curr->IsHead(), (curr->m_Annotation ? curr->m_Annotation : ""));
         fprintf(file, "|\n");
         return MEM_STATUS_SUCCESS;
     }
 
-    EMemStatus MemoryManager::PrintMemoryState(FILE* file) const
+    //////////////////////////////////////////////////////////////////////////
+    EMemStatus MemoryManager::PrintMemoryState(const string& filename) const
     {
+        auto file = fopen(filename.c_str(), "w");
         size_t streamCode = (size_t)m_MemoryStream;
         size_t usedMemory, freeMemory;
         MEM_CHECK(GetUsedMemoryUnsafe(usedMemory));
@@ -464,6 +464,7 @@ namespace Neuro
         MEM_CHECK(PrintListUnsafe(file, "used", m_UsedBlocks));
         MEM_CHECK(PrintListUnsafe(file, "free", m_FreeBlocks));
         fprintf(file, "\n");
+        fclose(file);
 
         return MEM_STATUS_SUCCESS;
     }
