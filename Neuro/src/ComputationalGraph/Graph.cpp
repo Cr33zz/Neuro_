@@ -202,7 +202,14 @@ namespace Neuro
                     variables.push_back(var);
             }
 
-            if (!node->IsConst()) // there is no need for computing gradients for constants ^^
+            bool computeGrad = true;
+
+            // there is no reason for computing gradients for contants nor placeholders when they have no input nodes
+            // these are not trainable parameters
+            if ((node->IsConst() || node->IsPlaceholder()) && node->m_InputNodes.empty())
+                computeGrad = false;
+
+            if (computeGrad)
             {
                 auto& nodeOutputGrad = node->m_OutputGrad;
                 nodeOutputGrad.Resize(node->m_Output.GetShape());

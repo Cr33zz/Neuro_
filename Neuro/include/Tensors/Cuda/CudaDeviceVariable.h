@@ -27,8 +27,8 @@ namespace Neuro
         void Offload();
         void Prefetch();
 
-        void CopyToDevice(const T* source) const;
-        void CopyToDevice(const vector<T>& source) const;
+        void CopyToDevice(const T* source, ELocation currLocation) const;
+        void CopyToDevice(const vector<T>& source, ELocation currLocation) const;
         void CopyToHost(T* dest) const;
         void CopyToHost(vector<T>& dest) const;
 
@@ -36,9 +36,6 @@ namespace Neuro
         void OverrideDevice() const;
 
         void CopyTo(void* destDevPtr) const;
-
-        void ZeroOnDevice() const;
-        void OneOnDevice() const;
 
         T* GetDevicePtr() const { return static_cast<T*>(m_DevPtr); }
         size_t GetSizeInBytes() const { return m_Length * m_TypeSize; }

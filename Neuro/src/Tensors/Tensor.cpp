@@ -263,21 +263,13 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
 	void Tensor::Zero()
 	{
-        if (m_CurrentLocation == ELocation::Host)
-            fill(m_Values.begin(), m_Values.end(), 0.f);
-        else
-            GetDeviceVar().ZeroOnDevice();
+        Op()->Zero(*this);
 	}
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::One()
     {
-        OverrideHost();
-        fill(m_Values.begin(), m_Values.end(), 1.f);
-        /*if (m_CurrentLocation == ELocation::Host)
-            fill(m_Values.begin(), m_Values.end(), 1.f);
-        else
-            GetDeviceVar().OneOnDevice();*/
+        Op()->One(*this);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -366,11 +358,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Mul(float v, Tensor& result) const
 	{
-		CopyToHost();
-		result.OverrideHost();
-
-		for (uint32_t i = 0; i < m_Values.size(); ++i)
-			result.m_Values[i] = m_Values[i] * v;
+        Op()->Mul(*this, v, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -1896,10 +1884,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::CopyToDevice() const
 	{
-        if (m_CurrentLocation == ELocation::Device)
-            return;
-        
-		GetDeviceVar().CopyToDevice(m_Values);
+        GetDeviceVar().CopyToDevice(m_Values, m_CurrentLocation);
 		m_CurrentLocation = ELocation::Device;
 	}
 

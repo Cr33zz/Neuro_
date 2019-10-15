@@ -11,11 +11,18 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    PowOp::PowOp(TensorLike* x, float p, const string& name)
+        : Operation({ x }, name.empty() ? "pow" : name), m_Power(p)
+    {
+        m_Output.Resize(x->GetShape());
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void PowOp::ComputeInternal()
     {
         m_Output.ResizeBatch(m_Inputs[0]->Batch());
 
-        float power = (*m_Inputs[1])(0);
+        float power = m_InputNodes.size() == 1 ? m_Power : (*m_Inputs[1])(0);
 
         if (power == 2)
             m_Inputs[0]->Map([&](float x) {return x * x; }, m_Output);
@@ -26,11 +33,11 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void PowOp::ComputeGradientInternal(const Tensor& grad)
     {
-        float power = (*m_Inputs[1])(0);
+        float power = m_InputNodes.size() == 1 ? m_Power : (*m_Inputs[1])(0);
 
         //in_grad = grad * p * x^(p-1)
         if (power == 2)
-            grad.Map([&](float g, float x) {return g * 2 * x; }, *m_Inputs[0], m_InputsGrads[0]);
+            grad.Map([&](float g, float x) {return g * 2.f * x; }, *m_Inputs[0], m_InputsGrads[0]);
         else
             grad.Map([&](float g, float x) {return g * power * ::pow(x, power - 1); }, *m_Inputs[0], m_InputsGrads[0]);
     }

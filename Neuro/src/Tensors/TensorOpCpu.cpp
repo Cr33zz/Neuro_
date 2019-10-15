@@ -9,6 +9,21 @@ namespace Neuro
 {
     using namespace std;
 
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Zero(Tensor& input) const
+    {
+        input.OverrideHost();
+        memset(&input.GetValues()[0], 0, input.Length() * sizeof(float));
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::One(Tensor& input) const
+    {
+        input.OverrideHost();
+        auto& inputValues = input.GetValues();
+        fill(inputValues.begin(), inputValues.end(), 1.f);
+    }
+
 	//////////////////////////////////////////////////////////////////////////
 	void Neuro::TensorOpCpu::Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const
 	{
@@ -109,6 +124,19 @@ namespace Neuro
             }
         }
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Mul(const Tensor& input, float v, Tensor& output) const
+    {
+        input.CopyToHost();
+        output.OverrideHost();
+
+        auto& inputValues = input.GetValues();
+        auto& outputValues = output.GetValues();
+
+        for (uint32_t i = 0; i < inputValues.size(); ++i)
+            outputValues[i] = inputValues[i] * v;
+    }
 
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::Div(const Tensor& input, float v, Tensor& output) const

@@ -175,30 +175,35 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     template<typename T>
-    void Neuro::CudaDeviceVariable<T>::CopyToDevice(const T* source) const
+    void Neuro::CudaDeviceVariable<T>::CopyToDevice(const T* source, ELocation currLocation) const
     {
         if (!m_DevPtr)
             Allocate();
 
-        CUDA_VAR_DEBUG_INFO("Copy to device '%s'[%s]\n", m_Name.c_str(), ToString(m_OffloadMode));
-        if (m_OffloadMode == Offload_Enabled)
+        if (currLocation == Host)
         {
-            if (cudaEventQuery(m_OffloadEvent) == cudaErrorNotReady)
+            CUDA_VAR_DEBUG_INFO("Copy to device '%s'[%s]\n", m_Name.c_str(), ToString(m_OffloadMode));
+            CUDA_CHECK(cudaMemcpy(m_DevPtr, source, GetSizeInBytes(), cudaMemcpyHostToDevice));
+        }
+        else if (m_OffloadMode == Offload_Enabled)
+        {
+            CUDA_VAR_DEBUG_INFO("Copy to device '%s'[%s] <<< prefetch completed check only\n", m_Name.c_str(), ToString(m_OffloadMode));
+            // we don't have to wait for offload because a valid copy still exists in GPU memory
+            /*if (cudaEventQuery(m_OffloadEvent) == cudaErrorNotReady)
                 CUDA_VAR_DEBUG_INFO("Waiting for offload... '%s'[%s]\n", m_Name.c_str(), ToString(m_OffloadMode));
-            MemoryManager::Default().WaitForMemEvent(m_OffloadEvent);
+            MemoryManager::Default().WaitForMemEvent(m_OffloadEvent);*/
+            // we have to make sure copy to device is blocked until prefetch is done
             if (cudaEventQuery(m_PrefetchEvent) == cudaErrorNotReady)
                 CUDA_VAR_DEBUG_INFO("Waiting for prefetch... '%s'[%s]\n", m_Name.c_str(), ToString(m_OffloadMode));
             MemoryManager::Default().WaitForMemEvent(m_PrefetchEvent);
         }
-        else
-            CUDA_CHECK(cudaMemcpy(m_DevPtr, source, GetSizeInBytes(), cudaMemcpyHostToDevice));
     }
 
     //////////////////////////////////////////////////////////////////////////
     template<typename T>
-    void Neuro::CudaDeviceVariable<T>::CopyToDevice(const vector<T>& source) const
+    void Neuro::CudaDeviceVariable<T>::CopyToDevice(const vector<T>& source, ELocation currLocation) const
     {
-        CopyToDevice(&source[0]);
+        CopyToDevice(&source[0], currLocation);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -243,20 +248,6 @@ namespace Neuro
     void Neuro::CudaDeviceVariable<T>::CopyTo(void* destDevPtr) const
     {
         CUDA_CHECK(cudaMemcpy(destDevPtr, m_DevPtr, GetSizeInBytes(), cudaMemcpyDeviceToDevice));
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    template<typename T>
-    void Neuro::CudaDeviceVariable<T>::ZeroOnDevice() const
-    {
-        CUDA_CHECK(cudaMemset(m_DevPtr, 0, GetSizeInBytes()));
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    template<typename T>
-    void Neuro::CudaDeviceVariable<T>::OneOnDevice() const
-    {
-        //CUDA_CHECK(cuMemsetD32(m_DevPtr, 1.f, GetSizeInBytes()));
     }
 
     template CudaDeviceVariable<float>;

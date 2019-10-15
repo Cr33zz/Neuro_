@@ -9,10 +9,13 @@ namespace Neuro
 	public:
 		virtual ~TensorOpCpu() {}
 
+        virtual void Zero(Tensor& input) const;
+        virtual void One(Tensor& input) const;
         virtual void Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const;
         virtual void Sub(const Tensor& t1, const Tensor& t2, Tensor& output) const;
         virtual void Mul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const;
 		virtual void MulElem(const Tensor& t1, const Tensor& t2, Tensor& output) const;
+        virtual void Mul(const Tensor& input, float v, Tensor& output) const;
         virtual void Div(const Tensor& input, float v, Tensor& output) const;
         virtual void Sum(const Tensor& input, EAxis axis, Tensor& output) const;
         virtual void Transpose(const Tensor& input, Tensor& output) const;

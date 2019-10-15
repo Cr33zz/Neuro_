@@ -81,11 +81,28 @@ __global__ void leakyReluGrad(int inputLen, const float* __restrict output, cons
         inputGrad[i] = (output[i] > 0 ? 1 : alpha) * outputGrad[i];
 }
 
-__global__ void div(int inputLen, const float* __restrict input, float v, float* __restrict output)
+__global__ void setValue(int inputLen, float* __restrict input, float v, int subLen)
+{
+    int i = (blockIdx.x * blockDim.x + threadIdx.x) * subLen;
+    if (i < inputLen)
+        for (int n = 0; n < subLen; ++n)
+            input[i + n] = v;
+}
+
+__global__ void mul(int inputLen, const float* __restrict input, float v, float* __restrict output, int subLen)
+{
+    int i = (blockIdx.x * blockDim.x + threadIdx.x) * subLen;
+    if (i < inputLen)
+        for (int n = 0; n < subLen; ++n)
+            output[i + n] = input[i + n] * v;
+}
+
+__global__ void div(int inputLen, const float* __restrict input, float v, float* __restrict output, int subLen)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < inputLen)
-        output[i] = input[i] / v;
+        for (int n = 0; n < subLen; ++n)
+            output[i + n] = input[i + n] / v;
 }
 
 __global__ void addBroadcast(float alpha, const float* __restrict t1, int t1Width, int t1Height, int t1Depth, int t1Batch, float beta, const float* __restrict t2, int t2Width, int t2Height, int t2Depth, int t2Batch, float* __restrict output, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
@@ -338,6 +355,12 @@ __global__ void map(int inputLen, const float* __restrict input, F f, float* __r
 
 namespace Neuro
 {
+    void CudaKernels::One(const dim3& blocks, const dim3& threads, int inputLen, float* inputDev, int subLen)
+    {
+        setValue<<<blocks, threads>>>(inputLen, inputDev, 1, subLen);
+        cudaDeviceSynchronize();
+    }
+
     void CudaKernels::UpSample2D(const dim3& blocks, const dim3& threads, const float* inputDev, int inputWidth, int inputHeight, int inputDepth, int inputBatch, int scale, float* outputDev)
     {
         upSample2D<<<blocks, threads>>>(inputDev, inputWidth, inputHeight, inputDepth, inputBatch, scale, outputDev);
@@ -362,9 +385,15 @@ namespace Neuro
         cudaDeviceSynchronize();
     }
 
-    void CudaKernels::Div(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float v, float* outputDev)
+    void CudaKernels::Mul(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float v, float* outputDev, int subLen)
     {
-        div<<<blocks, threads>>>(inputLen, inputDev, v, outputDev);
+        mul<<<blocks, threads>>>(inputLen, inputDev, v, outputDev, subLen);
+        cudaDeviceSynchronize();
+    }
+
+    void CudaKernels::Div(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float v, float* outputDev, int subLen)
+    {
+        div<<<blocks, threads>>>(inputLen, inputDev, v, outputDev, subLen);
         cudaDeviceSynchronize();
     }
 
