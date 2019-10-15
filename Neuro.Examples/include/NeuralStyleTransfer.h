@@ -6,6 +6,7 @@
 #include <numeric>
 
 #include "Neuro.h"
+#include "Memory/MemoryManager.h"
 #include "VGG19.h"
 
 using namespace std;
@@ -92,6 +93,8 @@ public:
         for (int e = 1; e <= EPOCHS; ++e, progress.NextStep())
         {
             auto results = Session::Default()->Run({ outputImg, contentLoss, styleLoss, totalLoss, minimize }, {});
+
+            MemoryManager::Default().PrintMemoryState("mem.log");
 
             stringstream extString;
             extString << setprecision(4) << fixed << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - total_l: " << (*results[3])(0);
