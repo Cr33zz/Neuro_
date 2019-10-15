@@ -83,7 +83,7 @@ int main()
 
 
 
-    ComputationalGraph().Run();
+    //ComputationalGraph().Run();
     //IrisNetwork().Run();
     //ConvNetwork().Run();
     //FlowNetwork().Run();
@@ -96,7 +96,7 @@ int main()
     //CifarGAN().RunDiscriminatorTrainTest();
     //CifarGAN().Run();
     //VGG16().Run();
-    //NeuralStyleTransfer().Run();
+    NeuralStyleTransfer().Run();
     //FastNeuralStyleTransfer().Run();
 
     cin.get();

@@ -101,6 +101,7 @@ namespace Neuro
         size_t m_Size = 0;
         uint32_t m_Flags = MEM_FLAGS_CANNOT_GROW;
         size_t m_AllocatedMemSize = 0;
+        size_t m_AllocatedMemSizePeak = 0;
     };
 
     //////////////////////////////////////////////////////////////////////////

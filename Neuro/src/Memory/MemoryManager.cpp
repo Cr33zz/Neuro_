@@ -30,7 +30,6 @@
 #define MEM_DEBUG_INFO(info)
 #endif
 
-//https://docs.nvidia.com/cuda/cuda-driver-api/group__CUDA__UNIFIED.html
 namespace Neuro
 {
     static void PrintSize(stringstream& ss, size_t size)
@@ -95,13 +94,16 @@ namespace Neuro
         m_UsedBlocks = best;
 
         m_AllocatedMemSize += size;
+        m_AllocatedMemSizePeak = max(m_AllocatedMemSize, m_AllocatedMemSizePeak);
 
 #ifdef ENABLE_GPU_MEMORY_LOGS
         stringstream ss;
         ss << "Alloc 0x" << hex << (__int64)m_UsedBlocks->GetData() << dec << " size ";
         PrintSize(ss, size);
-        ss << " total_allocated ";
+        ss << " total ";
         PrintSize(ss, m_AllocatedMemSize);
+        ss << " peak ";
+        PrintSize(ss, m_AllocatedMemSizePeak);
         ss << endl;
         OutputDebugString(ss.str().c_str());
 #endif
@@ -132,7 +134,7 @@ namespace Neuro
         stringstream ss;
         ss << "Release 0x" << hex << (__int64)ptr << dec << " size ";
         PrintSize(ss, curr->GetSize());
-        ss << " total_allocated ";
+        ss << " total ";
         PrintSize(ss, m_AllocatedMemSize);
         ss << endl;
         OutputDebugString(ss.str().c_str());

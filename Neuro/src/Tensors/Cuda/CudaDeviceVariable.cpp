@@ -164,10 +164,17 @@ namespace Neuro
                 CUDA_VAR_DEBUG_INFO("<<< nothing to preload.\n");
                 return;
             }
-            CUDA_VAR_DEBUG_INFO("<<< supported.\n");
             if (!m_DevPtr)
                 Allocate();
-            CUDA_CHECK(MemoryManager::Default().Prefetch(m_DevPtr, m_HostPtr, GetSizeInBytes(), m_PrefetchEvent));
+            if (cudaEventQuery(m_PrefetchEvent) != cudaSuccess)
+            {
+                CUDA_VAR_DEBUG_INFO("<<< requested already.\n");
+            }
+            else
+            {
+                CUDA_VAR_DEBUG_INFO("<<< requested.\n");
+                CUDA_CHECK(MemoryManager::Default().Prefetch(m_DevPtr, m_HostPtr, GetSizeInBytes(), m_PrefetchEvent));
+            }
         }
         else
             CUDA_VAR_DEBUG_INFO("<<< not supported.\n");

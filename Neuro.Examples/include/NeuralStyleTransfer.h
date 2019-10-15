@@ -19,7 +19,7 @@ public:
     const uint32_t IMAGE_HEIGHT = 300;
 
     const string CONTENT_FILE = "content.jpg";
-    const string STYLE_FILE = "style7.jpg";
+    const string STYLE_FILE = "style.jpg";
 
     void Run()
     {
