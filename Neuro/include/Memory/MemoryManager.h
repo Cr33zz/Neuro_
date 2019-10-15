@@ -93,6 +93,12 @@ namespace Neuro
         EMemStatus AddCudaBlockUnsafe(void* ptr, size_t size);
         EMemStatus RemoveCudaBlockUnsafe(void* ptr);
         
+        inline EMemStatus GetUsedMemoryUnsafe(size_t& usedMemory) const;
+        inline EMemStatus GetFreeMemoryUnsafe(size_t& freeMemory) const;
+        EMemStatus GetMemoryUnsafe(std::size_t &size, const Block *head) const;
+        EMemStatus PrintListUnsafe(FILE *file, const char *name, const Block *head) const;
+        EMemStatus PrintMemoryState(FILE *file) const;
+
         cudaStream_t m_MemoryStream = nullptr;
         bool m_IsStreamBlocking = false;
         Block* m_UsedBlocks = nullptr;

@@ -83,6 +83,9 @@ namespace Neuro
         if (!best)
         {
             *ptr = nullptr;
+            auto file = fopen("memory_manager.log", "w");
+            PrintMemoryState(file);
+            fclose(file);
             return MEM_STATUS_OUT_OF_MEMORY;
         }
 
@@ -416,5 +419,52 @@ namespace Neuro
             return MEM_STATUS_INVALID_ARGUMENT;
         else
             return MEM_STATUS_SUCCESS;
+    }
+
+    /// The amount of used memory.
+    inline EMemStatus MemoryManager::GetUsedMemoryUnsafe(size_t& usedMemory) const
+    {
+        return GetMemoryUnsafe(usedMemory, m_UsedBlocks);
+    }
+    /// The amount of used memory.
+    inline EMemStatus MemoryManager::GetFreeMemoryUnsafe(size_t& freeMemory) const
+    {
+        return GetMemoryUnsafe(freeMemory, m_FreeBlocks);
+    }
+
+    EMemStatus MemoryManager::GetMemoryUnsafe(size_t &size, const Block *head) const
+    {
+        size = 0;
+        for (Block *curr = (Block*)head; curr; curr = curr->GetNext())
+            size += curr->GetSize();
+        return MEM_STATUS_SUCCESS;
+    }
+
+    EMemStatus MemoryManager::PrintListUnsafe(FILE* file, const char* name, const Block* head) const
+    {
+        size_t size = 0;
+        for (Block *curr = (Block*)head; curr; curr = curr->GetNext())
+            size += curr->GetSize();
+        
+        fprintf(file, "| list=\"%s\", size=%zu\n", name, size);
+        for (Block *curr = (Block*)head; curr; curr = curr->GetNext())
+            fprintf(file, "| | node=0x%016zx, data=0x%016zx, size=%zu, next=0x%016zx, head=%2zu\n", (size_t)curr, (size_t)curr->GetData(), (size_t)curr->GetSize(), (size_t)curr->GetNext(), (size_t)curr->IsHead());
+        fprintf(file, "|\n");
+        return MEM_STATUS_SUCCESS;
+    }
+
+    EMemStatus MemoryManager::PrintMemoryState(FILE* file) const
+    {
+        size_t streamCode = (size_t)m_MemoryStream;
+        size_t usedMemory, freeMemory;
+        MEM_CHECK(GetUsedMemoryUnsafe(usedMemory));
+        MEM_CHECK(GetFreeMemoryUnsafe(freeMemory));
+
+        fprintf(file, ">> stream=0x%016zx, used=%zuB, free=%zuB\n", streamCode, usedMemory, freeMemory);
+        MEM_CHECK(PrintListUnsafe(file, "used", m_UsedBlocks));
+        MEM_CHECK(PrintListUnsafe(file, "free", m_FreeBlocks));
+        fprintf(file, "\n");
+
+        return MEM_STATUS_SUCCESS;
     }
 }

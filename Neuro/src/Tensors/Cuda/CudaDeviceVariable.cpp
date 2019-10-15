@@ -140,12 +140,12 @@ namespace Neuro
         CUDA_VAR_DEBUG_INFO("Offloading '%s'[%s] ", m_Name.c_str(), ToString(m_OffloadMode));
         if (m_OffloadMode == Offload_Enabled)
         {
-            if (!m_HostPtr)
+            if (!m_DevPtr)
             {
                 CUDA_VAR_DEBUG_INFO("<<< nothing to offload.\n");
                 return;
             }
-            CUDA_VAR_DEBUG_INFO("<<< supported.\n");
+            CUDA_VAR_DEBUG_INFO("<<< requested.\n");
             CUDA_CHECK(MemoryManager::Default().Offload(m_HostPtr, m_DevPtr, GetSizeInBytes(), m_OffloadEvent));
         }
         else
@@ -184,8 +184,13 @@ namespace Neuro
     template<typename T>
     void Neuro::CudaDeviceVariable<T>::CopyToDevice(const T* source, ELocation currLocation) const
     {
+        bool wasDevMemoryAllocated = true;
+
         if (!m_DevPtr)
+        {
             Allocate();
+            wasDevMemoryAllocated = false;
+        }
 
         if (currLocation == Host)
         {
@@ -194,15 +199,23 @@ namespace Neuro
         }
         else if (m_OffloadMode == Offload_Enabled)
         {
-            CUDA_VAR_DEBUG_INFO("Copy to device '%s'[%s] <<< prefetch completed check only\n", m_Name.c_str(), ToString(m_OffloadMode));
-            // we don't have to wait for offload because a valid copy still exists in GPU memory
-            /*if (cudaEventQuery(m_OffloadEvent) == cudaErrorNotReady)
-                CUDA_VAR_DEBUG_INFO("Waiting for offload... '%s'[%s]\n", m_Name.c_str(), ToString(m_OffloadMode));
-            MemoryManager::Default().WaitForMemEvent(m_OffloadEvent);*/
-            // we have to make sure copy to device is blocked until prefetch is done
-            if (cudaEventQuery(m_PrefetchEvent) == cudaErrorNotReady)
-                CUDA_VAR_DEBUG_INFO("Waiting for prefetch... '%s'[%s]\n", m_Name.c_str(), ToString(m_OffloadMode));
-            MemoryManager::Default().WaitForMemEvent(m_PrefetchEvent);
+            if (!wasDevMemoryAllocated)
+            {
+                CUDA_VAR_DEBUG_INFO("Copy to device '%s'[%s] <<< allocated device memory - copy from host ptr\n", m_Name.c_str(), ToString(m_OffloadMode));
+                CUDA_CHECK(cudaMemcpy(m_DevPtr, m_HostPtr, GetSizeInBytes(), cudaMemcpyHostToDevice));
+            }
+            else
+            {
+                CUDA_VAR_DEBUG_INFO("Copy to device '%s'[%s] <<< prefetch completed check only\n", m_Name.c_str(), ToString(m_OffloadMode));
+                // we don't have to wait for offload because a valid copy still exists in GPU memory
+                /*if (cudaEventQuery(m_OffloadEvent) == cudaErrorNotReady)
+                    CUDA_VAR_DEBUG_INFO("Waiting for offload... '%s'[%s]\n", m_Name.c_str(), ToString(m_OffloadMode));
+                MemoryManager::Default().WaitForMemEvent(m_OffloadEvent);*/
+                // we have to make sure copy to device is blocked until prefetch is done
+                if (cudaEventQuery(m_PrefetchEvent) == cudaErrorNotReady)
+                    CUDA_VAR_DEBUG_INFO("Waiting for prefetch... '%s'[%s]\n", m_Name.c_str(), ToString(m_OffloadMode));
+                MemoryManager::Default().WaitForMemEvent(m_PrefetchEvent);
+            }
         }
     }
 
@@ -254,6 +267,7 @@ namespace Neuro
     template<typename T>
     void Neuro::CudaDeviceVariable<T>::CopyTo(void* destDevPtr) const
     {
+        NEURO_ASSERT(destDevPtr, "Invalid destination pointer.");
         CUDA_CHECK(cudaMemcpy(destDevPtr, m_DevPtr, GetSizeInBytes(), cudaMemcpyDeviceToDevice));
     }
 

@@ -37,7 +37,7 @@ namespace Neuro
 
         void CopyTo(void* destDevPtr) const;
 
-        T* GetDevicePtr() const { return static_cast<T*>(m_DevPtr); }
+        T* GetDevicePtr() const { return m_DevPtr ? static_cast<T*>(m_DevPtr) : static_cast<T*>(m_HostPtr); }
         size_t GetSizeInBytes() const { return m_Length * m_TypeSize; }
         size_t GetAllocatedSizeInBytes() const { return m_AllocatedLength * m_TypeSize; }
 
