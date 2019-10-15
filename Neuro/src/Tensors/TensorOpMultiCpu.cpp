@@ -48,6 +48,7 @@ namespace Neuro
 
         t1Temp.CopyToHost();
         t2Temp.CopyToHost();
+        output.OverrideHost();
         output.Zero();
 
         parallel_for((uint32_t)0, output.Batch(), [&](uint32_t n)
@@ -121,6 +122,7 @@ namespace Neuro
         //output.Zero();
         //input.CopyToHost();
         //output.OverrideHost();
+        //output.Zero();
 
         //auto& inputValues = input.GetValues();
         //auto& outputValues = output.GetValues();
@@ -219,7 +221,8 @@ namespace Neuro
     {
         gradient.CopyToHost();
         kernels.CopyToHost();
-        inputGradient.CopyToHost();
+        inputGradient.OverrideHost();
+        inputGradient.Zero();
 
         if (dataFormat == NCHW)
         {
@@ -276,7 +279,8 @@ namespace Neuro
     {
         input.CopyToHost();
         gradient.CopyToHost();
-        kernelsGradient.CopyToHost();
+        kernelsGradient.OverrideHost();
+        kernelsGradient.Zero();
 
         if (dataFormat == NCHW)
         {
@@ -494,7 +498,6 @@ namespace Neuro
     {
         output.CopyToHost();
         output.OverrideHost();
-        output.Zero();
 
         parallel_for((uint32_t)0, t.Batch(), [&](uint32_t n) {
         parallel_for((uint32_t)0, t.Depth(), [&](uint32_t d) {

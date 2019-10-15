@@ -263,13 +263,19 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
 	void Tensor::Zero()
 	{
-        Op()->Zero(*this);
+        if (m_CurrentLocation == Host)
+            g_OpCpu->Zero(*this);
+        else
+            g_OpGpu->Zero(*this);
 	}
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::One()
     {
-        Op()->One(*this);
+        if (m_CurrentLocation == Host)
+            g_OpCpu->One(*this);
+        else
+            g_OpGpu->One(*this);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -826,10 +832,15 @@ namespace Neuro
 	void Tensor::MergeMax(const const_tensor_ptr_vec_t& inputs, Tensor& result)
 	{
         result.OverrideHost();
+        inputs[0]->CopyToHost();
 		inputs[0]->CopyTo(result);
-		for (uint32_t i = 1; i < inputs.size(); ++i)
-		for (uint32_t j = 0; j < result.Length(); ++j)
-			result.m_Values[j] = result.m_Values[j] < inputs[i]->m_Values[j] ? inputs[i]->m_Values[j] : result.m_Values[j];
+
+        for (uint32_t i = 1; i < inputs.size(); ++i)
+        {
+            inputs[i]->CopyToHost();
+            for (uint32_t j = 0; j < result.Length(); ++j)
+                result.m_Values[j] = result.m_Values[j] < inputs[i]->m_Values[j] ? inputs[i]->m_Values[j] : result.m_Values[j];
+        }
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -837,9 +848,12 @@ namespace Neuro
 	{
         result.OverrideHost();
 		result.Zero();
-		for (uint32_t i = 0; i < inputs.size(); ++i)
-		for (uint32_t j = 0; j < result.Length(); ++j)
-			result.m_Values[j] += inputs[i]->m_Values[j];
+        for (uint32_t i = 0; i < inputs.size(); ++i)
+        {
+            inputs[i]->CopyToHost();
+            for (uint32_t j = 0; j < result.Length(); ++j)
+                result.m_Values[j] += inputs[i]->m_Values[j];
+        }
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -1298,14 +1312,12 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Conv2DInputsGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& inputsGradient) const
 	{
-		inputsGradient.Zero();
 		Op()->Conv2DInputGradient(gradient, kernels, stride, padding, padding, dataFormat, inputsGradient);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& kernelsGradient) const
 	{
-		kernelsGradient.Zero();
 		Op()->Conv2DKernelsGradient(input, gradient, stride, padding, padding, dataFormat, kernelsGradient);
 	}
 
@@ -1327,14 +1339,12 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Conv2DTransposedInputsGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& inputsGradient) const
     {
-        inputsGradient.Zero();
         gradient.Conv2D(kernels, stride, padding, dataFormat, inputsGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Conv2DTransposedKernelsGradient(const Tensor& input, const Tensor& gradient, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& kernelsGradient) const
     {
-        kernelsGradient.Zero();
         Op()->Conv2DKernelsGradient(gradient, input, stride, padding, padding, dataFormat, kernelsGradient);
     }
 

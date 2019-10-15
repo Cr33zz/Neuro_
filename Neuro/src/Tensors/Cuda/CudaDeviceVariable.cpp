@@ -80,7 +80,7 @@ namespace Neuro
             CUDA_VAR_DEBUG_INFO("<<< already allocated.\n");
             return;
         }
-        CUDA_VAR_DEBUG_INFO("<<< allocate incoming.\n");
+        CUDA_VAR_DEBUG_INFO("<<< allocating.\n");
         CUDA_CHECK(MemoryManager::Default().Allocate(&m_DevPtr, GetAllocatedSizeInBytes()));
     }
 
@@ -156,28 +156,30 @@ namespace Neuro
     template<typename T>
     void Neuro::CudaDeviceVariable<T>::Prefetch()
     {
-        CUDA_VAR_DEBUG_INFO("Prefetching '%s'[%s] ", m_Name.c_str(), ToString(m_OffloadMode));
         if (m_OffloadMode == Offload_Enabled)
         {
+            NEURO_ASSERT(m_HostPtr, "Trying to prefetch unallocated device variable.");
             if (!m_HostPtr)
             {
-                CUDA_VAR_DEBUG_INFO("<<< nothing to preload.\n");
+                CUDA_VAR_DEBUG_INFO("Prefetching '%s'[%s] <<< nothing to preload.\n", m_Name.c_str(), ToString(m_OffloadMode));
                 return;
             }
+
             if (!m_DevPtr)
                 Allocate();
+
             if (cudaEventQuery(m_PrefetchEvent) != cudaSuccess)
             {
-                CUDA_VAR_DEBUG_INFO("<<< requested already.\n");
+                CUDA_VAR_DEBUG_INFO("Prefetching '%s'[%s] <<< requested already.\n", m_Name.c_str(), ToString(m_OffloadMode));
             }
             else
             {
-                CUDA_VAR_DEBUG_INFO("<<< requested.\n");
+                CUDA_VAR_DEBUG_INFO("Prefetching '%s'[%s] <<< requested.\n", m_Name.c_str(), ToString(m_OffloadMode));
                 CUDA_CHECK(MemoryManager::Default().Prefetch(m_DevPtr, m_HostPtr, GetSizeInBytes(), m_PrefetchEvent));
             }
         }
         else
-            CUDA_VAR_DEBUG_INFO("<<< not supported.\n");
+            CUDA_VAR_DEBUG_INFO("Prefetching '%s'[%s] <<< not supported.\n", m_Name.c_str(), ToString(m_OffloadMode));
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -135,7 +135,7 @@ public:
 
         //return multiply(mean(square(sub(styleGram, genGram))), 1.f / (4.f * (channels * channels) * (size * size)), "style_loss_" + to_string(index));
         //return div(mean(square(sub(styleGram, genGram))), new Constant(4.f * (channels * channels) * (size * size)), "style_loss_" + to_string(index));
-        return mean(square(sub(styleGram, genGram)));
+        return mean(square(sub(styleGram, genGram)), GlobalAxis, "style_loss_" + to_string(index));
     }
 
     //////////////////////////////////////////////////////////////////////////

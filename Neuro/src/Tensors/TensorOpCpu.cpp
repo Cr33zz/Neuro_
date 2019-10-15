@@ -72,6 +72,7 @@ namespace Neuro
 
 		t1Temp.CopyToHost();
 		t2Temp.CopyToHost();
+        output.OverrideHost();
 		output.Zero();
 
         uint32_t N = t1Temp.Height();
