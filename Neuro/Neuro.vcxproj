@@ -304,6 +304,7 @@
     <ClCompile Include="src\Optimizers\SGD.cpp" />
     <ClCompile Include="src\Random.cpp" />
     <ClCompile Include="src\Stopwatch.cpp" />
+    <ClCompile Include="src\Tensors\Cuda\CudaDeviceVariable.cpp" />
     <ClCompile Include="src\Tensors\Cuda\CudaErrorCheck.cpp" />
     <ClCompile Include="src\Tensors\Shape.cpp" />
     <ClCompile Include="src\Tensors\Tensor.cpp" />

@@ -54,6 +54,8 @@ namespace Neuro
     template<typename T>
     vector<T> MergeVectors(initializer_list<vector<T>> vectors);
 
+    string StringFormat(const string fmt_str, ...);
+
     void ImageLibInit();
     extern bool g_ImageLibInitialized;
 

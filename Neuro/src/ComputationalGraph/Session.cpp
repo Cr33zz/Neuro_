@@ -5,6 +5,17 @@
 #include "ComputationalGraph/Variable.h"
 #include "Tensors/Tensor.h"
 
+#define ENABLE_SESSION_LOGS
+
+#ifdef ENABLE_SESSION_LOGS
+#include <windows.h>
+#include <debugapi.h>
+#include "Tools.h"
+#define SESSION_DEBUG_INFO(...) do { OutputDebugString(StringFormat(__VA_ARGS__).c_str()); } while(0)
+#else
+#define SESSION_DEBUG_INFO(...)
+#endif
+
 namespace Neuro
 {
     Session* Session::s_Default = nullptr;
@@ -40,13 +51,16 @@ namespace Neuro
         m_Graph->IncrementStep();
 
         for (auto feed : feeds)
-            feed.first->m_Output = *feed.second;
-
+        {
+            SESSION_DEBUG_INFO("##Session: Feeding '%s'...\n", feed.first->Name().c_str());
+            feed.second->CopyTo(feed.first->m_Output);
+        }
 
         for (auto node : order)
         {
             if (node->IsOp())
             {
+                SESSION_DEBUG_INFO("##Session: Computing '%s'...\n", node->Name().c_str());
                 Operation* op = static_cast<Operation*>(node);
                 op->Compute(op->GatherInputs());
             }

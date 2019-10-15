@@ -3,8 +3,8 @@
 #include <numeric>
 #include <FreeImage.h>
 
-#include "Tensors/Tensor.h"
 #include "Tensors/Cuda/CudaDeviceVariable.h"
+#include "Tensors/Tensor.h"
 #include "Tensors/TensorOpCpu.h"
 #include "Tensors/TensorOpMultiCpu.h"
 #include "Tensors/TensorOpGpu.h"
@@ -652,21 +652,21 @@ namespace Neuro
 
         if (axis == GlobalAxis)
             output.Div((float)Length(), output);
-        if (axis == WidthAxis)
+        else if (axis == WidthAxis)
             output.Div((float)Width(), output);
-        if (axis == HeightAxis)
+        else if (axis == HeightAxis)
             output.Div((float)Height(), output);
-        if (axis == DepthAxis)
+        else if (axis == DepthAxis)
             output.Div((float)Depth(), output);
-        if (axis == BatchAxis)
+        else if (axis == BatchAxis)
             output.Div((float)Batch(), output);
-        if (axis == _01Axes)
+        else if (axis == _01Axes)
             output.Div((float)(Len(0)*Len(1)), output);
-        if (axis == _012Axes)
+        else if (axis == _012Axes)
             output.Div((float)(Len(0)*Len(1)*Len(2)), output);
-        if (axis == _013Axes)
+        else if (axis == _013Axes)
             output.Div((float)(Len(0)*Len(1)*Len(3)), output);
-        if (axis == _123Axes)
+        else if (axis == _123Axes)
             output.Div((float)(Len(1)*Len(2)*Len(3)), output);
     }
 
@@ -1916,15 +1916,21 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::TryDeviceAllocate()
     {
+        if (Op() != g_OpGpu)
+            return;
+
         if (!m_GpuData.m_DeviceVar)
-            m_GpuData.m_DeviceVar = new CudaDeviceVariable<float>(m_Values.size(), m_OffloadMode);
-        m_GpuData.m_DeviceVar->Allocate();
+            m_GpuData.m_DeviceVar = new CudaDeviceVariable<float>(m_Values.size(), m_OffloadMode, m_Name); // allocate is called inside
+        else
+            m_GpuData.m_DeviceVar->Allocate();
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::DeviceRelease()
     {
-        //NEURO_ASSERT(m_OffloadMode != Offload_KeepAllocated, "");
+        if (Op() != g_OpGpu)
+            return;
+
         if (m_GpuData.m_DeviceVar && m_OffloadMode != Offload_KeepAllocated)
             m_GpuData.m_DeviceVar->Release();
 
@@ -1935,6 +1941,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Prefetch() const
     {
+        if (Op() != g_OpGpu || m_CurrentLocation == Host) // prefetch can only happen when logically tensor is on the device
+            return;
+
         if (m_OffloadMode == Offload_Enabled && m_GpuData.m_DeviceVar)
             m_GpuData.m_DeviceVar->Prefetch();
     }
@@ -1942,6 +1951,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Offload() const
     {
+        if (Op() != g_OpGpu || m_CurrentLocation == Host)
+            return;
+
         if (m_OffloadMode == Offload_Enabled && m_GpuData.m_DeviceVar)
             m_GpuData.m_DeviceVar->Offload();
     }
@@ -1950,13 +1962,24 @@ namespace Neuro
     void Tensor::OverrideHost() const
     {
         m_CurrentLocation = ELocation::Host;
+        if (m_GpuData.m_DeviceVar) // for logging purposes only
+            m_GpuData.m_DeviceVar->OverrideHost();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::OverrideDevice()
+    {
+        TryDeviceAllocate();
+        m_CurrentLocation = ELocation::Device;
+        if (m_GpuData.m_DeviceVar) // for logging purposes only
+            m_GpuData.m_DeviceVar->OverrideDevice();
     }
 
     //////////////////////////////////////////////////////////////////////////
     const Neuro::CudaDeviceVariable<float>& Tensor::GetDeviceVar() const
     {
         if (!m_GpuData.m_DeviceVar)
-            m_GpuData.m_DeviceVar = new CudaDeviceVariable<float>(m_Values.size(), m_OffloadMode);
+            m_GpuData.m_DeviceVar = new CudaDeviceVariable<float>(m_Values.size(), m_OffloadMode, m_Name);
         return *m_GpuData.m_DeviceVar;
     }
 
@@ -2071,7 +2094,7 @@ namespace Neuro
         }
 
         if (!workspace)
-            workspace = new CudaDeviceVariable<char>(size, Offload_Disabled);
+            workspace = new CudaDeviceVariable<char>(size, Offload_Disabled, "workspace");
     }
 
     //////////////////////////////////////////////////////////////////////////

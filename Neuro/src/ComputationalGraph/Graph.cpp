@@ -6,6 +6,17 @@
 #include "Debug.h"
 #include "Tools.h"
 
+#define ENABLE_GRAPH_LOGS
+
+#ifdef ENABLE_GRAPH_LOGS
+#include <windows.h>
+#include <debugapi.h>
+#include "Tools.h"
+#define GRAPH_DEBUG_INFO(...) do { OutputDebugString(StringFormat(__VA_ARGS__).c_str()); } while(0)
+#else
+#define GRAPH_DEBUG_INFO(...)
+#endif
+
 namespace Neuro
 {
     Graph* Graph::s_Default = nullptr;
@@ -170,7 +181,19 @@ namespace Neuro
         
         for (size_t n = 0; n < order.size(); ++n)
         {
+            if (n + 1 < order.size())
+            {
+                auto node = order[n + 1];
+                GRAPH_DEBUG_INFO("##Graph: Prefetching '%s'...\n", node->Name().c_str());
+
+                // in order to compute any node's gradient we need it's output, inputs (input gradients will simply be allocated by operation)
+                node->Output().Prefetch();
+                for (auto inputNode : node->m_InputNodes)
+                    inputNode->Output().Prefetch();
+            }
+
             auto node = order[n];
+            GRAPH_DEBUG_INFO("##Graph: Computing gradient '%s'...\n", node->Name().c_str());
 
             if (node->IsVar())
             {
@@ -179,50 +202,57 @@ namespace Neuro
                     variables.push_back(var);
             }
 
-            auto& nodeOutputGrad = node->m_OutputGrad;
-            nodeOutputGrad.Resize(node->m_Output.GetShape());
-            nodeOutputGrad.Zero(); // reset gradient
-
-            if (node->IsVar() && !static_cast<Variable*>(node)->Trainable())
-                continue;
-
-            int inputGradsUsed = 0;
-
-            for (auto consumer : node->m_Consumers)
+            if (!node->IsConst()) // there is no need for computing gradients for constants ^^
             {
-                assert(consumer->IsOp());
-                Operation* consumerOp = static_cast<Operation*>(consumer);
+                auto& nodeOutputGrad = node->m_OutputGrad;
+                nodeOutputGrad.Resize(node->m_Output.GetShape());
+                nodeOutputGrad.Zero(); // reset gradient
 
-                auto& inputsGrad = consumerOp->InputsGrads();
-
-                // ignore consumer when it didn't participate in forward step or its input gradients were not computed
-                // the latter can happen when it wasn't required for loss computation (alternatively we could pass
-                // required nodes to this function and check against that but it would be more involving from 'user'
-                // point of view
-                if (consumerOp->LastComputeStep() != m_CurrentStep || inputsGrad.empty())
+                if (node->IsVar() && !static_cast<Variable*>(node)->Trainable())
                     continue;
 
-                ++inputGradsUsed;
+                int inputGradsUsed = 0;
 
-                if (inputsGrad.size() == 1)
+                for (auto consumer : node->m_Consumers)
                 {
-                    assert(inputsGrad[0].Length());
-                    nodeOutputGrad.Add(inputsGrad[0], nodeOutputGrad);
+                    assert(consumer->IsOp());
+                    Operation* consumerOp = static_cast<Operation*>(consumer);
+
+                    auto& inputsGrad = consumerOp->InputsGrads();
+
+                    // ignore consumer when it didn't participate in forward step or its input gradients were not computed
+                    // the latter can happen when it wasn't required for loss computation (alternatively we could pass
+                    // required nodes to this function and check against that but it would be more involving from 'user'
+                    // point of view
+                    if (consumerOp->LastComputeStep() != m_CurrentStep || inputsGrad.empty())
+                        continue;
+
+                    ++inputGradsUsed;
+
+                    if (inputsGrad.size() == 1)
+                    {
+                        assert(inputsGrad[0].Length());
+                        nodeOutputGrad.Add(inputsGrad[0], nodeOutputGrad);
+                    }
+                    else
+                    {
+                        auto nodeIndexInConsumerInputs = distance(consumer->m_InputNodes.begin(), find(consumer->m_InputNodes.begin(), consumer->m_InputNodes.end(), node));
+                        auto& lossGradWrtNode = inputsGrad[nodeIndexInConsumerInputs];
+                        assert(lossGradWrtNode.Length());
+                        nodeOutputGrad.Add(lossGradWrtNode, nodeOutputGrad);
+                    }
                 }
-                else
-                {
-                    auto nodeIndexInConsumerInputs = distance(consumer->m_InputNodes.begin(), find(consumer->m_InputNodes.begin(), consumer->m_InputNodes.end(), node));
-                    auto& lossGradWrtNode = inputsGrad[nodeIndexInConsumerInputs];
-                    assert(lossGradWrtNode.Length());
-                    nodeOutputGrad.Add(lossGradWrtNode, nodeOutputGrad);
-                }
+
+                if (inputGradsUsed == 0) // it must be one the loss nodes (gradient of loss w.r.t to loss is 1)
+                    nodeOutputGrad.One();
+
+                if (node->IsOp())
+                    static_cast<Operation*>(node)->ComputeGradient(nodeOutputGrad);
             }
 
-            if (inputGradsUsed == 0) // it must be one the loss nodes (gradient of loss w.r.t to loss is 1)
-                nodeOutputGrad.One();
-
-            if (node->IsOp())
-                static_cast<Operation*>(node)->ComputeGradient(nodeOutputGrad);
+            // all consumers contributing to this node's output grad can be notified so they can release their corresponding input gradient
+            for (auto consumerNode : node->m_Consumers)
+                consumerNode->InputGradConsumed(node);
         }
 
         return variables;

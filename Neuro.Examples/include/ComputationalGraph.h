@@ -14,18 +14,22 @@ class ComputationalGraph
 public:
     void Run()
     {
+        Tensor::SetForcedOpMode(GPU);
+
         GlobalRngSeed(100);
         vector<TensorLike*> fetches;
 
-        auto x = new Placeholder(Shape(5));
-        auto y = new Placeholder(Shape(2));
+        auto x = new Placeholder(Shape(5), "x");
+        auto y = new Placeholder(Shape(2), "y");
 
-        auto w = new Variable(Tensor(Shape(2, 5)).FillWithRand());
-        auto b = new Variable(Tensor(Shape(2)).FillWithRand());
+        auto w = new Variable(Tensor(Shape(2, 5)).FillWithRand(), "w");
+        auto b = new Variable(Tensor(Shape(2)).FillWithRand(), "b");
 
-        auto o = add(matmul(x, w), b); // dense layer
+        auto o = add(matmul(x, w, "dense/matmul"), b, "dense/add"); // dense layer
+        o = add(o, mean(x, GlobalAxis, "extra/mean"), "extra/add");
 
-        auto loss = multiply(square(subtract(o, y)), new Constant(0.5f));
+        //auto loss = multiply(square(subtract(o, y, "loss/sub"), "loss/square"), new Constant(0.5f, "loss/const_0.5"), "loss/multiply");
+        auto loss = multiply(square(subtract(o, y, "loss/sub"), "loss/square"), 0.5f, "loss/multiply");
         fetches.push_back(loss);
 
         /*auto minimizeOp = SGD(0.04f).Minimize({ loss });
@@ -87,9 +91,13 @@ public:
         }*/
 
         auto input = Uniform::Random(-1, 1, x->GetShape());
+        input.Name("input");
         auto output = input.Mul(Tensor(Shape(2, 5)).FillWithRand());
+        output.Name("output");
 
-        for (int step = 0; step < 200; ++step)
+        Debug::LogAllOutputs(true);
+
+        for (int step = 0; step < 5; ++step)
         {
             auto result = Session::Default()->Run({ fetches }, { {x, &input}, {y, &output} });
             cout << "step: " << step << " loss: " << (*result[0])(0) << endl;

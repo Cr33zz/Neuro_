@@ -5,6 +5,7 @@
 #include <cuda.h>
 
 #include "Types.h"
+#include "Tools.h"
 #include "Memory/MemoryManager.h"
 #include "Tensors/Cuda/CudaErrorCheck.h"
 
@@ -16,10 +17,9 @@
 #define MEM_CHECK(call) do { \
 	EMemStatus status = (call); \
 	if( status != MEM_STATUS_SUCCESS ) { \
-        stringstream ss; \
-        ss << "Memory manager failed with error: " << MemGetErrorString(status) << endl; \
-        OutputDebugString(ss.str().c_str()); \
-		NEURO_ASSERT(false, ss.str()); \
+        string msg = StringFormat("Memory manager failed with error: %s", MemGetErrorString(status)); \
+        OutputDebugString(msg.c_str()); \
+		NEURO_ASSERT(false, msg); \
 		return status; \
 	} \
 } while(0)

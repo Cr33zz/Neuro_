@@ -20,7 +20,7 @@ namespace Neuro
         const vector<Tensor>& InputsGrads() const { return m_InputsGrads; }
 
         virtual void OutputConsumed() override;
-        virtual void InputGradConsumed() override;
+        virtual void InputGradConsumed(TensorLike* inputNode) override;
 
     protected:
         Operation(const vector<TensorLike*>& inputNodes, const string& name);
@@ -35,6 +35,5 @@ namespace Neuro
         // We only care about computed ones in last forward pass
         uint32_t m_LastComputeStep = 0;
         size_t m_OutputConsumedCount = 0;
-        size_t m_InputGradsConsumedCount = 0;
     };
 }

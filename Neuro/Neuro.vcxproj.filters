@@ -632,6 +632,9 @@
     <ClCompile Include="src\Memory\MemoryManager.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Tensors\Cuda\CudaDeviceVariable.cpp">
+      <Filter>src\Tensors\Cuda</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\Tensors\Cuda\CudaKernels.cu">

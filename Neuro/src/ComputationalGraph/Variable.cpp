@@ -8,7 +8,8 @@ namespace Neuro
     Variable::Variable(const Tensor& initValue, const string& name)
         : TensorLike(name)
     {
-        m_Output = initValue;
+        m_Output.Resize(initValue.GetShape());
+        initValue.CopyTo(m_Output);
         m_Output.SetOffloadMode(Offload_KeepAllocated);
         Graph::Default()->AddVariable(this);
         m_Initialized = true;

@@ -273,7 +273,10 @@ namespace Neuro
         void DeviceRelease();
         void Prefetch() const;
         void Offload() const;
+        /// Use whatever data there is on the host (usually used for output tensors so copy can be avoided)
         void OverrideHost() const;
+        /// Use whatever data there is on the device (usually used for output tensors so copy can be avoided)
+        void OverrideDevice();
         bool IsOnHost() const { return m_CurrentLocation == ELocation::Host; }
         bool IsOnDevice() const { return m_CurrentLocation == ELocation::Device; }
         

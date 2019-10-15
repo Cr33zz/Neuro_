@@ -142,9 +142,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::Sum(const Tensor& input, EAxis axis, Tensor& output) const
     {
-        output.Zero();
         input.CopyToHost();
         output.OverrideHost();
+        output.Zero();
 
         if (axis == EAxis::GlobalAxis)
             return SumTemplate<1, 1, 1, 1>(input, output);
@@ -314,6 +314,7 @@ namespace Neuro
 		output.CopyToHost();
 		outputGradient.CopyToHost();
         inputGradient.OverrideHost();
+        inputGradient.Zero();
 
 		Tensor outputReshaped = output.Reshaped(Shape(1, Shape::Auto, 1, output.Batch()));
 		Tensor jacob = outputReshaped.DiagFlat().Sub(outputReshaped.Mul(outputReshaped.Transposed()));
@@ -393,7 +394,8 @@ namespace Neuro
 	{
 		gradient.CopyToHost();
 		kernels.CopyToHost();
-		inputGradient.CopyToHost();
+		inputGradient.OverrideHost();
+        inputGradient.Zero();
 
         if (dataFormat == NCHW)
         {
@@ -450,7 +452,8 @@ namespace Neuro
 	{
 		input.CopyToHost();
 		gradient.CopyToHost();
-		kernelsGradient.CopyToHost();
+		kernelsGradient.OverrideHost();
+        kernelsGradient.Zero();
 
         if (dataFormat == NCHW)
         {
@@ -660,8 +663,7 @@ namespace Neuro
     {
         output.CopyToHost();
         output.OverrideHost();
-        output.Zero();
-
+        
         for (uint32_t n = 0; n < input.Batch(); ++n)
         for (uint32_t d = 0; d < input.Depth(); ++d)
         for (uint32_t h = 0; h < input.Height(); ++h)
@@ -756,8 +758,11 @@ namespace Neuro
         savedMean.CopyToHost();
         savedInvVariance.CopyToHost();
         gammaGradient.OverrideHost();
+        gammaGradient.Zero();
         betaGradient.OverrideHost();
+        betaGradient.Zero();
         inputGradient.OverrideHost();
+        inputGradient.Zero();
 
         EAxis axis;
         float m;
@@ -806,6 +811,7 @@ namespace Neuro
         outputGradient.CopyToHost();
         savedMask.CopyToHost();
         inputGradient.OverrideHost();
+        inputGradient.Zero();
 
         outputGradient.MulElem(savedMask, inputGradient);
     }

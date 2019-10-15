@@ -9,7 +9,7 @@ namespace Neuro
     {
         m_Name = NameScope::Name() + name;
         m_Graph = Graph::Default();
-        m_Output.Name(m_Name);
-        m_OutputGrad.Name(m_Name + "[grad]");
+        m_Output.Name(m_Name + "/output");
+        m_OutputGrad.Name(m_Name + "/output[grad]");
     }
 }
