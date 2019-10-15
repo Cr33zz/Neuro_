@@ -19,7 +19,7 @@ namespace Neuro
         for (size_t i = 0; i < m_InputsGrads.size(); ++i)
         {
             m_InputsGrads[i].Resize(m_InputNodes[i]->GetShape());
-            m_InputsGrads[i].Name(name + "/inputGrad" + to_string(i));
+            m_InputsGrads[i].Name(m_Name + "/inputGrad" + to_string(i));
             m_InputsGradsPtrs[i] = &m_InputsGrads[i];
         }
 
