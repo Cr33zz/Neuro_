@@ -2059,12 +2059,6 @@ namespace Neuro
     {
         delete(m_DeviceVar);
         m_DeviceVar = nullptr;
-        delete(m_ConvWorkspace);
-        m_ConvWorkspace = nullptr;
-        delete(m_ConvBackWorkspace);
-        m_ConvBackWorkspace = nullptr;
-        delete(m_ConvBackKernelWorkspace);
-        m_ConvBackKernelWorkspace = nullptr;
         delete(m_DropoutWorkspace);
         m_DropoutWorkspace = nullptr;
         delete(m_DropoutStates);

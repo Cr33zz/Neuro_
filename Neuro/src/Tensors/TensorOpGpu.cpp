@@ -7,6 +7,7 @@
 #include "Tensors/Cuda/CudaDeviceVariable.h"
 #include "Tensors/Cuda/CudaErrorCheck.h"
 #include "Tensors/Cuda/CudaKernels.h"
+#include "Memory/MemoryManager.h"
 
 namespace Neuro
 {
@@ -282,7 +283,8 @@ namespace Neuro
 
         size_t workspaceSize;
         CUDA_CHECK(cudnnGetConvolutionForwardWorkspaceSize(s_CudnnHandle, inputDesc, kernelsDesc, convolutionDesc, outputDesc, algo, &workspaceSize));
-        output.m_GpuData.UpdateWorkspace(output.m_GpuData.m_ConvWorkspace, workspaceSize);
+        void* workspacePtr;
+        MemoryManager::Default().Allocate(&workspacePtr, workspaceSize, "conv2d_workspace");
 
         float alpha = 1, beta = 0;
         CUDA_CHECK(cudnnConvolutionForward(
@@ -294,11 +296,13 @@ namespace Neuro
             kernels.GetDevicePtr(),
             convolutionDesc,
             algo,
-            output.m_GpuData.m_ConvWorkspace->GetDevicePtr(),
+            workspacePtr,
             workspaceSize,
             &beta,
             outputDesc,
             output.GetDevicePtr()));
+
+        MemoryManager::Default().Release(workspacePtr);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -335,7 +339,9 @@ namespace Neuro
 
         size_t workspaceSize;
         cudnnGetConvolutionBackwardDataWorkspaceSize(s_CudnnHandle, kernelsDesc, gradientDesc, convolutionDesc, inputGradientDesc, algo, &workspaceSize);
-        inputGradient.m_GpuData.UpdateWorkspace(inputGradient.m_GpuData.m_ConvBackWorkspace, workspaceSize);
+        //inputGradient.m_GpuData.UpdateWorkspace(inputGradient.m_GpuData.m_ConvBackWorkspace, workspaceSize);
+        void* workspacePtr;
+        MemoryManager::Default().Allocate(&workspacePtr, workspaceSize, "conv2d_input_grad_workspace");
 
         float alpha = 1, beta = 0;
         CUDA_CHECK(cudnnConvolutionBackwardData(
@@ -347,11 +353,13 @@ namespace Neuro
             gradient.GetDevicePtr(),
             convolutionDesc,
             algo,
-            inputGradient.m_GpuData.m_ConvBackWorkspace->GetDevicePtr(),
+            workspacePtr,
             workspaceSize,
             &beta,
             inputGradientDesc,
             inputGradient.GetDevicePtr()));
+
+        MemoryManager::Default().Release(workspacePtr);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -389,7 +397,8 @@ namespace Neuro
 
         size_t workspaceSize;
         cudnnGetConvolutionBackwardFilterWorkspaceSize(s_CudnnHandle, inputDesc, gradientDesc, convolutionDesc, kernelsGradientsDesc, algo, &workspaceSize);
-        kernelsGradient.m_GpuData.UpdateWorkspace(kernelsGradient.m_GpuData.m_ConvBackKernelWorkspace, workspaceSize);
+        void* workspacePtr;
+        MemoryManager::Default().Allocate(&workspacePtr, workspaceSize, "conv2d_kernels_grad_workspace");
 
         float alpha = 1, beta = 0;
         CUDA_CHECK(cudnnConvolutionBackwardFilter(
@@ -401,11 +410,13 @@ namespace Neuro
             gradient.GetDevicePtr(),
             convolutionDesc,
             algo,
-            kernelsGradient.m_GpuData.m_ConvBackKernelWorkspace->GetDevicePtr(),
+            workspacePtr,
             workspaceSize,
             &beta,
             kernelsGradientsDesc,
             kernelsGradient.GetDevicePtr()));
+
+        MemoryManager::Default().Release(workspacePtr);
     }
 
     //////////////////////////////////////////////////////////////////////////
