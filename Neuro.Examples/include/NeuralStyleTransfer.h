@@ -16,11 +16,11 @@ using namespace Neuro;
 class NeuralStyleTransfer
 {
 public:
-    const uint32_t IMAGE_WIDTH = 400;
-    const uint32_t IMAGE_HEIGHT = 300;
+    const uint32_t IMAGE_WIDTH = 800;
+    const uint32_t IMAGE_HEIGHT = 600;
 
     const string CONTENT_FILE = "content.jpg";
-    const string STYLE_FILE = "style.jpg";
+    const string STYLE_FILE = "style3.jpg";
 
     void Run()
     {
@@ -99,7 +99,7 @@ public:
             MemoryManager::Default().PrintMemoryState("mem.log");
 
             stringstream extString;
-            extString << setprecision(4) << fixed << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - total_l: " << (*results[3])(0);
+            extString << setprecision(4) << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - total_l: " << (*results[3])(0);
             progress.SetExtraString(extString.str());
 
             if (e % 20 == 0)

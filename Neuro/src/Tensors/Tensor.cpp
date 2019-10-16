@@ -1909,28 +1909,30 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::TryDeviceAllocate()
+    bool Tensor::TryDeviceAllocate()
     {
         if (Op() != g_OpGpu)
-            return;
+            return false;
 
         if (!m_GpuData.m_DeviceVar)
             m_GpuData.m_DeviceVar = new CudaDeviceVariable<float>(m_Values.size(), m_OffloadMode, m_Name); // allocate is called inside
         else
             m_GpuData.m_DeviceVar->Allocate();
+        return true;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::TryDeviceRelease()
+    bool Tensor::TryDeviceRelease()
     {
         if (Op() != g_OpGpu)
-            return;
+            return false;
 
         if (m_GpuData.m_DeviceVar && m_OffloadMode != Offload_KeepAllocated)
             m_GpuData.m_DeviceVar->Release();
 
         if (m_OffloadMode == Offload_Disabled) // at this point the only place where values are stored is host memory (hopefully we didn't have to copy them from device...)
             m_CurrentLocation = Host;
+        return true;
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -206,6 +206,8 @@ namespace Neuro
 
                 auto& nodeOutputGrad = node->m_OutputGrad;
                 nodeOutputGrad.Resize(node->m_Output.GetShape());
+                if (nodeOutputGrad.TryDeviceAllocate())
+                    nodeOutputGrad.OverrideDevice();
                 nodeOutputGrad.Zero(); // reset gradient
 
                 int inputGradsUsed = 0;
