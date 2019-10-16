@@ -8,6 +8,11 @@ namespace Neuro
         : Operation({ a, b }, name.empty() ? "matmul" : name)
     {
         m_Output.Resize(Shape(b->GetShape().Width(), a->GetShape().Height(), a->GetShape().Depth()));
+
+        m_MulTempA.Name(m_Name + "/tmp_matmul_0");
+        m_MulTempB.Name(m_Name + "/tmp_matmul_1");
+        m_TransTempA.Name(m_Name + "/tmp_trans_0");
+        m_TransTempB.Name(m_Name + "/tmp_trans_1");
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -29,6 +34,7 @@ namespace Neuro
         if (m_InputNodes[0]->CareAboutGradient())
         {
             m_TransTempB.Resize(Shape(b.Height(), b.Width(), b.Depth(), b.Batch()));
+            m_TransTempB.TryDeviceAllocate(); // this is actually workspace
             b.Transpose(m_TransTempB);
 
             if (m_InputsGrads[0].Batch() == grad.Batch())
@@ -36,14 +42,18 @@ namespace Neuro
             else
             {
                 m_MulTempA.Resize(Shape::From(m_InputsGrads[0].GetShape(), grad.Batch()));
+                m_MulTempA.TryDeviceAllocate(); // this is actually workspace
                 grad.Mul(m_TransTempB, m_MulTempA);
                 m_MulTempA.Sum(BatchAxis, m_InputsGrads[0]);
+                m_MulTempA.TryDeviceRelease();
             }
+            m_TransTempB.TryDeviceRelease();
         }
 
         if (m_InputNodes[1]->CareAboutGradient())
         {
             m_TransTempA.Resize(Shape(a.Height(), a.Width(), a.Depth(), a.Batch()));
+            m_TransTempA.TryDeviceAllocate();
             a.Transpose(m_TransTempA);
 
             if (m_InputsGrads[1].Batch() == grad.Batch())
@@ -51,9 +61,12 @@ namespace Neuro
             else
             {
                 m_MulTempB.Resize(Shape::From(m_InputsGrads[1].GetShape(), grad.Batch()));
+                m_MulTempB.TryDeviceAllocate();
                 m_TransTempA.Mul(grad, m_MulTempB);
                 m_MulTempB.Sum(BatchAxis, m_InputsGrads[1]);
+                m_MulTempB.TryDeviceRelease();
             }
+            m_TransTempA.TryDeviceRelease();
         }
     }
 }

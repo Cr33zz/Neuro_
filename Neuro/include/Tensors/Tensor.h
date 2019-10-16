@@ -270,7 +270,7 @@ namespace Neuro
         bool OffloadMode() const { return m_OffloadMode; }
         bool Offloadable() const { return m_OffloadMode == Offload_Enabled; }
         void TryDeviceAllocate();
-        void DeviceRelease();
+        void TryDeviceRelease();
         void Prefetch() const;
         void Offload() const;
         /// Use whatever data there is on the host (usually used for output tensors so copy can be avoided)

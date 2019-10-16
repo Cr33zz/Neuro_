@@ -9,7 +9,7 @@
 #include "Memory/MemoryManager.h"
 #include "Tensors/Cuda/CudaErrorCheck.h"
 
-#define ENABLE_GPU_MEMORY_LOGS
+//#define ENABLE_GPU_MEMORY_LOGS
 
 #define MEM_GRANULARITY 512
 #define CUDA_GRANULARITY 128 * 1024
@@ -24,7 +24,7 @@
 	} \
 } while(0)
 
-#if 1
+#ifdef ENABLE_GPU_MEMORY_LOGS
 #define MEM_DEBUG_INFO(info) do { stringstream ss; ss << info; OutputDebugString(ss.str().c_str()); } while(0)
 #else
 #define MEM_DEBUG_INFO(info)

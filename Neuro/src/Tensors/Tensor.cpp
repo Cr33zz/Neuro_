@@ -1921,7 +1921,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::DeviceRelease()
+    void Tensor::TryDeviceRelease()
     {
         if (Op() != g_OpGpu)
             return;

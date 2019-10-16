@@ -57,7 +57,9 @@ namespace Neuro
             for (uint32_t i = 0; i < vars.size(); ++i)
             {
                 m_MGradients.push_back(Tensor(vars[i]->Output().GetShape()));
+                m_MGradients.back().Name(vars[i]->Name() + "/adam_m_grad");
                 m_VGradients.push_back(Tensor(vars[i]->Output().GetShape()));
+                m_VGradients.back().Name(vars[i]->Name() + "/adam_v_grad");
             }
         }
 

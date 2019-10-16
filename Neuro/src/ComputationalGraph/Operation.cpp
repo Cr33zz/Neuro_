@@ -60,8 +60,8 @@ namespace Neuro
 
         ComputeGradientInternal(grad);
 
-        m_Output.DeviceRelease(); // output is no longer needed, we've already used it to compute input gradients
-        m_OutputGrad.DeviceRelease(); // output grad is no longer needed, we've already used it to compute input gradients        
+        m_Output.TryDeviceRelease(); // output is no longer needed, we've already used it to compute input gradients
+        m_OutputGrad.TryDeviceRelease(); // output grad is no longer needed, we've already used it to compute input gradients        
         return m_InputsGradsPtrs;
     }
 
@@ -70,7 +70,7 @@ namespace Neuro
     {
         ++m_OutputConsumedCount;
         if (m_OutputConsumedCount == m_Consumers.size())
-            m_Output.DeviceRelease();
+            m_Output.TryDeviceRelease();
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -80,7 +80,7 @@ namespace Neuro
         {
             if (m_InputNodes[i] == inputNode)
             {
-                m_InputsGrads[i].DeviceRelease();
+                m_InputsGrads[i].TryDeviceRelease();
                 return;
             }
         }
