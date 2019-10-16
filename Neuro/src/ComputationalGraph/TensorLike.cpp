@@ -4,6 +4,18 @@
 
 namespace Neuro
 {
+    //////////////////////////////////////////////////////////////////////////
+    void TensorLike::Prefetch()
+    {
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorLike::PrefetchForGradient()
+    {
+        Output().Prefetch();
+        for (auto inputNode : m_InputNodes)
+            inputNode->Output().Prefetch();
+    }
 
     //////////////////////////////////////////////////////////////////////////
     bool TensorLike::CareAboutGradient() const

@@ -1564,50 +1564,51 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::CopyTo(Tensor& result, float tau) const
+	void Tensor::CopyTo(Tensor& target, float tau) const
 	{
-        NEURO_ASSERT(m_Shape.Length == result.m_Shape.Length, "");
+        NEURO_ASSERT(m_Shape.Length == target.m_Shape.Length, "");
 
-        if (tau <= 0 && IsOnDevice() && result.IsOnDevice())
+        if (tau <= 0 && target.IsOnDevice()) // target is more important
         {
-            GetDeviceVar().CopyTo(result.GetDevicePtr());
+            CopyToDevice();
+            GetDeviceVar().CopyTo(target.GetDevicePtr());
             return;
         }
 
 		CopyToHost();
-        result.OverrideHost();
+        target.OverrideHost();
 
 		if (tau <= 0)
-			copy(m_Values.begin(), m_Values.end(), result.m_Values.begin());
+			copy(m_Values.begin(), m_Values.end(), target.m_Values.begin());
 		else
-			Map([&](float v1, float v2) { return v1 * tau + v2 * (1 - tau); }, result, result);
+			Map([&](float v1, float v2) { return v1 * tau + v2 * (1 - tau); }, target, target);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::CopyBatchTo(uint32_t batchId, uint32_t targetBatchId, Tensor& result) const
+	void Tensor::CopyBatchTo(uint32_t batchId, uint32_t targetBatchId, Tensor& target) const
 	{
-        assert(SameDimensionsExceptBatches(result));
+        assert(SameDimensionsExceptBatches(target));
         assert(batchId < Batch());
-        assert(targetBatchId < result.Batch());
+        assert(targetBatchId < target.Batch());
 		
         CopyToHost();
-		result.OverrideHost();
+		target.OverrideHost();
         
 		copy(m_Values.begin() + batchId * m_Shape.Dim0Dim1Dim2, 
 			 m_Values.begin() + batchId * m_Shape.Dim0Dim1Dim2 + m_Shape.Dim0Dim1Dim2,
-			 result.m_Values.begin() + targetBatchId * m_Shape.Dim0Dim1Dim2);
+			 target.m_Values.begin() + targetBatchId * m_Shape.Dim0Dim1Dim2);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::CopyDepthTo(uint32_t depthId, uint32_t batchId, uint32_t targetDepthId, uint32_t targetBatchId, Tensor& result) const
+	void Tensor::CopyDepthTo(uint32_t depthId, uint32_t batchId, uint32_t targetDepthId, uint32_t targetBatchId, Tensor& target) const
 	{
 		CopyToHost();
-		result.OverrideHost();
+		target.OverrideHost();
 		//if (m_Shape.Width != result.m_Shape.Width || m_Shape.Height != result.m_Shape.Height) throw new Exception("Incompatible tensors.");
 
 		copy(m_Values.begin() + batchId * m_Shape.Dim0Dim1Dim2 + depthId * m_Shape.Dim0Dim1, 
 			 m_Values.begin() + batchId * m_Shape.Dim0Dim1Dim2 + depthId * m_Shape.Dim0Dim1 + m_Shape.Dim0Dim1,
-		     result.m_Values.begin() + targetBatchId * m_Shape.Dim0Dim1Dim2 + targetDepthId * m_Shape.Dim0Dim1);
+		     target.m_Values.begin() + targetBatchId * m_Shape.Dim0Dim1Dim2 + targetDepthId * m_Shape.Dim0Dim1);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -1918,7 +1919,8 @@ namespace Neuro
             m_GpuData.m_DeviceVar = new CudaDeviceVariable<float>(m_Values.size(), m_OffloadMode, m_Name); // allocate is called inside
         else
             m_GpuData.m_DeviceVar->Allocate();
-        return true;
+        
+        return m_GpuData.m_DeviceVar->GetDevicePtr() != nullptr;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1932,6 +1934,7 @@ namespace Neuro
 
         if (m_OffloadMode == Offload_Disabled) // at this point the only place where values are stored is host memory (hopefully we didn't have to copy them from device...)
             m_CurrentLocation = Host;
+        
         return true;
     }
 

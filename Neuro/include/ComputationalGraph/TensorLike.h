@@ -32,6 +32,9 @@ namespace Neuro
         virtual bool IsPlaceholder() const { return false; }
         virtual bool IsVar() const { return false; }
         virtual bool IsConst() const { return false; }
+
+        virtual void Prefetch();
+        virtual void PrefetchForGradient();
         
         void AddInputNode(TensorLike* node) { m_InputNodes.push_back(node); }
 

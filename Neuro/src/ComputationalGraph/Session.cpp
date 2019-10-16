@@ -56,8 +56,16 @@ namespace Neuro
             feed.second->CopyTo(feed.first->m_Output);
         }
 
-        for (auto node : order)
+        for (size_t n = 0; n < order.size(); ++n)
         {
+            if (n + 1 < order.size())
+            {
+                auto node = order[n + 1];
+                SESSION_DEBUG_INFO("##Session: Prefetching '%s'...\n", node->Name().c_str());
+                node->Prefetch();
+            }
+
+            auto node = order[n];
             if (node->IsOp())
             {
                 SESSION_DEBUG_INFO("##Session: Computing '%s'...\n", node->Name().c_str());

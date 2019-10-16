@@ -16,8 +16,8 @@ using namespace Neuro;
 class NeuralStyleTransfer
 {
 public:
-    const uint32_t IMAGE_WIDTH = 800;
-    const uint32_t IMAGE_HEIGHT = 600;
+    const uint32_t IMAGE_WIDTH = 400;
+    const uint32_t IMAGE_HEIGHT = 300;
 
     const string CONTENT_FILE = "content.jpg";
     const string STYLE_FILE = "style3.jpg";
@@ -119,12 +119,12 @@ public:
     //////////////////////////////////////////////////////////////////////////
     TensorLike* GramMatrix(TensorLike* x, const string& name)
     {
+        NameScope scope(name + "_gram_matrix");
         assert(x->GetShape().Batch() == 1);
 
         uint32_t elementsPerFeature = x->GetShape().Width() * x->GetShape().Height();
         auto features = reshape(x, Shape(elementsPerFeature, x->GetShape().Depth()));
-        return multiply(matmul(features, transpose(features)), 1.f / (float)elementsPerFeature, name + "_gram_matrix");
-        //return matmul(features, transpose(features));
+        return multiply(matmul(features, transpose(features)), 1.f / (float)elementsPerFeature, "result");
     }
 
     //////////////////////////////////////////////////////////////////////////

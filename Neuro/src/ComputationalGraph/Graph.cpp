@@ -185,11 +185,7 @@ namespace Neuro
             {
                 auto node = order[n + 1];
                 GRAPH_DEBUG_INFO("##Graph: Prefetching '%s'...\n", node->Name().c_str());
-
-                // in order to compute any node's gradient we need it's output, inputs (input gradients will simply be allocated by operation)
-                node->Output().Prefetch();
-                for (auto inputNode : node->m_InputNodes)
-                    inputNode->Output().Prefetch();
+                node->PrefetchForGradient();
             }
 
             auto node = order[n];

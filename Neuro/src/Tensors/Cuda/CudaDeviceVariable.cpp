@@ -137,6 +137,9 @@ namespace Neuro
     template<typename T>
     void Neuro::CudaDeviceVariable<T>::Offload()
     {
+        if (!m_AllocatedLength)
+            return;
+
         CUDA_VAR_DEBUG_INFO("Offloading '%s'[%s] ", m_Name.c_str(), ToString(m_OffloadMode));
         if (m_OffloadMode == Offload_Enabled)
         {
@@ -156,6 +159,9 @@ namespace Neuro
     template<typename T>
     void Neuro::CudaDeviceVariable<T>::Prefetch()
     {
+        if (!m_AllocatedLength)
+            return;
+
         if (m_OffloadMode == Offload_Enabled)
         {
             NEURO_ASSERT(m_HostPtr, "Trying to prefetch unallocated device variable.");

@@ -238,9 +238,9 @@ namespace Neuro
         void Set(float value, uint32_t w, uint32_t h = 0, uint32_t d = 0, uint32_t n = 0);
         void TrySet(float value, int w, int h = 0, int d = 0, int n = 0);
 
-        void CopyTo(Tensor& result, float tau = 0) const;
-        void CopyBatchTo(uint32_t batchId, uint32_t targetBatchId, Tensor& result) const;
-        void CopyDepthTo(uint32_t depthId, uint32_t batchId, uint32_t targetDepthId, uint32_t targetBatchId, Tensor& result) const;
+        void CopyTo(Tensor& target, float tau = 0) const;
+        void CopyBatchTo(uint32_t batchId, uint32_t targetBatchId, Tensor& target) const;
+        void CopyDepthTo(uint32_t depthId, uint32_t batchId, uint32_t targetDepthId, uint32_t targetBatchId, Tensor& target) const;
         Tensor GetBatch(uint32_t batchId) const;
         Tensor GetBatches(vector<uint32_t> batchIds) const;
         Tensor GetRandomBatches(uint32_t batchSize) const;

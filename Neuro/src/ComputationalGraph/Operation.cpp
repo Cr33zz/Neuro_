@@ -41,6 +41,8 @@ namespace Neuro
     const Tensor& Operation::Compute(const vector<const Tensor*>& inputs)
     {
         m_OutputConsumedCount = 0;
+        if (m_Output.TryDeviceAllocate())
+            m_Output.OverrideDevice();
         m_Inputs = inputs;
 
         ComputeInternal();

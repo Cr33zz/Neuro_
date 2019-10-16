@@ -460,7 +460,7 @@ namespace Neuro
         MEM_CHECK(GetUsedMemoryUnsafe(usedMemory));
         MEM_CHECK(GetFreeMemoryUnsafe(freeMemory));
 
-        fprintf(file, ">> stream=0x%016zx, used=%zuB, free=%zuB\n", streamCode, usedMemory, freeMemory);
+        fprintf(file, ">> stream=0x%016zx, used=%zuB, free=%zuB, peak=%zuB\n", streamCode, usedMemory, freeMemory, m_AllocatedMemSizePeak);
         MEM_CHECK(PrintListUnsafe(file, "used", m_UsedBlocks));
         MEM_CHECK(PrintListUnsafe(file, "free", m_FreeBlocks));
         fprintf(file, "\n");
