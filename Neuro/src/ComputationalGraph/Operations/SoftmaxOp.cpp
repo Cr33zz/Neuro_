@@ -19,6 +19,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void SoftmaxOp::ComputeGradientInternal(const Tensor& grad)
     {
-        m_Output.SoftmaxGradient(m_Output, grad, m_InputsGrads[0]);
+        if (m_InputNodes[0]->CareAboutGradient())
+            m_Output.SoftmaxGradient(m_Output, grad, m_InputsGrads[0]);
     }
 }

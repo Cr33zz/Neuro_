@@ -19,6 +19,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void EluOp::ComputeGradientInternal(const Tensor& grad)
     {
-        m_Output.EluGradient(m_Output, grad, m_Alpha, m_InputsGrads[0]);
+        if (m_InputNodes[0]->CareAboutGradient())
+            m_Output.EluGradient(m_Output, grad, m_Alpha, m_InputsGrads[0]);
     }
 }

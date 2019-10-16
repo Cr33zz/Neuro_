@@ -87,6 +87,8 @@ public:
         auto optimizer = Adam(5.f, 0.99f, 0.999f, 0.1f);
         auto minimize = optimizer.Minimize({ totalLoss }, { outputImg });
 
+        MemoryManager::Default().PrintMemoryState("mem_before.log");
+
         const int EPOCHS = 1000;
         Tqdm progress(EPOCHS, 10);
         progress.ShowStep(false).ShowElapsed(false);

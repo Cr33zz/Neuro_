@@ -30,6 +30,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void DropoutOp::ComputeGradientInternal(const Tensor& grad)
     {
-        grad.DropoutGradient(grad, m_Mask, m_InputsGrads[0]);
+        if (m_InputNodes[0]->CareAboutGradient())
+            grad.DropoutGradient(grad, m_Mask, m_InputsGrads[0]);
     }
 }

@@ -20,6 +20,7 @@ namespace Neuro
     void ExpOp::ComputeGradientInternal(const Tensor& grad)
     {
         // in_grad = grad * e^x
-        grad.Map([](float g, float x) {return g * x; }, m_Output, m_InputsGrads[0]);
+        if (m_InputNodes[0]->CareAboutGradient())
+            grad.Map([](float g, float x) {return g * x; }, m_Output, m_InputsGrads[0]);
     }
 }

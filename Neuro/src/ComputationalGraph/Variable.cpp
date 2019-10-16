@@ -55,4 +55,9 @@ namespace Neuro
         m_OutputGrad.SetOffloadMode(mode);
     }
 
+    //////////////////////////////////////////////////////////////////////////
+    bool Variable::CareAboutGradient() const
+    {
+        return m_Trainable || __super::CareAboutGradient();
+    }
 }

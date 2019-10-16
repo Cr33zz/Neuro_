@@ -66,8 +66,10 @@ namespace Neuro
                 }
             };
 
-            progressGrad(0);
-            progressGrad(1);
+            if (m_InputNodes[0]->CareAboutGradient())
+                progressGrad(0);
+            if (m_InputNodes[1]->CareAboutGradient())
+                progressGrad(1);
         }
     }
 }

@@ -25,30 +25,36 @@ namespace Neuro
 
         auto& gShape = grad.GetShape();
         
-        if (gShape == m_InputsGrads[0].GetShape())
-            grad.Div(b, m_InputsGrads[0]);
-        else
+        if (m_InputNodes[0]->CareAboutGradient())
         {
-            auto gradTemp = grad.Div(b);
-            for (int i = WidthAxis; i <= BatchAxis; ++i)
+            if (gShape == m_InputsGrads[0].GetShape())
+                grad.Div(b, m_InputsGrads[0]);
+            else
             {
-                if (gradTemp.Len(i) != 1 && a.Len(i) == 1)
-                    gradTemp = sum(gradTemp, (EAxis)i);
+                auto gradTemp = grad.Div(b);
+                for (int i = WidthAxis; i <= BatchAxis; ++i)
+                {
+                    if (gradTemp.Len(i) != 1 && a.Len(i) == 1)
+                        gradTemp = sum(gradTemp, (EAxis)i);
+                }
+                gradTemp.CopyTo(m_InputsGrads[0]);
             }
-            gradTemp.CopyTo(m_InputsGrads[0]);
         }
 
-        if (gShape == m_InputsGrads[1].GetShape())
-            grad.MulElem(a, m_InputsGrads[1]);
-        else
+        if (m_InputNodes[1]->CareAboutGradient())
         {
-            auto gradTemp = grad.MulElem(a);
-            for (int i = WidthAxis; i <= BatchAxis; ++i)
+            if (gShape == m_InputsGrads[1].GetShape())
+                grad.MulElem(a, m_InputsGrads[1]);
+            else
             {
-                if (gradTemp.Len(i) != 1 && a.Len(i) == 1)
-                    gradTemp = sum(gradTemp, (EAxis)i);
+                auto gradTemp = grad.MulElem(a);
+                for (int i = WidthAxis; i <= BatchAxis; ++i)
+                {
+                    if (gradTemp.Len(i) != 1 && a.Len(i) == 1)
+                        gradTemp = sum(gradTemp, (EAxis)i);
+                }
+                gradTemp.CopyTo(m_InputsGrads[1]);
             }
-            gradTemp.CopyTo(m_InputsGrads[1]);
         }
     }
 }

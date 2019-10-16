@@ -20,22 +20,28 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void SubtractOp::ComputeGradientInternal(const Tensor& grad)
     {
-        auto& a = *m_Inputs[0];
-        auto& b = *m_Inputs[1];
-
-        auto gradWrtA = grad;
-        auto gradWrtB = grad.Negated();
-
-        for (int i = WidthAxis; i <= BatchAxis; ++i)
+        if (m_InputNodes[0]->CareAboutGradient())
         {
-            if (gradWrtA.Len(i) != 1 && a.Len(i) == 1)
-                gradWrtA = sum(gradWrtA, (EAxis)i);
-
-            if (gradWrtB.Len(i) != 1 && b.Len(i) == 1)
-                gradWrtB = sum(gradWrtB, (EAxis)i);
+            auto& a = *m_Inputs[0];
+            auto gradWrtA = grad;
+            for (int i = WidthAxis; i <= BatchAxis; ++i)
+            {
+                if (gradWrtA.Len(i) != 1 && a.Len(i) == 1)
+                    gradWrtA = sum(gradWrtA, (EAxis)i);
+            }
+            gradWrtA.CopyTo(m_InputsGrads[0]);
         }
 
-        gradWrtA.CopyTo(m_InputsGrads[0]);
-        gradWrtB.CopyTo(m_InputsGrads[1]);
+        if (m_InputNodes[1]->CareAboutGradient())
+        {
+            auto& b = *m_Inputs[1];
+            auto gradWrtB = grad.Negated();
+            for (int i = WidthAxis; i <= BatchAxis; ++i)
+            {
+                if (gradWrtB.Len(i) != 1 && b.Len(i) == 1)
+                    gradWrtB = sum(gradWrtB, (EAxis)i);
+            }
+            gradWrtB.CopyTo(m_InputsGrads[1]);
+        }
     }
 }

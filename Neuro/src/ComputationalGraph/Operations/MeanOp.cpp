@@ -33,11 +33,14 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void MeanOp::ComputeGradientInternal(const Tensor& grad)
     {
-        float n = (float)m_Inputs[0]->Length();
-        if (m_Axis != GlobalAxis)
-            n = (float)m_Inputs[0]->Stride(m_Axis);
+        if (m_InputNodes[0]->CareAboutGradient())
+        {
+            float n = (float)m_Inputs[0]->Length();
+            if (m_Axis != GlobalAxis)
+                n = (float)m_Inputs[0]->Stride(m_Axis);
 
-        m_InputsGrads[0].FillWithValue(1);
-        m_InputsGrads[0].MulElem(grad.Div(n), m_InputsGrads[0]);
+            m_InputsGrads[0].FillWithValue(1);
+            m_InputsGrads[0].MulElem(grad.Div(n), m_InputsGrads[0]);
+        }
     }
 }

@@ -32,7 +32,10 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void SumOp::ComputeGradientInternal(const Tensor& grad)
     {
-        m_InputsGrads[0].FillWithValue(1);
-        m_InputsGrads[0].MulElem(grad, m_InputsGrads[0]);
+        if (m_InputNodes[0]->CareAboutGradient())
+        {
+            m_InputsGrads[0].FillWithValue(1);
+            m_InputsGrads[0].MulElem(grad, m_InputsGrads[0]);
+        }
     }
 }

@@ -195,28 +195,18 @@ namespace Neuro
             auto node = order[n];
             GRAPH_DEBUG_INFO("##Graph: Computing gradient '%s'...\n", node->Name().c_str());
 
-            if (node->IsVar())
+            if (node->CareAboutGradient())
             {
-                Variable* var = static_cast<Variable*>(node);
-                if (var->Trainable() && (params.empty() || find(params.begin(), params.end(), node) != params.end()))
-                    variables.push_back(var);
-            }
+                if (node->IsVar())
+                {
+                    Variable* var = static_cast<Variable*>(node);
+                    if (var->Trainable() && (params.empty() || find(params.begin(), params.end(), node) != params.end()))
+                        variables.push_back(var);
+                }
 
-            bool computeGrad = true;
-
-            // there is no reason for computing gradients for contants nor placeholders when they have no input nodes
-            // these are not trainable parameters
-            if ((node->IsConst() || node->IsPlaceholder()) && node->m_InputNodes.empty())
-                computeGrad = false;
-
-            if (computeGrad)
-            {
                 auto& nodeOutputGrad = node->m_OutputGrad;
                 nodeOutputGrad.Resize(node->m_Output.GetShape());
                 nodeOutputGrad.Zero(); // reset gradient
-
-                if (node->IsVar() && !static_cast<Variable*>(node)->Trainable())
-                    continue;
 
                 int inputGradsUsed = 0;
 

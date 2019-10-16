@@ -32,9 +32,10 @@ namespace Neuro
         virtual bool IsPlaceholder() const { return false; }
         virtual bool IsVar() const { return false; }
         virtual bool IsConst() const { return false; }
-
+        
         void AddInputNode(TensorLike* node) { m_InputNodes.push_back(node); }
 
+        virtual bool CareAboutGradient() const;
         virtual void OutputConsumed() {}
         virtual void InputGradConsumed(TensorLike* inputNode) {}
 

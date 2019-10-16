@@ -37,7 +37,8 @@ namespace Neuro
     {
         if (m_Val)
         {
-            grad.Mul(m_Val, m_InputsGrads[0]);
+            if (m_InputNodes[0]->CareAboutGradient())
+                grad.Mul(m_Val, m_InputsGrads[0]);
         }
         else
         {
@@ -61,8 +62,10 @@ namespace Neuro
                 }
             };
 
-            progressGrad(0);
-            progressGrad(1);
+            if (m_InputNodes[0]->CareAboutGradient())
+                progressGrad(0);
+            if (m_InputNodes[1]->CareAboutGradient())
+                progressGrad(1);
         }
     }
 }

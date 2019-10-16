@@ -38,7 +38,7 @@ namespace Neuro
                 size_t freeBytes, totalBytes;
                 cudaMemGetInfo(&freeBytes, &totalBytes);
 
-                size_t reservedBytes = (size_t)(freeBytes * 0.9);
+                size_t reservedBytes = (size_t)(freeBytes * 0.85);
 
                 CUDA_CHECK(MemoryManager::Default().Reserve(reservedBytes));
 

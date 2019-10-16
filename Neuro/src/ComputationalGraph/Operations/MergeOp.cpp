@@ -38,18 +38,31 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void MergeOp::ComputeGradientInternal(const Tensor& grad)
     {
-        switch (m_Mode)
+        bool anyInputCareAboutGrad = false;
+        for (auto inputNode : m_InputNodes)
         {
-        case MergeAvg:
-            Tensor::MergeAvgGradient(m_Output, m_Inputs, grad, m_InputsGradsPtrs);
-            break;
-        case MergeMax:
-        case MergeMin:
-            Tensor::MergeMinMaxGradient(m_Output, m_Inputs, grad, m_InputsGradsPtrs);
-            break;
-        case MergeSum:
-            Tensor::MergeSumGradient(m_Output, m_Inputs, grad, m_InputsGradsPtrs);
-            break;
+            if (inputNode->CareAboutGradient())
+            {
+                anyInputCareAboutGrad = true;
+                break;
+            }
+        }
+
+        if (anyInputCareAboutGrad)
+        {
+            switch (m_Mode)
+            {
+            case MergeAvg:
+                Tensor::MergeAvgGradient(m_Output, m_Inputs, grad, m_InputsGradsPtrs);
+                break;
+            case MergeMax:
+            case MergeMin:
+                Tensor::MergeMinMaxGradient(m_Output, m_Inputs, grad, m_InputsGradsPtrs);
+                break;
+            case MergeSum:
+                Tensor::MergeSumGradient(m_Output, m_Inputs, grad, m_InputsGradsPtrs);
+                break;
+            }
         }
     }
 }

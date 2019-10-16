@@ -36,6 +36,7 @@ namespace Neuro
         auto& gamma = *m_Inputs[1];
         auto& beta = *m_Inputs[2];
 
-        grad.BatchNormGradient(x, gamma, m_Epsilon, grad, m_SaveMean, m_SaveInvVar, m_InputsGrads[1], m_InputsGrads[2], true, m_InputsGrads[0]);
+        if (m_InputNodes[0]->CareAboutGradient() || m_InputNodes[1]->CareAboutGradient() || m_InputNodes[2]->CareAboutGradient())
+            grad.BatchNormGradient(x, gamma, m_Epsilon, grad, m_SaveMean, m_SaveInvVar, m_InputsGrads[1], m_InputsGrads[2], true, m_InputsGrads[0]);
     }
 }
