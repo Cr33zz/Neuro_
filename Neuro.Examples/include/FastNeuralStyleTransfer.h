@@ -1,17 +1,19 @@
 #pragma once
 
+#include <windows.h>
 #include <iostream>
 #include <string>
 #include <vector>
 #include <numeric>
-#include <experimental/filesystem>
 
+#include "Memory/MemoryManager.h"
 #include "Neuro.h"
 #include "VGG19.h"
 
+#undef LoadImage
+
 using namespace std;
 using namespace Neuro;
-namespace fs = std::experimental::filesystem;
 
 class FastNeuralStyleTransfer
 {
@@ -33,11 +35,19 @@ public:
 
         Tensor::SetForcedOpMode(GPU);
 
-        // build content files list
         vector<string> contentFiles;
-        for (const auto & entry : fs::directory_iterator(CONTENT_FILES_DIR))
-            contentFiles.push_back(entry.path().generic_string());
-
+        // build content files list
+        WIN32_FIND_DATA data;
+        HANDLE hFind = FindFirstFile((CONTENT_FILES_DIR + "\\*.jpg").c_str(), &data);
+        if (hFind != INVALID_HANDLE_VALUE)
+        {
+            do
+            {
+                contentFiles.push_back(CONTENT_FILES_DIR + "/" + data.cFileName);
+            } while (FindNextFile(hFind, &data));
+            FindClose(hFind);
+        }
+        
         auto vggModel = VGG16::CreateModel(NCHW, Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), false);
         vggModel->SetTrainable(false);
 
@@ -114,8 +124,10 @@ public:
                 //load images
                 for (int j = 0; j < BATCH_SIZE; ++j)
                     LoadImage(contentFiles[i * BATCH_SIZE + j], &contentBatch.GetValues()[0] + j * contentBatch.BatchLength(), content->GetShape().Width(), content->GetShape().Height(), NCHW);
-        
+
                 auto results = Session::Default()->Run({ stylizedContent, contentLoss, styleLoss, totalLoss, minimize }, { { content, &contentBatch } });
+
+                MemoryManager::Default().PrintMemoryState("mem.log");
 
                 stringstream extString;
                 extString << setprecision(4) << fixed << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - total_l: " << (*results[3])(0);

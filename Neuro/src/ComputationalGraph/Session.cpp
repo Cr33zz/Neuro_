@@ -5,7 +5,7 @@
 #include "ComputationalGraph/Variable.h"
 #include "Tensors/Tensor.h"
 
-//#define ENABLE_SESSION_LOGS
+#define ENABLE_SESSION_LOGS
 
 #ifdef ENABLE_SESSION_LOGS
 #include <windows.h>
@@ -13,7 +13,7 @@
 #include "Tools.h"
 #define SESSION_DEBUG_INFO(...) do { OutputDebugString(StringFormat(__VA_ARGS__).c_str()); } while(0)
 #else
-#define SESSION_DEBUG_INFO(...)
+#define SESSION_DEBUG_INFO(...) {}
 #endif
 
 namespace Neuro
@@ -53,6 +53,7 @@ namespace Neuro
         for (auto feed : feeds)
         {
             SESSION_DEBUG_INFO("##Session: Feeding '%s'...\n", feed.first->Name().c_str());
+            feed.first->m_Output.ResizeBatch(feed.second->Batch());
             feed.second->CopyTo(feed.first->m_Output);
         }
 

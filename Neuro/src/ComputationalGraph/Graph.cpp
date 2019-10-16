@@ -14,7 +14,7 @@
 #include "Tools.h"
 #define GRAPH_DEBUG_INFO(...) do { OutputDebugString(StringFormat(__VA_ARGS__).c_str()); } while(0)
 #else
-#define GRAPH_DEBUG_INFO(...)
+#define GRAPH_DEBUG_INFO(...) {}
 #endif
 
 namespace Neuro

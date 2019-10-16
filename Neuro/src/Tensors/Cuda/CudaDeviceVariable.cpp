@@ -5,14 +5,14 @@
 #include "Memory/MemoryManager.h"
 #include "Tensors/Cuda/CudaErrorCheck.h"
 
-//#define ENABLE_CUDA_VAR_LOGS
+#define ENABLE_CUDA_VAR_LOGS
 
 #ifdef ENABLE_CUDA_VAR_LOGS
 #include <windows.h>
 #include <debugapi.h>
 #define CUDA_VAR_DEBUG_INFO(...) do { static char buffer[1024]; sprintf(buffer, __VA_ARGS__); OutputDebugString(buffer); } while(0)
 #else
-#define CUDA_VAR_DEBUG_INFO(...) void
+#define CUDA_VAR_DEBUG_INFO(...) {}
 #endif
 
 namespace Neuro
