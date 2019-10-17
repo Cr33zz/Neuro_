@@ -186,11 +186,29 @@ __global__ void mulElemBroadcast(const float* __restrict t1, int t1Width, int t1
 template<int W, int H, int D, int N>
 __global__ void sumTemplate(const float* __restrict input, int width, int height, int depth, int batch, float* __restrict output)
 {
-    //const size_t THREADS_PER_BLOCK = 1024;
-
     if (W && H && D && N)
     {
-        // not implemented yet
+        const size_t THREADS_PER_BLOCK = 1024;
+        __shared__ float sdata[THREADS_PER_BLOCK];
+
+        unsigned int tid = threadIdx.x;
+        unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
+
+        sdata[tid] = (idx < width) ? input[idx] : 0;
+        __syncthreads();
+
+        // parallel reduction
+        for (unsigned int s = 1; s < blockDim.x; s *= 2)
+        {
+            int index = 2 * s * tid;
+            if (index < blockDim.x)
+                sdata[index] += sdata[index + s];
+
+            __syncthreads();
+        }
+
+        if (tid == 0)
+            output[blockIdx.x] = sdata[0];
     }
     else if (W && !H && !D && !N)
     {
@@ -410,7 +428,7 @@ namespace Neuro
         else if (axis == 3) // batch
             sumTemplate<0, 0, 0, 1><<<blocks, threads>>>(inputDev, inputWidth, inputHeight, inputDepth, inputBatch, outputDev);
         else if (axis == 4) // 01
-            sumTemplate<1, 1, 0, 0> << <blocks, threads >> > (inputDev, inputWidth, inputHeight, inputDepth, inputBatch, outputDev);
+            sumTemplate<1, 1, 0, 0><<<blocks, threads>>>(inputDev, inputWidth, inputHeight, inputDepth, inputBatch, outputDev);
         else if (axis == 5) // 012
             sumTemplate<1, 1, 1, 0><<<blocks, threads>>>(inputDev, inputWidth, inputHeight, inputDepth, inputBatch, outputDev);
         else if (axis == 6) // 013
