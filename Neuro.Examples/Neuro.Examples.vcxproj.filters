@@ -27,6 +27,12 @@
     <ClCompile Include="src\VGG19.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\NeuralStyleTransfer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FastNeuralStyleTransfer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\IrisNetwork.h">

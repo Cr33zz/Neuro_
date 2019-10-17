@@ -141,8 +141,10 @@
   <ItemGroup>
     <ClCompile Include="src\CifarGAN.cpp" />
     <ClCompile Include="src\DeepConvGAN.cpp" />
+    <ClCompile Include="src\FastNeuralStyleTransfer.cpp" />
     <ClCompile Include="src\GAN.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\NeuralStyleTransfer.cpp" />
     <ClCompile Include="src\VGG16.cpp" />
     <ClCompile Include="src\VGG19.cpp" />
   </ItemGroup>

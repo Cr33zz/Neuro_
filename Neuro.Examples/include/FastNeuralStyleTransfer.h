@@ -5,17 +5,18 @@
 #include <string>
 #include <vector>
 #include <numeric>
+#include <iomanip>
 
+#undef LoadImage
+
+#include "NeuralStyleTransfer.h"
 #include "Memory/MemoryManager.h"
 #include "Neuro.h"
 #include "VGG19.h"
 
-#undef LoadImage
-
-using namespace std;
 using namespace Neuro;
 
-class FastNeuralStyleTransfer
+class FastNeuralStyleTransfer : public NeuralStyleTransfer
 {
 public:
     void Run()
@@ -147,75 +148,5 @@ public:
         //genImage.SaveAsImage("_neural_transfer.jpg", false);
     }
 
-    //////////////////////////////////////////////////////////////////////////
-    TensorLike* CreateTransformerNet(TensorLike* input, TensorLike* training)
-    {
-        auto convLayer = [&](TensorLike* input, uint32_t filtersNum, uint32_t filterSize, uint32_t stride, bool includeReLU = true)
-        {
-            input = (new Conv2D(filtersNum, filterSize, stride, Tensor::GetPadding(Same, filterSize)))->Call(input)[0];
-            input = (new InstanceNormalization())->Call(input, training)[0];
-            if (includeReLU)
-                input = relu(input);
-            return input;
-        };
-
-        auto residualBlock = [&](TensorLike* input, uint32_t filterSize)
-        {
-            auto x = convLayer(input, 128, filterSize, 1);
-            return add(input, convLayer(x, 128, filterSize, 1, false));
-        };
-
-        auto upsampleLayer = [&](TensorLike* input, uint32_t filtersNum, uint32_t filterSize, uint32_t stride, uint32_t upsampleFactor)
-        {
-            input = upsample2d(input, upsampleFactor);
-            input = (new Conv2D(filtersNum, filterSize, stride, Tensor::GetPadding(Same, filterSize)))->Call(input)[0];
-            return input;
-        };
-
-        auto conv1 = convLayer(input, 32, 9, 1);
-        auto conv2 = convLayer(conv1, 64, 3, 2);
-        auto conv3 = convLayer(conv2, 128, 3, 2);
-        auto resid1 = residualBlock(conv3, 3);
-        auto resid2 = residualBlock(resid1, 3);
-        auto resid3 = residualBlock(resid2, 3);
-        auto resid4 = residualBlock(resid3, 3);
-        auto resid5 = residualBlock(resid4, 3);
-        auto up1 = upsampleLayer(resid5, 64, 3, 2, 2);
-        auto up2 = upsampleLayer(up1, 32, 3, 2, 2);
-        auto up3 = convLayer(up2, 3, 9, 1, false);
-        return add(multiply(tanh(up3), 127.5f), 127.5f); // de-normalize
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    TensorLike* GramMatrix(TensorLike* x, const string& name)
-    {
-        assert(x->GetShape().Batch() == 1);
-
-        uint32_t elementsPerFeature = x->GetShape().Width() * x->GetShape().Height();
-        auto features = reshape(x, Shape(elementsPerFeature, x->GetShape().Depth()));
-        return multiply(matmul(features, transpose(features)), 1.f / (float)elementsPerFeature, name + "_gram_matrix");
-        //return matmul(features, transpose(features));
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    TensorLike* StyleLoss(TensorLike* styleGram, TensorLike* gen, int index)
-    {
-        assert(gen->GetShape().Batch() == 1);
-
-        //auto s = GramMatrix(style, index);
-        auto genGram = GramMatrix(gen, "gen_style_" + to_string(index));
-
-        float channels = (float)gen->GetShape().Depth();
-        float size = (float)(gen->GetShape().Height() * gen->GetShape().Width());
-
-        //return multiply(mean(square(sub(styleGram, genGram))), 1.f / (4.f * (channels * channels) * (size * size)), "style_loss_" + to_string(index));
-        //return div(mean(square(sub(styleGram, genGram))), new Constant(4.f * (channels * channels) * (size * size)), "style_loss_" + to_string(index));
-        return mean(square(sub(styleGram, genGram)));
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    TensorLike* ContentLoss(TensorLike* target, TensorLike* gen)
-    {
-        return mean(square(sub(target, gen)), GlobalAxis, "content_loss");
-    }
+    TensorLike* CreateTransformerNet(TensorLike* input, TensorLike* training);
 };
