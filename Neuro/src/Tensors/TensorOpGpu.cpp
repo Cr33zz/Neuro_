@@ -524,7 +524,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::BatchNormalization(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor& runningMean, const Tensor& runningVar, Tensor& output) const
+    void TensorOpGpu::BatchNormalization(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor* runningMean, const Tensor* runningVar, Tensor& output) const
     {
         if (mode == Instance)
             return __super::BatchNormalization(input, mode, gamma, beta, epsilon, runningMean, runningVar, output);
@@ -532,8 +532,10 @@ namespace Neuro
         input.CopyToDevice();
         gamma.CopyToDevice();
         beta.CopyToDevice();
-        runningMean.CopyToDevice();
-        runningVar.CopyToDevice();
+        if (runningMean)
+            runningMean->CopyToDevice();
+        if (runningVar)
+            runningVar->CopyToDevice();
         output.OverrideDevice();
 
         cudnnTensorDescriptor_t inputOutputDesc; cudnnCreateTensorDescriptor(&inputOutputDesc);
@@ -555,13 +557,13 @@ namespace Neuro
             gammaBetaMeanVarDesc,
             gamma.GetDevicePtr(),
             beta.GetDevicePtr(),
-            runningMean.GetDevicePtr(),
-            runningVar.GetDevicePtr(),
+            runningMean ? runningMean->GetDevicePtr() : nullptr,
+            runningVar ? runningVar->GetDevicePtr() : nullptr,
             epsilon));
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::BatchNormalizationTrain(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& output) const
+    void TensorOpGpu::BatchNormalizationTrain(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor* runningMean, Tensor* runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& output) const
     {
         if (mode == Instance)
             return __super::BatchNormalizationTrain(input, mode, gamma, beta, momentum, epsilon, runningMean, runningVar, saveMean, saveInvVariance, output);
@@ -569,8 +571,10 @@ namespace Neuro
         input.CopyToDevice();
         gamma.CopyToDevice();
         beta.CopyToDevice();
-        runningMean.CopyToDevice();
-        runningVar.CopyToDevice();
+        if (runningMean)
+            runningMean->CopyToDevice();
+        if (runningVar)
+            runningVar->CopyToDevice();
         saveMean.CopyToDevice();
         saveInvVariance.CopyToDevice();
         output.OverrideDevice();
@@ -595,8 +599,8 @@ namespace Neuro
             gamma.GetDevicePtr(),
             beta.GetDevicePtr(),
             momentum,
-            runningMean.GetDevicePtr(),
-            runningVar.GetDevicePtr(),
+            runningMean ? runningMean->GetDevicePtr() : nullptr,
+            runningVar ? runningVar->GetDevicePtr() : nullptr,
             epsilon,
             saveMean.GetDevicePtr(),
             saveInvVariance.GetDevicePtr()));

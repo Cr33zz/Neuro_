@@ -719,28 +719,45 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::BatchNormalization(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor& runningMean, const Tensor& runningVar, Tensor& output) const
+    void TensorOpCpu::BatchNormalization(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor* runningMean, const Tensor* runningVar, Tensor& output) const
     {
         input.CopyToHost();
         gamma.CopyToHost();
         beta.CopyToHost();
-        runningMean.CopyToHost();
-        runningVar.CopyToHost();
+        if (runningMean)
+            runningMean->CopyToHost();
+        if (runningVar)
+            runningVar->CopyToHost();
         output.OverrideHost();
 
-        Tensor xMu = input - runningMean;
-        Tensor xNorm = xMu * (1.f / sqrt(runningVar + epsilon));
+        Tensor xNorm;
+
+        if (runningMean && runningVar)
+        {
+            Tensor xMu = input - *runningMean;
+            xNorm = xMu * (1.f / sqrt(*runningVar + epsilon));
+        }
+        else
+        {
+            NEURO_ASSERT(mode == Instance, "Running mean and variance can be missing only for Instance normalization.");
+            Tensor xMu = input - mean(input, _01Axes);
+            Tensor xVar = mean(sqr(xMu), _01Axes);
+            xNorm = xMu * (1.f / sqrt(xVar + epsilon));
+        }
+
         xNorm.MulElem(gamma).Add(beta, output);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::BatchNormalizationTrain(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& output) const
+    void TensorOpCpu::BatchNormalizationTrain(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor* runningMean, Tensor* runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& output) const
     {
         input.CopyToHost();
         gamma.CopyToHost();
         beta.CopyToHost();
-        runningMean.CopyToHost();
-        runningVar.CopyToHost();
+        if (runningMean)
+            runningMean->CopyToHost();
+        if (runningVar)
+            runningVar->CopyToHost();
         saveMean.CopyToHost();
         saveInvVariance.CopyToHost();
         output.OverrideHost();
@@ -772,10 +789,14 @@ namespace Neuro
         Tensor xNorm = xMu * saveInvVariance;
         xNorm.MulElem(gamma).Add(beta, output);
 
-        runningMean.Add(1 - momentum, momentum, saveMean, runningMean);
+        if (runningMean)
+            runningMean->Add(1 - momentum, momentum, saveMean, *runningMean);
 
-        Tensor tempVar = var * m / (m - 1); // according to the original BN paper
-        runningVar.Add(1 - momentum, momentum, tempVar, runningVar);
+        if (runningVar)
+        {
+            Tensor tempVar = var * m / (m - 1); // according to the original BN paper
+            runningVar->Add(1 - momentum, momentum, tempVar, *runningVar);
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////

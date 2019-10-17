@@ -5,7 +5,7 @@
 #include "Memory/MemoryManager.h"
 #include "Tensors/Cuda/CudaErrorCheck.h"
 
-#define ENABLE_CUDA_VAR_LOGS
+//#define ENABLE_CUDA_VAR_LOGS
 
 #ifdef ENABLE_CUDA_VAR_LOGS
 #include <windows.h>

@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    InstanceNormalizeOp::InstanceNormalizeOp(TensorLike* x, TensorLike* gamma, TensorLike* beta, TensorLike* runningMean, TensorLike* runningVar, float momentum, float epsilon, TensorLike* training, const string& name)
-        : BatchNormalizeOp(x, gamma, beta, runningMean, runningVar, momentum, epsilon, training, name.empty() ? "instance_normalize" : name)
+    InstanceNormalizeOp::InstanceNormalizeOp(TensorLike* x, TensorLike* gamma, TensorLike* beta, float momentum, float epsilon, TensorLike* training, const string& name)
+        : Operation({ x, gamma, beta, training }, name.empty() ? "instance_normalize" : name), m_Epsilon(epsilon), m_Momentum(momentum)
     {
         m_Output.Resize(x->GetShape());
     }
@@ -15,18 +15,16 @@ namespace Neuro
         auto& x = *m_Inputs[0];
         auto& gamma = *m_Inputs[1];
         auto& beta = *m_Inputs[2];
-        auto& runningMean = m_InputNodes[3]->Output();
-        auto& runningVar = m_InputNodes[4]->Output();
-        bool training = (*m_Inputs[5])(0) != 0;
+        bool training = (*m_Inputs[3])(0) != 0;
 
         m_Output.ResizeBatch(m_Inputs[0]->Batch());
-        m_SaveMean.Resize(gamma.GetShape());
-        m_SaveInvVar.Resize(gamma.GetShape());
+        m_SaveMean.Resize(Shape(1, 1, x.GetShape().Depth(), x.GetShape().Batch()));
+        m_SaveInvVar.Resize(m_SaveMean.GetShape());
 
         if (training)
-            m_Inputs[0]->InstanceNormTrain(gamma, beta, m_Momentum, m_Epsilon, runningMean, runningVar, m_SaveMean, m_SaveInvVar, m_Output);
+            m_Inputs[0]->InstanceNormTrain(gamma, beta, m_Momentum, m_Epsilon, m_SaveMean, m_SaveInvVar, m_Output);
         else
-            m_Inputs[0]->InstanceNorm(gamma, beta, m_Epsilon, runningMean, runningVar, m_Output);
+            m_Inputs[0]->InstanceNorm(gamma, beta, m_Epsilon, m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -26,16 +26,13 @@ namespace Neuro
         m_Gamma = new Variable(ones(paramsShape), "gamma");
         m_Beta = new Variable(zeros(paramsShape), "beta");
 
-        m_RunningMean = new Variable(zeros(paramsShape), "running_mean");
-        m_RunningVar = new Variable(ones(paramsShape), "running_var");
-
         m_Built = true;
     }
 
     //////////////////////////////////////////////////////////////////////////
     vector<TensorLike*> InstanceNormalization::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
     {
-        TensorLike* output = instance_norm(inputs[0], m_Gamma, m_Beta, m_RunningMean, m_RunningVar, m_Momentum, m_Epsilon, training);
+        TensorLike* output = instance_norm(inputs[0], m_Gamma, m_Beta, m_Momentum, m_Epsilon, training);
         return { output };
     }
 }

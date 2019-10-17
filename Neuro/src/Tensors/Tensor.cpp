@@ -1392,14 +1392,16 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::BatchNorm(const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor& runningMean, const Tensor& runningVar, Tensor& result) const
+    void Tensor::BatchNorm(const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor* runningMean, const Tensor* runningVar, Tensor& result) const
     {
+        NEURO_ASSERT((runningMean && runningVar) || (!runningMean && !runningVar), "Both running mean and var must be present or absent at the same time.");
         Op()->BatchNormalization(*this, m_Shape.Depth() > 1 ? Spatial : PerActivation, gamma, beta, epsilon, runningMean, runningVar, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::BatchNormTrain(const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const
+    void Tensor::BatchNormTrain(const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor* runningMean, Tensor* runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const
     {
+        NEURO_ASSERT((runningMean && runningVar) || (!runningMean && !runningVar), "Both running mean and var must be present or absent at the same time.");
         Op()->BatchNormalizationTrain(*this, m_Shape.Depth() > 1 ? Spatial : PerActivation, gamma, beta, momentum, epsilon, runningMean, runningVar, saveMean, saveInvVariance, result);
     }
 
@@ -1410,15 +1412,15 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::InstanceNorm(const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor& runningMean, const Tensor& runningVar, Tensor& result) const
+    void Tensor::InstanceNorm(const Tensor& gamma, const Tensor& beta, float epsilon, Tensor& result) const
     {
-        Op()->BatchNormalization(*this, Instance, gamma, beta, epsilon, runningMean, runningVar, result);
+        Op()->BatchNormalization(*this, Instance, gamma, beta, epsilon, nullptr, nullptr, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::InstanceNormTrain(const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const
+    void Tensor::InstanceNormTrain(const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const
     {
-        Op()->BatchNormalizationTrain(*this, Instance, gamma, beta, momentum, epsilon, runningMean, runningVar, saveMean, saveInvVariance, result);
+        Op()->BatchNormalizationTrain(*this, Instance, gamma, beta, momentum, epsilon, nullptr, nullptr, saveMean, saveInvVariance, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
