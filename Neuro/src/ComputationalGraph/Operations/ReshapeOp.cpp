@@ -12,6 +12,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void ReshapeOp::ComputeInternal()
     {
+        m_Output.ResizeBatch(m_Inputs[0]->Batch());
         m_Inputs[0]->CopyTo(m_Output);
     }
 
