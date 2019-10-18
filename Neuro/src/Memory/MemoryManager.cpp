@@ -344,6 +344,8 @@ namespace Neuro
     EMemStatus MemoryManager::AllocateForOffload(void** ptr, size_t size)
     {
         CUDA_CHECK(cudaMallocHost(ptr, size));
+        m_AllocatedPinnedMemSize += size;
+        m_PinnedAllocations.push_back({ *ptr, size });
         if (ptr)
             return MEM_STATUS_SUCCESS;
         return MEM_STATUS_OUT_OF_MEMORY;
@@ -354,7 +356,10 @@ namespace Neuro
     {
         if (!ptr)
             return MEM_STATUS_SUCCESS;
-
+        auto it = find_if(m_PinnedAllocations.begin(), m_PinnedAllocations.end(), [&](const PinnedAlloc& a) { return a.ptr == ptr; });
+        NEURO_ASSERT(it != m_PinnedAllocations.end(), "");
+        m_AllocatedPinnedMemSize -= it->size;
+        m_PinnedAllocations.erase(it);
         CUDA_CHECK(cudaFreeHost(ptr));
         return MEM_STATUS_SUCCESS;
     }
@@ -460,7 +465,7 @@ namespace Neuro
         MEM_CHECK(GetUsedMemoryUnsafe(usedMemory));
         MEM_CHECK(GetFreeMemoryUnsafe(freeMemory));
 
-        fprintf(file, ">> stream=0x%016zx, used=%zuB, free=%zuB, peak=%zuB\n", streamCode, usedMemory, freeMemory, m_AllocatedMemSizePeak);
+        fprintf(file, ">> stream=0x%016zx, used=%zuKB, free=%zuKB, peak=%zuKB, pinned_used=%zuKB\n", streamCode, usedMemory / 1024, freeMemory / 1024, m_AllocatedMemSizePeak / 1024, m_AllocatedPinnedMemSize / 1024);
         MEM_CHECK(PrintListUnsafe(file, "used", m_UsedBlocks));
         MEM_CHECK(PrintListUnsafe(file, "free", m_FreeBlocks));
         fprintf(file, "\n");

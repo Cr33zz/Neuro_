@@ -64,6 +64,12 @@ namespace Neuro
         size_t size;
     };
 
+    struct PinnedAlloc
+    {
+        void* ptr;
+        size_t size;
+    };
+
     // Memory manager for GPU device
     class MemoryManager
     {
@@ -106,8 +112,10 @@ namespace Neuro
         Block* m_UsedBlocks = nullptr;
         Block* m_FreeBlocks = nullptr;
         list<CudaBlock> m_CudaBlocks;
+        list<PinnedAlloc> m_PinnedAllocations;
         size_t m_Size = 0;
         uint32_t m_Flags = MEM_FLAGS_CANNOT_GROW;
+        size_t m_AllocatedPinnedMemSize = 0;
         size_t m_AllocatedMemSize = 0;
         size_t m_AllocatedMemSizePeak = 0;
     };
