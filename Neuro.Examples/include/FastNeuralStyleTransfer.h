@@ -97,11 +97,8 @@ public:
 
         auto stylizedFeatures = vggFeaturesModel(stylizedContentPre);
 
-        float contentLossWeight = 1e3f;
-        float styleLossWeight = 1e-2f;
-
         // compute content loss from first output...
-        auto contentLoss = multiply(ContentLoss(targetContentFeatures[0], stylizedFeatures[0]), contentLossWeight);
+        auto contentLoss = multiply(ContentLoss(targetContentFeatures[0], stylizedFeatures[0]), CONTENT_WEIGHT);
         stylizedFeatures.erase(stylizedFeatures.begin());
 
         vector<TensorLike*> styleLosses;
@@ -109,11 +106,11 @@ public:
         assert(stylizedFeatures.size() == styleGrams.size());
         for (size_t i = 0; i < stylizedFeatures.size(); ++i)
             styleLosses.push_back(StyleLoss(styleGrams[i], stylizedFeatures[i], (int)i));
-        auto styleLoss = multiply(merge_avg(styleLosses, "mean_style_loss"), styleLossWeight, "style_loss");
+        auto styleLoss = multiply(merge_avg(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "style_loss");
 
         auto totalLoss = add(contentLoss, styleLoss, "total_loss");
 
-        auto optimizer = Adam(5.f, 0.99f, 0.999f, 0.1f);
+        auto optimizer = Adam(LEARNING_RATE);
         auto minimize = optimizer.Minimize({ totalLoss });
 
         Tensor contentBatch(Shape::From(content->GetShape(), BATCH_SIZE));
@@ -142,7 +139,7 @@ public:
                 extString << setprecision(4) << fixed << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - total_l: " << (*results[3])(0);
                 progress.SetExtraString(extString.str());
 
-                if (i % 1 == 0)
+                if (i % 5 == 0)
                 {
                     auto genImage = *results[0];
                     genImage.SaveAsImage("fnst_e" + PadLeft(to_string(e), 4, '0') + "_b" + PadLeft(to_string(i), 4, '0') + ".png", false);
