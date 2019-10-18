@@ -324,7 +324,7 @@ namespace Neuro
 		assert(t.Depth() == Depth());
         assert(result.Batch() == max(Batch(), t.Batch()));
 
-		Op()->Mul(false, transposeT, *this, t, result);
+		Op()->MatMul(false, transposeT, *this, t, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -378,16 +378,8 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Div(const Tensor& t, Tensor& result) const
 	{
-		CopyToHost();
-		result.OverrideHost();
-
-		assert(SameDimensionsExceptBatches(t));
-		assert(t.Batch() == result.Batch());
-
-		for (uint32_t i = 0; i < m_Values.size(); ++i)
-			result.m_Values[i] = m_Values[i] / t.m_Values[i];
+        Op()->Div(*this, t, result);
 	}
-
 
 	//////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::Div(const Tensor& t) const
@@ -442,11 +434,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Add(float v, Tensor& result) const
 	{
-		CopyToHost();
-        result.OverrideHost();
-
-		for (uint32_t i = 0; i < m_Values.size(); ++i)
-			result.m_Values[i] = m_Values[i] + v;
+        Op()->Add(*this, v, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -474,11 +462,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Sub(float v, Tensor& result) const
 	{
-		CopyToHost();
-        result.OverrideHost();
-
-		for (uint32_t i = 0; i < m_Values.size(); ++i)
-			result.m_Values[i] = m_Values[i] - v;
+        Add(-v, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////

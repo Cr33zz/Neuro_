@@ -17,6 +17,8 @@ namespace Neuro
             m_Output.Resize(Shape(inputShape.Width(), inputShape.Height(), 1, inputShape.Batch()));
         else if (m_Axis == BatchAxis)
             m_Output.Resize(Shape(inputShape.Width(), inputShape.Height(), inputShape.Depth(), 1));
+        else if (m_Axis == _01Axes)
+            m_Output.Resize(Shape(1, 1, inputShape.Depth(), inputShape.Batch()));
         else
             assert(false);
     }
@@ -24,7 +26,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void MeanOp::ComputeInternal()
     {
-        if (m_Axis == WidthAxis || m_Axis == HeightAxis || m_Axis == DepthAxis)
+        if (m_Axis == WidthAxis || m_Axis == HeightAxis || m_Axis == DepthAxis || m_Axis == _01Axes)
             m_Output.ResizeBatch(m_Inputs[0]->Batch());
 
         m_Inputs[0]->Mean(m_Axis, m_Output);
@@ -36,7 +38,9 @@ namespace Neuro
         if (m_InputNodes[0]->CareAboutGradient())
         {
             float n = (float)m_Inputs[0]->Length();
-            if (m_Axis != GlobalAxis)
+            if (m_Axis == _01Axes)
+                n = (float)(m_Inputs[0]->Width() * m_Inputs[0]->Height());
+            else if (m_Axis != GlobalAxis)
                 n = (float)m_Inputs[0]->Stride(m_Axis);
 
             m_InputsGrads[0].FillWithValue(1);

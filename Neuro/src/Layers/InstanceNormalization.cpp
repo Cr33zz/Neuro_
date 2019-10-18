@@ -1,6 +1,6 @@
 #include "Layers/InstanceNormalization.h"
 #include "ComputationalGraph/Variable.h"
-#include "ComputationalGraph/Operations/InstanceNormalizeOp.h"
+#include "ComputationalGraph/Ops.h"
 
 namespace Neuro
 {
@@ -32,7 +32,10 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<TensorLike*> InstanceNormalization::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
     {
-        TensorLike* output = instance_norm(inputs[0], m_Gamma, m_Beta, m_Momentum, m_Epsilon, training);
-        return { output };
+        auto _mean = mean(inputs[0], _01Axes);
+        auto xmu = sub(inputs[0], _mean);
+        auto var = mean(square(xmu), _01Axes, "variance");
+        auto normed = divide(xmu, add(sqrt(var, "stddev"), m_Epsilon), "normed");
+        return { add(multiply(normed, m_Gamma, "gamma_scaled"), m_Beta, "beta_shifted") };
     }
 }

@@ -41,7 +41,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Mul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
+    void TensorOpMultiCpu::MatMul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
     {
         auto t1Temp = transposeT1 ? t1.Transposed() : t1;
         auto t2Temp = transposeT2 ? t2.Transposed() : t2;

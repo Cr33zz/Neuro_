@@ -63,7 +63,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    EMemStatus MemoryManager::Allocate(void** ptr, size_t size, const char* annotation)
+    EMemStatus MemoryManager::Allocate(void** ptr, size_t size, const string& annotation)
     {
         size = ceilInt(size, MEM_GRANULARITY);
 
@@ -341,11 +341,11 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    EMemStatus MemoryManager::AllocateForOffload(void** ptr, size_t size)
+    EMemStatus MemoryManager::AllocateForOffload(void** ptr, size_t size, const string& annotation)
     {
         CUDA_CHECK(cudaMallocHost(ptr, size));
         m_AllocatedPinnedMemSize += size;
-        m_PinnedAllocations.push_back({ *ptr, size });
+        m_PinnedAllocations.push_back({ *ptr, size, annotation});
         if (ptr)
             return MEM_STATUS_SUCCESS;
         return MEM_STATUS_OUT_OF_MEMORY;
@@ -451,7 +451,17 @@ namespace Neuro
         
         fprintf(file, "| list=\"%s\", size=%zu\n", name, size);
         for (Block *curr = (Block*)head; curr; curr = curr->GetNext())
-            fprintf(file, "| | node=0x%016zx, data=0x%016zx, size=%zu, next=0x%016zx, head=%2zu, annotation:'%s'\n", (size_t)curr, (size_t)curr->GetData(), (size_t)curr->GetSize(), (size_t)curr->GetNext(), (size_t)curr->IsHead(), (curr->m_Annotation ? curr->m_Annotation : ""));
+            fprintf(file, "| | node=0x%016zx, data=0x%016zx, size=%zu, next=0x%016zx, head=%2zu, annotation:'%s'\n", (size_t)curr, (size_t)curr->GetData(), (size_t)curr->GetSize(), (size_t)curr->GetNext(), (size_t)curr->IsHead(), curr->m_Annotation.c_str());
+        fprintf(file, "|\n");
+        return MEM_STATUS_SUCCESS;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    EMemStatus MemoryManager::PrintPinned(FILE* file) const
+    {
+        fprintf(file, "| list=\"pinned\", size=%zu\n", m_AllocatedPinnedMemSize);
+        for (auto& curr : m_PinnedAllocations)
+            fprintf(file, "| | data=0x%016zx, size=%zu, annotation:'%s'\n", (size_t)curr.ptr, (size_t)curr.size, curr.annotation.c_str());
         fprintf(file, "|\n");
         return MEM_STATUS_SUCCESS;
     }
@@ -465,9 +475,10 @@ namespace Neuro
         MEM_CHECK(GetUsedMemoryUnsafe(usedMemory));
         MEM_CHECK(GetFreeMemoryUnsafe(freeMemory));
 
-        fprintf(file, ">> stream=0x%016zx, used=%zuKB, free=%zuKB, peak=%zuKB, pinned_used=%zuKB\n", streamCode, usedMemory / 1024, freeMemory / 1024, m_AllocatedMemSizePeak / 1024, m_AllocatedPinnedMemSize / 1024);
+        fprintf(file, ">> stream=0x%016zx, used=%zuKB, free=%zuKB, peak=%zuKB, pinned=%zuKB\n", streamCode, usedMemory / 1024, freeMemory / 1024, m_AllocatedMemSizePeak / 1024, m_AllocatedPinnedMemSize / 1024);
         MEM_CHECK(PrintListUnsafe(file, "used", m_UsedBlocks));
         MEM_CHECK(PrintListUnsafe(file, "free", m_FreeBlocks));
+        MEM_CHECK(PrintPinned(file));
         fprintf(file, "\n");
         fclose(file);
 

@@ -45,7 +45,7 @@ namespace Neuro
         inline void SetHeadFlag(bool isHead) { m_IsHead = isHead; }
 
         /// Debug annotation
-        const char* m_Annotation = nullptr;
+        string m_Annotation;
 
     private:
         /// The pointer to the memory region on the device. 
@@ -68,6 +68,7 @@ namespace Neuro
     {
         void* ptr;
         size_t size;
+        string annotation;
     };
 
     // Memory manager for GPU device
@@ -79,10 +80,10 @@ namespace Neuro
 
         EMemStatus Reserve(size_t size);
 
-        EMemStatus Allocate(void** ptr, size_t size, const char* annotation = nullptr);
+        EMemStatus Allocate(void** ptr, size_t size, const string& annotation = "");
         EMemStatus Release(void* ptr);
 
-        EMemStatus AllocateForOffload(void** ptr, size_t size);
+        EMemStatus AllocateForOffload(void** ptr, size_t size, const string& annotation = "");
         EMemStatus ReleaseForOffload(void* ptr);
 
         EMemStatus Offload(void* dst, void* src, size_t size, cudaEvent_t memEvent);
@@ -106,6 +107,7 @@ namespace Neuro
         inline EMemStatus GetFreeMemoryUnsafe(size_t& freeMemory) const;
         EMemStatus GetMemoryUnsafe(std::size_t &size, const Block *head) const;
         EMemStatus PrintListUnsafe(FILE *file, const char *name, const Block *head) const;
+        EMemStatus PrintPinned(FILE* file) const;
 
         cudaStream_t m_MemoryStream = nullptr;
         bool m_IsStreamBlocking = false;

@@ -50,7 +50,7 @@ namespace Neuro
                 auto gradTemp = grad.MulElem(a);
                 for (int i = WidthAxis; i <= BatchAxis; ++i)
                 {
-                    if (gradTemp.Len(i) != 1 && a.Len(i) == 1)
+                    if (gradTemp.Len(i) != 1 && b.Len(i) == 1)
                         gradTemp = sum(gradTemp, (EAxis)i);
                 }
                 gradTemp.CopyTo(m_InputsGrads[1]);

@@ -64,8 +64,8 @@ namespace Neuro
 		Add(1, t1, -1, t2, output);
 	}
 
-	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::Mul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
+    //////////////////////////////////////////////////////////////////////////
+	void TensorOpCpu::MatMul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
 	{
 		const Tensor& t1Temp = transposeT1 ? t1.Transposed() : t1;
         const Tensor& t2Temp = transposeT2 ? t2.Transposed() : t2;
@@ -150,6 +150,53 @@ namespace Neuro
 
         for (uint32_t i = 0; i < inputValues.size(); ++i)
             outputValues[i] = inputValues[i] / v;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Div(const Tensor& t1, const Tensor& t2, Tensor& output) const
+    {
+        t1.CopyToHost();
+        t2.CopyToHost();
+        output.OverrideHost();
+
+        for (uint32_t n = 0; n < max(t1.Batch(), t2.Batch()); ++n)
+        {
+            uint32_t t1N = n % t1.Batch();
+            uint32_t t2N = n % t2.Batch();
+
+            for (uint32_t d = 0; d < max(t1.Depth(), t2.Depth()); ++d)
+            {
+                uint32_t t1D = d % t1.Depth();
+                uint32_t t2D = d % t2.Depth();
+
+                for (uint32_t h = 0; h < max(t1.Height(), t2.Height()); ++h)
+                {
+                    uint32_t t1H = h % t1.Height();
+                    uint32_t t2H = h % t2.Height();
+
+                    for (uint32_t w = 0; w < max(t1.Width(), t2.Width()); ++w)
+                    {
+                        uint32_t t1W = w % t1.Width();
+                        uint32_t t2W = w % t2.Width();
+
+                        output(w, h, d, n) = t1(t1W, t1H, t1D, t1N) / t2(t2W, t2H, t2D, t2N);
+                    }
+                }
+            }
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Add(const Tensor& input, float v, Tensor& output) const
+    {
+        input.CopyToHost();
+        output.OverrideHost();
+
+        auto& inputValues = input.GetValues();
+        auto& outputValues = output.GetValues();
+
+        for (uint32_t i = 0; i < inputValues.size(); ++i)
+            outputValues[i] = inputValues[i] + v;
     }
 
     //////////////////////////////////////////////////////////////////////////

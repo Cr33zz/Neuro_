@@ -16,7 +16,7 @@ namespace Neuro
     cublasHandle_t TensorOpGpu::s_CublasHandle = nullptr;
     cudnnHandle_t TensorOpGpu::s_CudnnHandle = nullptr;
 
-    static const int INNER_KERNEL_LOOP_LENGTH = 10; // for simple per-element kernels
+    static const int INNER_KERNEL_LOOP_LENGTH = 5; // for simple per-element kernels
 
     //////////////////////////////////////////////////////////////////////////
     TensorOpGpu::TensorOpGpu()
@@ -143,7 +143,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Mul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
+    void TensorOpGpu::MatMul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
     {
         t1.CopyToDevice();
         t2.CopyToDevice();
@@ -198,6 +198,45 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::Div(const Tensor& t1, const Tensor& t2, Tensor& output) const
+    {
+        t1.CopyToDevice();
+        t2.CopyToDevice();
+        output.OverrideDevice();
+
+        dim3 blocks, threads;
+
+        if (t1.GetShape() == t2.GetShape())
+        {
+            GetKernelRunParams(max(t1.Length() / INNER_KERNEL_LOOP_LENGTH, 1), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
+            CudaKernels::Div(blocks, threads, t1.Length(), t1.GetDevicePtr(), t2.GetDevicePtr(), output.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);
+        }
+        else
+        {
+            GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
+
+            return CudaKernels::DivBroadcast(
+                blocks,
+                threads,
+                t1.GetDevicePtr(),
+                t1.Width(),
+                t1.Height(),
+                t1.Depth(),
+                t1.Batch(),
+                t2.GetDevicePtr(),
+                t2.Width(),
+                t2.Height(),
+                t2.Depth(),
+                t2.Batch(),
+                output.GetDevicePtr(),
+                output.Width(),
+                output.Height(),
+                output.Depth(),
+                output.Batch());
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Mul(const Tensor& input, float v, Tensor& output) const
     {
         dim3 blocks, threads;
@@ -217,6 +256,17 @@ namespace Neuro
         output.OverrideDevice();
 
         CudaKernels::Div(blocks, threads, input.Length(), input.GetDevicePtr(), v, output.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::Add(const Tensor& input, float v, Tensor& output) const
+    {
+        dim3 blocks, threads;
+        GetKernelRunParams(max((int)input.Length() / INNER_KERNEL_LOOP_LENGTH, 1), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
+        input.CopyToDevice();
+        output.OverrideDevice();
+
+        CudaKernels::Add(blocks, threads, input.Length(), input.GetDevicePtr(), v, output.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);
     }
 
     //////////////////////////////////////////////////////////////////////////

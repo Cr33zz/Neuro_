@@ -36,6 +36,8 @@ public:
 
         Tensor::SetForcedOpMode(GPU);
 
+        cout << "Collecting dataset files list...\n";
+
         vector<string> contentFiles;
         // build content files list
         WIN32_FIND_DATA data;
@@ -48,9 +50,13 @@ public:
             } while (FindNextFile(hFind, &data));
             FindClose(hFind);
         }
+
+        cout << "Creating VGG model...\n";
         
         auto vggModel = VGG16::CreateModel(NCHW, Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), false);
         vggModel->SetTrainable(false);
+
+        cout << "Precomputing style features and grams...\n";
 
         vector<TensorLike*> contentOutputs = { vggModel->Layer("block4_conv2")->Outputs()[0] };
         vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv1")->Outputs()[0],
@@ -76,6 +82,8 @@ public:
             auto features = x->Reshaped(Shape(elementsPerFeature, x->GetShape().Depth()));
             styleGrams.push_back(new Constant(features.Mul(features.Transposed()).Mul(1.f / (float)elementsPerFeature), "style_" + to_string(i) + "_gram"));
         }
+
+        cout << "Building computational graph...\n";
 
         // generate final computational graph
         auto content = new Placeholder(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), "content");
@@ -134,7 +142,7 @@ public:
                 extString << setprecision(4) << fixed << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - total_l: " << (*results[3])(0);
                 progress.SetExtraString(extString.str());
 
-                if (i % 10 == 0)
+                if (i % 1 == 0)
                 {
                     auto genImage = *results[0];
                     genImage.SaveAsImage("fnst_e" + PadLeft(to_string(e), 4, '0') + "_b" + PadLeft(to_string(i), 4, '0') + ".png", false);

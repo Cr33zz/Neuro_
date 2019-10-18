@@ -29,7 +29,7 @@ namespace Neuro
         Allocate();
         if (m_OffloadMode == Offload_Enabled)
         {
-            CUDA_CHECK(MemoryManager::Default().AllocateForOffload(&m_HostPtr, GetAllocatedSizeInBytes()));
+            CUDA_CHECK(MemoryManager::Default().AllocateForOffload(&m_HostPtr, GetAllocatedSizeInBytes(), name.c_str()));
             CUDA_CHECK(cudaEventCreate(&m_OffloadEvent));
             CUDA_CHECK(cudaEventCreate(&m_PrefetchEvent));
         }
@@ -81,7 +81,7 @@ namespace Neuro
             return;
         }
         CUDA_VAR_DEBUG_INFO("<<< allocating.\n");
-        CUDA_CHECK(MemoryManager::Default().Allocate(&m_DevPtr, GetAllocatedSizeInBytes(), m_Name.c_str()));
+        CUDA_CHECK(MemoryManager::Default().Allocate(&m_DevPtr, GetAllocatedSizeInBytes(), m_Name));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -116,11 +116,11 @@ namespace Neuro
 
         m_Length = m_AllocatedLength = length;
         CUDA_CHECK(MemoryManager::Default().Release(m_DevPtr));
-        CUDA_CHECK(MemoryManager::Default().Allocate(&m_DevPtr, GetAllocatedSizeInBytes(), m_Name.c_str()));
+        CUDA_CHECK(MemoryManager::Default().Allocate(&m_DevPtr, GetAllocatedSizeInBytes(), m_Name));
         if (m_OffloadMode == Offload_Enabled)
         {
             CUDA_CHECK(MemoryManager::Default().ReleaseForOffload(m_HostPtr));
-            CUDA_CHECK(MemoryManager::Default().AllocateForOffload(&m_HostPtr, GetAllocatedSizeInBytes()));
+            CUDA_CHECK(MemoryManager::Default().AllocateForOffload(&m_HostPtr, GetAllocatedSizeInBytes(), m_Name));
         }
         NEURO_ASSERT(m_AllocatedLength == 0 || m_DevPtr, "Failed to allocate GPU memory.");
         return true;

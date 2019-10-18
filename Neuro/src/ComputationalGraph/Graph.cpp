@@ -83,14 +83,14 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Graph::ProcessForwardNode(TensorLike* node, vector<TensorLike*>& nodes, unordered_set<TensorLike*>& visited)
     {
+        if (visited.find(node) != visited.end())
+            return;
+
         for (auto inputNode : node->m_InputNodes)
             ProcessForwardNode(inputNode, nodes, visited);
 
-        if (!node->IsOp())
-            return;
-
-        if (visited.find(node) != visited.end())
-            return;
+        /*if (!node->IsOp())
+            return;*/
 
         visited.insert(node);
         nodes.push_back(node);
