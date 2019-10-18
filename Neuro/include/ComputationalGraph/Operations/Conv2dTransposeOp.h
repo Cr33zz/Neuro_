@@ -14,7 +14,6 @@ namespace Neuro
         virtual void ComputeGradientInternal(const Tensor& grad) override;
 
     private:
-        uint32_t m_OutputDepth;
         uint32_t m_Stride;
         uint32_t m_Padding;
         EDataFormat m_DataFormat;
