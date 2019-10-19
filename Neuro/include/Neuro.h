@@ -5,7 +5,6 @@
 #include "Loss.h"
 #include "Random.h"
 #include "Tools.h"
-#include "TestTools.h"
 #include "Stopwatch.h"
 
 #include "Layers/LayerBase.h"
@@ -56,5 +55,4 @@
 
 #include "ComputationalGraph/Ops.h"
 
-#include "TestTools.h"
 #include "Debug.h"

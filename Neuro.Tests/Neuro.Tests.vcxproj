@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="src\ComputationalGraphTests.cpp" />
     <ClCompile Include="src\ModelTests.cpp" />
+    <ClCompile Include="src\OperationsTests.cpp" />
     <ClCompile Include="src\RandomTests.cpp" />
     <ClCompile Include="src\ShapeTests.cpp" />
     <ClCompile Include="src\TensorOpGpuTests.cpp" />

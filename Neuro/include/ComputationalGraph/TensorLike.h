@@ -26,6 +26,8 @@ namespace Neuro
 
         const string& Name() const { return m_Name; }
 
+        const vector<TensorLike*>& InputNodes() const { return m_InputNodes; }
+
         Graph* GetGraph() const { return m_Graph; }
 
         virtual bool IsOp() const { return false; }

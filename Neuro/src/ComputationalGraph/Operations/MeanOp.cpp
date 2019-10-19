@@ -41,7 +41,7 @@ namespace Neuro
             if (m_Axis == _01Axes)
                 n = (float)(m_Inputs[0]->Width() * m_Inputs[0]->Height());
             else if (m_Axis != GlobalAxis)
-                n = (float)m_Inputs[0]->Stride(m_Axis);
+                n = (float)m_Inputs[0]->Len(m_Axis);
 
             m_InputsGrads[0].FillWithValue(1);
             m_InputsGrads[0].MulElem(grad.Div(n), m_InputsGrads[0]);
