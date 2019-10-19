@@ -243,6 +243,32 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Pow(const Tensor& input, float power, Tensor& output) const
+    {
+        input.CopyToHost();
+        output.OverrideHost();
+
+        auto& inputValues = input.GetValues();
+        auto& outputValues = output.GetValues();
+
+        for (uint32_t i = 0; i < inputValues.size(); ++i)
+            outputValues[i] = ::pow(inputValues[i], power);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::PowGradient(const Tensor& input, float power, const Tensor& outputGradient, Tensor& inputGradient) const
+    {
+        input.CopyToHost();
+        outputGradient.CopyToHost();
+        inputGradient.OverrideHost();
+
+        if (power == 2)
+            outputGradient.Map([&](float g, float x) {return g * 2.f * x; }, input, inputGradient);
+        else
+            outputGradient.Map([&](float g, float x) {return g * power * ::pow(x, power - 1); }, input, inputGradient);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void TensorOpCpu::Transpose(const Tensor& input, Tensor& output) const
 	{
 		input.CopyToHost();

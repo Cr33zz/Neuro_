@@ -58,7 +58,11 @@ namespace Neuro
     const vector<Tensor*>& Operation::ComputeGradient(const Tensor& grad)
     {
         for (size_t i = 0; i < m_InputsGrads.size(); ++i)
+        {
             m_InputsGrads[i].ResizeBatch(m_Inputs[i]->GetShape().Batch());
+            if (m_InputsGrads[i].TryDeviceAllocate())
+                m_InputsGrads[i].OverrideDevice();
+        }
 
         ComputeGradientInternal(grad);
 

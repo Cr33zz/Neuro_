@@ -101,6 +101,10 @@ namespace Neuro
         Tensor Clipped(float min, float max) const;
         Tensor DiagFlat() const;
 
+        Tensor Pow(float power) const;
+        void Pow(float power, Tensor& result) const;
+        void PowGradient(const Tensor& input, float power, const Tensor& outputGradient, Tensor& inputGradient) const;
+
         void Map(const function<float(float)>& func, Tensor& result) const;
 		Tensor Map(const function<float(float)>& func) const;
 		void Map(const function<float(float, float)>&, const Tensor& other, Tensor& result) const;

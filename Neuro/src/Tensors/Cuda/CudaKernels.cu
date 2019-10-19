@@ -114,6 +114,36 @@ __global__ void div(int inputLen, const float* __restrict input, float v, float*
         output[n] = input[n] / v;
 }
 
+__global__ void pow(int inputLen, const float* __restrict input, float power, float* __restrict output, int subLen)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+
+    int maxN = i * subLen + subLen;
+    if (maxN > inputLen)
+        maxN = inputLen;
+    for (int n = i * subLen; n < maxN; ++n)
+        output[n] = ::pow(input[n], power);
+}
+
+__global__ void powGrad(int inputLen, const float* __restrict input, float power, const float* __restrict outputGrad, float* __restrict inputGrad, int subLen)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+
+    int maxN = i * subLen + subLen;
+    if (maxN > inputLen)
+        maxN = inputLen;
+    if (power == 2)
+    {
+        for (int n = i * subLen; n < maxN; ++n)
+            inputGrad[n] = outputGrad[n] * 2.f * input[n];
+    }
+    else
+    {
+        for (int n = i * subLen; n < maxN; ++n)
+            inputGrad[n] = outputGrad[n] * power * ::pow(input[n], power - 1);
+    }
+}
+
 __global__ void add(int inputLen, const float* __restrict input, float v, float* __restrict output, int subLen)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -487,6 +517,18 @@ namespace Neuro
     void CudaKernels::Add(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float v, float* outputDev, int subLen)
     {
         add<<<blocks, threads>>>(inputLen, inputDev, v, outputDev, subLen);
+        cudaDeviceSynchronize();
+    }
+
+    void CudaKernels::Pow(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float power, float* outputDev, int subLen)
+    {
+        pow<<<blocks, threads>>>(inputLen, inputDev, power, outputDev, subLen);
+        cudaDeviceSynchronize();
+    }
+
+    void CudaKernels::PowGradient(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float power, const float* outputGradientDev, float* inputGradientDev, int subLen)
+    {
+        powGrad<<<blocks, threads>>>(inputLen, inputDev, power, outputGradientDev, inputGradientDev, subLen);
         cudaDeviceSynchronize();
     }
 

@@ -259,6 +259,29 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::Pow(const Tensor& input, float power, Tensor& output) const
+    {
+        dim3 blocks, threads;
+        GetKernelRunParams(max((int)input.Length() / INNER_KERNEL_LOOP_LENGTH, 1), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
+        input.CopyToDevice();
+        output.OverrideDevice();
+
+        CudaKernels::Pow(blocks, threads, input.Length(), input.GetDevicePtr(), power, output.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::PowGradient(const Tensor& input, float power, const Tensor& outputGradient, Tensor& inputGradient) const
+    {
+        dim3 blocks, threads;
+        GetKernelRunParams(max((int)input.Length() / INNER_KERNEL_LOOP_LENGTH, 1), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
+        input.CopyToDevice();
+        outputGradient.CopyToDevice();
+        inputGradient.OverrideDevice();
+
+        CudaKernels::PowGradient(blocks, threads, input.Length(), input.GetDevicePtr(), power, outputGradient.GetDevicePtr(), inputGradient.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Add(const Tensor& input, float v, Tensor& output) const
     {
         dim3 blocks, threads;

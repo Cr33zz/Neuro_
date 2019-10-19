@@ -458,6 +458,51 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
+        TEST_METHOD(Pow_CompareWithCpuResult)
+        {
+            Tensor t(Shape(10, 20, 30, 40)); t.FillWithRand();
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r = t.Pow(2.f);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = t.Pow(2.f);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(PowGradient_2_CompareWithCpuResult)
+        {
+            Tensor t(Shape(10, 20, 30, 40)); t.FillWithRand();
+            Tensor gradient(t.GetShape()); gradient.FillWithRand(13);            
+
+            Tensor::SetForcedOpMode(CPU);
+            Tensor inputGrad(t.GetShape());
+            NEURO_PROFILE("CPU", t.PowGradient(t, 2.f, gradient, inputGrad);)
+
+            Tensor::SetForcedOpMode(GPU);
+            Tensor inputGrad2(t.GetShape());
+            NEURO_PROFILE("GPU", t.PowGradient(t, 2.f, gradient, inputGrad2);)
+
+            Assert::IsTrue(inputGrad.Equals(inputGrad2));
+        }
+
+        TEST_METHOD(PowGradient_4_CompareWithCpuResult)
+        {
+            Tensor t(Shape(10, 20, 30, 40)); t.FillWithRand();
+            Tensor gradient(t.GetShape()); gradient.FillWithRand(13);            
+
+            Tensor::SetForcedOpMode(CPU);
+            Tensor inputGrad(t.GetShape());
+            NEURO_PROFILE("CPU", t.PowGradient(t, 4.f, gradient, inputGrad);)
+
+            Tensor::SetForcedOpMode(GPU);
+            Tensor inputGrad2(t.GetShape());
+            NEURO_PROFILE("GPU", t.PowGradient(t, 4.f, gradient, inputGrad2);)
+
+            Assert::IsTrue(inputGrad.Equals(inputGrad2));
+        }
+
         TEST_METHOD(Map_CompareWithCpuResult)
         {
             Tensor t(Shape(1, 2, 3, 4)); t.FillWithRand();

@@ -20,6 +20,8 @@ namespace Neuro
         virtual void Div(const Tensor& input, float v, Tensor& output) const;
         virtual void Add(const Tensor& input, float v, Tensor& output) const;
         virtual void Sum(const Tensor& input, EAxis axis, Tensor& output) const;
+        virtual void Pow(const Tensor& input, float power, Tensor& output) const;
+        virtual void PowGradient(const Tensor& input, float power, const Tensor& outputGradient, Tensor& inputGradient) const;
         virtual void Transpose(const Tensor& input, Tensor& output) const;
         virtual void Conv2D(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& output) const;
         virtual void Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& inputGradient) const;

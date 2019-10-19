@@ -23,11 +23,7 @@ namespace Neuro
         m_Output.ResizeBatch(m_Inputs[0]->Batch());
 
         float power = m_InputNodes.size() == 1 ? m_Power : (*m_Inputs[1])(0);
-
-        if (power == 2)
-            m_Inputs[0]->Map([&](float x) {return x * x; }, m_Output);
-        else
-            m_Inputs[0]->Map([&](float x) {return ::pow(x, power); }, m_Output);
+        m_Inputs[0]->Pow(power, m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -38,10 +34,7 @@ namespace Neuro
         //in_grad = grad * p * x^(p-1)
         if (m_InputNodes[0]->CareAboutGradient())
         {
-            if (power == 2)
-                grad.Map([&](float g, float x) {return g * 2.f * x; }, *m_Inputs[0], m_InputsGrads[0]);
-            else
-                grad.Map([&](float g, float x) {return g * power * ::pow(x, power - 1); }, *m_Inputs[0], m_InputsGrads[0]);
+            grad.PowGradient(*m_Inputs[0], power, grad, m_InputsGrads[0]);
         }
 
         if (m_InputNodes.size() > 1 && m_InputNodes[1]->CareAboutGradient())

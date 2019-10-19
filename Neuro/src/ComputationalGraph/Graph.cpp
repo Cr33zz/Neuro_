@@ -177,13 +177,17 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<Variable*> Graph::ComputeGradientsInOrder(const vector<TensorLike*>& order, const vector<Variable*>& params)
     {
+        const size_t PREFETCH_STEPS = 2;
         vector<Variable*> variables;
         
         for (size_t n = 0; n < order.size(); ++n)
         {
-            if (n + 1 < order.size())
+            for (size_t p = n + 1; p <= n + PREFETCH_STEPS; ++p)
             {
-                auto node = order[n + 1];
+                if (p >= order.size())
+                    break;
+
+                auto node = order[p];
                 GRAPH_DEBUG_INFO("##Graph: Prefetching '%s'...\n", node->Name().c_str());
                 node->PrefetchForGradient();
             }

@@ -519,7 +519,27 @@ namespace Neuro
 		return result;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::Pow(float power) const
+    {
+        Tensor result(m_Shape);
+        Pow(power, result);
+        return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Pow(float power, Tensor& result) const
+    {
+        Op()->Pow(*this, power, result);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::PowGradient(const Tensor& input, float power, const Tensor& outputGradient, Tensor& inputGradient) const
+    {
+        Op()->PowGradient(input, power, outputGradient, inputGradient);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void Tensor::Map(const function<float(float)>& func, Tensor& result) const
 	{
 		Op()->Map(func, *this, result);
