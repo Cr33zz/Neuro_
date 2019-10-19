@@ -263,7 +263,8 @@ namespace Neuro
 
         for (size_t i = 0; i < outputTensors.size(); ++i)
         {
-            NEURO_ASSERT(!outputTensors[i]->m_Metadata, "Tensor '" << outputTensors[i]->Name() << "' has already a metadata.");
+            //NEURO_ASSERT(!outputTensors[i]->m_Metadata, "Tensor '" << outputTensors[i]->Name() << "' has already a metadata.");
+            delete outputTensors[i]->m_Metadata;
             outputTensors[i]->m_Metadata = new TensorLike::metadata{ this, m_InboundNodes.size(), i };
         }
         

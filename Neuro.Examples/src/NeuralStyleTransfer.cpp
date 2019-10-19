@@ -8,7 +8,7 @@ Neuro::TensorLike* NeuralStyleTransfer::GramMatrix(TensorLike* x, const string& 
 
     uint32_t elementsPerFeature = x->GetShape().Width() * x->GetShape().Height();
     auto features = reshape(x, Shape(elementsPerFeature, x->GetShape().Depth()));
-    return multiply(matmul(features, transpose(features)), 1.f / (float)elementsPerFeature, "result");
+    return multiply(matmul(features, transpose(features)), 1.f / elementsPerFeature, "result");
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -23,8 +23,7 @@ Neuro::TensorLike* NeuralStyleTransfer::StyleLoss(TensorLike* styleGram, TensorL
     float channels = (float)gen->GetShape().Depth();
     float size = (float)(gen->GetShape().Height() * gen->GetShape().Width());
 
-    //return multiply(mean(square(sub(styleGram, genGram))), 1.f / (4.f * (channels * channels) * (size * size)), "style_loss_" + to_string(index));
-    //return div(mean(square(sub(styleGram, genGram))), new Constant(4.f * (channels * channels) * (size * size)), "style_loss_" + to_string(index));
+    //return multiply(mean(square(sub(styleGram, genGram))), 1.f / (4.f * (channels * channels) * (size * size)), "total");
     return mean(square(sub(styleGram, genGram)), GlobalAxis, "total");
 }
 

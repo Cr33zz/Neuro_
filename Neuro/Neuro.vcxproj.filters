@@ -366,6 +366,9 @@
     <ClInclude Include="include\Memory\MemoryManager.h">
       <Filter>include\Memory</Filter>
     </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\FunctionOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -634,6 +637,9 @@
     </ClCompile>
     <ClCompile Include="src\Tensors\Cuda\CudaDeviceVariable.cpp">
       <Filter>src\Tensors\Cuda</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\FunctionOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

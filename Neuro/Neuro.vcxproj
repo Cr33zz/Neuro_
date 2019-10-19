@@ -134,6 +134,7 @@
     <ClInclude Include="include\ComputationalGraph\Operations\DivideOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\DropoutOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\DumpOp.h" />
+    <ClInclude Include="include\ComputationalGraph\Operations\FunctionOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\GradientsOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\IdentityOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\InstanceNormalizeOp.h" />
@@ -238,6 +239,7 @@
     <ClCompile Include="src\ComputationalGraph\Operations\DivideOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\DropoutOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\DumpOp.cpp" />
+    <ClCompile Include="src\ComputationalGraph\Operations\FunctionOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\GradientsOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\IdentityOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\InstanceNormalizeOp.cpp" />
