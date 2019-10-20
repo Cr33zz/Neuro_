@@ -171,11 +171,11 @@ namespace Neuro
     vector<Variable*> Graph::ComputeGradients(const vector<TensorLike*>& losses, const vector<Variable*>& params)
     {
         auto order = BuildBackwardOrder(losses, params);
-        return ComputeGradientsInOrder(order, params);
+        return ComputeGradientsInOrder(order, losses, params);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<Variable*> Graph::ComputeGradientsInOrder(const vector<TensorLike*>& order, const vector<Variable*>& params)
+    vector<Variable*> Graph::ComputeGradientsInOrder(const vector<TensorLike*>& order, const vector<TensorLike*>& losses, const vector<Variable*>& params)
     {
         const size_t PREFETCH_STEPS = 2;
         vector<Variable*> variables;
@@ -193,7 +193,7 @@ namespace Neuro
             }
 
             auto node = order[n];
-            GRAPH_DEBUG_INFO("##Graph: Computing gradient '%s'...\n", node->Name().c_str());
+            GRAPH_DEBUG_INFO("##Graph: Computing gradient '%s'... (care about grad: %d)\n", node->Name().c_str(), node->CareAboutGradient() ? 1 : 0);
 
             if (node->CareAboutGradient())
             {
@@ -210,40 +210,41 @@ namespace Neuro
                     nodeOutputGrad.OverrideDevice();
                 nodeOutputGrad.Zero(); // reset gradient
 
-                int inputGradsUsed = 0;
-
-                for (auto consumer : node->m_Consumers)
+                if (find(losses.begin(), losses.end(), node) != losses.end())
                 {
-                    assert(consumer->IsOp());
-                    Operation* consumerOp = static_cast<Operation*>(consumer);
-
-                    auto& inputsGrad = consumerOp->InputsGrads();
-
-                    // ignore consumer when it didn't participate in forward step or its input gradients were not computed
-                    // the latter can happen when it wasn't required for loss computation (alternatively we could pass
-                    // required nodes to this function and check against that but it would be more involving from 'user'
-                    // point of view
-                    if (consumerOp->LastComputeStep() != m_CurrentStep || inputsGrad.empty())
-                        continue;
-
-                    ++inputGradsUsed;
-
-                    if (inputsGrad.size() == 1)
+                    // gradient of loss w.r.t to loss is 1
+                    nodeOutputGrad.One();
+                }
+                else
+                {
+                    for (auto consumer : node->m_Consumers)
                     {
-                        assert(inputsGrad[0].Length());
-                        nodeOutputGrad.Add(inputsGrad[0], nodeOutputGrad);
-                    }
-                    else
-                    {
-                        auto nodeIndexInConsumerInputs = distance(consumer->m_InputNodes.begin(), find(consumer->m_InputNodes.begin(), consumer->m_InputNodes.end(), node));
-                        auto& lossGradWrtNode = inputsGrad[nodeIndexInConsumerInputs];
-                        assert(lossGradWrtNode.Length());
-                        nodeOutputGrad.Add(lossGradWrtNode, nodeOutputGrad);
+                        assert(consumer->IsOp());
+                        Operation* consumerOp = static_cast<Operation*>(consumer);
+
+                        auto& inputsGrad = consumerOp->InputsGrads();
+
+                        // ignore consumer when it didn't participate in forward step or its input gradients were not computed
+                        // the latter can happen when it wasn't required for loss computation (alternatively we could pass
+                        // required nodes to this function and check against that but it would be more involving from 'user'
+                        // point of view
+                        if (consumerOp->LastComputeStep() != m_CurrentStep || inputsGrad.empty())
+                            continue;
+
+                        if (inputsGrad.size() == 1)
+                        {
+                            assert(inputsGrad[0].Length());
+                            nodeOutputGrad.Add(inputsGrad[0], nodeOutputGrad);
+                        }
+                        else
+                        {
+                            auto nodeIndexInConsumerInputs = distance(consumer->m_InputNodes.begin(), find(consumer->m_InputNodes.begin(), consumer->m_InputNodes.end(), node));
+                            auto& lossGradWrtNode = inputsGrad[nodeIndexInConsumerInputs];
+                            assert(lossGradWrtNode.Length());
+                            nodeOutputGrad.Add(lossGradWrtNode, nodeOutputGrad);
+                        }
                     }
                 }
-
-                if (inputGradsUsed == 0) // it must be one the loss nodes (gradient of loss w.r.t to loss is 1)
-                    nodeOutputGrad.One();
 
                 if (node->IsOp())
                     static_cast<Operation*>(node)->ComputeGradient(nodeOutputGrad);
