@@ -29,11 +29,7 @@ namespace Neuro
     Random& GlobalRng();
     void GlobalRngSeed(unsigned int seed);
 
-    int AccNone(const Tensor& target, const Tensor& output);
-    int AccBinaryClassificationEquality(const Tensor& target, const Tensor& output);
-    int AccCategoricalClassificationEquality(const Tensor& target, const Tensor& output);
-
-	template<typename C> void DeleteContainer(C& container);
+    template<typename C> void DeleteContainer(C& container);
     void DeleteData(vector<const_tensor_ptr_vec_t>& data);
 
     float Clip(float value, float min, float max);

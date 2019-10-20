@@ -26,7 +26,7 @@ namespace NeuroTests
             auto gamma = Variable(Shape(1, 1, 5, 2));
             auto beta = Variable(gamma.GetShape());
             auto training = Constant(1.f);
-            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new InstanceNormalizeOp(&x, &gamma, &beta, 0.9f, 0.001f, &training)).get(), { 0,0,0,1,1,1 }));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new InstanceNormalizeOp(&x, &gamma, &beta, 0.9f, 0.001f, &training)).get()));
         }
 
         TEST_METHOD(BatchNormalize_Spatial)
@@ -38,6 +38,25 @@ namespace NeuroTests
             auto runningVar = Variable(gamma.GetShape());
             auto training = Constant(1.f);
             Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new BatchNormalizeOp(&x, &gamma, &beta, &runningMean, &runningVar, 0.9f, 0.001f, &training)).get(), { 0,0,0,1,1,1 }));
+        }
+
+        TEST_METHOD(Conv2d)
+        {
+            auto x = Variable(Shape(9, 9, 3, 2));
+            auto kernels = Variable(Shape(3, 3, 3, 5));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new Conv2dOp(&x, &kernels, 1, 1, NCHW)).get()));
+        }
+
+        TEST_METHOD(Pool2d_Max)
+        {
+            auto x = Variable(Shape(9, 9, 3, 2));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new Pool2dOp(&x, 2, 1, 1, Max, NCHW)).get()));
+        }
+
+        TEST_METHOD(Pool2d_Avg)
+        {
+            auto x = Variable(Shape(9, 9, 3, 2));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new Pool2dOp(&x, 2, 1, 1, Avg, NCHW)).get()));
         }
 
         TEST_METHOD(Add_Same)
@@ -71,6 +90,38 @@ namespace NeuroTests
             auto x = Variable(Shape(2, 3, 4, 1));
             auto y = Variable(Shape(2, 3, 4, 1));
             Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new ConcatenateOp({ &x, &y })).get()));
+        }
+
+        TEST_METHOD(Merge_Avg)
+        {
+            vector<TensorLike*> inputs;
+            for (int i = 0; i < 5; ++i)
+                inputs.push_back(new Variable(Shape(2, 3, 4, 2)));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new MergeOp(inputs, MergeAvg)).get()));
+        }
+
+        TEST_METHOD(Merge_Sum)
+        {
+            vector<TensorLike*> inputs;
+            for (int i = 0; i < 5; ++i)
+                inputs.push_back(new Variable(Shape(2, 3, 4, 2)));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new MergeOp(inputs, MergeSum)).get()));
+        }
+
+        TEST_METHOD(Merge_Min)
+        {
+            vector<TensorLike*> inputs;
+            for (int i = 0; i < 5; ++i)
+                inputs.push_back(new Variable(Shape(2, 3, 4, 2)));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new MergeOp(inputs, MergeMin)).get()));
+        }
+
+        TEST_METHOD(Merge_Max)
+        {
+            vector<TensorLike*> inputs;
+            for (int i = 0; i < 5; ++i)
+                inputs.push_back(new Variable(Shape(2, 3, 4, 2)));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new MergeOp(inputs, MergeMax)).get()));
         }
 
         TEST_METHOD(Mean_None)

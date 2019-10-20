@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ComputationalGraph/Operations/AddOp.h"
+#include "ComputationalGraph/Operations/AccuracyOp.h"
 #include "ComputationalGraph/Operations/AssignOp.h"
 #include "ComputationalGraph/Operations/BatchNormalizeOp.h"
 #include "ComputationalGraph/Operations/BatchFlattenOp.h"

@@ -27,7 +27,7 @@ public:
         model.AddLayer(new Flatten());
         model.AddLayer(new Dense(128, new ReLU()));
         model.AddLayer(new Dense(10, new Softmax()));        
-        model.Optimize(new Adam(), new BinaryCrossEntropy());
+        model.Optimize(new Adam(), new BinaryCrossEntropy(), All);
 
         cout << "Example: " << model.Name() << endl;
         cout << model.Summary();
@@ -37,7 +37,7 @@ public:
         Tensor validationInput, validationOutput;
         LoadMnistData("data/t10k-images.idx3-ubyte", "data/t10k-labels.idx1-ubyte", validationInput, validationOutput, true, false, -1);
 
-        model.Fit(input, output, 256, 2, &validationInput, &validationOutput, 2, All);
+        model.Fit(input, output, 256, 2, &validationInput, &validationOutput, 2);
 
         cout << model.TrainSummary();
 

@@ -28,14 +28,16 @@ public:
 
         const float CONTENT_WEIGHT = 400.f;
         const float STYLE_WEIGHT = 0.1f;
+        /*const float CONTENT_WEIGHT = 1e3f;
+        const float STYLE_WEIGHT = 1e-2f;*/
 
         const float LEARNING_RATE = 0.001f;
-        const int NUM_EPOCHS = 2;
-        const uint32_t BATCH_SIZE = 4;
+        const int NUM_EPOCHS = 200;
+        const uint32_t BATCH_SIZE = 1;
 
         const string STYLE_FILE = "data/style.jpg";
         const string TEST_FILE = "data/content.jpg";
-        const string CONTENT_FILES_DIR = "e:/Downloads/coco14";
+        const string CONTENT_FILES_DIR = "e:/Downloads/fake_coco";
 
         Tensor::SetForcedOpMode(GPU);
 
@@ -94,9 +96,9 @@ public:
         for (size_t i = 0; i < styleFeatures.size(); ++i)
         {
             Tensor* x = styleFeatures[i];
-            uint32_t elementsPerFeature = x->GetShape().Width() * x->GetShape().Height();
-            auto features = x->Reshaped(Shape(elementsPerFeature, x->GetShape().Depth()));
-            styleGrams.push_back(new Constant(features.Mul(features.Transposed()).Mul(1.f / (float)elementsPerFeature), "style_" + to_string(i) + "_gram"));
+            uint32_t elementsPerFeature = x->Width() * x->Height();
+            auto features = x->Reshaped(Shape(elementsPerFeature, x->Depth()));
+            styleGrams.push_back(new Constant(features.Mul(features.Transposed()).Mul(1.f / (elementsPerFeature * x->Depth())), "style_" + to_string(i) + "_gram"));
         }
 
         cout << "Building computational graph...\n";
@@ -111,7 +113,8 @@ public:
 
         // compute content loss from first output...
         auto targetContentFeatures = new Placeholder(contentOutputs[0]->GetShape(), "target_content_features");
-        auto contentLoss = multiply(ContentLoss(targetContentFeatures, stylizedFeatures[0]), CONTENT_WEIGHT);
+        auto contentLoss = ContentLoss(targetContentFeatures, stylizedFeatures[0]);
+        auto weightedContentLoss = multiply(contentLoss, CONTENT_WEIGHT);
         stylizedFeatures.erase(stylizedFeatures.begin());
 
         vector<TensorLike*> styleLosses;
@@ -119,9 +122,9 @@ public:
         assert(stylizedFeatures.size() == styleGrams.size());
         for (size_t i = 0; i < stylizedFeatures.size(); ++i)
             styleLosses.push_back(StyleLoss(styleGrams[i], stylizedFeatures[i], (int)i));
-        auto styleLoss = multiply(merge_avg(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "style_loss");
+        auto weightedStyleLoss = multiply(merge_avg(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "style_loss");
 
-        auto totalLoss = add(contentLoss, styleLoss, "total_loss");
+        auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
 
         auto optimizer = Adam(LEARNING_RATE);
         auto minimize = optimizer.Minimize({ totalLoss });
@@ -135,8 +138,8 @@ public:
         {
             cout << "Epoch " << e << endl;
 
-            Tqdm progress(steps, 10);
-            progress.ShowStep(true).ShowElapsed(false);
+            Tqdm progress(steps, 0);
+            progress.ShowStep(true).ShowPercent(false).ShowElapsed(false).EnableSeparateLines(true);
             for (int i = 0; i < steps; ++i, progress.NextStep())
             {
                 contentBatch.OverrideHost();
@@ -147,15 +150,22 @@ public:
                 VGG16::PreprocessImage(contentBatch, NCHW);
                 auto contentFeatures = *vggFeaturesModel.Eval(contentOutputs, { { (Placeholder*)(vggFeaturesModel.InputsAt(0)[0]), &contentBatch } })[0];
 
-                auto results = Session::Default()->Run({ stylizedContent, contentLoss, styleLoss, totalLoss, minimize }, { { content, &contentBatch }, { targetContentFeatures, &contentFeatures } });
+                auto results = Session::Default()->Run({ stylizedContent, contentLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], totalLoss, minimize }, 
+                                                       { { content, &contentBatch }, { targetContentFeatures, &contentFeatures } });
 
                 MemoryManager::Default().PrintMemoryState("mem.log");
 
+                uint64_t cLoss = (uint64_t)(*results[1])(0);
+                uint64_t sLoss1 = (uint64_t)(*results[2])(0);
+                uint64_t sLoss2 = (uint64_t)(*results[3])(0);
+                uint64_t sLoss3 = (uint64_t)(*results[4])(0);
+                uint64_t sLoss4 = (uint64_t)(*results[5])(0);
                 stringstream extString;
-                extString << setprecision(4) << fixed << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - total_l: " << (*results[3])(0);
+                extString << " - content_l: " << cLoss << " - style1_l: " << sLoss1 << " - style2_l: " << sLoss2 << 
+                    " - style3_l: " << sLoss3 << " - style4_l: " << sLoss4 << " - total_l: " << (cLoss + sLoss1 + sLoss2 + sLoss3 + sLoss4);
                 progress.SetExtraString(extString.str());
 
-                if (i % 5 == 0)
+                if (i % 1 == 0)
                 {
                     auto genImage = *Session::Default()->Run({ stylizedContent }, { { content, &testImage } })[0];
                     VGG16::UnprocessImage(genImage, NCHW);

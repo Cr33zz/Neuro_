@@ -76,8 +76,8 @@ namespace NeuroTests
             Tensor outputs(inputs.GetShape());
             GenerateTrainingData(expectedWeights, MatMult, inputs, outputs);
 
-            model->Optimize(new SGD(0.07f), new MeanSquareError());
-            model->Fit(inputs, outputs, batchSize, epochs, nullptr, nullptr, 0, ETrack::Nothing);
+            model->Optimize(new SGD(0.07f), new MeanSquareError(), Nothing);
+            model->Fit(inputs, outputs, batchSize, epochs, nullptr, nullptr, 0);
 
             vector<Tensor*> params = model->Layers().back()->Weights();
 
@@ -96,8 +96,8 @@ namespace NeuroTests
             inputs.FillWithRand(10, -2, 2);
             Tensor outputs = inputs.Mul(1.7f);
             
-            model->Optimize(new SGD(0.02f), new MeanSquareError());
-            model->Fit(inputs, outputs, batchSize, epochs, nullptr, nullptr, 0, ETrack::Nothing);
+            model->Optimize(new SGD(0.02f), new MeanSquareError(), Nothing);
+            model->Fit(inputs, outputs, batchSize, epochs, nullptr, nullptr, 0);
 
             Assert::IsTrue(outputs.Equals(*model->Predict(inputs)[0], 0.02f));
         }

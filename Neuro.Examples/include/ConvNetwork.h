@@ -34,7 +34,7 @@ public:
         for (uint32_t n = 0; n < output.Batch(); ++n)
             output(0, GlobalRng().Next(output.Height()), 0, n) = 1.0f;
 
-        model.Fit(input, output, -1, 10, nullptr, nullptr, 2, TrainError);
+        model.Fit(input, output, -1, 10, nullptr, nullptr, 2);
 
         cout << model.TrainSummary();
 

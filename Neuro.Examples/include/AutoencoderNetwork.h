@@ -38,7 +38,7 @@ public:
         LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, true, false, 60000);
         input.Reshape(Shape(784, 1, 1, -1));
 
-        model.Fit(input, input, 256, 20, nullptr, nullptr, 2, TrainError);
+        model.Fit(input, input, 256, 20, nullptr, nullptr, 2);
 
         cout << model.TrainSummary();
         

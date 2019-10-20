@@ -19,7 +19,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void GradientsOp::ComputeInternal()
     {
-        m_InputNodes[0]->GetGraph()->ComputeGradientsInOrder(m_Order, m_Vars);
+        m_InputNodes[0]->GetGraph()->ComputeGradientsInOrder(m_Order, m_InputNodes, m_Vars);
         for (size_t i = 0; i < m_Vars.size(); ++i)
             m_Vars[i]->OutputGrad().CopyTo(m_Grads[i]->Output());
     }
