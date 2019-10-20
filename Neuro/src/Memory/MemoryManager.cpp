@@ -341,7 +341,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    EMemStatus MemoryManager::AllocateForOffload(void** ptr, size_t size, const string& annotation)
+    EMemStatus MemoryManager::AllocatePinned(void** ptr, size_t size, const string& annotation)
     {
         CUDA_CHECK(cudaMallocHost(ptr, size));
         m_AllocatedPinnedMemSize += size;
@@ -352,7 +352,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    EMemStatus MemoryManager::ReleaseForOffload(void* ptr)
+    EMemStatus MemoryManager::ReleasePinned(void* ptr)
     {
         if (!ptr)
             return MEM_STATUS_SUCCESS;

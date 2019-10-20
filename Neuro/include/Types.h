@@ -38,31 +38,10 @@ namespace Neuro
 
     enum ELocation
     {
+        None,
         Host,
         Device
     };
-
-    enum EOffloadMode
-    {
-        Offload_KeepAllocated, // will never automatically deallocate device memory
-        Offload_Enabled, // offload is enabled can be streamed between host pinned memory and device deallocating device memory when not used
-        Offload_Disabled, // offload disabled all memory migration and device memory management has to be done manually
-    };
-
-    static const char* ToString(EOffloadMode mode)
-    {
-        switch (mode)
-        {
-        case Neuro::Offload_KeepAllocated:
-            return "Offload_KeepAllocated";
-        case Neuro::Offload_Enabled:
-            return "Offload_Enabled";
-        case Neuro::Offload_Disabled:
-            return "Offload_Disabled";
-        default:
-            return "Unknown";
-        }
-    }
 
     enum EPaddingMode
     {

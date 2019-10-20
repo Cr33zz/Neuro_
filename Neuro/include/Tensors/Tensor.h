@@ -9,6 +9,7 @@
 
 #include "Types.h"
 #include "Tensors/Shape.h"
+#include "Tensors/Storage.h"
 
 namespace Neuro
 {
@@ -24,12 +25,11 @@ namespace Neuro
     class Tensor
     {
 	public:
-        Tensor(const string& name = "");
-        explicit Tensor(const Shape& shape, const string& name = "");
-        Tensor(const vector<float>&, const Shape& shape, const string& name = "");
-        Tensor(const vector<float>&, const string& name = "");
-        Tensor(const string& imageFile, bool normalize, bool grayScale = false, const string& name = "");
-        Tensor(istream& stream);
+        explicit Tensor(const Shape& shape = Shape(0), const string& name = "", EStorageType storageType = ST_Default);
+        Tensor(const vector<float>&, const Shape& shape, const string& name = "", EStorageType storageType = ST_Default);
+        Tensor(const vector<float>&, const string& name = "", EStorageType storageType = ST_Default);
+        Tensor(const string& imageFile, bool normalize, bool grayScale = false, const string& name = "", EStorageType storageType = ST_Default);
+        Tensor(istream& stream, EStorageType storageType = ST_Default);
         Tensor(const Tensor& t);
         Tensor& operator=(const Tensor& t);
 
@@ -47,13 +47,14 @@ namespace Neuro
         uint32_t NDim() const { return m_Shape.NDim; }
         uint32_t Stride(size_t dim) const { return m_Shape.Stride[dim]; }
         uint32_t BatchLength() const { return m_Shape.Stride[3]; }
-        uint32_t Length() const { return (uint32_t)m_Values.size(); }
+        uint32_t Length() const { return m_Shape.Length; }
 
         const string& Name() const { return m_Name; }
         void Name(const string& name) { m_Name = name; }
 
-        vector<float>& GetValues();
-        const vector<float>& GetValues() const;
+        float* Values();
+        const float* Values() const;
+        void SetStorageType(int type);
 
         void SaveAsImage(const string& imageFile, bool denormalize) const;
 
@@ -270,21 +271,17 @@ namespace Neuro
 
         void CopyToDevice() const;
         void CopyToHost() const;
-        void SetOffloadMode(EOffloadMode mode) { m_OffloadMode = mode; }
-        bool OffloadMode() const { return m_OffloadMode; }
-        bool Offloadable() const { return m_OffloadMode == Offload_Enabled; }
         bool TryDeviceAllocate();
         bool TryDeviceRelease();
         void Prefetch() const;
         void Offload() const;
         /// Use whatever data there is on the host (usually used for output tensors so copy can be avoided)
-        void OverrideHost() const;
+        void OverrideHost();
         /// Use whatever data there is on the device (usually used for output tensors so copy can be avoided)
         void OverrideDevice();
-        bool IsOnHost() const { return m_CurrentLocation == ELocation::Host; }
-        bool IsOnDevice() const { return m_CurrentLocation == ELocation::Device; }
+        bool IsOnHost() const { return m_Storage.Location() == Host; }
+        bool IsOnDevice() const { return m_Storage.Location() == Device; }
         
-        const CudaDeviceVariable<float>& GetDeviceVar() const;
         const float* GetDevicePtr() const;
         float* GetDevicePtr();
 
@@ -295,31 +292,9 @@ namespace Neuro
         void DebugRecoverValues(const string& inFile);
 
 	private:
-        struct GPUData
-        {
-            GPUData() {}
-            ~GPUData();
-            void Release();
-            // Returns true if GPU location has changed
-            bool Resize(size_t size);
-
-            void UpdateWorkspace(CudaDeviceVariable<char>*& workspace, size_t size);
-
-            CudaDeviceVariable<float>* m_DeviceVar = nullptr;
-            CudaDeviceVariable<char>* m_DropoutWorkspace = nullptr;
-            CudaDeviceVariable<char>* m_DropoutStates = nullptr;
-
-        private:
-            GPUData(const GPUData&);
-            GPUData& operator=(const GPUData&);
-        };
-
-        mutable GPUData m_GpuData;
-		TensorOpCpu* m_Op;
-        EOffloadMode m_OffloadMode = Offload_Disabled;
-        mutable ELocation m_CurrentLocation = ELocation::Host;
-		Shape m_Shape;
-        mutable vector<float> m_Values;
+        TensorOpCpu* m_Op;
+        Shape m_Shape;
+        Storage m_Storage;
         string m_Name;
 
         TensorOpCpu* Op() const { return g_ForcedOp ? g_ForcedOp : m_Op; }
@@ -339,21 +314,21 @@ namespace Neuro
     _inline float Tensor::GetFlat(uint32_t i) const
     {
         CopyToHost();
-        return m_Values[i];
+        return m_Storage.Data()[i];
     }
 
     //////////////////////////////////////////////////////////////////////////
     _inline float& Tensor::Get(uint32_t w, uint32_t h, uint32_t d, uint32_t n)
     {
         CopyToHost();
-        return m_Values[m_Shape.GetIndex(w, h, d, n)];
+        return m_Storage.Data()[m_Shape.GetIndex(w, h, d, n)];
     }
 
     //////////////////////////////////////////////////////////////////////////
     _inline float Tensor::Get(uint32_t w, uint32_t h, uint32_t d, uint32_t n) const
     {
         CopyToHost();
-        return m_Values[m_Shape.GetIndex(w, h, d, n)];
+        return m_Storage.Data()[m_Shape.GetIndex(w, h, d, n)];
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -372,14 +347,14 @@ namespace Neuro
     _inline void Tensor::SetFlat(float value, uint32_t i)
     {
         CopyToHost();
-        m_Values[i] = value;
+        m_Storage.Data()[i] = value;
     }
 
     //////////////////////////////////////////////////////////////////////////
     _inline void Tensor::Set(float value, uint32_t w, uint32_t h, uint32_t d, uint32_t n)
     {
         CopyToHost();
-        m_Values[m_Shape.GetIndex(w, h, d, n)] = value;
+        m_Storage.Data()[m_Shape.GetIndex(w, h, d, n)] = value;
     }
 
     Tensor operator*(const Tensor& t1, const Tensor& t2);

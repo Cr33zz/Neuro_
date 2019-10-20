@@ -106,10 +106,10 @@ namespace Neuro
         input.CopyToHost();
         output.OverrideHost();
 
-        auto& inputValues = input.GetValues();
-        auto& outputValues = output.GetValues();
+        auto inputValues = input.Values();
+        auto outputValues = output.Values();
 
-        parallel_for((uint32_t)0, (uint32_t)inputValues.size(), [&](uint32_t i)
+        parallel_for((uint32_t)0, input.Length(), [&](uint32_t i)
         {
             outputValues[i] = inputValues[i] / v;
         });
@@ -534,10 +534,10 @@ namespace Neuro
         input.CopyToHost();
         output.OverrideHost();
 
-        auto& inputValues = input.GetValues();
-        auto& outputValues = output.GetValues();
+        auto inputValues = input.Values();
+        auto outputValues = output.Values();
 
-        parallel_for(0, (int)inputValues.size(), [&](int i)
+        parallel_for(0, (int)input.Length(), [&](int i)
         {
             outputValues[i] = func(inputValues[i]);
         });

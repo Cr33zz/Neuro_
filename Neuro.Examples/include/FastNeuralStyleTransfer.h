@@ -145,7 +145,7 @@ public:
                 contentBatch.OverrideHost();
                 //load images
                 for (int j = 0; j < BATCH_SIZE; ++j)
-                    LoadImage(contentFiles[i * BATCH_SIZE + j], &contentBatch.GetValues()[0] + j * contentBatch.BatchLength(), content->GetShape().Width(), content->GetShape().Height(), NCHW);
+                    LoadImage(contentFiles[i * BATCH_SIZE + j], &contentBatch.Values()[0] + j * contentBatch.BatchLength(), content->GetShape().Width(), content->GetShape().Height(), NCHW);
 
                 VGG16::PreprocessImage(contentBatch, NCHW);
                 auto contentFeatures = *vggFeaturesModel.Eval(contentOutputs, { { (Placeholder*)(vggFeaturesModel.InputsAt(0)[0]), &contentBatch } })[0];

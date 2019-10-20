@@ -9,7 +9,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     string TensorFormatter::ToString(const Tensor& t)
     {
-        return ToStringRecursive(t, {}, " ", 75, Dragon4FloatFormatter(t.GetValues()));
+        return ToStringRecursive(t, {}, " ", 75, Dragon4FloatFormatter(t.Values()));
     }
 
     //////////////////////////////////////////////////////////////////////////

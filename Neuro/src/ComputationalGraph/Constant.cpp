@@ -8,8 +8,8 @@ namespace Neuro
     Constant::Constant(const Tensor& value, const string& name)
         : TensorLike(name)
     {
+        m_Output.SetStorageType(ST_KeepDevMem);
         m_Output = value;
-        m_Output.SetOffloadMode(Offload_KeepAllocated);
     }
 
     //////////////////////////////////////////////////////////////////////////

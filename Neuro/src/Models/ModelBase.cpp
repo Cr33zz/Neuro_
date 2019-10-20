@@ -453,7 +453,7 @@ namespace Neuro
                     dims.push_back(wShape.Dimensions[i]);
 
                 DataSet dataset(g.createDataSet("param_" + to_string(i), PredType::NATIVE_FLOAT, DataSpace(wShape.NDim, &dims[0])));
-                dataset.write(&w->GetValues()[0], PredType::NATIVE_FLOAT);
+                dataset.write(&w->Values()[0], PredType::NATIVE_FLOAT);
             }
         }
 
@@ -575,7 +575,7 @@ namespace Neuro
                 for (int i = wShape.NDim - 1, n = 0; i >= 0; --i, ++n)
                     NEURO_ASSERT(weightDims[n] == wShape.Dimensions[i], "Dimension " << i << " of parameter '" << w->Name() << "' doesn't match corresponding dimension of saved parameter. Found " << weightDims[i] << " expected " << wShape.Dimensions[i] << ".");
 
-                dataset.read(&w->GetValues()[0], PredType::NATIVE_FLOAT);
+                dataset.read(&w->Values()[0], PredType::NATIVE_FLOAT);
 
                 if (is_keras && !params[i].transAxesKeras.empty())
                 {

@@ -539,7 +539,7 @@ namespace Neuro
         FIBITMAP* image = LoadResizedImage(filename, targetSizeX, targetSizeY, sizeX, sizeY);
         Shape imageShape = targetFormat == NCHW ? Shape(sizeX, sizeY, 3) : Shape(3, sizeX, sizeY);
         Tensor result(imageShape);
-        LoadImageInternal(image, imageShape, targetFormat, &result.GetValues()[0]);
+        LoadImageInternal(image, imageShape, targetFormat, &result.Values()[0]);
         FreeImage_Unload(image);
         return result;
     }

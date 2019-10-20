@@ -24,8 +24,6 @@ namespace Neuro
         void Initialize();
         void ForceInitialized() { m_Initialized = true; }
 
-        void SetOffloadMode(EOffloadMode mode);
-
         virtual bool CareAboutGradient() const override;
 
     private:

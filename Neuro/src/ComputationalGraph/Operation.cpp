@@ -1,7 +1,6 @@
 ﻿#include "ComputationalGraph/Operation.h"
 #include "ComputationalGraph/Graph.h"
 #include "Tensors/Tensor.h"
-#include "Tensors/Cuda/CudaDeviceVariable.h"
 
 namespace Neuro
 {
@@ -23,7 +22,7 @@ namespace Neuro
             m_InputsGradsPtrs[i] = &m_InputsGrads[i];
         }
 
-        m_Output.SetOffloadMode(Offload_Enabled);
+        m_Output.SetStorageType(ST_RefCounted|ST_Offloadable);
 
         Graph::Default()->AddOperation(this);
     }

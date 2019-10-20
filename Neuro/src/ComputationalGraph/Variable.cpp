@@ -9,8 +9,9 @@ namespace Neuro
         : TensorLike(name)
     {
         m_Output.Resize(initValue.GetShape());
+        m_Output.SetStorageType(ST_KeepDevMem);
+        m_OutputGrad.SetStorageType(ST_RefCounted|ST_Offloadable);
         initValue.CopyTo(m_Output);
-        m_Output.SetOffloadMode(Offload_KeepAllocated);
         Graph::Default()->AddVariable(this);
         m_Initialized = true;
     }
@@ -26,7 +27,8 @@ namespace Neuro
         : TensorLike(name), m_Initializer(initializer)
     {
         m_Output.Resize(shape);
-        m_Output.SetOffloadMode(Offload_KeepAllocated);
+        m_Output.SetStorageType(ST_KeepDevMem);
+        m_OutputGrad.SetStorageType(ST_RefCounted|ST_Offloadable);
         Graph::Default()->AddVariable(this);
     }
 
@@ -46,13 +48,6 @@ namespace Neuro
 
         if (m_Initializer)
             m_Initializer->Init(m_Output);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void Variable::SetOffloadMode(EOffloadMode mode)
-    {
-        m_Output.SetOffloadMode(mode);
-        m_OutputGrad.SetOffloadMode(mode);
     }
 
     //////////////////////////////////////////////////////////////////////////

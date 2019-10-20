@@ -156,9 +156,6 @@
     <ClInclude Include="include\Tensors\TensorOpGpu.h">
       <Filter>include\Tensors</Filter>
     </ClInclude>
-    <ClInclude Include="include\Tensors\Cuda\CudaDeviceVariable.h">
-      <Filter>include\Tensors\Cuda</Filter>
-    </ClInclude>
     <ClInclude Include="include\Tensors\Cuda\CudaKernels.h">
       <Filter>include\Tensors\Cuda</Filter>
     </ClInclude>
@@ -371,6 +368,9 @@
     </ClInclude>
     <ClInclude Include="include\ComputationalGraph\Operations\AccuracyOp.h">
       <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tensors\Storage.h">
+      <Filter>include\Tensors</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -638,14 +638,14 @@
     <ClCompile Include="src\Memory\MemoryManager.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Tensors\Cuda\CudaDeviceVariable.cpp">
-      <Filter>src\Tensors\Cuda</Filter>
-    </ClCompile>
     <ClCompile Include="src\ComputationalGraph\Operations\FunctionOp.cpp">
       <Filter>src\ComputationalGraph\Operations</Filter>
     </ClCompile>
     <ClCompile Include="src\ComputationalGraph\Operations\AccuracyOp.cpp">
       <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tensors\Storage.cpp">
+      <Filter>src\Tensors</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

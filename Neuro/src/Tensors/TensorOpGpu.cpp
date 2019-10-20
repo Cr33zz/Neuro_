@@ -4,7 +4,6 @@
 
 #include "Tools.h"
 #include "Tensors/TensorOpGpu.h"
-#include "Tensors/Cuda/CudaDeviceVariable.h"
 #include "Tensors/Cuda/CudaErrorCheck.h"
 #include "Tensors/Cuda/CudaKernels.h"
 #include "Memory/MemoryManager.h"
@@ -132,12 +131,12 @@ namespace Neuro
                 t1.BatchLength(),
                 1,
                 &alpha,
-                CudaDeviceVariable<float>(t1.GetDeviceVar(), t1N * t1.BatchLength()).GetDevicePtr(),
+                t1.GetDevicePtr() + t1N * t1.BatchLength(),
                 t1.BatchLength(),
                 &beta,
-                CudaDeviceVariable<float>(t2.GetDeviceVar(), t2N * t2.BatchLength()).GetDevicePtr(),
+                t2.GetDevicePtr() + t2N * t2.BatchLength(),
                 t2.BatchLength(),
-                CudaDeviceVariable<float>(output.GetDeviceVar(), n * output.BatchLength()).GetDevicePtr(),
+                output.GetDevicePtr() + n * output.BatchLength(),
                 output.BatchLength()));
         }
     }
@@ -307,7 +306,7 @@ namespace Neuro
 
         for (int b = 0; b < batches; ++b)
         {
-            CudaDeviceVariable<float> tVar(input.GetDeviceVar(), b * input.GetShape().Dim0Dim1);
+            const float* tPtr = input.GetDevicePtr() + b * input.GetShape().Dim0Dim1;
 
             CUDA_CHECK(cublasSgeam(
                 s_CublasHandle,
@@ -316,12 +315,13 @@ namespace Neuro
                 m,
                 n,  // trick to convert row major to column major
                 &alpha,
-                tVar.GetDevicePtr(),
+                tPtr,
                 n,
                 &beta,
-                tVar.GetDevicePtr(),
+                tPtr,
                 m,
-                CudaDeviceVariable<float>(output.GetDeviceVar(), b * output.GetShape().Dim0Dim1).GetDevicePtr(), m));
+                output.GetDevicePtr() + b * output.GetShape().Dim0Dim1, 
+                m));
         }
     }
 
@@ -727,69 +727,70 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Dropout(const Tensor& input, float prob, Tensor& saveMask, Tensor& output)
-    {
-        input.CopyToDevice();
-        output.OverrideDevice();
-        prob = 1 - prob;
+    //void TensorOpGpu::Dropout(const Tensor& input, float prob, Tensor& saveMask, void** states, Tensor& output)
+    //{
+    //    input.CopyToDevice();
+    //    output.OverrideDevice();
+    //    prob = 1 - prob;
 
-        cudnnTensorDescriptor_t inputOutputDesc; cudnnCreateTensorDescriptor(&inputOutputDesc);
-        cudnnDropoutDescriptor_t dropoutDesc; cudnnCreateDropoutDescriptor(&dropoutDesc);
+    //    cudnnTensorDescriptor_t inputOutputDesc; cudnnCreateTensorDescriptor(&inputOutputDesc);
+    //    cudnnDropoutDescriptor_t dropoutDesc; cudnnCreateDropoutDescriptor(&dropoutDesc);
 
-        cudnnSetTensor4dDescriptor(inputOutputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
+    //    cudnnSetTensor4dDescriptor(inputOutputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
 
-        size_t dropoutStateSize;
-        CUDA_CHECK(cudnnDropoutGetStatesSize(s_CudnnHandle, &dropoutStateSize));
-        saveMask.m_GpuData.UpdateWorkspace(saveMask.m_GpuData.m_DropoutStates, dropoutStateSize);
+    //    size_t dropoutStateSize;
+    //    CUDA_CHECK(cudnnDropoutGetStatesSize(s_CudnnHandle, &dropoutStateSize));
+    //    if (!states)
+    //    MemoryManager::Default().Allocate(states, dropoutStateSize);
 
-        size_t dropoutReserveSize;
-        CUDA_CHECK(cudnnDropoutGetReserveSpaceSize(inputOutputDesc, &dropoutReserveSize));
-        saveMask.m_GpuData.UpdateWorkspace(saveMask.m_GpuData.m_DropoutWorkspace, dropoutReserveSize);
+    //    size_t dropoutReserveSize;
+    //    CUDA_CHECK(cudnnDropoutGetReserveSpaceSize(inputOutputDesc, &dropoutReserveSize));
+    //    saveMask.m_GpuData.UpdateWorkspace(saveMask.m_GpuData.m_DropoutWorkspace, dropoutReserveSize);
 
-        saveMask(0) = prob;
+    //    saveMask(0) = prob;
 
-        cudnnSetDropoutDescriptor(dropoutDesc, s_CudnnHandle, prob, saveMask.m_GpuData.m_DropoutStates->GetDevicePtr(), dropoutStateSize, 0);
+    //    cudnnSetDropoutDescriptor(dropoutDesc, s_CudnnHandle, prob, *states, dropoutStateSize, 0);
 
-        CUDA_CHECK(cudnnDropoutForward(
-            s_CudnnHandle,
-            dropoutDesc,
-            inputOutputDesc,
-            input.GetDevicePtr(),
-            inputOutputDesc,
-            output.GetDevicePtr(),
-            saveMask.m_GpuData.m_DropoutWorkspace->GetDevicePtr(),
-            dropoutReserveSize));
-    }
+    //    CUDA_CHECK(cudnnDropoutForward(
+    //        s_CudnnHandle,
+    //        dropoutDesc,
+    //        inputOutputDesc,
+    //        input.GetDevicePtr(),
+    //        inputOutputDesc,
+    //        output.GetDevicePtr(),
+    //        saveMask.m_GpuData.m_DropoutWorkspace->GetDevicePtr(),
+    //        dropoutReserveSize));
+    //}
 
-    ////////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::DropoutGradient(const Tensor& outputGradient, const Tensor& savedMask, Tensor& inputGradient)
-    {
-        outputGradient.CopyToDevice();
-        inputGradient.OverrideDevice();
-        inputGradient.Zero();
+    //////////////////////////////////////////////////////////////////////////////
+    //void TensorOpGpu::DropoutGradient(const Tensor& outputGradient, const Tensor& savedMask, Tensor& inputGradient)
+    //{
+    //    outputGradient.CopyToDevice();
+    //    inputGradient.OverrideDevice();
+    //    inputGradient.Zero();
 
-        cudnnTensorDescriptor_t inputOutputGradDesc; cudnnCreateTensorDescriptor(&inputOutputGradDesc);
-        cudnnDropoutDescriptor_t dropoutDesc; cudnnCreateDropoutDescriptor(&dropoutDesc);
+    //    cudnnTensorDescriptor_t inputOutputGradDesc; cudnnCreateTensorDescriptor(&inputOutputGradDesc);
+    //    cudnnDropoutDescriptor_t dropoutDesc; cudnnCreateDropoutDescriptor(&dropoutDesc);
 
-        cudnnSetTensor4dDescriptor(inputOutputGradDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, outputGradient.GetShape().Dimensions[3], outputGradient.GetShape().Dimensions[2], outputGradient.GetShape().Dimensions[1], outputGradient.GetShape().Dimensions[0]);
-        
-        size_t dropoutStateSize;
-        CUDA_CHECK(cudnnDropoutGetStatesSize(s_CudnnHandle, &dropoutStateSize));
-        size_t dropoutReserveSize;
-        CUDA_CHECK(cudnnDropoutGetReserveSpaceSize(inputOutputGradDesc, &dropoutReserveSize));
+    //    cudnnSetTensor4dDescriptor(inputOutputGradDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, outputGradient.GetShape().Dimensions[3], outputGradient.GetShape().Dimensions[2], outputGradient.GetShape().Dimensions[1], outputGradient.GetShape().Dimensions[0]);
+    //    
+    //    size_t dropoutStateSize;
+    //    CUDA_CHECK(cudnnDropoutGetStatesSize(s_CudnnHandle, &dropoutStateSize));
+    //    size_t dropoutReserveSize;
+    //    CUDA_CHECK(cudnnDropoutGetReserveSpaceSize(inputOutputGradDesc, &dropoutReserveSize));
 
-        cudnnSetDropoutDescriptor(dropoutDesc, s_CudnnHandle, savedMask(0), savedMask.m_GpuData.m_DropoutStates->GetDevicePtr(), dropoutStateSize, 0);
+    //    cudnnSetDropoutDescriptor(dropoutDesc, s_CudnnHandle, savedMask(0), states, dropoutStateSize, 0);
 
-        CUDA_CHECK(cudnnDropoutBackward(
-            s_CudnnHandle,
-            dropoutDesc,
-            inputOutputGradDesc,
-            outputGradient.GetDevicePtr(),
-            inputOutputGradDesc,
-            inputGradient.GetDevicePtr(),
-            savedMask.m_GpuData.m_DropoutWorkspace->GetDevicePtr(),
-            dropoutReserveSize));
-    }
+    //    CUDA_CHECK(cudnnDropoutBackward(
+    //        s_CudnnHandle,
+    //        dropoutDesc,
+    //        inputOutputGradDesc,
+    //        outputGradient.GetDevicePtr(),
+    //        inputOutputGradDesc,
+    //        inputGradient.GetDevicePtr(),
+    //        savedMask.m_GpuData.m_DropoutWorkspace->GetDevicePtr(),
+    //        dropoutReserveSize));
+    //}
 
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Sigmoid(const Tensor& input, Tensor& output) const
@@ -1005,7 +1006,7 @@ namespace Neuro
                 input.BatchLength(),
                 1,
                 &alpha,
-                CudaDeviceVariable<float>(input.GetDeviceVar(), n * input.BatchLength()).GetDevicePtr(),
+                input.GetDevicePtr() + n * input.BatchLength(),
                 input.BatchLength(),
                 &beta,
                 output.GetDevicePtr(),
@@ -1126,12 +1127,12 @@ namespace Neuro
                     m,
                     k,  // trick to convert row major to column major
                     &alpha,
-                    CudaDeviceVariable<float>(t2.GetDeviceVar(), d * t2.GetShape().Dim0Dim1 + t2B * t2.BatchLength()).GetDevicePtr(),
+                    t2.GetDevicePtr() + d * t2.GetShape().Dim0Dim1 + t2B * t2.BatchLength(),
                     n,
-                    CudaDeviceVariable<float>(t1.GetDeviceVar(), d * t1.GetShape().Dim0Dim1 + t1B * t1.BatchLength()).GetDevicePtr(),
+                    t1.GetDevicePtr() + d * t1.GetShape().Dim0Dim1 + t1B * t1.BatchLength(),
                     k,
                     &beta,
-                    CudaDeviceVariable<float>(output.GetDeviceVar(), d * output.GetShape().Dim0Dim1 + b * output.BatchLength()).GetDevicePtr(),
+                    output.GetDevicePtr() + d * output.GetShape().Dim0Dim1 + b * output.BatchLength(),
                     n));
             }
         }
@@ -1147,8 +1148,8 @@ namespace Neuro
         fill(alphaArray.begin(), alphaArray.end(), 1.f);
         vector<float> betaArray(batches);
         fill(betaArray.begin(), betaArray.end(), 0.f);
-        vector<float*> t1List(batches);
-        vector<float*> t2List(batches);
+        vector<const float*> t1List(batches);
+        vector<const float*> t2List(batches);
         vector<float*> outputList(batches);
 
         for (uint32_t b = 0; b < output.Batch(); ++b)
@@ -1159,9 +1160,9 @@ namespace Neuro
             for (uint32_t d = 0; d < t1.Depth(); ++d)
             {
                 uint32_t idx = b * t1.Depth() + d;
-                t1List[idx] = CudaDeviceVariable<float>(t1.GetDeviceVar(), d * t1.GetShape().Dim0Dim1 + t1B * t1.BatchLength()).GetDevicePtr();
-                t2List[idx] = CudaDeviceVariable<float>(t2.GetDeviceVar(), d * t2.GetShape().Dim0Dim1 + t2B * t2.BatchLength()).GetDevicePtr();
-                outputList[idx] = CudaDeviceVariable<float>(output.GetDeviceVar(), d * output.GetShape().Dim0Dim1 + b * output.BatchLength()).GetDevicePtr();
+                t1List[idx] = t1.GetDevicePtr() + d * t1.GetShape().Dim0Dim1 + t1B * t1.BatchLength();
+                t2List[idx] = t2.GetDevicePtr() + d * t2.GetShape().Dim0Dim1 + t2B * t2.BatchLength();
+                outputList[idx] = output.GetDevicePtr() + d * output.GetShape().Dim0Dim1 + b * output.BatchLength();
             }
         }
 

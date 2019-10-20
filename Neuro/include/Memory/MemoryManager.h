@@ -83,8 +83,8 @@ namespace Neuro
         EMemStatus Allocate(void** ptr, size_t size, const string& annotation = "");
         EMemStatus Release(void* ptr);
 
-        EMemStatus AllocateForOffload(void** ptr, size_t size, const string& annotation = "");
-        EMemStatus ReleaseForOffload(void* ptr);
+        EMemStatus AllocatePinned(void** ptr, size_t size, const string& annotation = "");
+        EMemStatus ReleasePinned(void* ptr);
 
         EMemStatus Offload(void* dst, void* src, size_t size, cudaEvent_t memEvent);
         EMemStatus Prefetch(void* dst, void* src, size_t size, cudaEvent_t memEvent);

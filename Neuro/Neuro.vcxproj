@@ -213,10 +213,10 @@
     <ClInclude Include="include\ParameterAndGradient.h" />
     <ClInclude Include="include\Random.h" />
     <ClInclude Include="include\Stopwatch.h" />
-    <ClInclude Include="include\Tensors\Cuda\CudaDeviceVariable.h" />
     <ClInclude Include="include\Tensors\Cuda\CudaErrorCheck.h" />
     <ClInclude Include="include\Tensors\Cuda\CudaKernels.h" />
     <ClInclude Include="include\Tensors\Shape.h" />
+    <ClInclude Include="include\Tensors\Storage.h" />
     <ClInclude Include="include\Tensors\Tensor.h" />
     <ClInclude Include="include\Tensors\TensorFormatter.h" />
     <ClInclude Include="include\Tensors\TensorOpCpu.h" />
@@ -308,9 +308,9 @@
     <ClCompile Include="src\Optimizers\SGD.cpp" />
     <ClCompile Include="src\Random.cpp" />
     <ClCompile Include="src\Stopwatch.cpp" />
-    <ClCompile Include="src\Tensors\Cuda\CudaDeviceVariable.cpp" />
     <ClCompile Include="src\Tensors\Cuda\CudaErrorCheck.cpp" />
     <ClCompile Include="src\Tensors\Shape.cpp" />
+    <ClCompile Include="src\Tensors\Storage.cpp" />
     <ClCompile Include="src\Tensors\Tensor.cpp" />
     <ClCompile Include="src\Tensors\TensorFormatter.cpp" />
     <ClCompile Include="src\Tensors\TensorOpCpu.cpp" />
