@@ -19,10 +19,12 @@ namespace Neuro
         {
             m_InputsGrads[i].Resize(m_InputNodes[i]->GetShape());
             m_InputsGrads[i].Name(m_Name + "/inputGrad" + to_string(i));
+            m_InputsGrads[i].SetStorageType(ST_RefCounted);
             m_InputsGradsPtrs[i] = &m_InputsGrads[i];
         }
 
         m_Output.SetStorageType(ST_RefCounted|ST_Offloadable);
+        m_OutputGrad.SetStorageType(ST_RefCounted);
 
         Graph::Default()->AddOperation(this);
     }
@@ -42,6 +44,7 @@ namespace Neuro
         m_OutputConsumedCount = 0;
         if (m_Output.TryDeviceAllocate())
             m_Output.OverrideDevice();
+        m_Output.IncRef();
         m_Inputs = inputs;
 
         ComputeInternal();
@@ -65,7 +68,8 @@ namespace Neuro
 
         ComputeGradientInternal(grad);
 
-        m_Output.TryDeviceRelease(); // output is no longer needed, we've already used it to compute input gradients
+        m_Output.DecRef();
+        //m_Output.TryDeviceRelease(); // output is no longer needed, we've already used it to compute input gradients
         m_OutputGrad.TryDeviceRelease(); // output grad is no longer needed, we've already used it to compute input gradients        
         return m_InputsGradsPtrs;
     }

@@ -67,8 +67,10 @@ namespace Neuro
     {
         FreeOnDevice();
         Free();
-        CUDA_CHECK(cudaEventDestroy(m_OffloadEvent));
-        CUDA_CHECK(cudaEventDestroy(m_PrefetchEvent));
+        if (m_OffloadEvent)
+            CUDA_CHECK(cudaEventDestroy(m_OffloadEvent));
+        if (m_PrefetchEvent)
+            CUDA_CHECK(cudaEventDestroy(m_PrefetchEvent));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -314,6 +316,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Storage::OverrideDevice()
     {
+        if (!m_DataPtr)
+            Allocate();
         if (!m_DeviceDataPtr)
             AllocateOnDevice();
         m_Location = Device;
@@ -323,16 +327,17 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Storage::IncRef(size_t n)
     {
-        m_RefCount += n;
+        //NEURO_ASSERT(m_DataPtr, "Increasing ref count on deallocated data.");
+        m_RefCount += (int)n;
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Storage::DecRef(size_t n)
     {
         NEURO_ASSERT(n <= m_RefCount, "Over-decresing ref count.");
-        m_RefCount -= n;
+        m_RefCount -= (int)n;
 
-        if (m_RefCount == 0 && (m_Type & ST_RefCounted))
+        if (m_RefCount <= 0 && (m_Type & ST_RefCounted))
         {
             STORAGE_DEBUG_INFO("Ref count zeroed '%s'[%d] <<< deallocating.\n", m_Name.c_str(), m_Type);
             Free();

@@ -22,7 +22,7 @@ namespace Neuro
         class Dragon4FloatFormatter
         {
         public:
-            Dragon4FloatFormatter(const vector<float>& a);
+            Dragon4FloatFormatter(const float* a, size_t size);
             string FormatValue(float v) const;
 
         private:

@@ -269,12 +269,14 @@ namespace Neuro
 
 		const Shape& GetShape() const { return m_Shape; }
 
-        void CopyToDevice() const;
-        void CopyToHost() const;
         bool TryDeviceAllocate();
         bool TryDeviceRelease();
         void Prefetch() const;
         void Offload() const;
+        void IncRef(size_t n = 1);
+        void DecRef(size_t n = 1);
+        void CopyToDevice() const;
+        void CopyToHost() const;
         /// Use whatever data there is on the host (usually used for output tensors so copy can be avoided)
         void OverrideHost();
         /// Use whatever data there is on the device (usually used for output tensors so copy can be avoided)

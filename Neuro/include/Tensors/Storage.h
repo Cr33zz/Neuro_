@@ -11,10 +11,10 @@ namespace Neuro
 
     enum EStorageType
     {
+        ST_Default = 0,
         ST_RefCounted = 1 << 1,
         ST_Offloadable = 1 << 2,
         ST_KeepDevMem = 1 << 3,
-        ST_Default = ST_RefCounted
     };
 
     class Storage
@@ -65,7 +65,7 @@ namespace Neuro
         int m_Type = ST_Default;
         size_t m_AllocSize = 0;
         size_t m_Size = 0;
-        size_t m_RefCount = 0;
+        int m_RefCount = 0;
         cudaEvent_t m_OffloadEvent = nullptr;
         cudaEvent_t m_PrefetchEvent = nullptr;
         mutable ELocation m_Location = None;
