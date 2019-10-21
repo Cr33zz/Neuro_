@@ -9,9 +9,9 @@
 #include "Memory/MemoryManager.h"
 #include "Tensors/Cuda/CudaErrorCheck.h"
 
-//#define ENABLE_GPU_MEMORY_LOGS
+#define ENABLE_MEMORY_LOGS
 
-#define MEM_GRANULARITY 512
+#define DEVICE_ALLOC_GRANULARITY 512
 #define CUDA_GRANULARITY 128 * 1024
 
 #define MEM_CHECK(call) do { \
@@ -24,7 +24,7 @@
 	} \
 } while(0)
 
-#ifdef ENABLE_GPU_MEMORY_LOGS
+#ifdef ENABLE_MEMORY_LOGS
 #define MEM_DEBUG_INFO(info) do { stringstream ss; ss << info; OutputDebugString(ss.str().c_str()); } while(0)
 #else
 #define MEM_DEBUG_INFO(info) {}
@@ -63,9 +63,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    EMemStatus MemoryManager::Allocate(void** ptr, size_t size, const string& annotation)
+    EMemStatus MemoryManager::AllocateDevice(void** ptr, size_t size, const string& annotation)
     {
-        size = ceilInt(size, MEM_GRANULARITY);
+        size = ceilInt(size, DEVICE_ALLOC_GRANULARITY);
 
         // Find the best fit.
         Block *best = nullptr, *prev = nullptr;
@@ -91,17 +91,17 @@ namespace Neuro
         m_UsedBlocks = best;
         best->m_Annotation = annotation;
 
-        m_AllocatedMemSize += size;
-        m_AllocatedMemSizePeak = max(m_AllocatedMemSize, m_AllocatedMemSizePeak);
+        m_AllocatedDeviceMemSize += size;
+        m_AllocatedDeviceMemSizePeak = max(m_AllocatedDeviceMemSize, m_AllocatedDeviceMemSizePeak);
 
-#ifdef ENABLE_GPU_MEMORY_LOGS
+#ifdef ENABLE_MEMORY_LOGS
         stringstream ss;
-        ss << "Alloc '" << (annotation ? annotation : "") << "' 0x" << hex << (__int64)m_UsedBlocks->GetData() << dec << " size ";
+        ss << "Device alloc '" << annotation << "' 0x" << hex << (__int64)m_UsedBlocks->GetData() << dec << " size ";
         PrintSize(ss, size);
         ss << " total ";
-        PrintSize(ss, m_AllocatedMemSize);
+        PrintSize(ss, m_AllocatedDeviceMemSize);
         ss << " peak ";
-        PrintSize(ss, m_AllocatedMemSizePeak);
+        PrintSize(ss, m_AllocatedDeviceMemSizePeak);
         ss << endl;
         OutputDebugString(ss.str().c_str());
 #endif
@@ -112,7 +112,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    EMemStatus MemoryManager::Release(void* ptr)
+    EMemStatus MemoryManager::ReleaseDevice(void* ptr)
     {
         if (!ptr)
             return MEM_STATUS_SUCCESS;
@@ -126,14 +126,14 @@ namespace Neuro
         if (!curr)
             return MEM_STATUS_INVALID_ARGUMENT;
 
-        m_AllocatedMemSize -= curr->GetSize();
+        m_AllocatedDeviceMemSize -= curr->GetSize();
 
-#ifdef ENABLE_GPU_MEMORY_LOGS
+#ifdef ENABLE_MEMORY_LOGS
         stringstream ss;
-        ss << "Release '" << (curr->m_Annotation ? curr->m_Annotation : "") << "' 0x" << hex << (__int64)ptr << dec << " size ";
+        ss << "Device release '" << curr->m_Annotation << "' 0x" << hex << (__int64)ptr << dec << " size ";
         PrintSize(ss, curr->GetSize());
         ss << " total ";
-        PrintSize(ss, m_AllocatedMemSize);
+        PrintSize(ss, m_AllocatedDeviceMemSize);
         ss << endl;
         OutputDebugString(ss.str().c_str());
 #endif
@@ -141,6 +141,80 @@ namespace Neuro
         // We have the node so release it.
         EMemStatus result = ReleaseBlockUnsafe(curr, prev);        
         return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    EMemStatus MemoryManager::AllocateHostPinned(void** ptr, size_t size, const string& annotation)
+    {
+        CUDA_CHECK(cudaMallocHost(ptr, size));
+        m_AllocatedHostPinnedMemSize += size;
+        m_HostPinnedAllocations.push_back({ *ptr, size, annotation});
+        if (ptr)
+            return MEM_STATUS_SUCCESS;
+        return MEM_STATUS_OUT_OF_MEMORY;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    EMemStatus MemoryManager::ReleaseHostPinned(void* ptr)
+    {
+        if (!ptr)
+            return MEM_STATUS_SUCCESS;
+        auto it = find_if(m_HostPinnedAllocations.begin(), m_HostPinnedAllocations.end(), [&](const HostAlloc& a) { return a.ptr == ptr; });
+        NEURO_ASSERT(it != m_HostPinnedAllocations.end(), "");
+        m_AllocatedHostPinnedMemSize -= it->size;
+        m_HostPinnedAllocations.erase(it);
+        CUDA_CHECK(cudaFreeHost(ptr));
+        return MEM_STATUS_SUCCESS;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    EMemStatus MemoryManager::AllocateHost(void** ptr, size_t size, const string& annotation)
+    {
+        *ptr = malloc(size);
+        m_AllocatedHostMemSize += size;
+        m_AllocatedHostMemSizePeak = max(m_AllocatedHostMemSize, m_AllocatedHostMemSizePeak);
+        m_HostAllocations.push_back({ *ptr, size, annotation });
+
+#ifdef ENABLE_MEMORY_LOGS
+        stringstream ss;
+        ss << "Host alloc '" << annotation << "' 0x" << hex << (__int64)*ptr << dec << " size ";
+        PrintSize(ss, size);
+        ss << " total ";
+        PrintSize(ss, m_AllocatedHostMemSize);
+        ss << " peak ";
+        PrintSize(ss, m_AllocatedHostMemSizePeak);
+        ss << endl;
+        OutputDebugString(ss.str().c_str());
+#endif
+
+        if (ptr)
+            return MEM_STATUS_SUCCESS;
+        return MEM_STATUS_OUT_OF_MEMORY;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    EMemStatus MemoryManager::ReleaseHost(void* ptr)
+    {
+        if (!ptr)
+            return MEM_STATUS_SUCCESS;
+
+        auto it = find_if(m_HostAllocations.begin(), m_HostAllocations.end(), [&](const HostAlloc& a) { return a.ptr == ptr; });
+        NEURO_ASSERT(it != m_HostAllocations.end(), "");
+        m_AllocatedHostMemSize -= it->size;
+        m_HostAllocations.erase(it);
+
+#ifdef ENABLE_MEMORY_LOGS
+        stringstream ss;
+        ss << "Host release '" << it->annotation << "' 0x" << hex << (__int64)ptr << dec << " size ";
+        PrintSize(ss, it->size);
+        ss << " total ";
+        PrintSize(ss, m_AllocatedHostMemSize);
+        ss << endl;
+        OutputDebugString(ss.str().c_str());
+#endif
+
+        free(ptr);
+        return MEM_STATUS_SUCCESS;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -341,30 +415,6 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    EMemStatus MemoryManager::AllocatePinned(void** ptr, size_t size, const string& annotation)
-    {
-        CUDA_CHECK(cudaMallocHost(ptr, size));
-        m_AllocatedPinnedMemSize += size;
-        m_PinnedAllocations.push_back({ *ptr, size, annotation});
-        if (ptr)
-            return MEM_STATUS_SUCCESS;
-        return MEM_STATUS_OUT_OF_MEMORY;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    EMemStatus MemoryManager::ReleasePinned(void* ptr)
-    {
-        if (!ptr)
-            return MEM_STATUS_SUCCESS;
-        auto it = find_if(m_PinnedAllocations.begin(), m_PinnedAllocations.end(), [&](const PinnedAlloc& a) { return a.ptr == ptr; });
-        NEURO_ASSERT(it != m_PinnedAllocations.end(), "");
-        m_AllocatedPinnedMemSize -= it->size;
-        m_PinnedAllocations.erase(it);
-        CUDA_CHECK(cudaFreeHost(ptr));
-        return MEM_STATUS_SUCCESS;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
     EMemStatus MemoryManager::Offload(void* dst, void* src, size_t size, cudaEvent_t memEvent)
     {
         NEURO_ASSERT(dst, "Host pinned memory is not allocated.");
@@ -457,11 +507,11 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    EMemStatus MemoryManager::PrintPinned(FILE* file) const
+    EMemStatus MemoryManager::PrintHostAllocs(FILE* file, const char* name, const list<HostAlloc>& allocs) const
     {
-        fprintf(file, "| list=\"pinned\", size=%zu\n", m_AllocatedPinnedMemSize);
-        for (auto& curr : m_PinnedAllocations)
-            fprintf(file, "| | data=0x%016zx, size=%zu, annotation:'%s'\n", (size_t)curr.ptr, (size_t)curr.size, curr.annotation.c_str());
+        fprintf(file, "| list=\"%s\", size=%zu\n", name, m_AllocatedHostPinnedMemSize);
+        for (auto& a : allocs)
+            fprintf(file, "| | data=0x%016zx, size=%zu, annotation:'%s'\n", (size_t)a.ptr, (size_t)a.size, a.annotation.c_str());
         fprintf(file, "|\n");
         return MEM_STATUS_SUCCESS;
     }
@@ -475,10 +525,11 @@ namespace Neuro
         MEM_CHECK(GetUsedMemoryUnsafe(usedMemory));
         MEM_CHECK(GetFreeMemoryUnsafe(freeMemory));
 
-        fprintf(file, ">> stream=0x%016zx, used=%zuKB, free=%zuKB, peak=%zuKB, pinned=%zuKB\n", streamCode, usedMemory / 1024, freeMemory / 1024, m_AllocatedMemSizePeak / 1024, m_AllocatedPinnedMemSize / 1024);
-        MEM_CHECK(PrintListUnsafe(file, "used", m_UsedBlocks));
-        MEM_CHECK(PrintListUnsafe(file, "free", m_FreeBlocks));
-        MEM_CHECK(PrintPinned(file));
+        fprintf(file, ">> stream=0x%016zx, used=%zuKB, free=%zuKB, peak=%zuKB, pinned=%zuKB\n", streamCode, usedMemory / 1024, freeMemory / 1024, m_AllocatedDeviceMemSizePeak / 1024, m_AllocatedHostPinnedMemSize / 1024);
+        MEM_CHECK(PrintListUnsafe(file, "device_used", m_UsedBlocks));
+        MEM_CHECK(PrintListUnsafe(file, "device_free", m_FreeBlocks));
+        MEM_CHECK(PrintHostAllocs(file, "host", m_HostAllocations));
+        MEM_CHECK(PrintHostAllocs(file, "host_pinned", m_HostPinnedAllocations));
         fprintf(file, "\n");
         fclose(file);
 

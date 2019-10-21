@@ -10,7 +10,7 @@ namespace Neuro
     {
         m_Output.Resize(initValue.GetShape());
         m_Output.SetStorageType(ST_KeepDevMem);
-        m_OutputGrad.SetStorageType(ST_RefCounted|ST_Offloadable);
+        m_OutputGrad.SetStorageType(ST_Offloadable);
         initValue.CopyTo(m_Output);
         Graph::Default()->AddVariable(this);
         m_Initialized = true;
@@ -28,7 +28,7 @@ namespace Neuro
     {
         m_Output.Resize(shape);
         m_Output.SetStorageType(ST_KeepDevMem);
-        m_OutputGrad.SetStorageType(ST_RefCounted|ST_Offloadable);
+        m_OutputGrad.SetStorageType(ST_Offloadable);
         Graph::Default()->AddVariable(this);
     }
 

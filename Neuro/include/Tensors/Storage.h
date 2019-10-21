@@ -12,7 +12,7 @@ namespace Neuro
     enum EStorageType
     {
         ST_Default = 0,
-        ST_RefCounted = 1 << 1,
+        ST_DeviceRefCounted = 1 << 1,
         ST_Offloadable = 1 << 2,
         ST_KeepDevMem = 1 << 3,
     };
@@ -22,14 +22,19 @@ namespace Neuro
     public:
         Storage(int type = ST_Default, size_t size = 0, const string& name = "");
         Storage(const Storage& other);
+        Storage(Storage&& other);
         Storage& operator=(const Storage& other);
+        Storage& operator=(Storage&& other);
         ~Storage();
 
         void ChangeType(int type);
         void Resize(size_t size);
+        void Rename(const string& name) { m_Name = name; }
+        /// Deallocates all memory on both host and device. Location will be changed to None. Size will remain.
+        void Release();
 
-        void Allocate();
-        void Free();
+        void AllocateOnHost() const;
+        void FreeOnHost();
 
         void AllocateOnDevice() const;
         void FreeOnDevice();
@@ -37,17 +42,18 @@ namespace Neuro
         void Offload() const;
         void Prefetch() const;
 
-        ELocation Location() const { return m_Location; }
+        ELocation Location() const { return m_DataLocation; }
 
         void CopyToDevice() const;
         void CopyToHost() const;
-        void CopyD2D(void* destDevPtr) const;
+        void CopyWithinDevice(void* destDevPtr) const;
 
         void OverrideHost();
         void OverrideDevice();
 
-        void IncRef(size_t n);
-        void DecRef(size_t n);
+        void ResetDeviceRef() { m_DeviceDataRefCount = 0; }
+        void IncDeviceRef(size_t n);
+        void DecDeviceRef(size_t n);
 
         const float* Data() const { return m_DataPtr; }
         const float* DataEnd() const { return m_DataPtr + m_Size; }
@@ -65,10 +71,10 @@ namespace Neuro
         int m_Type = ST_Default;
         size_t m_AllocSize = 0;
         size_t m_Size = 0;
-        int m_RefCount = 0;
+        int m_DeviceDataRefCount = 0;
         cudaEvent_t m_OffloadEvent = nullptr;
         cudaEvent_t m_PrefetchEvent = nullptr;
-        mutable ELocation m_Location = None;
+        mutable ELocation m_DataLocation = None;
         string m_Name = "";
     };
 }

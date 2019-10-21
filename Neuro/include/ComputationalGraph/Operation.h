@@ -34,6 +34,8 @@ namespace Neuro
         // This is used during gradient computation to figure out which consumers we care about.
         // We only care about computed ones in last forward pass
         uint32_t m_LastComputeStep = 0;
-        size_t m_OutputConsumedCount = 0;
+        /// Some operations like optimizer minimizations will consume outputs before computing gradients
+        /// This flag in a hint for operation not to notify input nodes again
+        bool m_InputsManuallyConsumed = false;
     };
 }

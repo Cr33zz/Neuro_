@@ -31,7 +31,9 @@ namespace Neuro
         Tensor(const string& imageFile, bool normalize, bool grayScale = false, const string& name = "", EStorageType storageType = ST_Default);
         Tensor(istream& stream, EStorageType storageType = ST_Default);
         Tensor(const Tensor& t);
+        Tensor(Tensor&& t);
         Tensor& operator=(const Tensor& t);
+        Tensor& operator=(Tensor&& t);
 
 		static void SetDefaultOpMode(EOpMode mode);
         static void SetForcedOpMode(EOpMode mode);
@@ -50,7 +52,7 @@ namespace Neuro
         uint32_t Length() const { return m_Shape.Length; }
 
         const string& Name() const { return m_Name; }
-        void Name(const string& name) { m_Name = name; }
+        void Name(const string& name);
 
         float* Values();
         const float* Values() const;
@@ -152,7 +154,7 @@ namespace Neuro
         void Reshaped(const Shape& shape, Tensor& output) const;
         void Reshape(const Shape& shape);
 
-        // Changes shape and resizes values if neccessary.
+        // Changes shape and resizes values if necessary.
         void Resize(const Shape& shape);
         void ResizeBatch(uint32_t batch);
 
@@ -269,12 +271,14 @@ namespace Neuro
 
 		const Shape& GetShape() const { return m_Shape; }
 
-        bool TryDeviceAllocate();
+        bool TryDeviceAllocate() const;
         bool TryDeviceRelease();
         void Prefetch() const;
         void Offload() const;
-        void IncRef(size_t n = 1);
-        void DecRef(size_t n = 1);
+        void ResetDeviceRef();
+        void IncDeviceRef(size_t n = 1);
+        void DecDeviceRef(size_t n = 1);
+        void ReleaseData();
         void CopyToDevice() const;
         void CopyToHost() const;
         /// Use whatever data there is on the host (usually used for output tensors so copy can be avoided)

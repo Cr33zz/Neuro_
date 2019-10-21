@@ -357,7 +357,7 @@ namespace Neuro
         size_t workspaceSize;
         CUDA_CHECK(cudnnGetConvolutionForwardWorkspaceSize(s_CudnnHandle, inputDesc, kernelsDesc, convolutionDesc, outputDesc, algo, &workspaceSize));
         void* workspacePtr;
-        MemoryManager::Default().Allocate(&workspacePtr, workspaceSize, "conv2d_workspace");
+        MemoryManager::Default().AllocateDevice(&workspacePtr, workspaceSize, "conv2d_workspace");
 
         float alpha = 1, beta = 0;
         CUDA_CHECK(cudnnConvolutionForward(
@@ -375,7 +375,7 @@ namespace Neuro
             outputDesc,
             output.GetDevicePtr()));
 
-        MemoryManager::Default().Release(workspacePtr);
+        MemoryManager::Default().ReleaseDevice(workspacePtr);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -414,7 +414,7 @@ namespace Neuro
         cudnnGetConvolutionBackwardDataWorkspaceSize(s_CudnnHandle, kernelsDesc, gradientDesc, convolutionDesc, inputGradientDesc, algo, &workspaceSize);
         //inputGradient.m_GpuData.UpdateWorkspace(inputGradient.m_GpuData.m_ConvBackWorkspace, workspaceSize);
         void* workspacePtr;
-        MemoryManager::Default().Allocate(&workspacePtr, workspaceSize, "conv2d_input_grad_workspace");
+        MemoryManager::Default().AllocateDevice(&workspacePtr, workspaceSize, "conv2d_input_grad_workspace");
 
         float alpha = 1, beta = 0;
         CUDA_CHECK(cudnnConvolutionBackwardData(
@@ -432,7 +432,7 @@ namespace Neuro
             inputGradientDesc,
             inputGradient.GetDevicePtr()));
 
-        MemoryManager::Default().Release(workspacePtr);
+        MemoryManager::Default().ReleaseDevice(workspacePtr);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -471,7 +471,7 @@ namespace Neuro
         size_t workspaceSize;
         cudnnGetConvolutionBackwardFilterWorkspaceSize(s_CudnnHandle, inputDesc, gradientDesc, convolutionDesc, kernelsGradientsDesc, algo, &workspaceSize);
         void* workspacePtr;
-        MemoryManager::Default().Allocate(&workspacePtr, workspaceSize, "conv2d_kernels_grad_workspace");
+        MemoryManager::Default().AllocateDevice(&workspacePtr, workspaceSize, "conv2d_kernels_grad_workspace");
 
         float alpha = 1, beta = 0;
         CUDA_CHECK(cudnnConvolutionBackwardFilter(
@@ -489,7 +489,7 @@ namespace Neuro
             kernelsGradientsDesc,
             kernelsGradient.GetDevicePtr()));
 
-        MemoryManager::Default().Release(workspacePtr);
+        MemoryManager::Default().ReleaseDevice(workspacePtr);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -947,7 +947,7 @@ namespace Neuro
 
             if (blocks.x < THREADS_PER_BLOCK)
             {
-                MemoryManager::Default().Allocate(&tempOutput, tempOutputLen * sizeof(float));
+                MemoryManager::Default().AllocateDevice(&tempOutput, tempOutputLen * sizeof(float));
                 CudaKernels::Sum(blocks, threads, input.GetDevicePtr(), input.Length(), 1, 1, 1, axis, (float*)tempOutput);
 
                 vector<float> tmp(blocks.x);
@@ -956,16 +956,16 @@ namespace Neuro
                 GetKernelRunParams(tempOutputLen, blocks, threads, THREADS_PER_BLOCK);
                 CudaKernels::Sum(blocks, threads, (float*)tempOutput, tempOutputLen, 1, 1, 1, axis, output.GetDevicePtr());
 
-                MemoryManager::Default().Release(tempOutput);
+                MemoryManager::Default().ReleaseDevice(tempOutput);
                 return;
             }
 
             void* tempOutput2;
             int tempOutput2Len = (int)ceil(blocks.x / (float)THREADS_PER_BLOCK);
 
-            MemoryManager::Default().Allocate(&tempOutput2, tempOutput2Len * sizeof(float));
+            MemoryManager::Default().AllocateDevice(&tempOutput2, tempOutput2Len * sizeof(float));
 
-            MemoryManager::Default().Allocate(&tempOutput, THREADS_PER_BLOCK * sizeof(float));
+            MemoryManager::Default().AllocateDevice(&tempOutput, THREADS_PER_BLOCK * sizeof(float));
 
             for (size_t i = 0; i < tempOutput2Len; ++i)
             {
@@ -978,12 +978,12 @@ namespace Neuro
                 cudaMemcpy((float*)tempOutput2 + i, output.GetDevicePtr(), sizeof(float), cudaMemcpyDeviceToDevice);
             }
                 
-            MemoryManager::Default().Release(tempOutput);
+            MemoryManager::Default().ReleaseDevice(tempOutput);
 
             GetKernelRunParams(tempOutput2Len, blocks, threads, THREADS_PER_BLOCK);
             CudaKernels::Sum(blocks, threads, (float*)tempOutput2, tempOutput2Len, 1, 1, 1, axis, output.GetDevicePtr());
 
-            MemoryManager::Default().Release(tempOutput2);
+            MemoryManager::Default().ReleaseDevice(tempOutput2);
             return;
         }
 

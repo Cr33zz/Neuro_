@@ -5,7 +5,7 @@
 #include "Memory/MemoryManager.h"
 #include "Tensors/Cuda/CudaErrorCheck.h"
 
-//#define ENABLE_STORAGE_LOGS
+#define ENABLE_STORAGE_LOGS
 
 #ifdef ENABLE_STORAGE_LOGS
 #include <windows.h>
@@ -19,7 +19,7 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     Storage::Storage(int type, size_t size, const string& name)
-        : m_Type(type), m_AllocSize(size), m_Size(size), m_Name(name), m_Location(None)
+        : m_Type(type), m_AllocSize(size), m_Size(size), m_Name(name), m_DataLocation(None)
     {
         if (m_Type & ST_Offloadable)
         {
@@ -35,26 +35,36 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    Storage::Storage(Storage&& other)
+    {
+        *this = move(other);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     Storage& Storage::operator=(const Storage& other)
     {
         if (this != &other)
         {
             m_AllocSize = other.m_AllocSize;
             m_Size = other.m_Size;
-            m_RefCount = 0;
+            m_DeviceDataRefCount = 0;
             m_Name = other.m_Name;
-            Free();
+            FreeOnHost();
             FreeOnDevice();
             ChangeType(other.m_Type);
             if (other.m_DataPtr)
             {
-                m_Location = Host;
-                Allocate();
-                memcpy(m_DataPtr, other.m_DataPtr, SizeInBytes());
+                NEURO_ASSERT(other.m_DataLocation != None, "");
+                m_DataLocation = Host;
+                AllocateOnHost();
+                if (other.m_DataLocation == Host)
+                    memcpy(m_DataPtr, other.m_DataPtr, SizeInBytes());
+                else
+                    cudaMemcpy(m_DataPtr, other.m_DeviceDataPtr, SizeInBytes(), cudaMemcpyDeviceToHost);
             }
             else
             {
-                m_Location = None;
+                m_DataLocation = None;
                 m_DataPtr = nullptr;
             }
             m_DeviceDataPtr = nullptr;            
@@ -63,10 +73,28 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    Storage& Storage::operator=(Storage&& other)
+    {
+        if (this != &other)
+        {
+            m_AllocSize = other.m_AllocSize;
+            m_Size = other.m_Size;
+            m_DeviceDataRefCount = other.m_DeviceDataRefCount;
+            m_Name = other.m_Name;
+            m_DataLocation = other.m_DataLocation;
+            m_DataPtr = other.m_DataPtr;
+            other.m_DataPtr = nullptr;
+            m_DeviceDataPtr = other.m_DeviceDataPtr;
+            other.m_DeviceDataPtr = nullptr;
+        }
+        return *this;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     Storage::~Storage()
     {
         FreeOnDevice();
-        Free();
+        FreeOnHost();
         if (m_OffloadEvent)
             CUDA_CHECK(cudaEventDestroy(m_OffloadEvent));
         if (m_PrefetchEvent)
@@ -114,15 +142,27 @@ namespace Neuro
 
         if (m_DataPtr)
         {
-            Free();
-            Allocate();
-            m_Location = Host;
+            FreeOnHost();
+            AllocateOnHost();
+            m_DataLocation = Host;
         }
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Storage::Allocate()
+    void Storage::Release()
     {
+        FreeOnDevice();
+        FreeOnHost();
+        m_DataLocation = None;
+        m_DeviceDataRefCount = 0;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Storage::AllocateOnHost() const
+    {
+        if (m_AllocSize == 0)
+            return;
+
         NEURO_ASSERT(!m_DeviceDataPtr, "");
         STORAGE_DEBUG_INFO("Allocating on host '%s' ", m_Name.c_str());
         if (m_DataPtr)
@@ -132,15 +172,15 @@ namespace Neuro
         }
         STORAGE_DEBUG_INFO("<<< allocating.\n");
         if (m_Type & ST_Offloadable)
-            MemoryManager::Default().AllocatePinned((void**)&m_DataPtr, m_AllocSize, m_Name);
+            MemoryManager::Default().AllocateHostPinned((void**)&m_DataPtr, AllocSizeInBytes(), m_Name);
         else
-            m_DataPtr = new float[m_AllocSize];
+            MemoryManager::Default().AllocateHost((void**)&m_DataPtr, AllocSizeInBytes(), m_Name);
 
-        m_Location = Host;
+        m_DataLocation = Host;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Storage::Free()
+    void Storage::FreeOnHost()
     {
         NEURO_ASSERT(!m_DeviceDataPtr, "Data cannot be only on device.");
         STORAGE_DEBUG_INFO("Releasing on host '%s' ", m_Name.c_str());
@@ -151,17 +191,23 @@ namespace Neuro
         }
         STORAGE_DEBUG_INFO("<<< release incoming.\n");
         if (m_Type & ST_Offloadable)
-            MemoryManager::Default().ReleasePinned(m_DataPtr);
+            MemoryManager::Default().ReleaseHostPinned(m_DataPtr);
         else
-            delete[] m_DataPtr;
+            MemoryManager::Default().ReleaseHost(m_DataPtr);
         
         m_DataPtr = nullptr;
-        m_Location = None;
+        m_DataLocation = None;
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Storage::AllocateOnDevice() const
     {
+        if (m_AllocSize == 0)
+            return;
+
+        if (!m_DataPtr)
+            AllocateOnHost();
+        NEURO_ASSERT(m_DataPtr, "Data cannot be only on device.");
         STORAGE_DEBUG_INFO("Allocating on device '%s' ", m_Name.c_str());
         if (m_DeviceDataPtr)
         {
@@ -169,7 +215,7 @@ namespace Neuro
             return;
         }
         STORAGE_DEBUG_INFO("<<< allocating.\n");
-        CUDA_CHECK(MemoryManager::Default().Allocate((void**)&m_DeviceDataPtr, AllocSizeInBytes(), m_Name));
+        CUDA_CHECK(MemoryManager::Default().AllocateDevice((void**)&m_DeviceDataPtr, AllocSizeInBytes(), m_Name));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -190,11 +236,12 @@ namespace Neuro
 
         STORAGE_DEBUG_INFO("<<< release incoming.\n");
         MemoryManager::Default().WaitForMemEvent(m_OffloadEvent);
-        CUDA_CHECK(MemoryManager::Default().Release((void*)m_DeviceDataPtr));
+        CUDA_CHECK(MemoryManager::Default().ReleaseDevice((void*)m_DeviceDataPtr));
         m_DeviceDataPtr = nullptr;
 
         // at this point the only place where values are stored is host memory
-        m_Location = Host;
+        if (m_DataPtr)
+            m_DataLocation = Host;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -249,10 +296,10 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Storage::CopyToDevice() const
     {
-        if (m_Location == Device)
+        if (m_DataLocation == Device)
             return;
 
-        NEURO_ASSERT(m_Location == Host, "Attempting to copy from unallocated host memory to device.");
+        NEURO_ASSERT(m_DataLocation == Host, "Attempting to copy from unallocated host memory to device.");
 
         bool wasDevMemoryAllocated = true;
 
@@ -280,16 +327,16 @@ namespace Neuro
             CUDA_CHECK(cudaMemcpy((void*)m_DeviceDataPtr, (void*)m_DataPtr, SizeInBytes(), cudaMemcpyHostToDevice));
         }
 
-        m_Location = Device;
+        m_DataLocation = Device;
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Storage::CopyToHost() const
     {
-        if (m_Location == Host)
+        if (m_DataLocation == Host)
             return;
 
-        NEURO_ASSERT(m_Location != None, "Attempting to copy to unallocated host memory");
+        NEURO_ASSERT(m_DataLocation != None, "Attempting to copy to unallocated host memory");
 
         STORAGE_DEBUG_INFO("Copy to host '%s'[%d]\n", m_Name.c_str(), m_Type);
         if (m_Type & ST_Offloadable)
@@ -301,15 +348,15 @@ namespace Neuro
         else
             CUDA_CHECK(cudaMemcpy((void*)m_DataPtr, (void*)m_DeviceDataPtr, SizeInBytes(), cudaMemcpyDeviceToHost));
 
-        m_Location = Host;
+        m_DataLocation = Host;
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Storage::OverrideHost()
     {
         if (!m_DataPtr)
-            Allocate();
-        m_Location = Host;
+            AllocateOnHost();
+        m_DataLocation = Host;
         STORAGE_DEBUG_INFO("Override host '%s'[%d]\n", m_Name.c_str(), m_Type);
     }
 
@@ -317,30 +364,30 @@ namespace Neuro
     void Storage::OverrideDevice()
     {
         if (!m_DataPtr)
-            Allocate();
+            AllocateOnHost();
         if (!m_DeviceDataPtr)
             AllocateOnDevice();
-        m_Location = Device;
+        m_DataLocation = Device;
         STORAGE_DEBUG_INFO("Override device '%s'[%d]\n", m_Name.c_str(), m_Type);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Storage::IncRef(size_t n)
+    void Storage::IncDeviceRef(size_t n)
     {
-        //NEURO_ASSERT(m_DataPtr, "Increasing ref count on deallocated data.");
-        m_RefCount += (int)n;
+        NEURO_ASSERT(m_Type & ST_DeviceRefCounted, "Increasing ref count for non-refcounted storage.");
+        m_DeviceDataRefCount += (int)n;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Storage::DecRef(size_t n)
+    void Storage::DecDeviceRef(size_t n)
     {
-        NEURO_ASSERT(n <= m_RefCount, "Over-decresing ref count.");
-        m_RefCount -= (int)n;
+        NEURO_ASSERT(m_Type & ST_DeviceRefCounted, "Decreasing ref count for non-refcounted storage.");
+        NEURO_ASSERT(n <= m_DeviceDataRefCount, "Over-decresing ref count.");
+        m_DeviceDataRefCount -= (int)n;
 
-        if (m_RefCount <= 0 && (m_Type & ST_RefCounted))
+        if (m_DeviceDataRefCount <= 0 && (m_Type & ST_DeviceRefCounted))
         {
-            STORAGE_DEBUG_INFO("Ref count zeroed '%s'[%d] <<< deallocating.\n", m_Name.c_str(), m_Type);
-            Free();
+            STORAGE_DEBUG_INFO("Ref count zeroed '%s'[%d] <<< deallocating device memory.\n", m_Name.c_str(), m_Type);
             FreeOnDevice();
         }
     }
@@ -349,7 +396,7 @@ namespace Neuro
     float* Storage::Data()
     {
         if (!m_DataPtr)
-            Allocate();
+            AllocateOnHost();
         return m_DataPtr;
     }
 
@@ -357,12 +404,12 @@ namespace Neuro
     float* Storage::DeviceData()
     {
         NEURO_ASSERT(m_DeviceDataPtr, "Attempting to write to unallocated device memory.");
-        NEURO_ASSERT(m_Location == Device, "Attempting to write to data not located on device.");
+        NEURO_ASSERT(m_DataLocation == Device, "Attempting to write to data not located on device.");
         return m_DeviceDataPtr;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Storage::CopyD2D(void* destDevPtr) const
+    void Storage::CopyWithinDevice(void* destDevPtr) const
     {
         NEURO_ASSERT(m_DeviceDataPtr, "Invalid device pointer.");
         NEURO_ASSERT(destDevPtr, "Invalid destination device pointer.");

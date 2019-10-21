@@ -64,7 +64,7 @@ namespace Neuro
         size_t size;
     };
 
-    struct PinnedAlloc
+    struct HostAlloc
     {
         void* ptr;
         size_t size;
@@ -80,11 +80,14 @@ namespace Neuro
 
         EMemStatus Reserve(size_t size);
 
-        EMemStatus Allocate(void** ptr, size_t size, const string& annotation = "");
-        EMemStatus Release(void* ptr);
+        EMemStatus AllocateDevice(void** ptr, size_t size, const string& annotation = "");
+        EMemStatus ReleaseDevice(void* ptr);
 
-        EMemStatus AllocatePinned(void** ptr, size_t size, const string& annotation = "");
-        EMemStatus ReleasePinned(void* ptr);
+        EMemStatus AllocateHost(void** ptr, size_t size, const string& annotation = "");
+        EMemStatus ReleaseHost(void* ptr);
+
+        EMemStatus AllocateHostPinned(void** ptr, size_t size, const string& annotation = "");
+        EMemStatus ReleaseHostPinned(void* ptr);
 
         EMemStatus Offload(void* dst, void* src, size_t size, cudaEvent_t memEvent);
         EMemStatus Prefetch(void* dst, void* src, size_t size, cudaEvent_t memEvent);
@@ -105,21 +108,24 @@ namespace Neuro
         
         inline EMemStatus GetUsedMemoryUnsafe(size_t& usedMemory) const;
         inline EMemStatus GetFreeMemoryUnsafe(size_t& freeMemory) const;
-        EMemStatus GetMemoryUnsafe(std::size_t &size, const Block *head) const;
-        EMemStatus PrintListUnsafe(FILE *file, const char *name, const Block *head) const;
-        EMemStatus PrintPinned(FILE* file) const;
+        EMemStatus GetMemoryUnsafe(size_t& size, const Block* head) const;
+        EMemStatus PrintListUnsafe(FILE *file, const char *name, const Block* head) const;
+        EMemStatus PrintHostAllocs(FILE* file, const char* name, const list<HostAlloc>& allocs) const;
 
         cudaStream_t m_MemoryStream = nullptr;
         bool m_IsStreamBlocking = false;
         Block* m_UsedBlocks = nullptr;
         Block* m_FreeBlocks = nullptr;
         list<CudaBlock> m_CudaBlocks;
-        list<PinnedAlloc> m_PinnedAllocations;
+        list<HostAlloc> m_HostPinnedAllocations;
+        list<HostAlloc> m_HostAllocations;
         size_t m_Size = 0;
         uint32_t m_Flags = MEM_FLAGS_CANNOT_GROW;
-        size_t m_AllocatedPinnedMemSize = 0;
-        size_t m_AllocatedMemSize = 0;
-        size_t m_AllocatedMemSizePeak = 0;
+        size_t m_AllocatedDeviceMemSize = 0;
+        size_t m_AllocatedDeviceMemSizePeak = 0;
+        size_t m_AllocatedHostMemSize = 0;
+        size_t m_AllocatedHostMemSizePeak = 0;
+        size_t m_AllocatedHostPinnedMemSize = 0;
     };
 
     //////////////////////////////////////////////////////////////////////////

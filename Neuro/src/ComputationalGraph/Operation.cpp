@@ -19,12 +19,10 @@ namespace Neuro
         {
             m_InputsGrads[i].Resize(m_InputNodes[i]->GetShape());
             m_InputsGrads[i].Name(m_Name + "/inputGrad" + to_string(i));
-            m_InputsGrads[i].SetStorageType(ST_RefCounted);
             m_InputsGradsPtrs[i] = &m_InputsGrads[i];
         }
 
-        m_Output.SetStorageType(ST_RefCounted|ST_Offloadable);
-        m_OutputGrad.SetStorageType(ST_RefCounted);
+        m_Output.SetStorageType(ST_DeviceRefCounted|ST_Offloadable);
 
         Graph::Default()->AddOperation(this);
     }
@@ -41,17 +39,21 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     const Tensor& Operation::Compute(const vector<const Tensor*>& inputs)
     {
-        m_OutputConsumedCount = 0;
         if (m_Output.TryDeviceAllocate())
             m_Output.OverrideDevice();
-        m_Output.IncRef();
+        m_Output.ResetDeviceRef();
+        m_Output.IncDeviceRef(m_Consumers.size());
         m_Inputs = inputs;
+        m_InputsManuallyConsumed = false;
 
         ComputeInternal();
 
         m_LastComputeStep = m_Graph->CurrentStep();
-        for (auto inputNode : m_InputNodes)
-            inputNode->OutputConsumed();
+        if (!m_InputsManuallyConsumed)
+        {
+            for (auto inputNode : m_InputNodes)
+                inputNode->OutputConsumed();
+        }
         m_Output.Offload(); // at this point output won't change so start offloading it, it will be released when all consumers used it
         return m_Output;
     }
@@ -68,18 +70,15 @@ namespace Neuro
 
         ComputeGradientInternal(grad);
 
-        m_Output.DecRef();
-        //m_Output.TryDeviceRelease(); // output is no longer needed, we've already used it to compute input gradients
-        m_OutputGrad.TryDeviceRelease(); // output grad is no longer needed, we've already used it to compute input gradients        
+        m_Output.ReleaseData(); // output is no longer needed, we've already used it to compute input gradients
+        m_OutputGrad.ReleaseData(); // output grad is no longer needed, we've already used it to compute input gradients
         return m_InputsGradsPtrs;
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Operation::OutputConsumed()
     {
-        ++m_OutputConsumedCount;
-        if (m_OutputConsumedCount == m_Consumers.size())
-            m_Output.TryDeviceRelease();
+        m_Output.DecDeviceRef();
     }
 
     //////////////////////////////////////////////////////////////////////////

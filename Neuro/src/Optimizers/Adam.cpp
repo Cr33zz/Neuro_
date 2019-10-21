@@ -45,6 +45,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Adam::MinimizationOperation::ComputeInternal()
     {
+        m_InputsManuallyConsumed = true;
         auto vars = Graph::Default()->ComputeGradientsInOrder(m_Order, m_InputNodes, m_Vars);
         ++m_Owner->m_Iteration;
 
@@ -56,10 +57,13 @@ namespace Neuro
 
             for (uint32_t i = 0; i < vars.size(); ++i)
             {
-                m_MGradients.push_back(Tensor(vars[i]->Output().GetShape()));
+                m_MGradients.push_back(zeros(vars[i]->Output().GetShape()));
                 m_MGradients.back().Name(vars[i]->Name() + "/adam_m_grad");
-                m_VGradients.push_back(Tensor(vars[i]->Output().GetShape()));
+                //m_MGradients.back().SetStorageType(ST_Offloadable);
+
+                m_VGradients.push_back(zeros(vars[i]->Output().GetShape()));
                 m_VGradients.back().Name(vars[i]->Name() + "/adam_v_grad");
+                //m_VGradients.back().SetStorageType(ST_Offloadable);
             }
         }
 

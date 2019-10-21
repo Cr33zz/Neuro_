@@ -34,7 +34,7 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     Tensor::Tensor(const Shape& shape, const string& name, EStorageType storageType)
-        : m_Name(name), m_Shape(shape), m_Storage(storageType, shape.Length)
+        : m_Name(name), m_Shape(shape), m_Storage(storageType, shape.Length, name)
     {
         m_Shape = shape;
         m_Op = DefaultOp();
@@ -54,12 +54,30 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
+    Tensor::Tensor(Tensor&& t)
+    {
+        *this = move(t);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     Tensor& Tensor::operator=(const Tensor& t)
     {
         if (this != &t)
         {
-            t.CopyToHost();
             m_Storage = t.m_Storage;
+            m_Name = t.m_Name;
+            m_Shape = t.m_Shape;
+            m_Op = t.m_Op;
+        }
+        return *this;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor& Tensor::operator=(Tensor&& t)
+    {
+        if (this != &t)
+        {
+            m_Storage = move(t.m_Storage);
             m_Name = t.m_Name;
             m_Shape = t.m_Shape;
             m_Op = t.m_Op;
@@ -158,7 +176,7 @@ namespace Neuro
         FreeImage_Unload(image);
     }
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
 	void Tensor::SetDefaultOpMode(EOpMode mode)
 	{
 		g_DefaultOp = GetOpFromMode(mode);
@@ -182,7 +200,14 @@ namespace Neuro
 		m_Op = GetOpFromMode(mode);
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Name(const string& name)
+    {
+        m_Name = name;
+        m_Storage.Rename(name);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	float* Tensor::Values()
 	{
 		CopyToHost();
@@ -1568,7 +1593,7 @@ namespace Neuro
         if (tau <= 0 && target.IsOnDevice()) // target is more important
         {
             CopyToDevice();
-            m_Storage.CopyD2D(target.GetDevicePtr());
+            m_Storage.CopyWithinDevice(target.GetDevicePtr());
             return;
         }
 
@@ -1902,7 +1927,7 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    bool Tensor::TryDeviceAllocate()
+    bool Tensor::TryDeviceAllocate() const
     {
         if (Op() != g_OpGpu)
             return false;
@@ -1940,15 +1965,27 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::IncRef(size_t n)
+    void Tensor::ResetDeviceRef()
     {
-        m_Storage.IncRef(n);
+        m_Storage.ResetDeviceRef();
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::DecRef(size_t n)
+    void Tensor::IncDeviceRef(size_t n)
     {
-        m_Storage.DecRef(n);
+        m_Storage.IncDeviceRef(n);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::DecDeviceRef(size_t n)
+    {
+        m_Storage.DecDeviceRef(n);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::ReleaseData()
+    {
+        m_Storage.Release();
     }
 
     //////////////////////////////////////////////////////////////////////////
