@@ -134,18 +134,20 @@ namespace Neuro
 
         m_AllocSize = m_Size = size;
 
-        if (m_DeviceDataPtr)
-        {
-            FreeOnDevice();
-            AllocateOnDevice();
-        }
+        bool wasAllocatedOnDevice = m_DeviceDataPtr != nullptr;
+        bool wasAllocatedOnHost = m_DataPtr != nullptr;
 
+        if (m_DeviceDataPtr)
+            FreeOnDevice();
         if (m_DataPtr)
-        {
             FreeOnHost();
+
+        if (wasAllocatedOnHost)
             AllocateOnHost();
-            m_DataLocation = Host;
-        }
+        if (wasAllocatedOnDevice)
+            AllocateOnDevice();
+            
+        m_DataLocation = Host;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -462,6 +464,14 @@ namespace Neuro
     {
         if (!m_DataPtr)
             AllocateOnHost();
+        NEURO_ASSERT(m_DataLocation == Host, "Trying to access data that is currently located on device.");
+        return m_DataPtr;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    const float* Storage::Data() const
+    {
+        NEURO_ASSERT(m_DataLocation == Host, "Trying to access data that is currently located on device.");
         return m_DataPtr;
     }
 
@@ -470,6 +480,13 @@ namespace Neuro
     {
         NEURO_ASSERT(m_DeviceDataPtr, "Attempting to write to unallocated device memory.");
         NEURO_ASSERT(m_DataLocation == Device, "Attempting to write to data not located on device.");
+        return m_DeviceDataPtr;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    const float* Storage::DeviceData() const
+    {
+        NEURO_ASSERT(m_DataLocation == Device, "Trying to access data that is currently located on host.");
         return m_DeviceDataPtr;
     }
 

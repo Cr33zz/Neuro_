@@ -39,14 +39,14 @@ namespace Neuro
     Adam::MinimizationOperation::MinimizationOperation(const vector<TensorLike*>& losses, const vector<Variable*>& vars, Adam* owner)
         : Operation(losses, "adam_minimize"), m_Owner(owner), m_Vars(vars)
     {
-        m_Order = Graph::Default()->BuildBackwardOrder(losses, vars);
+        m_Order = Graph::Default()->BuildBackwardOrder(losses, m_NodesAffectingLosses, vars);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Adam::MinimizationOperation::ComputeInternal()
     {
         m_InputsManuallyConsumed = true;
-        auto vars = Graph::Default()->ComputeGradientsInOrder(m_Order, m_InputNodes, m_Vars);
+        auto vars = Graph::Default()->ComputeGradientsInOrder(m_Order, m_InputNodes, m_NodesAffectingLosses, m_Vars);
         ++m_Owner->m_Iteration;
 
         float batchSize = (float)m_Inputs[0]->Batch(); // assuming all inputs have the same batch size

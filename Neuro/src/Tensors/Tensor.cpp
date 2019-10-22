@@ -1939,7 +1939,7 @@ namespace Neuro
             return false;
 
         m_Storage.AllocateOnDevice();
-        return m_Storage.DeviceData() != nullptr;
+        return m_Storage.IsDeviceAllocated();
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -2062,7 +2062,7 @@ namespace Neuro
         for (int i = 0; i < 4; ++i)
             stream << m_Shape.Dimensions[i] << "\n";
         for (uint32_t i = 0; i < m_Shape.Length; ++i)
-            stream << m_Storage.Data()[i] << "\n";
+            stream << m_Storage.DataUnsafe()[i] << "\n";
         stream.close();
     }
 

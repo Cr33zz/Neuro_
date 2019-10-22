@@ -97,24 +97,24 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> Graph::BuildBackwardOrder(const vector<TensorLike*>& endNodes, const vector<Variable*>& params)
+    vector<TensorLike*> Graph::BuildBackwardOrder(const vector<TensorLike*>& endNodes, unordered_set<TensorLike*>& nodesAffectingEndNodes, const vector<Variable*>& params)
     {
         // we need to figure out which nodes were required to calculate end nodes
         // later on when check if all consumers were visited we will additionally check if
         // any particular consumer is required, otherwise it's inputs' gradients are not important 
         // (and won't be computed anyway)
-        auto nodesAffectingLosses = BuildForwardOrder(endNodes);
+        auto tempNodesAffectingEndNodes = BuildForwardOrder(endNodes);
 
         // build hash set for fast lookup
-        unordered_set<TensorLike*> required;
-        required.insert(nodesAffectingLosses.begin(), nodesAffectingLosses.end());
+        nodesAffectingEndNodes.clear();
+        nodesAffectingEndNodes.insert(tempNodesAffectingEndNodes.begin(), tempNodesAffectingEndNodes.end());
 
         vector<TensorLike*> result;
         unordered_set<TensorLike*> visited;
         unordered_set<TensorLike*> visitedParams;
 
         for (auto node : endNodes)
-            ProcessBackwardNode(node, result, params, false, visited, visitedParams, required);
+            ProcessBackwardNode(node, result, params, false, visited, visitedParams, nodesAffectingEndNodes);
 
         return result;
     }
@@ -170,12 +170,13 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<Variable*> Graph::ComputeGradients(const vector<TensorLike*>& losses, const vector<Variable*>& params)
     {
-        auto order = BuildBackwardOrder(losses, params);
-        return ComputeGradientsInOrder(order, losses, params);
+        unordered_set<TensorLike*> nodesAffectingLosses;
+        auto order = BuildBackwardOrder(losses, nodesAffectingLosses, params);
+        return ComputeGradientsInOrder(order, losses, nodesAffectingLosses, params);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<Variable*> Graph::ComputeGradientsInOrder(const vector<TensorLike*>& order, const vector<TensorLike*>& losses, const vector<Variable*>& params)
+    vector<Variable*> Graph::ComputeGradientsInOrder(const vector<TensorLike*>& order, const vector<TensorLike*>& losses, const unordered_set<TensorLike*> nodesAffectingLosses, const vector<Variable*>& params)
     {
         const size_t PREFETCH_STEPS = 2;
         vector<Variable*> variables;
@@ -222,14 +223,11 @@ namespace Neuro
                         assert(consumer->IsOp());
                         Operation* consumerOp = static_cast<Operation*>(consumer);
 
-                        auto& inputsGrad = consumerOp->InputsGrads();
-
-                        // ignore consumer when it didn't participate in forward step or its input gradients were not computed
-                        // the latter can happen when it wasn't required for loss computation (alternatively we could pass
-                        // required nodes to this function and check against that but it would be more involving from 'user'
-                        // point of view
-                        if (consumerOp->LastComputeStep() != m_CurrentStep || inputsGrad.empty())
+                        // ignore consumer when it didn't affect loss. one example of such consumers might be accuracy operation
+                        if (nodesAffectingLosses.find(consumer) == nodesAffectingLosses.end())
                             continue;
+
+                        auto& inputsGrad = consumerOp->InputsGrads();
 
                         if (inputsGrad.size() == 1)
                         {

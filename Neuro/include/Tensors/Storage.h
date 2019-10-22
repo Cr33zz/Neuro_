@@ -61,11 +61,15 @@ namespace Neuro
         void IncRef(size_t n);
         void DecRef(size_t n);
 
-        const float* Data() const { return m_DataPtr; }
+        const float* Data() const;
+        const float* DataUnsafe() const { return m_DataPtr; }
         const float* DataEnd() const { return m_DataPtr + m_Size; }
-        const float* DeviceData() const { return m_DeviceDataPtr; }
+        const float* DeviceData() const;
         float* Data();
         float* DeviceData();
+
+        bool IsHostAllocated() const { return m_DataPtr != nullptr; }
+        bool IsDeviceAllocated() const { return m_DeviceDataPtr != nullptr; }
 
         size_t Size() const { return m_Size; }
         size_t SizeInBytes() const { return m_Size * sizeof(float); }

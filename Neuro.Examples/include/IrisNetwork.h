@@ -13,8 +13,8 @@ class IrisNetwork
 public:
     void Run()
     {
-        //Debug::LogAllGrads();
-        //Debug::LogAllOutputs();
+        Debug::LogAllGrads();
+        Debug::LogAllOutputs();
         //Debug::LogOutput("loss/cross_entropy/negative");
         
         Tensor::SetDefaultOpMode(GPU);

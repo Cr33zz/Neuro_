@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <unordered_set>
+
 #include "Optimizers/OptimizerBase.h"
 
 namespace Neuro
@@ -30,6 +32,7 @@ namespace Neuro
             vector<Tensor> m_MGradients;
             vector<Tensor> m_VGradients;
             vector<TensorLike*> m_Order;
+            unordered_set<TensorLike*> m_NodesAffectingLosses;
         };
 
     private:

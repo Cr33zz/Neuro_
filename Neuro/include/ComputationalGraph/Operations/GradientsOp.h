@@ -1,5 +1,8 @@
 #pragma once
 
+#include <vector>
+#include <unordered_set>
+
 #include "ComputationalGraph/Operation.h"
 
 namespace Neuro
@@ -21,6 +24,7 @@ namespace Neuro
         vector<Variable*> m_Vars;
         vector<TensorLike*> m_Grads;
         vector<TensorLike*> m_Order;
+        unordered_set<TensorLike*> m_NodesAffectingInputNodes;
     };
 
     static vector<TensorLike*> gradients(TensorLike* y, const vector<Variable*>& vars, const string& name = "")

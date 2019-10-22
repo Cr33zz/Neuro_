@@ -35,10 +35,10 @@ namespace Neuro
         // Builds nodes visitation order for forward pass
         vector<TensorLike*> BuildForwardOrder(const vector<TensorLike*>& endNodes);
         // Builds nodes visitation order for backward/gradients computation pass
-        vector<TensorLike*> BuildBackwardOrder(const vector<TensorLike*>& endNodes, const vector<Variable*>& params = {});
+        vector<TensorLike*> BuildBackwardOrder(const vector<TensorLike*>& endNodes, unordered_set<TensorLike*>& nodesAffectingEndNodes, const vector<Variable*>& params = {});
 
         vector<Variable*> ComputeGradients(const vector<TensorLike*>& losses, const vector<Variable*>& params);
-        vector<Variable*> ComputeGradientsInOrder(const vector<TensorLike*>& order, const vector<TensorLike*>& losses, const vector<Variable*>& params);
+        vector<Variable*> ComputeGradientsInOrder(const vector<TensorLike*>& order, const vector<TensorLike*>& losses, const unordered_set<TensorLike*> nodesAffectingLosses, const vector<Variable*>& params);
 
         TensorLike* GetNode(const string& name);
         void DebugLog();
