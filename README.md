@@ -1,5 +1,5 @@
 ## Neuro_
-C++ implementation of neural networks library with Keras-like API. Contains majority of commonly used layers, losses and optimizers. Supports sequential and multi-input-output (flow) models. Supports single CPU, Multi-CPU and GPU tensor operations (using cuDNN and cuBLAS). This is a result of months of scouring internet for information regarding minute details of how neural networks work. Hopefully, it serves a good source of knowlegde for those who want to understand how neural networks are implemented.
+C++ implementation of neural networks library with Keras-like API. Contains majority of commonly used layers, losses and optimizers. Supports sequential and multi-input-output (flow) models. Supports single CPU, Multi-CPU and GPU tensor operations (using cuDNN and cuBLAS). This is a result of months of scouring internet for information regarding minute details of how neural networks work. Hopefully, it serves a good source of knowlegde for those who want to understand how neural networks are implemented. Master branch contains computational graphs approach allowing more complex networks. It might be easier to start your adventure analysing "classic" feed forward/backward propagate implementation available in *non-computational-graph-impl* branch.  
 Supported layers:  
 * Dense
 * Conv2D
@@ -7,6 +7,7 @@ Supported layers:
 * Pooling2D
 * UpSampling2D
 * BatchNormalization
+* InstanceNormalization
 * Dropout
 * Flatten
 * Reshape
