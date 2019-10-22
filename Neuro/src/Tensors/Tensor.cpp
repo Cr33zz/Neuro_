@@ -1927,6 +1927,12 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
+    void Tensor::SyncToHost() const
+    {
+        m_Storage.SyncToHost();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     bool Tensor::TryDeviceAllocate() const
     {
         if (Op() != g_OpGpu)
@@ -2051,7 +2057,7 @@ namespace Neuro
         if (!m_Storage.AllocSizeInBytes())
             return;
 
-        CopyToHost();
+        SyncToHost();
         ofstream stream(outFile);
         for (int i = 0; i < 4; ++i)
             stream << m_Shape.Dimensions[i] << "\n";

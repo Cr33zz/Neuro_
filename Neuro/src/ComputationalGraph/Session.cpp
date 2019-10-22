@@ -5,7 +5,7 @@
 #include "ComputationalGraph/Variable.h"
 #include "Tensors/Tensor.h"
 
-//#define ENABLE_SESSION_LOGS
+#define ENABLE_SESSION_LOGS
 
 #ifdef ENABLE_SESSION_LOGS
 #include <windows.h>

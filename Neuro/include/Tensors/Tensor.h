@@ -284,6 +284,8 @@ namespace Neuro
         void ReleaseData();
         void CopyToDevice() const;
         void CopyToHost() const;
+        /// Sync will copy data from device to host but it won't change location
+        void SyncToHost() const; 
         /// Use whatever data there is on the host (usually used for output tensors so copy can be avoided)
         void OverrideHost();
         /// Use whatever data there is on the device (usually used for output tensors so copy can be avoided)

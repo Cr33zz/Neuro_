@@ -12,6 +12,7 @@
 #define ENABLE_MEMORY_LOGS
 
 #define DEVICE_ALLOC_GRANULARITY 512
+#define HOST_ALLOC_GRANULARITY 256
 #define CUDA_GRANULARITY 128 * 1024
 
 #define MEM_CHECK(call) do { \
@@ -92,7 +93,7 @@ namespace Neuro
         best->m_Annotation = annotation;
 
         m_AllocatedDeviceMemSize += size;
-        m_AllocatedDeviceMemSizePeak = max(m_AllocatedDeviceMemSize, m_AllocatedDeviceMemSizePeak);
+        m_AllocatedDeviceMemPeakSize = max(m_AllocatedDeviceMemSize, m_AllocatedDeviceMemPeakSize);
 
 #ifdef ENABLE_MEMORY_LOGS
         stringstream ss;
@@ -101,7 +102,7 @@ namespace Neuro
         ss << " total ";
         PrintSize(ss, m_AllocatedDeviceMemSize);
         ss << " peak ";
-        PrintSize(ss, m_AllocatedDeviceMemSizePeak);
+        PrintSize(ss, m_AllocatedDeviceMemPeakSize);
         ss << endl;
         OutputDebugString(ss.str().c_str());
 #endif
@@ -146,6 +147,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     EMemStatus MemoryManager::AllocateHostPinned(void** ptr, size_t size, const string& annotation)
     {
+        size = ceilInt(size, HOST_ALLOC_GRANULARITY);
+
         CUDA_CHECK(cudaMallocHost(ptr, size));
         m_AllocatedHostPinnedMemSize += size;
         m_AllocatedHostPinnedMemPeakSize = max(m_AllocatedHostPinnedMemSize, m_AllocatedHostPinnedMemPeakSize);
@@ -195,9 +198,11 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     EMemStatus MemoryManager::AllocateHost(void** ptr, size_t size, const string& annotation)
     {
+        size = ceilInt(size, HOST_ALLOC_GRANULARITY);
+        
         *ptr = malloc(size);
         m_AllocatedHostMemSize += size;
-        m_AllocatedHostMemSizePeak = max(m_AllocatedHostMemSize, m_AllocatedHostMemSizePeak);
+        m_AllocatedHostMemPeakSize = max(m_AllocatedHostMemSize, m_AllocatedHostMemPeakSize);
         m_HostAllocations.push_back({ *ptr, size, annotation });
 
 #ifdef ENABLE_MEMORY_LOGS
@@ -207,7 +212,7 @@ namespace Neuro
         ss << " total ";
         PrintSize(ss, m_AllocatedHostMemSize);
         ss << " peak ";
-        PrintSize(ss, m_AllocatedHostMemSizePeak);
+        PrintSize(ss, m_AllocatedHostMemPeakSize);
         ss << endl;
         OutputDebugString(ss.str().c_str());
 #endif
@@ -550,7 +555,7 @@ namespace Neuro
         MEM_CHECK(GetUsedMemoryUnsafe(usedMemory));
         MEM_CHECK(GetFreeMemoryUnsafe(freeMemory));
 
-        fprintf(file, ">> stream=0x%016zx, used=%zuKB, free=%zuKB, peak=%zuKB, pinned=%zuKB\n", streamCode, usedMemory / 1024, freeMemory / 1024, m_AllocatedDeviceMemSizePeak / 1024, m_AllocatedHostPinnedMemSize / 1024);
+        fprintf(file, ">> stream=0x%016zx, device_used=%zuKB, device_free=%zuKB, device_peak=%zuKB, host_pinned_used=%zuKB, host_pinned_peak=%zuKB, host_used=%zuKB, host_peak=%zuKB\n", streamCode, usedMemory / 1024, freeMemory / 1024, m_AllocatedDeviceMemPeakSize / 1024, m_AllocatedHostPinnedMemSize / 1024, m_AllocatedHostPinnedMemPeakSize / 1024, m_AllocatedHostMemSize / 1024, m_AllocatedHostMemPeakSize / 1024);
         MEM_CHECK(PrintListUnsafe(file, "device_used", m_UsedBlocks));
         MEM_CHECK(PrintListUnsafe(file, "device_free", m_FreeBlocks));
         MEM_CHECK(PrintHostAllocs(file, "host", m_HostAllocations));
@@ -559,5 +564,41 @@ namespace Neuro
         fclose(file);
 
         return MEM_STATUS_SUCCESS;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void MemoryManager::UpdateAnnotation(void* ptr, const string& annotation)
+    {
+        if (!ptr)
+            return;
+
+        // device lookup
+        Block *curr = m_UsedBlocks, *prev = nullptr;
+        for (; curr && curr->GetData() != ptr; curr = curr->GetNext())
+            prev = curr;
+
+        if (curr)
+        {
+            curr->m_Annotation = annotation;
+            return;
+        }
+
+        // host lookup
+        auto it = find_if(m_HostAllocations.begin(), m_HostAllocations.end(), [&](const HostAlloc& a) { return a.ptr == ptr; });
+        if (it != m_HostAllocations.end())
+        {
+            it->annotation = annotation;
+            return;
+        }
+
+        // host pinned lookup
+        it = find_if(m_HostPinnedAllocations.begin(), m_HostPinnedAllocations.end(), [&](const HostAlloc& a) { return a.ptr == ptr; });
+        if (it != m_HostPinnedAllocations.end())
+        {
+            it->annotation = annotation;
+            return;
+        }
+
+        NEURO_ASSERT(false, "Unrecognized pointer.");
     }
 }

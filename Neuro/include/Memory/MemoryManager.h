@@ -95,6 +95,8 @@ namespace Neuro
         EMemStatus WaitForMemEvent(cudaEvent_t memEvent);
 
         EMemStatus PrintMemoryState(const string& filename) const;
+
+        void UpdateAnnotation(void* ptr, const string& annotation);
     
     private:
         EMemStatus AllocateBlockUnsafe(Block*& curr, Block*& prev, size_t size);
@@ -122,9 +124,9 @@ namespace Neuro
         size_t m_Size = 0;
         uint32_t m_Flags = MEM_FLAGS_CANNOT_GROW;
         size_t m_AllocatedDeviceMemSize = 0;
-        size_t m_AllocatedDeviceMemSizePeak = 0;
+        size_t m_AllocatedDeviceMemPeakSize = 0;
         size_t m_AllocatedHostMemSize = 0;
-        size_t m_AllocatedHostMemSizePeak = 0;
+        size_t m_AllocatedHostMemPeakSize = 0;
         size_t m_AllocatedHostPinnedMemSize = 0;
         size_t m_AllocatedHostPinnedMemPeakSize = 0;
     };

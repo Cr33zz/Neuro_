@@ -149,6 +149,14 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void Storage::Rename(const string& name)
+    {
+        m_Name = name;
+        MemoryManager::Default().UpdateAnnotation(m_DataPtr, name);
+        MemoryManager::Default().UpdateAnnotation(m_DeviceDataPtr, name);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void Storage::Release()
     {
         FreeOnDevice();
@@ -351,8 +359,23 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void Storage::SyncToHost() const
+    {
+        if (m_DataLocation == Host)
+            return;
+
+        NEURO_ASSERT(m_DataLocation != None, "Attempting to sync to unallocated host memory");
+
+        STORAGE_DEBUG_INFO("Sync to host '%s'\n", m_Name.c_str());
+        CUDA_CHECK(cudaMemcpy((void*)m_DataPtr, (void*)m_DeviceDataPtr, SizeInBytes(), cudaMemcpyDeviceToHost));
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void Storage::OverrideHost()
     {
+        if (m_DataLocation == Host)
+            return;
+
         if (!m_DataPtr)
             AllocateOnHost();
         m_DataLocation = Host;
@@ -362,6 +385,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Storage::OverrideDevice()
     {
+        if (m_DataLocation == Device)
+            return;
+
         if (!m_DataPtr)
             AllocateOnHost();
         if (!m_DeviceDataPtr)
@@ -371,10 +397,18 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void Storage::ResetDeviceRef(size_t n)
+    {
+        STORAGE_DEBUG_INFO("Device ref count reset '%s' to %zu.\n", m_Name.c_str(), n);
+        m_DeviceDataRefCount = (int)n;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void Storage::IncDeviceRef(size_t n)
     {
         NEURO_ASSERT(m_Type & ST_DeviceRefCounted, "Increasing ref count for non-refcounted storage.");
         m_DeviceDataRefCount += (int)n;
+        STORAGE_DEBUG_INFO("Device ref count increased '%s' by %zu <<< currently %d.\n", m_Name.c_str(), n, m_DeviceDataRefCount);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -383,12 +417,20 @@ namespace Neuro
         NEURO_ASSERT(m_Type & ST_DeviceRefCounted, "Decreasing ref count for non-refcounted storage.");
         NEURO_ASSERT(n <= m_DeviceDataRefCount, "Over-decresing ref count.");
         m_DeviceDataRefCount -= (int)n;
+        STORAGE_DEBUG_INFO("Device ref count decreased '%s' by %zu <<< currently %d.\n", m_Name.c_str(), n, m_DeviceDataRefCount);
 
         if (m_DeviceDataRefCount <= 0 && (m_Type & ST_DeviceRefCounted))
         {
-            STORAGE_DEBUG_INFO("Device ref count zeroed '%s'[%d] <<< deallocating device memory.\n", m_Name.c_str(), m_Type);
+            STORAGE_DEBUG_INFO("Device ref count zeroed '%s' <<< deallocating device memory.\n", m_Name.c_str());
             FreeOnDevice();
         }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Storage::ResetRef(size_t n)
+    {
+        STORAGE_DEBUG_INFO("Ref count reset '%s' to %zu.\n", m_Name.c_str(), n);
+        m_DataRefCount = (int)n;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -396,6 +438,7 @@ namespace Neuro
     {
         NEURO_ASSERT(m_Type & ST_RefCounted, "Increasing ref count for non-refcounted storage.");
         m_DataRefCount += (int)n;
+        STORAGE_DEBUG_INFO("Ref count increased '%s' by %zu <<< currently %d.\n", m_Name.c_str(), n, m_DataRefCount);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -404,10 +447,11 @@ namespace Neuro
         NEURO_ASSERT(m_Type & ST_RefCounted, "Decreasing ref count for non-refcounted storage.");
         NEURO_ASSERT(n <= m_DataRefCount, "Over-decresing ref count.");
         m_DataRefCount -= (int)n;
+        STORAGE_DEBUG_INFO("Ref count decreased '%s' by %zu <<< currently %d.\n", m_Name.c_str(), n, m_DataRefCount);
 
         if (m_DataRefCount <= 0 && (m_Type & ST_RefCounted))
         {
-            STORAGE_DEBUG_INFO("Ref count zeroed '%s'[%d] <<< deallocating memory.\n", m_Name.c_str(), m_Type);
+            STORAGE_DEBUG_INFO("Ref count zeroed '%s' <<< deallocating memory.\n", m_Name.c_str());
             FreeOnDevice();
             FreeOnHost();
         }

@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Neuro.h"
+#include "Memory/MemoryManager.h"
 
 using namespace std;
 using namespace Neuro;
@@ -29,7 +30,7 @@ public:
         o = add(o, mean(x, GlobalAxis, "extra/mean"), "extra/add");
 
         //auto loss = multiply(square(subtract(o, y, "loss/sub"), "loss/square"), new Constant(0.5f, "loss/const_0.5"), "loss/multiply");
-        auto loss = multiply(square(subtract(o, y, "loss/sub"), "loss/square"), 0.5f, "loss/multiply");
+        auto loss = multiply(square(subtract(o, y, "loss/sub"), "loss/square"), new Constant(0.5f, "const_0.5"), "loss/multiply");
         fetches.push_back(loss);
 
         /*auto minimizeOp = SGD(0.04f).Minimize({ loss });
@@ -99,6 +100,8 @@ public:
 
         for (int step = 0; step < 5; ++step)
         {
+            MemoryManager::Default().PrintMemoryState("mem.log");
+
             auto result = Session::Default()->Run({ fetches }, { {x, &input}, {y, &output} });
             cout << "step: " << step << " loss: " << (*result[0])(0) << endl;
         }
