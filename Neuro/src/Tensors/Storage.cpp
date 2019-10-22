@@ -247,13 +247,13 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Storage::Offload() const
     {
-        NEURO_ASSERT(m_DataPtr, "Attempting to offload to deallocated host storage.");
         if (!m_AllocSize)
             return;
 
         STORAGE_DEBUG_INFO("Offloading '%s'[%d] ", m_Name.c_str(), m_Type);
         if (m_Type & ST_Offloadable)
         {
+            NEURO_ASSERT(m_DataPtr, "Attempting to offload to deallocated host storage.");
             if (!m_DeviceDataPtr)
             {
                 STORAGE_DEBUG_INFO("<<< nothing to offload.\n");
@@ -275,7 +275,6 @@ namespace Neuro
         if (m_Type & ST_Offloadable)
         {
             NEURO_ASSERT(m_DataPtr, "Attempting to preload from deallocated host storage.");
-            
             if (!m_DeviceDataPtr)
                 AllocateOnDevice();
 
@@ -387,8 +386,30 @@ namespace Neuro
 
         if (m_DeviceDataRefCount <= 0 && (m_Type & ST_DeviceRefCounted))
         {
-            STORAGE_DEBUG_INFO("Ref count zeroed '%s'[%d] <<< deallocating device memory.\n", m_Name.c_str(), m_Type);
+            STORAGE_DEBUG_INFO("Device ref count zeroed '%s'[%d] <<< deallocating device memory.\n", m_Name.c_str(), m_Type);
             FreeOnDevice();
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Storage::IncRef(size_t n)
+    {
+        NEURO_ASSERT(m_Type & ST_RefCounted, "Increasing ref count for non-refcounted storage.");
+        m_DataRefCount += (int)n;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Storage::DecRef(size_t n)
+    {
+        NEURO_ASSERT(m_Type & ST_RefCounted, "Decreasing ref count for non-refcounted storage.");
+        NEURO_ASSERT(n <= m_DataRefCount, "Over-decresing ref count.");
+        m_DataRefCount -= (int)n;
+
+        if (m_DataRefCount <= 0 && (m_Type & ST_RefCounted))
+        {
+            STORAGE_DEBUG_INFO("Ref count zeroed '%s'[%d] <<< deallocating memory.\n", m_Name.c_str(), m_Type);
+            FreeOnDevice();
+            FreeOnHost();
         }
     }
 

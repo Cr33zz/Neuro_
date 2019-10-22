@@ -57,6 +57,9 @@ namespace Neuro
             feed.second->CopyTo(feed.first->m_Output);
         }
 
+        for (size_t i = 0; i < fetches.size(); ++i)
+            fetches[i]->Output().ResetRef(1); // lock fetches outputs so they don't get released
+
         for (size_t n = 0; n < order.size(); ++n)
         {
             if (n + 1 < order.size())
@@ -67,6 +70,7 @@ namespace Neuro
             }
 
             auto node = order[n];
+            
             if (node->IsOp())
             {
                 SESSION_DEBUG_INFO("##Session: Computing '%s'...\n", node->Name().c_str());

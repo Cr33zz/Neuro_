@@ -126,6 +126,7 @@ namespace Neuro
         size_t m_AllocatedHostMemSize = 0;
         size_t m_AllocatedHostMemSizePeak = 0;
         size_t m_AllocatedHostPinnedMemSize = 0;
+        size_t m_AllocatedHostPinnedMemPeakSize = 0;
     };
 
     //////////////////////////////////////////////////////////////////////////

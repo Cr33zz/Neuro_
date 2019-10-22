@@ -148,7 +148,21 @@ namespace Neuro
     {
         CUDA_CHECK(cudaMallocHost(ptr, size));
         m_AllocatedHostPinnedMemSize += size;
+        m_AllocatedHostPinnedMemPeakSize = max(m_AllocatedHostPinnedMemSize, m_AllocatedHostPinnedMemPeakSize);
         m_HostPinnedAllocations.push_back({ *ptr, size, annotation});
+
+#ifdef ENABLE_MEMORY_LOGS
+        stringstream ss;
+        ss << "Host pinned alloc '" << annotation << "' 0x" << hex << (__int64)*ptr << dec << " size ";
+        PrintSize(ss, size);
+        ss << " total ";
+        PrintSize(ss, m_AllocatedHostPinnedMemSize);
+        ss << " peak ";
+        PrintSize(ss, m_AllocatedHostPinnedMemPeakSize);
+        ss << endl;
+        OutputDebugString(ss.str().c_str());
+#endif
+
         if (ptr)
             return MEM_STATUS_SUCCESS;
         return MEM_STATUS_OUT_OF_MEMORY;
@@ -162,6 +176,17 @@ namespace Neuro
         auto it = find_if(m_HostPinnedAllocations.begin(), m_HostPinnedAllocations.end(), [&](const HostAlloc& a) { return a.ptr == ptr; });
         NEURO_ASSERT(it != m_HostPinnedAllocations.end(), "");
         m_AllocatedHostPinnedMemSize -= it->size;
+
+#ifdef ENABLE_MEMORY_LOGS
+        stringstream ss;
+        ss << "Host pinned release '" << it->annotation << "' 0x" << hex << (__int64)ptr << dec << " size ";
+        PrintSize(ss, it->size);
+        ss << " total ";
+        PrintSize(ss, m_AllocatedHostPinnedMemSize);
+        ss << endl;
+        OutputDebugString(ss.str().c_str());
+#endif
+
         m_HostPinnedAllocations.erase(it);
         CUDA_CHECK(cudaFreeHost(ptr));
         return MEM_STATUS_SUCCESS;
@@ -201,7 +226,6 @@ namespace Neuro
         auto it = find_if(m_HostAllocations.begin(), m_HostAllocations.end(), [&](const HostAlloc& a) { return a.ptr == ptr; });
         NEURO_ASSERT(it != m_HostAllocations.end(), "");
         m_AllocatedHostMemSize -= it->size;
-        m_HostAllocations.erase(it);
 
 #ifdef ENABLE_MEMORY_LOGS
         stringstream ss;
@@ -213,6 +237,7 @@ namespace Neuro
         OutputDebugString(ss.str().c_str());
 #endif
 
+        m_HostAllocations.erase(it);
         free(ptr);
         return MEM_STATUS_SUCCESS;
     }

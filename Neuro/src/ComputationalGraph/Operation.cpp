@@ -1,6 +1,8 @@
 ﻿#include "ComputationalGraph/Operation.h"
 #include "ComputationalGraph/Graph.h"
 #include "Tensors/Tensor.h"
+#include "Tools.h"
+#include "Debug.h"
 
 namespace Neuro
 {
@@ -22,7 +24,7 @@ namespace Neuro
             m_InputsGradsPtrs[i] = &m_InputsGrads[i];
         }
 
-        m_Output.SetStorageType(ST_DeviceRefCounted|ST_Offloadable);
+        m_Output.SetStorageType(ST_DeviceRefCounted|ST_RefCounted|ST_Offloadable);
 
         Graph::Default()->AddOperation(this);
     }
@@ -41,8 +43,8 @@ namespace Neuro
     {
         if (m_Output.TryDeviceAllocate())
             m_Output.OverrideDevice();
-        m_Output.ResetDeviceRef();
-        m_Output.IncDeviceRef(m_Consumers.size());
+        m_Output.ResetDeviceRef(m_Consumers.size());
+        m_Output.IncRef();
         m_Inputs = inputs;
         m_InputsManuallyConsumed = false;
 
@@ -54,6 +56,10 @@ namespace Neuro
             for (auto inputNode : m_InputNodes)
                 inputNode->OutputConsumed();
         }
+
+        if (Debug::ShouldLogOutput(Name()))
+            m_Output.DebugDumpValues(Replace(Name() + "_step" + to_string(m_LastComputeStep) + ".log", "/", "_"));
+
         m_Output.Offload(); // at this point output won't change so start offloading it, it will be released when all consumers used it
         return m_Output;
     }
@@ -70,7 +76,13 @@ namespace Neuro
 
         ComputeGradientInternal(grad);
 
-        m_Output.ReleaseData(); // output is no longer needed, we've already used it to compute input gradients
+        if (Debug::ShouldLogGrad(Name()))
+        {
+            for (size_t i = 0; i < m_InputsGrads.size(); ++i)
+                m_InputsGrads[i].DebugDumpValues(Replace(Name() + "_grad" + to_string(i) + "_step" + to_string(m_LastComputeStep) + ".log", "/", "_"));
+        }
+
+        m_Output.DecRef(); // output is no longer needed, we've already used it to compute input gradients
         m_OutputGrad.ReleaseData(); // output grad is no longer needed, we've already used it to compute input gradients
         return m_InputsGradsPtrs;
     }
@@ -88,7 +100,7 @@ namespace Neuro
         {
             if (m_InputNodes[i] == inputNode)
             {
-                m_InputsGrads[i].TryDeviceRelease();
+                m_InputsGrads[i].ReleaseData();
                 return;
             }
         }

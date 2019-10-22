@@ -272,28 +272,10 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Graph::DebugLog()
     {
-#ifdef DEBUG_LOG_ENABLED
-        for (auto node : m_Operations)
-        {
-            if (node->LastComputeStep() != m_CurrentStep)
-                continue;
-
-            if (Debug::ShouldLogOutput(node->Name()))
-                node->Output().DebugDumpValues(Replace(node->Name() + "_step" + to_string(m_CurrentStep) + ".log", "/", "_"));
-
-            if (Debug::ShouldLogGrad(node->Name()))
-            {
-                auto& inputGrads = static_cast<Operation*>(node)->InputsGrads();
-                for (size_t i = 0; i < inputGrads.size(); ++i)
-                    inputGrads[i].DebugDumpValues(Replace(node->Name() + "_grad" + to_string(i) + "_step" + to_string(m_CurrentStep) + ".log", "/", "_"));
-            }
-        }
-
         for (auto node : m_Variables)
         {
             if (Debug::ShouldLogGrad(node->Name()))
                 node->OutputGrad().DebugDumpValues(Replace(node->Name() + "_grad_step" + to_string(m_CurrentStep) + ".log", "/", "_"));
         }
-#endif
     }
 }

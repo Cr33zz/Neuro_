@@ -1965,9 +1965,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::ResetDeviceRef()
+    void Tensor::ResetDeviceRef(size_t n)
     {
-        m_Storage.ResetDeviceRef();
+        m_Storage.ResetDeviceRef(n);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1980,6 +1980,24 @@ namespace Neuro
     void Tensor::DecDeviceRef(size_t n)
     {
         m_Storage.DecDeviceRef(n);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::ResetRef(size_t n)
+    {
+        m_Storage.ResetRef(n);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::IncRef(size_t n)
+    {
+        m_Storage.IncRef(n);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::DecRef(size_t n)
+    {
+        m_Storage.DecRef(n);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -2030,6 +2048,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::DebugDumpValues(const string& outFile) const
     {
+        if (!m_Storage.AllocSizeInBytes())
+            return;
+
         CopyToHost();
         ofstream stream(outFile);
         for (int i = 0; i < 4; ++i)
@@ -2042,8 +2063,12 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::DebugRecoverValues(const string& inFile)
     {
-        OverrideHost();
         ifstream stream(inFile);
+
+        if (!stream)
+            return;
+
+        OverrideHost();
         vector<int> dimensions(4);
         for (int i = 0; i < 4; ++i)
             stream >> dimensions[i];
