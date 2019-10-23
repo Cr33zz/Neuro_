@@ -84,6 +84,7 @@ namespace Neuro
         int m_DeviceDataRefCount = 0;
         int m_DataRefCount = 0;
         cudaEvent_t m_OffloadEvent = nullptr;
+        mutable bool m_PrefetchRequested = false;
         cudaEvent_t m_PrefetchEvent = nullptr;
         mutable ELocation m_DataLocation = None;
         string m_Name = "";

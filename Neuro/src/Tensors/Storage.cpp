@@ -47,7 +47,7 @@ namespace Neuro
         {
             m_AllocSize = other.m_AllocSize;
             m_Size = other.m_Size;
-            m_DeviceDataRefCount = 0;
+            m_DataRefCount = m_DeviceDataRefCount = 0;
             m_Name = other.m_Name;
             FreeOnHost();
             FreeOnDevice();
@@ -67,7 +67,8 @@ namespace Neuro
                 m_DataLocation = None;
                 m_DataPtr = nullptr;
             }
-            m_DeviceDataPtr = nullptr;            
+            m_DeviceDataPtr = nullptr;
+            m_PrefetchRequested = false;
         }
         return *this;
     }
@@ -80,12 +81,18 @@ namespace Neuro
             m_AllocSize = other.m_AllocSize;
             m_Size = other.m_Size;
             m_DeviceDataRefCount = other.m_DeviceDataRefCount;
+            m_DataRefCount = other.m_DataRefCount;
             m_Name = other.m_Name;
             m_DataLocation = other.m_DataLocation;
             m_DataPtr = other.m_DataPtr;
             other.m_DataPtr = nullptr;
             m_DeviceDataPtr = other.m_DeviceDataPtr;
             other.m_DeviceDataPtr = nullptr;
+            m_OffloadEvent = other.m_OffloadEvent;
+            other.m_OffloadEvent = nullptr;
+            m_PrefetchRequested = other.m_PrefetchRequested;
+            m_PrefetchEvent = other.m_PrefetchEvent;
+            other.m_PrefetchEvent = nullptr;
         }
         return *this;
     }
@@ -126,11 +133,15 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Storage::Resize(size_t size)
     {
+        STORAGE_DEBUG_INFO("Resizing '%s' from %zu to %zu (alloc size %zu)", m_Name.c_str(), m_Size, size, m_AllocSize);
         if (size < m_AllocSize)
         {
+            STORAGE_DEBUG_INFO(" <<< no reallocation required.\n");
             m_Size = size;
             return;
         }
+
+        STORAGE_DEBUG_INFO(" <<< reallocating.\n");
 
         m_AllocSize = m_Size = size;
 
@@ -264,11 +275,12 @@ namespace Neuro
         if (m_Type & ST_Offloadable)
         {
             NEURO_ASSERT(m_DataPtr, "Attempting to offload to deallocated host storage.");
-            if (!m_DeviceDataPtr)
+            if (!m_DeviceDataPtr || m_DataLocation == Host)
             {
-                STORAGE_DEBUG_INFO("<<< nothing to offload.\n");
+                STORAGE_DEBUG_INFO("<<< data already on host.\n");
                 return;
             }
+
             STORAGE_DEBUG_INFO("<<< requested.\n");
             CUDA_CHECK(MemoryManager::Default().Offload((void*)m_DataPtr, (void*)m_DeviceDataPtr, SizeInBytes(), m_OffloadEvent));
         }
@@ -284,6 +296,14 @@ namespace Neuro
 
         if (m_Type & ST_Offloadable)
         {
+            if (m_DataLocation == Device)
+            {
+                STORAGE_DEBUG_INFO("<<< data already on device.\n");
+                return;
+            }
+
+            m_PrefetchRequested = true;
+
             NEURO_ASSERT(m_DataPtr, "Attempting to preload from deallocated host storage.");
             if (!m_DeviceDataPtr)
                 AllocateOnDevice();
@@ -310,15 +330,10 @@ namespace Neuro
 
         NEURO_ASSERT(m_DataLocation == Host, "Attempting to copy from unallocated host memory to device.");
 
-        bool wasDevMemoryAllocated = true;
-
         if (!m_DeviceDataPtr)
-        {
             AllocateOnDevice();
-            wasDevMemoryAllocated = false;
-        }
 
-        if ((m_Type & ST_Offloadable) && wasDevMemoryAllocated)
+        if ((m_Type & ST_Offloadable) && m_PrefetchRequested)
         {
             STORAGE_DEBUG_INFO("Copy to device '%s'[%d] <<< prefetch completed check only\n", m_Name.c_str(), m_Type);
             // we don't have to wait for offload because a valid copy still exists in GPU memory
@@ -336,12 +351,14 @@ namespace Neuro
             CUDA_CHECK(cudaMemcpy((void*)m_DeviceDataPtr, (void*)m_DataPtr, SizeInBytes(), cudaMemcpyHostToDevice));
         }
 
+        m_PrefetchRequested = false;
         m_DataLocation = Device;
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Storage::CopyToHost() const
     {
+        m_PrefetchRequested = false;
         if (m_DataLocation == Host)
             return;
 

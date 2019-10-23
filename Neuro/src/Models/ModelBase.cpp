@@ -730,6 +730,10 @@ namespace Neuro
                 trainTotalLoss += loss;
                 trainTotalAcc += acc;
 
+                stringstream extString;
+                extString << setprecision(4) << " - loss: " << loss;
+                progress->SetExtraString(extString.str());
+
                 if (progress)
                     progress->NextStep(samplesInBatch);
             }
