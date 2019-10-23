@@ -4,6 +4,8 @@
 #include "Tools.h"
 #include "Debug.h"
 
+#include "Memory/MemoryManager.h"
+
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
@@ -48,6 +50,9 @@ namespace Neuro
         m_Inputs = inputs;
         m_InputsManuallyConsumed = false;
 
+        /*for (auto input : inputs)
+            NEURO_ASSERT(ValidateArrayNotFreed(input->Values(), input->Length()), "");*/
+
         ComputeInternal();
 
         m_LastComputeStep = m_Graph->CurrentStep();
@@ -56,6 +61,8 @@ namespace Neuro
             for (auto inputNode : m_InputNodes)
                 inputNode->OutputConsumed();
         }
+
+        //NEURO_ASSERT(ValidateArrayModifiedAfterAlloc(m_Output.Values(), m_Output.Length()), "");
 
         if (Debug::ShouldLogOutput(Name()))
             m_Output.DebugDumpValues(Replace(Name() + "_step" + to_string(m_LastComputeStep) + ".log", "/", "_"));

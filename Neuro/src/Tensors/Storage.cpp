@@ -176,6 +176,7 @@ namespace Neuro
         FreeOnHost();
         m_DataLocation = None;
         m_DeviceDataRefCount = 0;
+        m_DataRefCount = 0;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -281,6 +282,8 @@ namespace Neuro
                 return;
             }
 
+            NEURO_ASSERT(m_DataPtr && m_DeviceDataPtr, "");
+
             STORAGE_DEBUG_INFO("<<< requested.\n");
             CUDA_CHECK(MemoryManager::Default().Offload((void*)m_DataPtr, (void*)m_DeviceDataPtr, SizeInBytes(), m_OffloadEvent));
         }
@@ -308,6 +311,8 @@ namespace Neuro
             if (!m_DeviceDataPtr)
                 AllocateOnDevice();
 
+            NEURO_ASSERT(m_DataPtr && m_DeviceDataPtr, "");
+
             if (cudaEventQuery(m_PrefetchEvent) != cudaSuccess)
             {
                 STORAGE_DEBUG_INFO("Prefetching '%s'[%d] <<< requested already.\n", m_Name.c_str(), m_Type);
@@ -332,6 +337,8 @@ namespace Neuro
 
         if (!m_DeviceDataPtr)
             AllocateOnDevice();
+
+        NEURO_ASSERT(m_DeviceDataPtr, "");
 
         if ((m_Type & ST_Offloadable) && m_PrefetchRequested)
         {
@@ -369,6 +376,7 @@ namespace Neuro
         else
         {
             NEURO_ASSERT(m_DataLocation != None, "Attempting to copy to unallocated host memory");
+            NEURO_ASSERT(m_DataPtr && m_DeviceDataPtr, "");
 
             STORAGE_DEBUG_INFO("Copy to host '%s'[%d]\n", m_Name.c_str(), m_Type);
             if (m_Type & ST_Offloadable)
@@ -391,6 +399,7 @@ namespace Neuro
             return;
 
         NEURO_ASSERT(m_DataLocation != None, "Attempting to sync to unallocated host memory");
+        NEURO_ASSERT(m_DataPtr && m_DeviceDataPtr, "");
 
         STORAGE_DEBUG_INFO("Sync to host '%s'\n", m_Name.c_str());
         CUDA_CHECK(cudaMemcpy((void*)m_DataPtr, (void*)m_DeviceDataPtr, SizeInBytes(), cudaMemcpyDeviceToHost));
@@ -488,14 +497,14 @@ namespace Neuro
     {
         if (!m_DataPtr)
             AllocateOnHost();
-        NEURO_ASSERT(m_DataLocation == Host, "Trying to access data that is currently located on device.");
+        NEURO_ASSERT(m_DataLocation == Host, "Trying to access data that is currently located on device or unallocated.");
         return m_DataPtr;
     }
 
     //////////////////////////////////////////////////////////////////////////
     const float* Storage::Data() const
     {
-        NEURO_ASSERT(m_DataLocation == Host, "Trying to access data that is currently located on device.");
+        NEURO_ASSERT(m_DataLocation == Host, "Trying to access data that is currently located on device or unallocated.");
         return m_DataPtr;
     }
 

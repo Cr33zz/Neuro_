@@ -31,7 +31,7 @@ namespace Neuro
         void ChangeType(int type);
         void Resize(size_t size);
         void Rename(const string& name);
-        /// Deallocates all memory on both host and device. Location will be changed to None. Size will remain.
+        /// Deallocates all memory on both host and device. Location will be changed to None. Size will remain unchanged.
         void Release();
 
         void AllocateOnHost() const;

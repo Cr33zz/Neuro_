@@ -143,4 +143,26 @@ namespace Neuro
         default: return "MEM_STATUS_UNKNOWN_ERROR";
         }
     }
+
+    static bool ValidateArrayNotFreed(const float* ptr, size_t elements)
+    {
+        for (int i = 0; i < elements; ++i)
+        {
+            if (ptr[i] == 0xFEFEFEFE)
+                return false;
+        }
+
+        return true;
+    }
+
+    static bool ValidateArrayModifiedAfterAlloc(const float* ptr, size_t elements)
+    {
+        for (int i = 0; i < elements; ++i)
+        {
+            if (ptr[i] == 0xABABABAB)
+                return false;
+        }
+
+        return true;
+    }
 }

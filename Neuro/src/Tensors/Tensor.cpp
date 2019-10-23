@@ -210,7 +210,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
 	float* Tensor::Values()
 	{
-		CopyToHost();
+		CopyToHost(true);
 		return m_Storage.Data();
 	}
 
@@ -279,6 +279,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
 	void Tensor::Zero()
 	{
+        NEURO_ASSERT(m_Storage.Location() != None, "");
         if (m_Storage.Location() == Host)
             g_OpCpu->Zero(*this);
         else
@@ -288,6 +289,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::One()
     {
+        NEURO_ASSERT(m_Storage.Location() != None, "");
         if (m_Storage.Location() == Host)
             g_OpCpu->One(*this);
         else
@@ -1936,11 +1938,14 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     bool Tensor::TryDeviceAllocate() const
     {
-        if (Op() != g_OpGpu)
-            return false;
-
-        m_Storage.AllocateOnDevice();
-        return m_Storage.IsDeviceAllocated();
+        if (!m_Storage.IsHostAllocated())
+            m_Storage.AllocateOnHost();
+        if (Op() == g_OpGpu)
+        {
+            m_Storage.AllocateOnDevice();
+            return m_Storage.IsDeviceAllocated();
+        }
+        return false;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -2055,7 +2060,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::DebugDumpValues(const string& outFile) const
     {
-        if (!m_Storage.AllocSizeInBytes())
+        if (!m_Storage.AllocSizeInBytes() || !m_Storage.IsHostAllocated())
             return;
 
         SyncToHost();
