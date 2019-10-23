@@ -283,7 +283,7 @@ namespace Neuro
         void DecRef(size_t n = 1);
         void ReleaseData();
         void CopyToDevice() const;
-        void CopyToHost() const;
+        void CopyToHost(bool allowAlloc = false) const;
         /// Sync will copy data from device to host but it won't change location
         void SyncToHost() const; 
         /// Use whatever data there is on the host (usually used for output tensors so copy can be avoided)
@@ -331,7 +331,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     _inline float& Tensor::Get(uint32_t w, uint32_t h, uint32_t d, uint32_t n)
     {
-        CopyToHost();
+        CopyToHost(true);
         return m_Storage.Data()[m_Shape.GetIndex(w, h, d, n)];
     }
 
@@ -357,14 +357,14 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     _inline void Tensor::SetFlat(float value, uint32_t i)
     {
-        CopyToHost();
+        CopyToHost(true);
         m_Storage.Data()[i] = value;
     }
 
     //////////////////////////////////////////////////////////////////////////
     _inline void Tensor::Set(float value, uint32_t w, uint32_t h, uint32_t d, uint32_t n)
     {
-        CopyToHost();
+        CopyToHost(true);
         m_Storage.Data()[m_Shape.GetIndex(w, h, d, n)] = value;
     }
 

@@ -356,23 +356,30 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Storage::CopyToHost() const
+    void Storage::CopyToHost(bool allowAlloc) const
     {
         m_PrefetchRequested = false;
         if (m_DataLocation == Host)
             return;
 
-        NEURO_ASSERT(m_DataLocation != None, "Attempting to copy to unallocated host memory");
-
-        STORAGE_DEBUG_INFO("Copy to host '%s'[%d]\n", m_Name.c_str(), m_Type);
-        if (m_Type & ST_Offloadable)
+        if (allowAlloc && !m_DataPtr)
         {
-            if (cudaEventQuery(m_OffloadEvent) == cudaErrorNotReady)
-                STORAGE_DEBUG_INFO("Waiting for offload... '%s'[%d]\n", m_Name.c_str(), m_Type);
-            MemoryManager::Default().WaitForMemEvent(m_OffloadEvent);
+            AllocateOnHost();
         }
         else
-            CUDA_CHECK(cudaMemcpy((void*)m_DataPtr, (void*)m_DeviceDataPtr, SizeInBytes(), cudaMemcpyDeviceToHost));
+        {
+            NEURO_ASSERT(m_DataLocation != None, "Attempting to copy to unallocated host memory");
+
+            STORAGE_DEBUG_INFO("Copy to host '%s'[%d]\n", m_Name.c_str(), m_Type);
+            if (m_Type & ST_Offloadable)
+            {
+                if (cudaEventQuery(m_OffloadEvent) == cudaErrorNotReady)
+                    STORAGE_DEBUG_INFO("Waiting for offload... '%s'[%d]\n", m_Name.c_str(), m_Type);
+                MemoryManager::Default().WaitForMemEvent(m_OffloadEvent);
+            }
+            else
+                CUDA_CHECK(cudaMemcpy((void*)m_DataPtr, (void*)m_DeviceDataPtr, SizeInBytes(), cudaMemcpyDeviceToHost));
+        }
 
         m_DataLocation = Host;
     }

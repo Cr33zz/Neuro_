@@ -46,7 +46,7 @@ namespace Neuro
         ELocation Location() const { return m_DataLocation; }
 
         void CopyToDevice() const;
-        void CopyToHost() const;
+        void CopyToHost(bool allowAlloc = false) const;
         void SyncToHost() const;
         void CopyWithinDevice(void* destDevPtr) const;
 

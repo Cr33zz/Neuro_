@@ -12,6 +12,9 @@ class ConvNetwork
 public:
 	void Run()
 	{
+        Debug::LogAllGrads();
+        Debug::LogAllOutputs();
+
 		Tensor::SetDefaultOpMode(GPU);
         GlobalRngSeed(1337);
 

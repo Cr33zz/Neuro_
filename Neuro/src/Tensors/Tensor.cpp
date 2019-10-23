@@ -1922,9 +1922,9 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-	void Tensor::CopyToHost() const
+	void Tensor::CopyToHost(bool allowAlloc) const
 	{
-        m_Storage.CopyToHost();
+        m_Storage.CopyToHost(allowAlloc);
 	}
 
     //////////////////////////////////////////////////////////////////////////
