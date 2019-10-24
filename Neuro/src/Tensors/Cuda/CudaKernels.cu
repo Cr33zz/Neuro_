@@ -287,7 +287,7 @@ __global__ void sumTemplate(const float* __restrict input, int width, int height
 {
     if (W && H && D && N)
     {
-        const size_t THREADS_PER_BLOCK = 1024;
+        const size_t THREADS_PER_BLOCK = 512;
         __shared__ float sdata[THREADS_PER_BLOCK];
 
         unsigned int tid = threadIdx.x;
