@@ -5,6 +5,8 @@
 #include "Memory/MemoryManager.h"
 #include "Tensors/Cuda/CudaErrorCheck.h"
 
+//#define DISABLE_OFFLOAD_PREFETCH
+
 #define ENABLE_STORAGE_LOGS
 
 #ifdef ENABLE_STORAGE_LOGS
@@ -193,9 +195,11 @@ namespace Neuro
             return;
         }
         STORAGE_DEBUG_INFO("<<< allocating.\n");
+#ifndef DISABLE_OFFLOAD_PREFETCH
         if (m_Type & ST_Offloadable)
             MemoryManager::Default().AllocateHostPinned((void**)&m_DataPtr, AllocSizeInBytes(), m_Name);
         else
+#endif
             MemoryManager::Default().AllocateHost((void**)&m_DataPtr, AllocSizeInBytes(), m_Name);
 
         m_DataLocation = Host;
@@ -212,9 +216,11 @@ namespace Neuro
             return;
         }
         STORAGE_DEBUG_INFO("<<< release incoming.\n");
+#ifndef DISABLE_OFFLOAD_PREFETCH
         if (m_Type & ST_Offloadable)
             MemoryManager::Default().ReleaseHostPinned(m_DataPtr);
         else
+#endif
             MemoryManager::Default().ReleaseHost(m_DataPtr);
         
         m_DataPtr = nullptr;
@@ -269,6 +275,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Storage::Offload() const
     {
+#ifndef DISABLE_OFFLOAD_PREFETCH
         if (!m_AllocSize)
             return;
 
@@ -289,11 +296,13 @@ namespace Neuro
         }
         else
             STORAGE_DEBUG_INFO("<<< not supported.\n");
+#endif
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Storage::Prefetch() const
     {
+#ifndef DISABLE_OFFLOAD_PREFETCH
         if (!m_AllocSize)
             return;
 
@@ -325,6 +334,7 @@ namespace Neuro
         }
         else
             STORAGE_DEBUG_INFO("Prefetching '%s'[%d] <<< not supported.\n", m_Name.c_str(), m_Type);
+#endif
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -340,6 +350,7 @@ namespace Neuro
 
         NEURO_ASSERT(m_DeviceDataPtr, "");
 
+#ifndef DISABLE_OFFLOAD_PREFETCH
         if ((m_Type & ST_Offloadable) && m_PrefetchRequested)
         {
             STORAGE_DEBUG_INFO("Copy to device '%s'[%d] <<< prefetch completed check only\n", m_Name.c_str(), m_Type);
@@ -353,6 +364,7 @@ namespace Neuro
             MemoryManager::Default().WaitForMemEvent(m_PrefetchEvent);
         }
         else
+#endif
         {
             STORAGE_DEBUG_INFO("Copy to device '%s'[%d]\n", m_Name.c_str(), m_Type);
             CUDA_CHECK(cudaMemcpy((void*)m_DeviceDataPtr, (void*)m_DataPtr, SizeInBytes(), cudaMemcpyHostToDevice));
@@ -379,6 +391,7 @@ namespace Neuro
             NEURO_ASSERT(m_DataPtr && m_DeviceDataPtr, "");
 
             STORAGE_DEBUG_INFO("Copy to host '%s'[%d]\n", m_Name.c_str(), m_Type);
+#ifndef DISABLE_OFFLOAD_PREFETCH
             if (m_Type & ST_Offloadable)
             {
                 if (cudaEventQuery(m_OffloadEvent) == cudaErrorNotReady)
@@ -386,6 +399,7 @@ namespace Neuro
                 MemoryManager::Default().WaitForMemEvent(m_OffloadEvent);
             }
             else
+#endif
                 CUDA_CHECK(cudaMemcpy((void*)m_DataPtr, (void*)m_DeviceDataPtr, SizeInBytes(), cudaMemcpyDeviceToHost));
         }
 

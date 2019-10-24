@@ -15,7 +15,7 @@ namespace Neuro
     cublasHandle_t TensorOpGpu::s_CublasHandle = nullptr;
     cudnnHandle_t TensorOpGpu::s_CudnnHandle = nullptr;
 
-    static const int INNER_KERNEL_LOOP_LENGTH = 5; // for simple per-element kernels
+    static const int INNER_KERNEL_LOOP_LENGTH = 1; // for simple per-element kernels
 
     //////////////////////////////////////////////////////////////////////////
     TensorOpGpu::TensorOpGpu()
