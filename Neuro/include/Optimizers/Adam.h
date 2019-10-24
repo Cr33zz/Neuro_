@@ -16,23 +16,27 @@ namespace Neuro
         virtual string ToString() override;
 		const char* ClassName() const;
 
-        virtual Operation* Minimize(const vector<TensorLike*>& losses, const vector<Variable*>& vars = {}) override { return new MinimizationOperation(losses, vars, this); }
+        virtual Operation* Minimize(const vector<TensorLike*>& losses, const vector<Variable*>& vars = {}) override { return new MinimizationOperation(losses, vars, m_LearningRate, m_Beta1, m_Beta2, m_Epsilon); }
 
     private:
         class MinimizationOperation : public Operation
         {
         public:
-            MinimizationOperation(const vector<TensorLike*>& losses, const vector<Variable*>& vars, Adam* owner);
+            MinimizationOperation(const vector<TensorLike*>& losses, const vector<Variable*>& vars, float lr, float beta1, float beta2, float epsilon);
         protected:
             virtual void ComputeInternal();
             virtual void ComputeGradientInternal(const Tensor& grad) {}
 
-            Adam* m_Owner;
+            float m_LearningRate;
+            float m_Beta1;
+            float m_Beta2;
+            float m_Epsilon;
             vector<Variable*> m_Vars;
             vector<Tensor> m_MGradients;
             vector<Tensor> m_VGradients;
             vector<TensorLike*> m_Order;
             unordered_set<TensorLike*> m_NodesAffectingLosses;
+            float m_Iteration = 0;
         };
 
     private:
