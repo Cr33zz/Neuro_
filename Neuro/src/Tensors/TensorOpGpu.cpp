@@ -76,7 +76,7 @@ namespace Neuro
         if (!t1.SameDimensionsExceptBatches(t2))
         {
             dim3 blocks, threads;
-            GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
+            GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock / 2);
 
             return CudaKernels::AddBroadcast(
                 blocks, 
@@ -173,7 +173,7 @@ namespace Neuro
         }
         else
         {
-            GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
+            GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock / 2);
 
             return CudaKernels::MulElemBroadcast(
                 blocks,
@@ -212,7 +212,7 @@ namespace Neuro
         }
         else
         {
-            GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
+            GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock / 2);
 
             return CudaKernels::DivBroadcast(
                 blocks,
