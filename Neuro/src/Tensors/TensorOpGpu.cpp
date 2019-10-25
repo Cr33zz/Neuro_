@@ -41,7 +41,7 @@ namespace Neuro
                 //CUDA_CHECK(MemoryManager::Default().Reserve(reservedBytes));
 
                 stringstream ss;
-                ss << "GPU: " << s_CudaDevProp.name << "(threads_per_block: " << s_CudaDevProp.maxThreadsPerBlock << ")\n";
+                ss << "GPU >> " << s_CudaDevProp.name << " threads_per_block=" << s_CudaDevProp.maxThreadsPerBlock << " available/total_memory=" << freeBytes/(1024*1024) << "/" << totalBytes/(1024*1024) << "MB\n";
                 //ss << "Reserved memory: " << reservedBytes/(1024*1024) << "MB\n";
                 OutputDebugString(ss.str().c_str());
             }

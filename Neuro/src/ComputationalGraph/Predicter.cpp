@@ -19,7 +19,7 @@ namespace Neuro
         for (size_t i = 0; i < m_InputPlaceholders.size(); ++i)
             m_Feeds[m_InputPlaceholders[i]] = nullptr;
         
-        static Tensor trainingDisabled({ 0.f }, Shape(1));
+        static Tensor trainingDisabled({ 0.f }, Shape(1), "training_disabled");
         m_Feeds[m_TrainingPlaceholder] = &trainingDisabled;
     }
 
