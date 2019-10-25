@@ -27,6 +27,7 @@
     <ClCompile Include="src\TensorOpGpuTests.cpp" />
     <ClCompile Include="src\TensorOpMultiCpuTests.cpp" />
     <ClCompile Include="src\TensorTests.cpp" />
+    <ClCompile Include="src\TrainingModelsTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Neuro\Neuro.vcxproj">
