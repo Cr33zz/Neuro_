@@ -138,9 +138,9 @@ public:
         {
             cout << "Epoch " << e << endl;
 
-            Tqdm progress(steps, 0);
-            progress.ShowStep(true).ShowPercent(false).ShowElapsed(false).EnableSeparateLines(true);
-            for (int i = 0; i < steps; ++i, progress.NextStep())
+            /*Tqdm progress(steps, 0);
+            progress.ShowStep(true).ShowPercent(false).ShowElapsed(false).EnableSeparateLines(true);*/
+            for (int i = 0; i < steps; ++i)
             {
                 contentBatch.OverrideHost();
                 //load images
@@ -155,7 +155,7 @@ public:
 
                 //MemoryManager::Default().PrintMemoryState("mem.log");
 
-                uint64_t cLoss = (uint64_t)(*results[1])(0);
+                /*uint64_t cLoss = (uint64_t)(*results[1])(0);
                 uint64_t sLoss1 = (uint64_t)(*results[2])(0);
                 uint64_t sLoss2 = (uint64_t)(*results[3])(0);
                 uint64_t sLoss3 = (uint64_t)(*results[4])(0);
@@ -164,8 +164,9 @@ public:
                 extString << " - content_l: " << cLoss << " - style1_l: " << sLoss1 << " - style2_l: " << sLoss2 << 
                     " - style3_l: " << sLoss3 << " - style4_l: " << sLoss4 << " - total_l: " << (cLoss + sLoss1 + sLoss2 + sLoss3 + sLoss4);
                 progress.SetExtraString(extString.str());
+                progress.NextStep();*/
 
-                if (i % 1 == 0)
+                if (i % 10 == 0)
                 {
                     auto result = Session::Default()->Run({ stylizedContent, weightedContentLoss, weightedStyleLoss }, { { content, &testImage } });
                     cout << "test content_loss: " << (*result[1])(0) << " style_loss: " << (*result[2])(0) << endl;
