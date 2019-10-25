@@ -78,10 +78,11 @@ namespace Neuro
     {
         if (this != &other)
         {
+            m_Type = other.m_Type;
             m_AllocSize = other.m_AllocSize;
             m_Size = other.m_Size;
-            m_DeviceDataRefCount = other.m_DeviceDataRefCount;
             m_DataRefCount = other.m_DataRefCount;
+            m_DeviceDataRefCount = other.m_DeviceDataRefCount;
             m_Name = other.m_Name;
             m_DataLocation = other.m_DataLocation;
             m_DataPtr = other.m_DataPtr;
