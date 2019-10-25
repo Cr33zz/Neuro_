@@ -59,22 +59,25 @@ namespace NeuroTests
         TEST_METHOD(Iris_Network_GPU)
         {
             Tensor::SetForcedOpMode(GPU);
-            float loss = TrainIrisNetwork();
+            float loss = TrainIrisNetwork("iris_gpu");
             Assert::AreEqual(0.4183, (double)loss, 0.0001);
         }
 
         TEST_METHOD(Iris_Network_CPU)
         {
             Tensor::SetForcedOpMode(MultiCPU);
-            float loss = TrainIrisNetwork();
+            float loss = TrainIrisNetwork("iris_cpu");
             Assert::AreEqual(0.4183, (double)loss, 0.0001);
         }
 
-        float TrainIrisNetwork()
+        float TrainIrisNetwork(const string& name)
         {
             GlobalRngSeed(1337);
 
-            auto model = Sequential("iris");
+            Debug::LogAllOutputs(true);
+            Debug::LogAllGrads(true);
+
+            auto model = Sequential(name);
             model.AddLayer(new Dense(4, 300, new ReLU()));
             model.AddLayer(new Dense(200, new ReLU()));
             model.AddLayer(new Dense(100, new ReLU()));

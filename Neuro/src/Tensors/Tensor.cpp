@@ -527,7 +527,7 @@ namespace Neuro
 	Tensor Tensor::DiagFlat() const
 	{
         CopyToHost();
-		Tensor result(Shape(BatchLength(), BatchLength(), 1, Batch()));
+		Tensor result(zeros(Shape(BatchLength(), BatchLength(), 1, Batch())));
 
         uint32_t batchLen = BatchLength();
 
