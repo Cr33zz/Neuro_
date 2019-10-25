@@ -85,8 +85,9 @@ namespace Neuro
 
         if (Debug::ShouldLogGrad(Name()))
         {
+            m_OutputGrad.DebugDumpValues(Replace(Name() + "_output0_grad_step" + to_string(m_LastComputeStep) + ".log", "/", "_"));
             for (size_t i = 0; i < m_InputsGrads.size(); ++i)
-                m_InputsGrads[i].DebugDumpValues(Replace(Name() + "_grad" + to_string(i) + "_step" + to_string(m_LastComputeStep) + ".log", "/", "_"));
+                m_InputsGrads[i].DebugDumpValues(Replace(Name() + "_input" + to_string(i) + "_grad_step" + to_string(m_LastComputeStep) + ".log", "/", "_"));
         }
 
         m_Output.DecRef(); // output is no longer needed, we've already used it to compute input gradients
