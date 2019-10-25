@@ -254,6 +254,7 @@ namespace Neuro
 
         input = Tensor(Shape(imgWidth, imgHeight, 1, maxImages));
         output = Tensor(Shape(outputsNum, 1, 1, maxImages));
+        output.OverrideHost();
         output.Zero();
 
         uint8_t* pixelOffset = reinterpret_cast<uint8_t*>(imagesBuffer.get() + 16);
