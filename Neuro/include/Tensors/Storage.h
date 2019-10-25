@@ -38,7 +38,7 @@ namespace Neuro
         void FreeOnHost();
 
         void AllocateOnDevice() const;
-        void FreeOnDevice();
+        void FreeOnDevice(bool force = false);
 
         void Offload() const;
         void Prefetch() const;

@@ -6,7 +6,6 @@
 #include "Tensors/Cuda/CudaErrorCheck.h"
 
 //#define DISABLE_OFFLOAD_PREFETCH
-
 #define ENABLE_STORAGE_LOGS
 
 #ifdef ENABLE_STORAGE_LOGS
@@ -50,9 +49,8 @@ namespace Neuro
             m_AllocSize = other.m_AllocSize;
             m_Size = other.m_Size;
             m_DataRefCount = m_DeviceDataRefCount = 0;
-            m_Name = other.m_Name;
             FreeOnHost();
-            FreeOnDevice();
+            FreeOnDevice(true);
             ChangeType(other.m_Type);
             if (other.m_DataPtr)
             {
@@ -102,7 +100,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     Storage::~Storage()
     {
-        FreeOnDevice();
+        FreeOnDevice(true);
         FreeOnHost();
         if (m_OffloadEvent)
             CUDA_CHECK(cudaEventDestroy(m_OffloadEvent));
@@ -151,7 +149,7 @@ namespace Neuro
         bool wasAllocatedOnHost = m_DataPtr != nullptr;
 
         if (m_DeviceDataPtr)
-            FreeOnDevice();
+            FreeOnDevice(true);
         if (m_DataPtr)
             FreeOnHost();
 
@@ -247,7 +245,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Storage::FreeOnDevice()
+    void Storage::FreeOnDevice(bool force)
     {
         STORAGE_DEBUG_INFO("Releasing on device '%s' ", m_Name.c_str());
         if (!m_DeviceDataPtr)
@@ -256,14 +254,16 @@ namespace Neuro
             return;
         }
 
-        if (m_Type & ST_KeepDevMem)
+        if (!force && (m_Type & ST_KeepDevMem))
         {
             STORAGE_DEBUG_INFO("<<< not allowed.\n");
             return;
         }
 
+        if (m_Type & ST_Offloadable)
+            MemoryManager::Default().WaitForMemEvent(m_OffloadEvent);
+
         STORAGE_DEBUG_INFO("<<< release incoming.\n");
-        MemoryManager::Default().WaitForMemEvent(m_OffloadEvent);
         CUDA_CHECK(MemoryManager::Default().ReleaseDevice((void*)m_DeviceDataPtr));
         m_DeviceDataPtr = nullptr;
 
