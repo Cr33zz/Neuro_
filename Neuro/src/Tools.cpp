@@ -252,10 +252,8 @@ namespace Neuro
             FreeImage_FillBackground(image, &imageColor);
         }
 
-        input = Tensor(Shape(imgWidth, imgHeight, 1, maxImages));
-        output = Tensor(Shape(outputsNum, 1, 1, maxImages));
-        output.OverrideHost();
-        output.Zero();
+        input = Tensor(zeros(Shape(imgWidth, imgHeight, 1, maxImages)));
+        output = Tensor(zeros(Shape(outputsNum, 1, 1, maxImages)));
 
         uint8_t* pixelOffset = reinterpret_cast<uint8_t*>(imagesBuffer.get() + 16);
         uint8_t* labelOffset = reinterpret_cast<uint8_t*>(labelsBuffer.get() + 8);
@@ -321,9 +319,8 @@ namespace Neuro
             FreeImage_FillBackground(image, &imageColor);
         }
 
-        input = Tensor(Shape(imgWidth, imgHeight, 3, maxImages));
-        output = Tensor(Shape(outputsNum, 1, 1, maxImages));
-        output.Zero();
+        input = Tensor(zeros(Shape(imgWidth, imgHeight, 3, maxImages)));
+        output = Tensor(zeros(Shape(outputsNum, 1, 1, maxImages)));
 
         for (uint32_t i = 0; i < (uint32_t)maxImages; ++i)
         {
