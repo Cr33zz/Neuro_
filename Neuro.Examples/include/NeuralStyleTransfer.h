@@ -21,7 +21,7 @@ public:
     const uint32_t IMAGE_HEIGHT = 300;
 
     const string CONTENT_FILE = "content.jpg";
-    const string STYLE_FILE = "style3.jpg";
+    const string STYLE_FILE = "style_legion.jpg";
 
     void Run()
     {
@@ -88,7 +88,7 @@ public:
         auto optimizer = Adam(5.f, 0.99f, 0.999f, 0.1f);
         auto minimize = optimizer.Minimize({ totalLoss }, { outputImg });
 
-        MemoryManager::Default().PrintMemoryState("mem_before.log");
+        DumpMemoryManagers("mem_before.log");
 
         const int EPOCHS = 1000;
         Tqdm progress(EPOCHS, 10);
@@ -97,7 +97,7 @@ public:
         {
             auto results = Session::Default()->Run({ outputImg, contentLoss, styleLoss, totalLoss, minimize }, {});
 
-            MemoryManager::Default().PrintMemoryState("mem.log");
+            DumpMemoryManagers("mem.log");
 
             stringstream extString;
             extString << setprecision(4) << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - total_l: " << (*results[3])(0);

@@ -166,8 +166,9 @@ namespace Neuro
     void Storage::Rename(const string& name)
     {
         m_Name = name;
-        MemoryManager::Default().UpdateAnnotation(m_DataPtr, name);
-        MemoryManager::Default().UpdateAnnotation(m_DeviceDataPtr, name);
+        HostMemoryManager::Default().UpdateAnnotation(m_DataPtr, name);
+        HostPinnedMemoryManager::Default().UpdateAnnotation(m_DataPtr, name);
+        DeviceMemoryManager::Default().UpdateAnnotation(m_DeviceDataPtr, name);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -196,10 +197,10 @@ namespace Neuro
         STORAGE_DEBUG_INFO("<<< allocating.\n");
 #ifndef DISABLE_OFFLOAD_PREFETCH
         if (m_Type & ST_Offloadable)
-            MemoryManager::Default().AllocateHostPinned((void**)&m_DataPtr, AllocSizeInBytes(), m_Name);
+            HostPinnedMemoryManager::Default().Allocate((void**)&m_DataPtr, AllocSizeInBytes(), m_Name);
         else
 #endif
-            MemoryManager::Default().AllocateHost((void**)&m_DataPtr, AllocSizeInBytes(), m_Name);
+            HostMemoryManager::Default().Allocate((void**)&m_DataPtr, AllocSizeInBytes(), m_Name);
 
         m_DataLocation = Host;
     }
@@ -217,10 +218,10 @@ namespace Neuro
         STORAGE_DEBUG_INFO("<<< release incoming.\n");
 #ifndef DISABLE_OFFLOAD_PREFETCH
         if (m_Type & ST_Offloadable)
-            MemoryManager::Default().ReleaseHostPinned(m_DataPtr);
+            HostPinnedMemoryManager::Default().Free(m_DataPtr);
         else
 #endif
-            MemoryManager::Default().ReleaseHost(m_DataPtr);
+            HostMemoryManager::Default().Free(m_DataPtr);
         
         m_DataPtr = nullptr;
         m_DataLocation = None;
@@ -242,7 +243,7 @@ namespace Neuro
             return;
         }
         STORAGE_DEBUG_INFO("<<< allocating.\n");
-        CUDA_CHECK(MemoryManager::Default().AllocateDevice((void**)&m_DeviceDataPtr, AllocSizeInBytes(), m_Name));
+        CUDA_CHECK(DeviceMemoryManager::Default().Allocate((void**)&m_DeviceDataPtr, AllocSizeInBytes(), m_Name));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -262,10 +263,10 @@ namespace Neuro
         }
 
         if (m_Type & ST_Offloadable)
-            MemoryManager::Default().WaitForMemEvent(m_OffloadEvent);
+            DeviceMemoryManager::Default().WaitForMemEvent(m_OffloadEvent);
 
         STORAGE_DEBUG_INFO("<<< release incoming.\n");
-        CUDA_CHECK(MemoryManager::Default().ReleaseDevice((void*)m_DeviceDataPtr));
+        CUDA_CHECK(DeviceMemoryManager::Default().Free((void*)m_DeviceDataPtr));
         m_DeviceDataPtr = nullptr;
 
         // at this point the only place where values are stored is host memory
@@ -293,7 +294,7 @@ namespace Neuro
             NEURO_ASSERT(m_DataPtr && m_DeviceDataPtr, "");
 
             STORAGE_DEBUG_INFO("<<< requested.\n");
-            CUDA_CHECK(MemoryManager::Default().Offload((void*)m_DataPtr, (void*)m_DeviceDataPtr, SizeInBytes(), m_OffloadEvent));
+            CUDA_CHECK(DeviceMemoryManager::Default().Offload((void*)m_DataPtr, (void*)m_DeviceDataPtr, SizeInBytes(), m_OffloadEvent));
         }
         else
             STORAGE_DEBUG_INFO("<<< not supported.\n");
@@ -330,7 +331,7 @@ namespace Neuro
             else
             {
                 STORAGE_DEBUG_INFO("Prefetching '%s'[%d] <<< requested.\n", m_Name.c_str(), m_Type);
-                CUDA_CHECK(MemoryManager::Default().Prefetch((void*)m_DeviceDataPtr, (void*)m_DataPtr, SizeInBytes(), m_PrefetchEvent));
+                CUDA_CHECK(DeviceMemoryManager::Default().Prefetch((void*)m_DeviceDataPtr, (void*)m_DataPtr, SizeInBytes(), m_PrefetchEvent));
             }
         }
         else
@@ -362,7 +363,7 @@ namespace Neuro
             // we have to make sure copy to device is blocked until prefetch is completed
             if (cudaEventQuery(m_PrefetchEvent) == cudaErrorNotReady)
                 STORAGE_DEBUG_INFO("Waiting for prefetch... '%s'[%d]\n", m_Name.c_str(), m_Type);
-            MemoryManager::Default().WaitForMemEvent(m_PrefetchEvent);
+            DeviceMemoryManager::Default().WaitForMemEvent(m_PrefetchEvent);
         }
         else
 #endif
@@ -397,7 +398,7 @@ namespace Neuro
             {
                 if (cudaEventQuery(m_OffloadEvent) == cudaErrorNotReady)
                     STORAGE_DEBUG_INFO("Waiting for offload... '%s'[%d]\n", m_Name.c_str(), m_Type);
-                MemoryManager::Default().WaitForMemEvent(m_OffloadEvent);
+                DeviceMemoryManager::Default().WaitForMemEvent(m_OffloadEvent);
             }
             else
 #endif

@@ -153,7 +153,7 @@ public:
                 auto results = Session::Default()->Run({ stylizedContent, contentLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], totalLoss, minimize }, 
                                                        { { content, &contentBatch }, { targetContentFeatures, &contentFeatures } });
 
-                MemoryManager::Default().PrintMemoryState("mem.log");
+                //MemoryManager::Default().PrintMemoryState("mem.log");
 
                 uint64_t cLoss = (uint64_t)(*results[1])(0);
                 uint64_t sLoss1 = (uint64_t)(*results[2])(0);

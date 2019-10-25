@@ -100,7 +100,7 @@ public:
 
         for (int step = 0; step < 5; ++step)
         {
-            MemoryManager::Default().PrintMemoryState("mem.log");
+            DumpMemoryManagers("mem.log");
 
             auto result = Session::Default()->Run({ fetches }, { {x, &input}, {y, &output} });
             cout << "step: " << step << " loss: " << (*result[0])(0) << endl;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdio>
 #include <list>
 #include <driver_types.h>
 
@@ -21,7 +22,6 @@ namespace Neuro
     {
         MEM_FLAGS_DEFAULT = 0,       /// Default flags.
         MEM_FLAGS_CANNOT_GROW = 1,   /// Prevent the manager from growing its memory consumption.
-        MEM_FLAGS_CANNOT_STEAL = 2,  /// Prevent the manager from stealing memory.
     };
 
     // A node in the linked list of memory blocks
@@ -33,16 +33,15 @@ namespace Neuro
         inline const char* GetData() const { return m_Data; }
         inline char* GetData() { return m_Data; }
 
+        inline void SetSize(size_t size) { m_Size = size; }
         inline size_t GetSize() const { return m_Size; }
 
+        inline void SetNext(Block *next) { m_Next = next; }
         inline const Block* GetNext() const { return m_Next; }
         inline Block* GetNext() { return m_Next; }
 
-        inline bool IsHead() const { return m_IsHead; }
-
-        inline void SetNext(Block *next) { m_Next = next; }
-        inline void SetSize(size_t size) { m_Size = size; }
         inline void SetHeadFlag(bool isHead) { m_IsHead = isHead; }
+        inline bool IsHead() const { return m_IsHead; }
 
         /// Debug annotation
         string m_Annotation;
@@ -54,82 +53,119 @@ namespace Neuro
         size_t m_Size;
         /// The prev/next blocks in the linked list of blocks.
         Block* m_Next;        
-        /// Is it a head node (i.e. a node obtained from parent->allocate or cudaMalloc).
+        /// Is it a head node (i.e. a node obtained from system allocator.
         bool m_IsHead;
     };
 
-    struct CudaBlock
+    // Block of memory allocated by system call
+    struct NativeBlock
     {
         void* ptr;
         size_t size;
     };
 
-    struct HostAlloc
-    {
-        void* ptr;
-        size_t size;
-        string annotation;
-    };
-
-    // Memory manager for GPU device
-    class MemoryManager
+    class MemoryManagerBase
     {
     public:
-        MemoryManager();
-        static MemoryManager& Default();
+        MemoryManagerBase(size_t allocGranularity, size_t nativeAllocGranularity);
 
-        EMemStatus Reserve(size_t size);
+        EMemStatus Allocate(void** ptr, size_t size, const string& annotation = "");
+        EMemStatus Free(void* ptr);
 
-        EMemStatus AllocateDevice(void** ptr, size_t size, const string& annotation = "");
-        EMemStatus ReleaseDevice(void* ptr);
-
-        EMemStatus AllocateHost(void** ptr, size_t size, const string& annotation = "");
-        EMemStatus ReleaseHost(void* ptr);
-
-        EMemStatus AllocateHostPinned(void** ptr, size_t size, const string& annotation = "");
-        EMemStatus ReleaseHostPinned(void* ptr);
-
-        EMemStatus Offload(void* dst, void* src, size_t size, cudaEvent_t memEvent);
-        EMemStatus Prefetch(void* dst, void* src, size_t size, cudaEvent_t memEvent);
-
-        EMemStatus WaitForMemEvent(cudaEvent_t memEvent);
-
-        EMemStatus PrintMemoryState(const string& filename) const;
-
+        EMemStatus DumpMemoryState(const string& filename) const;
+        EMemStatus DumpMemoryState(FILE* file) const;
         void UpdateAnnotation(void* ptr, const string& annotation);
-    
+
+    protected:
+        virtual void InternalAllocate(void** ptr, size_t size, const string& annotation = "") = 0;
+        virtual void InternalFree(void* ptr) = 0;
+        virtual const char* InternalName() const = 0;
+
+        EMemStatus AllocateBlock(Block*& curr, Block*& prev, size_t size);
+
     private:
-        EMemStatus AllocateBlockUnsafe(Block*& curr, Block*& prev, size_t size);
-        EMemStatus ReleaseAllUnsafe();
-        EMemStatus ReleaseBlockUnsafe(Block* curr, Block* prev);
-        EMemStatus ExtractBlockUnsafe(Block* curr, Block* prev, size_t size, bool stolen);
-        EMemStatus FindBestBlockUnsafe(Block*& best, Block*& prev, size_t size);
+        EMemStatus ReleaseBlock(Block* curr, Block* prev);
+        EMemStatus SplitBlock(Block* curr, Block* prev, size_t size);
+        EMemStatus FindBestBlock(Block*& best, Block*& prev, size_t size);
 
-        EMemStatus AddCudaBlockUnsafe(void* ptr, size_t size);
-        EMemStatus RemoveCudaBlockUnsafe(void* ptr);
+        EMemStatus AddNativeBlock(void* ptr, size_t size);
+        EMemStatus RemoveNativeBlock(void* ptr);
         
-        inline EMemStatus GetUsedMemoryUnsafe(size_t& usedMemory) const;
-        inline EMemStatus GetFreeMemoryUnsafe(size_t& freeMemory) const;
-        EMemStatus GetMemoryUnsafe(size_t& size, const Block* head) const;
-        EMemStatus PrintListUnsafe(FILE *file, const char *name, const Block* head) const;
-        EMemStatus PrintHostAllocs(FILE* file, const char* name, const list<HostAlloc>& allocs, size_t total) const;
+        EMemStatus ReleaseAll();
 
-        cudaStream_t m_MemoryStream = nullptr;
-        bool m_IsStreamBlocking = false;
+        EMemStatus PrintList(FILE* file, const char* name, const Block* head) const;
+        inline EMemStatus GetUsedMemory(size_t& usedMemory) const;
+        inline EMemStatus GetFreeMemory(size_t& freeMemory) const;
+        EMemStatus GetMemory(size_t& size, const Block* head) const;        
+
         Block* m_UsedBlocks = nullptr;
         Block* m_FreeBlocks = nullptr;
-        list<CudaBlock> m_CudaBlocks;
-        list<HostAlloc> m_HostPinnedAllocations;
-        list<HostAlloc> m_HostAllocations;
-        size_t m_Size = 0;
-        uint32_t m_Flags = MEM_FLAGS_CANNOT_GROW;
-        size_t m_AllocatedDeviceMemSize = 0;
-        size_t m_AllocatedDeviceMemPeakSize = 0;
-        size_t m_AllocatedHostMemSize = 0;
-        size_t m_AllocatedHostMemPeakSize = 0;
-        size_t m_AllocatedHostPinnedMemSize = 0;
-        size_t m_AllocatedHostPinnedMemPeakSize = 0;
+        list<NativeBlock> m_NativeBlocks;
+        uint32_t m_Flags = MEM_FLAGS_DEFAULT;
+        const size_t m_AllocGranularity;
+        const size_t m_NativeAllocGranularity;
+        size_t m_AllocatedMemSize = 0;
+        size_t m_AllocatedMemPeakSize = 0;
     };
+
+    // Memory manager for GPU memory
+    class DeviceMemoryManager : public MemoryManagerBase
+    {
+    public:
+        DeviceMemoryManager();
+        static DeviceMemoryManager& Default();
+
+        EMemStatus Reserve(size_t size);
+        EMemStatus Offload(void* dst, void* src, size_t size, cudaEvent_t memEvent);
+        EMemStatus Prefetch(void* dst, void* src, size_t size, cudaEvent_t memEvent);
+        EMemStatus WaitForMemEvent(cudaEvent_t memEvent);
+
+    protected:
+        virtual void InternalAllocate(void** ptr, size_t size, const string& annotation = "") override;
+        virtual void InternalFree(void* ptr) override;
+        virtual const char* InternalName() const override { return "Device"; }
+
+    private:
+        cudaStream_t m_MemoryStream = nullptr;
+        bool m_IsStreamBlocking = false;
+    };
+
+    // Memory manager for generic CPU memory
+    class HostMemoryManager : public MemoryManagerBase
+    {
+    public:
+        HostMemoryManager();
+        static HostMemoryManager& Default();
+
+    protected:
+        virtual void InternalAllocate(void** ptr, size_t size, const string& annotation = "") override;
+        virtual void InternalFree(void* ptr) override;
+        virtual const char* InternalName() const override { return "Host"; }
+    };
+
+    // Memory manager for pinned (unpageable) CPU memory
+    class HostPinnedMemoryManager : public MemoryManagerBase
+    {
+    public:
+        HostPinnedMemoryManager();
+        static HostPinnedMemoryManager& Default();
+
+    protected:
+        virtual void InternalAllocate(void** ptr, size_t size, const string& annotation = "") override;
+        virtual void InternalFree(void* ptr) override;
+        virtual const char* InternalName() const override { return "Host pinned"; }
+    };
+
+    ///
+    static void DumpMemoryManagers(const string& filename)
+    {
+        FILE* file;
+        fopen_s(&file, filename.c_str(), "w");
+        DeviceMemoryManager::Default().DumpMemoryState(file);
+        HostMemoryManager::Default().DumpMemoryState(file);
+        HostPinnedMemoryManager::Default().DumpMemoryState(file);
+        fclose(file);
+    }
 
     //////////////////////////////////////////////////////////////////////////
     static const char* MemGetErrorString(EMemStatus status)
