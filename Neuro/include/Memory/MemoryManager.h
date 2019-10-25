@@ -112,7 +112,7 @@ namespace Neuro
         inline EMemStatus GetFreeMemoryUnsafe(size_t& freeMemory) const;
         EMemStatus GetMemoryUnsafe(size_t& size, const Block* head) const;
         EMemStatus PrintListUnsafe(FILE *file, const char *name, const Block* head) const;
-        EMemStatus PrintHostAllocs(FILE* file, const char* name, const list<HostAlloc>& allocs) const;
+        EMemStatus PrintHostAllocs(FILE* file, const char* name, const list<HostAlloc>& allocs, size_t total) const;
 
         cudaStream_t m_MemoryStream = nullptr;
         bool m_IsStreamBlocking = false;

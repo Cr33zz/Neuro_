@@ -9,7 +9,8 @@
 #include "Memory/MemoryManager.h"
 #include "Tensors/Cuda/CudaErrorCheck.h"
 
-#define ENABLE_MEMORY_LOGS
+//#define ENABLE_MEMORY_LOGS
+//#define MEMSET_ALLOCATED_MEMORY
 
 #define DEVICE_ALLOC_GRANULARITY 512
 #define HOST_ALLOC_GRANULARITY 256
@@ -33,8 +34,9 @@
 
 namespace Neuro
 {
-    static void PrintSize(stringstream& ss, size_t size)
+    static string SizeToString(size_t size)
     {
+        stringstream ss;
         ss << size << "B";
         if (size > 1024)
         {
@@ -43,6 +45,7 @@ namespace Neuro
             else
                 ss << "(~" << size / (1024 * 1024) << "MB)";
         }
+        return ss.str();
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -97,18 +100,17 @@ namespace Neuro
 
 #ifdef ENABLE_MEMORY_LOGS
         stringstream ss;
-        ss << "Device alloc '" << annotation << "' 0x" << hex << (__int64)m_UsedBlocks->GetData() << dec << " size ";
-        PrintSize(ss, size);
-        ss << " total ";
-        PrintSize(ss, m_AllocatedDeviceMemSize);
-        ss << " peak ";
-        PrintSize(ss, m_AllocatedDeviceMemPeakSize);
-        ss << endl;
+        ss << "Device alloc '" << annotation << "' 0x" << hex << (__int64)m_UsedBlocks->GetData() << dec << " size " << SizeToString(size) << " total " << SizeToString(m_AllocatedDeviceMemSize) << " peak " << SizeToString(m_AllocatedDeviceMemPeakSize) << endl;
         OutputDebugString(ss.str().c_str());
 #endif
 
         // Return the new pointer into memory.
         *ptr = m_UsedBlocks->GetData();
+
+#ifdef MEMSET_ALLOCATED_MEMORY
+        cudaMemset(m_UsedBlocks->GetData(), 0xFF, m_UsedBlocks->GetSize());
+#endif
+
         return MEM_STATUS_SUCCESS;
     }
 
@@ -131,11 +133,7 @@ namespace Neuro
 
 #ifdef ENABLE_MEMORY_LOGS
         stringstream ss;
-        ss << "Device release '" << curr->m_Annotation << "' 0x" << hex << (__int64)ptr << dec << " size ";
-        PrintSize(ss, curr->GetSize());
-        ss << " total ";
-        PrintSize(ss, m_AllocatedDeviceMemSize);
-        ss << endl;
+        ss << "Device release '" << curr->m_Annotation << "' 0x" << hex << (__int64)ptr << dec << " size " << SizeToString(curr->GetSize()) << " total " << SizeToString(m_AllocatedDeviceMemSize) << endl;
         OutputDebugString(ss.str().c_str());
 #endif
 
@@ -158,13 +156,7 @@ namespace Neuro
 
 #ifdef ENABLE_MEMORY_LOGS
         stringstream ss;
-        ss << "Host pinned alloc '" << annotation << "' 0x" << hex << (__int64)*ptr << dec << " size ";
-        PrintSize(ss, size);
-        ss << " total ";
-        PrintSize(ss, m_AllocatedHostPinnedMemSize);
-        ss << " peak ";
-        PrintSize(ss, m_AllocatedHostPinnedMemPeakSize);
-        ss << endl;
+        ss << "Host pinned alloc '" << annotation << "' 0x" << hex << (__int64)*ptr << dec << " size " << SizeToString(size) << " total " << SizeToString(m_AllocatedHostPinnedMemSize) << " peak " << SizeToString(m_AllocatedHostPinnedMemPeakSize) << endl;
         OutputDebugString(ss.str().c_str());
 #endif
 
@@ -184,11 +176,7 @@ namespace Neuro
 
 #ifdef ENABLE_MEMORY_LOGS
         stringstream ss;
-        ss << "Host pinned release '" << it->annotation << "' 0x" << hex << (__int64)ptr << dec << " size ";
-        PrintSize(ss, it->size);
-        ss << " total ";
-        PrintSize(ss, m_AllocatedHostPinnedMemSize);
-        ss << endl;
+        ss << "Host pinned release '" << it->annotation << "' 0x" << hex << (__int64)ptr << dec << " size " << SizeToString(it->size) << " total " << SizeToString(m_AllocatedHostPinnedMemSize) << endl;
         OutputDebugString(ss.str().c_str());
 #endif
 
@@ -212,13 +200,7 @@ namespace Neuro
 
 #ifdef ENABLE_MEMORY_LOGS
         stringstream ss;
-        ss << "Host alloc '" << annotation << "' 0x" << hex << (__int64)*ptr << dec << " size ";
-        PrintSize(ss, size);
-        ss << " total ";
-        PrintSize(ss, m_AllocatedHostMemSize);
-        ss << " peak ";
-        PrintSize(ss, m_AllocatedHostMemPeakSize);
-        ss << endl;
+        ss << "Host alloc '" << annotation << "' 0x" << hex << (__int64)*ptr << dec << " size " << SizeToString(size) << " total " << SizeToString(m_AllocatedHostMemSize) << " peak " << SizeToString(m_AllocatedHostMemPeakSize) << endl;
         OutputDebugString(ss.str().c_str());
 #endif
 
@@ -239,11 +221,7 @@ namespace Neuro
 
 #ifdef ENABLE_MEMORY_LOGS
         stringstream ss;
-        ss << "Host release '" << it->annotation << "' 0x" << hex << (__int64)ptr << dec << " size ";
-        PrintSize(ss, it->size);
-        ss << " total ";
-        PrintSize(ss, m_AllocatedHostMemSize);
-        ss << endl;
+        ss << "Host release '" << it->annotation << "' 0x" << hex << (__int64)ptr << dec << " size " << SizeToString(it->size) << " total " << SizeToString(m_AllocatedHostMemSize) << endl;
         OutputDebugString(ss.str().c_str());
 #endif
 
@@ -535,7 +513,7 @@ namespace Neuro
         for (Block *curr = (Block*)head; curr; curr = curr->GetNext())
             size += curr->GetSize();
         
-        fprintf(file, "| list=\"%s\", size=%zu\n", name, size);
+        fprintf(file, "| list=\"%s\", total=%s\n", name, SizeToString(size).c_str());
         for (Block *curr = (Block*)head; curr; curr = curr->GetNext())
             fprintf(file, "| | node=0x%016zx, data=0x%016zx, size=%zu, next=0x%016zx, head=%2zu, annotation:'%s'\n", (size_t)curr, (size_t)curr->GetData(), (size_t)curr->GetSize(), (size_t)curr->GetNext(), (size_t)curr->IsHead(), curr->m_Annotation.c_str());
         fprintf(file, "|\n");
@@ -543,9 +521,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    EMemStatus MemoryManager::PrintHostAllocs(FILE* file, const char* name, const list<HostAlloc>& allocs) const
+    EMemStatus MemoryManager::PrintHostAllocs(FILE* file, const char* name, const list<HostAlloc>& allocs, size_t total) const
     {
-        fprintf(file, "| list=\"%s\", size=%zu\n", name, m_AllocatedHostPinnedMemSize);
+        fprintf(file, "| list=\"%s\", total=%s\n", name, SizeToString(total).c_str());
         for (auto& a : allocs)
             fprintf(file, "| | data=0x%016zx, size=%zu, annotation:'%s'\n", (size_t)a.ptr, (size_t)a.size, a.annotation.c_str());
         fprintf(file, "|\n");
@@ -561,11 +539,13 @@ namespace Neuro
         MEM_CHECK(GetUsedMemoryUnsafe(usedMemory));
         MEM_CHECK(GetFreeMemoryUnsafe(freeMemory));
 
-        fprintf(file, ">> stream=0x%016zx, device_used=%zuKB, device_free=%zuKB, device_peak=%zuKB, host_pinned_used=%zuKB, host_pinned_peak=%zuKB, host_used=%zuKB, host_peak=%zuKB\n", streamCode, usedMemory / 1024, freeMemory / 1024, m_AllocatedDeviceMemPeakSize / 1024, m_AllocatedHostPinnedMemSize / 1024, m_AllocatedHostPinnedMemPeakSize / 1024, m_AllocatedHostMemSize / 1024, m_AllocatedHostMemPeakSize / 1024);
+        fprintf(file, ">> Device: stream=0x%016zx, used=%s, free=%s, peak=%s\n", streamCode, SizeToString(usedMemory).c_str(), SizeToString(freeMemory).c_str(), SizeToString(m_AllocatedDeviceMemPeakSize).c_str());
+        fprintf(file, ">> Host: pinned_used=%s, pinned_peak=%s, used=%s, peak=%s\n", SizeToString(m_AllocatedHostPinnedMemSize).c_str(), SizeToString(m_AllocatedHostPinnedMemPeakSize).c_str(), SizeToString(m_AllocatedHostMemSize).c_str(), SizeToString(m_AllocatedHostMemPeakSize).c_str());
+        fprintf(file, "\n");
         MEM_CHECK(PrintListUnsafe(file, "device_used", m_UsedBlocks));
         MEM_CHECK(PrintListUnsafe(file, "device_free", m_FreeBlocks));
-        MEM_CHECK(PrintHostAllocs(file, "host", m_HostAllocations));
-        MEM_CHECK(PrintHostAllocs(file, "host_pinned", m_HostPinnedAllocations));
+        MEM_CHECK(PrintHostAllocs(file, "host", m_HostAllocations, m_AllocatedHostMemSize));
+        MEM_CHECK(PrintHostAllocs(file, "host_pinned", m_HostPinnedAllocations, m_AllocatedHostPinnedMemSize));
         fprintf(file, "\n");
         fclose(file);
 
