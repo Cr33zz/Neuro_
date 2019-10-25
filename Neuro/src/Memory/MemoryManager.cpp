@@ -148,7 +148,6 @@ namespace Neuro
         size = ceilInt(size, HOST_ALLOC_GRANULARITY);
 
         CUDA_CHECK(cudaMallocHost(ptr, size));
-        memset(*ptr, 0xAB, size);
 
         m_AllocatedHostPinnedMemSize += size;
         m_AllocatedHostPinnedMemPeakSize = max(m_AllocatedHostPinnedMemSize, m_AllocatedHostPinnedMemPeakSize);
@@ -180,7 +179,6 @@ namespace Neuro
         OutputDebugString(ss.str().c_str());
 #endif
 
-        memset(ptr, 0xFE, it->size);
         CUDA_CHECK(cudaFreeHost(ptr));
         m_HostPinnedAllocations.erase(it);
         return MEM_STATUS_SUCCESS;
@@ -192,7 +190,6 @@ namespace Neuro
         size = ceilInt(size, HOST_ALLOC_GRANULARITY);
         
         *ptr = malloc(size);
-        memset(*ptr, 0xAB, size);
 
         m_AllocatedHostMemSize += size;
         m_AllocatedHostMemPeakSize = max(m_AllocatedHostMemSize, m_AllocatedHostMemPeakSize);
@@ -225,7 +222,6 @@ namespace Neuro
         OutputDebugString(ss.str().c_str());
 #endif
 
-        memset(ptr, 0xFE, it->size);
         free(ptr);
         m_HostAllocations.erase(it);
         return MEM_STATUS_SUCCESS;
