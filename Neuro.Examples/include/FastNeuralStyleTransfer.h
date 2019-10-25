@@ -32,12 +32,12 @@ public:
         const float STYLE_WEIGHT = 1e-2f;*/
 
         const float LEARNING_RATE = 0.001f;
-        const int NUM_EPOCHS = 200;
-        const uint32_t BATCH_SIZE = 1;
+        const int NUM_EPOCHS = 2;
+        const uint32_t BATCH_SIZE = 4;
 
         const string STYLE_FILE = "data/style.jpg";
         const string TEST_FILE = "data/content.jpg";
-        const string CONTENT_FILES_DIR = "e:/Downloads/fake_coco";
+        const string CONTENT_FILES_DIR = "e:/Downloads/coco14";
 
         Tensor::SetForcedOpMode(GPU);
 
@@ -167,7 +167,9 @@ public:
 
                 if (i % 1 == 0)
                 {
-                    auto genImage = *Session::Default()->Run({ stylizedContent }, { { content, &testImage } })[0];
+                    auto result = Session::Default()->Run({ stylizedContent, weightedContentLoss, weightedStyleLoss }, { { content, &testImage } });
+                    cout << "test content_loss: " << (*result[1])(0) << " style_loss: " << (*result[2])(0) << endl;
+                    auto genImage = *result[0];
                     VGG16::UnprocessImage(genImage, NCHW);
                     genImage.SaveAsImage("fnst_e" + PadLeft(to_string(e), 4, '0') + "_b" + PadLeft(to_string(i), 4, '0') + ".png", false);
                 }
