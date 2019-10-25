@@ -46,8 +46,8 @@ namespace NeuroTests
             auto output = input.Mul(Tensor(Shape(2, 5)).FillWithRand());
             output.Name("output");
 
-            Debug::LogAllOutputs(true);
-            Debug::LogAllGrads(true);
+            /*Debug::LogAllOutputs(true);
+            Debug::LogAllGrads(true);*/
 
             float lastLoss = 0.f;
             for (int step = 0; step < 5; ++step)
@@ -74,8 +74,8 @@ namespace NeuroTests
         {
             GlobalRngSeed(1337);
 
-            Debug::LogAllOutputs(true);
-            Debug::LogAllGrads(true);
+            /*Debug::LogAllOutputs(true);
+            Debug::LogAllGrads(true);*/
 
             auto model = Sequential(name);
             model.AddLayer(new Dense(4, 300, new ReLU()));
