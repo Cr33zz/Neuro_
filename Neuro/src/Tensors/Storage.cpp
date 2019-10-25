@@ -78,6 +78,12 @@ namespace Neuro
     {
         if (this != &other)
         {
+            if (m_OffloadEvent)
+                CUDA_CHECK(cudaEventDestroy(m_OffloadEvent));
+            if (m_PrefetchEvent)
+                CUDA_CHECK(cudaEventDestroy(m_PrefetchEvent));
+            FreeOnDevice(true);
+            FreeOnHost();
             m_Type = other.m_Type;
             m_AllocSize = other.m_AllocSize;
             m_Size = other.m_Size;
@@ -85,10 +91,10 @@ namespace Neuro
             m_DeviceDataRefCount = other.m_DeviceDataRefCount;
             m_Name = other.m_Name;
             m_DataLocation = other.m_DataLocation;
-            m_DataPtr = other.m_DataPtr;
-            other.m_DataPtr = nullptr;
             m_DeviceDataPtr = other.m_DeviceDataPtr;
             other.m_DeviceDataPtr = nullptr;
+            m_DataPtr = other.m_DataPtr;
+            other.m_DataPtr = nullptr;
             m_OffloadEvent = other.m_OffloadEvent;
             other.m_OffloadEvent = nullptr;
             m_PrefetchRequested = other.m_PrefetchRequested;
