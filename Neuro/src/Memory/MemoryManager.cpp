@@ -10,6 +10,7 @@
 #include "Tensors/Cuda/CudaErrorCheck.h"
 
 //#define ENABLE_MEMORY_LOGS
+
 //#define MEMSET_ALLOCATED_MEMORY
 
 #define DEVICE_ALLOC_GRANULARITY 512
@@ -405,6 +406,12 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void DeviceMemoryManager::InternalAllocate(void** ptr, size_t size, const string& annotation)
     {
+        size_t freeBytes, totalBytes;
+        cudaMemGetInfo(&freeBytes, &totalBytes);
+
+        if (freeBytes < size)
+            DumpMemoryState("device_out_of_memory.log");
+
         MEM_DEBUG_INFO("cudaMalloc(" << size << ")");
         CUDA_CHECK(cudaMalloc(ptr, size));
     }
