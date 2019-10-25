@@ -65,7 +65,6 @@ namespace Neuro
         if (this != &t)
         {
             m_Storage = t.m_Storage;
-            m_Name = t.m_Name;
             m_Shape = t.m_Shape;
             m_Op = t.m_Op;
         }
@@ -338,6 +337,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
 	void Tensor::Mul(bool transposeT, const Tensor& t, Tensor& result) const
 	{
+        NEURO_ASSERT(!transposeT, "");
 		assert((!transposeT && Width() == t.Height()) || (transposeT && Width() == t.Width()));
 		assert(t.Depth() == Depth());
         assert(result.Batch() == max(Batch(), t.Batch()));

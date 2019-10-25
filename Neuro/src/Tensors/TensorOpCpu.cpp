@@ -67,28 +67,28 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
 	void TensorOpCpu::MatMul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
 	{
-		const Tensor& t1Temp = transposeT1 ? t1.Transposed() : t1;
-        const Tensor& t2Temp = transposeT2 ? t2.Transposed() : t2;
-
-		t1Temp.CopyToHost();
-		t2Temp.CopyToHost();
+        NEURO_ASSERT(!transposeT1, "");
+        NEURO_ASSERT(!transposeT2, "");
+		
+		t1.CopyToHost();
+		t2.CopyToHost();
         output.OverrideHost();
 		output.Zero();
 
-        uint32_t N = t1Temp.Height();
-        uint32_t M = t2Temp.Width();
-        uint32_t K = t1Temp.Width();
+        uint32_t N = t1.Height();
+        uint32_t M = t2.Width();
+        uint32_t K = t1.Width();
 
 		for (uint32_t n = 0; n < output.Batch(); ++n)
 		{
-            uint32_t t1N = min(n, t1Temp.Batch() - 1);
-            uint32_t t2N = min(n, t2Temp.Batch() - 1);
+            uint32_t t1N = min(n, t1.Batch() - 1);
+            uint32_t t2N = min(n, t2.Batch() - 1);
 
-			for (uint32_t d = 0; d < t1Temp.Depth(); ++d)
+			for (uint32_t d = 0; d < t1.Depth(); ++d)
 			for (uint32_t i = 0; i < N; ++i)
 			for (uint32_t j = 0; j < M; ++j)
 			for (uint32_t k = 0; k < K; ++k)
-				output(j, i, d, n) += t1Temp(k, i, d, t1N) * t2Temp(j, k, d, t2N);
+				output(j, i, d, n) += t1(k, i, d, t1N) * t2(j, k, d, t2N);
 		}
 	}
 
