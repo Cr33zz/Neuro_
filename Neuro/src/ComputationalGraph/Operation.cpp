@@ -64,9 +64,6 @@ namespace Neuro
 
         //NEURO_ASSERT(ValidateArrayModifiedAfterAlloc(m_Output.Values(), m_Output.Length()), "");
 
-        if (Debug::ShouldLogOutput(Name()))
-            m_Output.DebugDumpValues(Replace(Name() + "_step" + to_string(m_LastComputeStep) + ".log", "/", "_"));
-
         m_Output.Offload(); // at this point output won't change so start offloading it, it will be released when all consumers used it
         return m_Output;
     }
@@ -83,15 +80,6 @@ namespace Neuro
 
         ComputeGradientInternal(grad);
 
-        if (Debug::ShouldLogGrad(Name()))
-        {
-            m_OutputGrad.DebugDumpValues(Replace(Name() + "_output0_grad_step" + to_string(m_LastComputeStep) + ".log", "/", "_"));
-            for (size_t i = 0; i < m_InputsGrads.size(); ++i)
-                m_InputsGrads[i].DebugDumpValues(Replace(Name() + "_input" + to_string(i) + "_grad_step" + to_string(m_LastComputeStep) + ".log", "/", "_"));
-        }
-
-        m_Output.DecRef(); // output is no longer needed, we've already used it to compute input gradients
-        m_OutputGrad.ReleaseData(); // output grad is no longer needed, we've already used it to compute input gradients
         return m_InputsGradsPtrs;
     }
 

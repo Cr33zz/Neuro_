@@ -999,8 +999,6 @@ namespace Neuro
             *loss = (*results[m_Metrics[Loss].second])(0) / (float)outputs.size();
         if (acc && (m_TrackedMetrics & Accuracy))
             *acc = (*results[m_Metrics[Accuracy].second])(0);
-
-        Debug::Step();
     }
 
     //////////////////////////////////////////////////////////////////////////

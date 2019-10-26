@@ -1,4 +1,6 @@
-﻿#include "ComputationalGraph/Graph.h"
+﻿#include <fstream>
+
+#include "ComputationalGraph/Graph.h"
 #include "ComputationalGraph/TensorLike.h"
 #include "ComputationalGraph/Placeholder.h"
 #include "ComputationalGraph/Variable.h"
@@ -244,8 +246,36 @@ namespace Neuro
                     }
                 }
 
-                if (node->IsOp())
-                    static_cast<Operation*>(node)->ComputeGradient(nodeOutputGrad);
+                Operation* opNode = node->IsOp() ? static_cast<Operation*>(node) : nullptr;
+                
+                if (opNode)
+                {
+                    opNode->ComputeGradient(nodeOutputGrad);
+
+                    if (Debug::ShouldLogGrad(node->Name()))
+                    {
+                        nodeOutputGrad.DebugDumpValues(Replace(node->Name() + "_output0_grad_step" + to_string(Debug::GetStep()) + ".log", "/", "_"));
+                        for (size_t i = 0; i < opNode->InputsGrads().size(); ++i)
+                        {
+                            if (opNode->InputNodes()[i]->CareAboutGradient())
+                                opNode->InputsGrads()[i].DebugDumpValues(Replace(node->Name() + "_input" + to_string(i) + "_grad_step" + to_string(Debug::GetStep()) + ".log", "/", "_"));
+                            else
+                            {
+                                ofstream s(Replace(node->Name() + "_input" + to_string(i) + "_grad_step" + to_string(Debug::GetStep()) + ".log", "/", "_"));
+                                s << "doesn't care about gradient";
+                                s.close();
+                            }
+                        }
+                    }
+
+                    node->Output().DecRef(); // output is no longer needed, we've already used it to compute input gradients
+                    node->OutputGrad().ReleaseData(); // output grad is no longer needed, we've already used it to compute input gradients
+                }
+                else
+                {
+                    if (Debug::ShouldLogGrad(node->Name()))
+                        nodeOutputGrad.DebugDumpValues(Replace(node->Name() + "_grad_step" + to_string(Debug::GetStep()) + ".log", "/", "_"));
+                }
             }
 
             // all consumers contributing to this node's output grad can be notified so they can release their corresponding input gradient
