@@ -14,8 +14,8 @@ namespace NeuroTests
             auto x = Variable(Shape(3, 4, 1, 2));
             auto gamma = Variable(Shape(3, 4, 1, 1));
             auto beta = Variable(gamma.GetShape());
-            auto runningMean = Variable(gamma.GetShape());
-            auto runningVar = Variable(gamma.GetShape());
+            auto runningMean = Variable(zeros(gamma.GetShape()));
+            auto runningVar = Variable(ones(gamma.GetShape()));
             auto training = Constant(1.f);
             Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new BatchNormalizeOp(&x, &gamma, &beta, &runningMean, &runningVar, 0.9f, 0.001f, &training)).get(), {0,0,0,1,1,1}));
         }
@@ -34,8 +34,8 @@ namespace NeuroTests
             auto x = Variable(Shape(3, 4, 5, 2));
             auto gamma = Variable(Shape(1, 1, 5, 1));
             auto beta = Variable(gamma.GetShape());
-            auto runningMean = Variable(gamma.GetShape());
-            auto runningVar = Variable(gamma.GetShape());
+            auto runningMean = Variable(zeros(gamma.GetShape()));
+            auto runningVar = Variable(ones(gamma.GetShape()));
             auto training = Constant(1.f);
             Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new BatchNormalizeOp(&x, &gamma, &beta, &runningMean, &runningVar, 0.9f, 0.001f, &training)).get(), { 0,0,0,1,1,1 }));
         }
@@ -290,7 +290,7 @@ namespace NeuroTests
 
             op->ComputeGradient(outputGrad);
 
-            auto result = Tensor(output.GetShape());
+            auto result = Tensor(zeros(output.GetShape()));
 
             for (uint32_t n = 0; n < (int)inputs.size(); ++n)
             {

@@ -690,7 +690,7 @@ namespace NeuroTests
 
         TEST_METHOD(Pool_Max_Valid_NHWC_CompareWithCpuResult)
         {
-            Tensor t(Shape(27, 27, 2, 3)); t.FillWithRand();
+            Tensor t(Shape(2, 27, 27, 3)); t.FillWithRand();
             
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t.Pool2D(3, 2, EPoolingMode::Max, 0, NHWC);)
@@ -703,7 +703,7 @@ namespace NeuroTests
 
         TEST_METHOD(Pool_Avg_Valid_NHWC_CompareWithCpuResult)
         {
-            Tensor t(Shape(27, 27, 2, 3)); t.FillWithRand();
+            Tensor t(Shape(2, 27, 27, 3)); t.FillWithRand();
 
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t.Pool2D(3, 2, EPoolingMode::Avg, 0, NHWC);)
@@ -776,7 +776,7 @@ namespace NeuroTests
 
         TEST_METHOD(PoolGradient_Max_Valid_NHWC_CompareWithCpuResult)
         {
-            Tensor input(Shape(27, 27, 2, 3)); input.FillWithRand();
+            Tensor input(Shape(2, 27, 27, 3)); input.FillWithRand();
             Tensor output = input.Pool2D(3, 2, EPoolingMode::Max, 0, NHWC);
             Tensor outputGradient(output.GetShape()); outputGradient.FillWithRand();
 
@@ -793,7 +793,7 @@ namespace NeuroTests
 
         TEST_METHOD(PoolGradient_Avg_Valid_NHWC_CompareWithCpuResult)
         {
-            Tensor input(Shape(27, 27, 2, 3)); input.FillWithRand();
+            Tensor input(Shape(2, 27, 27, 3)); input.FillWithRand();
             Tensor output = input.Pool2D(3, 2, EPoolingMode::Avg, 0, NHWC);
             Tensor outputGradient(output.GetShape()); outputGradient.FillWithRand();
 
@@ -992,7 +992,7 @@ namespace NeuroTests
             Tensor gamma(Shape(3, 4, 1, 1)); gamma.FillWithValue(1);//gamma.FillWithRand();
             Tensor beta(gamma.GetShape()); beta.FillWithValue(0);//beta.FillWithRand();
             float epsilon = 0.001f;
-            Tensor runningMean(gamma.GetShape()); runningMean.Zero();//runningMean.FillWithRand();
+            Tensor runningMean(zeros(gamma.GetShape()));
             Tensor runningVariance(gamma.GetShape()); runningVariance.FillWithValue(1);// runningVariance.FillWithRand(-1, 0, 1);
 
             Tensor::SetForcedOpMode(CPU);
@@ -1012,7 +1012,7 @@ namespace NeuroTests
             Tensor gamma(Shape(1, 1, 5, 1)); gamma.FillWithValue(1);//gamma.FillWithRand();
             Tensor beta(gamma.GetShape()); beta.FillWithValue(0);//beta.FillWithRand();
             float epsilon = 0.001f;
-            Tensor runningMean(gamma.GetShape()); runningMean.Zero();//runningMean.FillWithRand();
+            Tensor runningMean(zeros(gamma.GetShape()));
             Tensor runningVariance(gamma.GetShape()); runningVariance.FillWithValue(1);// runningVariance.FillWithRand(-1, 0, 1);
 
             Tensor::SetForcedOpMode(CPU);

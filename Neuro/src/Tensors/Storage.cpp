@@ -356,6 +356,7 @@ namespace Neuro
         if (!m_DeviceDataPtr)
             AllocateOnDevice();
 
+        NEURO_ASSERT(m_DataPtr, "");
         NEURO_ASSERT(m_DeviceDataPtr, "");
 
 #ifndef DISABLE_OFFLOAD_PREFETCH

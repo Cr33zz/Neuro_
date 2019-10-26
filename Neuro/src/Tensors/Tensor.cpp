@@ -1381,7 +1381,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::Pool2D(uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t padding, EDataFormat dataFormat) const
 	{
-		Tensor result(GetConvOutputShape(GetShape(), GetShape().Depth(), filterSize, filterSize, stride, padding, padding, dataFormat));
+		Tensor result(GetPooling2DOutputShape(GetShape(), filterSize, filterSize, stride, padding, padding, dataFormat));
 		Pool2D(filterSize, stride, type, padding, dataFormat, result);
 
 		return result;
@@ -1503,11 +1503,17 @@ namespace Neuro
     {
         assert(stride > 0);
         if (dataFormat == NCHW)
+        {
+            NEURO_ASSERT((inputShape.Width() + 2 * paddingX - kernelWidth) > 0, "");
+            NEURO_ASSERT((inputShape.Height() + 2 * paddingY - kernelHeight) > 0, "");
             return Shape((int)floor((inputShape.Width() + 2 * paddingX - kernelWidth) / (float)stride) + 1, 
                          (int)floor((inputShape.Height() + 2 * paddingY - kernelHeight) / (float)stride) + 1,
                          inputShape.Depth(),
                          inputShape.Batch());
+        }
 
+        NEURO_ASSERT((inputShape.Len(1) + 2 * paddingX - kernelWidth) > 0, "");
+        NEURO_ASSERT((inputShape.Len(2) + 2 * paddingY - kernelHeight) > 0, "");
         return Shape(inputShape.Len(0), 
                      (int)floor((inputShape.Len(1) + 2 * paddingX - kernelWidth) / (float)stride) + 1,
                      (int)floor((inputShape.Len(2) + 2 * paddingY - kernelHeight) / (float)stride) + 1,
@@ -1519,11 +1525,17 @@ namespace Neuro
     {
         assert(stride > 0);
         if (dataFormat == NCHW)
+        {
+            NEURO_ASSERT((inputShape.Width() + 2 * paddingX - kernelWidth) > 0, "");
+            NEURO_ASSERT((inputShape.Height() + 2 * paddingY - kernelHeight) > 0, "");
             return Shape((int)floor((inputShape.Width() + 2 * paddingX - kernelWidth) / (float)stride) + 1, 
                          (int)floor((inputShape.Height() + 2 * paddingY - kernelHeight) / (float)stride) + 1,
                          kernelsNum,
                          inputShape.Batch());
+        }
 
+        NEURO_ASSERT((inputShape.Len(1) + 2 * paddingX - kernelWidth) > 0, "");
+        NEURO_ASSERT((inputShape.Len(2) + 2 * paddingY - kernelHeight) > 0, "");
         return Shape(kernelsNum, 
                      (int)floor((inputShape.Len(1) + 2 * paddingX - kernelWidth) / (float)stride) + 1,
                      (int)floor((inputShape.Len(2) + 2 * paddingY - kernelHeight) / (float)stride) + 1,
@@ -1535,11 +1547,17 @@ namespace Neuro
     {
         assert(stride > 0);
         if (dataFormat == NCHW)
+        {
+            NEURO_ASSERT(((inputShape.Width() - 1) * stride + kernelWidth - 2 * paddingX) > 0, "");
+            NEURO_ASSERT(((inputShape.Height() - 1) * stride + kernelHeight - 2 * paddingY) > 0, "");
             return Shape((inputShape.Width() - 1) * stride + kernelWidth - 2 * paddingX,
                          (inputShape.Height() - 1) * stride + kernelHeight - 2 * paddingY,
                          outputDepth, 
                          inputShape.Batch());
+        }
 
+        NEURO_ASSERT(((inputShape.Len(1) - 1) * stride + kernelWidth - 2 * paddingX) > 0, "");
+        NEURO_ASSERT(((inputShape.Len(2) - 1) * stride + kernelHeight - 2 * paddingY) > 0, "");
         return Shape(outputDepth, 
                      (inputShape.Len(1) - 1) * stride + kernelWidth - 2 * paddingX,
                      (inputShape.Len(2) - 1) * stride + kernelHeight - 2 * paddingY,

@@ -647,8 +647,8 @@ namespace Neuro
             runningMean->CopyToDevice();
         if (runningVar)
             runningVar->CopyToDevice();
-        saveMean.CopyToDevice();
-        saveInvVariance.CopyToDevice();
+        saveMean.OverrideDevice();
+        saveInvVariance.OverrideDevice();
         output.OverrideDevice();
 
         cudnnTensorDescriptor_t inputOutputDesc; cudnnCreateTensorDescriptor(&inputOutputDesc);
