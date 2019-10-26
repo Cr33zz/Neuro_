@@ -77,7 +77,9 @@ namespace Neuro
         m_Beta = new Variable(zeros(paramsShape), "beta");
 
         m_RunningMean = new Variable(zeros(paramsShape), "running_mean");
+        m_RunningMean->SetTrainable(false);
         m_RunningVar = new Variable(ones(paramsShape), "running_var");
+        m_RunningVar->SetTrainable(false);
 
         m_Built = true;
     }
