@@ -3,6 +3,7 @@
 //////////////////////////////////////////////////////////////////////////
 TensorLike* FastNeuralStyleTransfer::CreateTransformerNet(TensorLike* input, TensorLike* training)
 {
+    NameScope scope("transform_net");
     auto convLayer = [&](TensorLike* input, uint32_t filtersNum, uint32_t filterSize, uint32_t stride = 1, bool doUpSample = false, bool doNorm = true, bool doReLU = true)
     {
         static int id = 1;

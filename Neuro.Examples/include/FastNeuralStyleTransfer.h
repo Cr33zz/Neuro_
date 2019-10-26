@@ -15,6 +15,9 @@
 #include "Neuro.h"
 #include "VGG19.h"
 
+//#define SLOW
+#define FAST_SINGLE_CONTENT
+
 namespace fs = std::experimental::filesystem;
 using namespace Neuro;
 
@@ -25,21 +28,35 @@ public:
     {
         const uint32_t IMAGE_WIDTH = 256;
         const uint32_t IMAGE_HEIGHT = 256;
-
-        const float CONTENT_WEIGHT = 400.f;
-        const float STYLE_WEIGHT = 0.1f;
-        /*const float CONTENT_WEIGHT = 1e3f;
-        const float STYLE_WEIGHT = 1e-2f;*/
-
-        const float LEARNING_RATE = 0.001f;
         const int NUM_EPOCHS = 2;
+        
+#ifdef SLOW
+        const float CONTENT_WEIGHT = 1e3f;
+        const float STYLE_WEIGHT = 1e-2f;
+        const float LEARNING_RATE = 5.0f;
+        const uint32_t BATCH_SIZE = 1;
+#else
+        const float CONTENT_WEIGHT = 400;
+        const float STYLE_WEIGHT = 0.1f;
+        const float LEARNING_RATE = 0.001f;
+
+#       ifdef FAST_SINGLE_CONTENT
+        const uint32_t BATCH_SIZE = 1;
+#       else
         const uint32_t BATCH_SIZE = 4;
+#       endif
+#endif
 
         const string STYLE_FILE = "data/style.jpg";
         const string TEST_FILE = "data/content.jpg";
+#       ifdef FAST_SINGLE_CONTENT
+        const string CONTENT_FILES_DIR = "e:/Downloads/fake_coco";
+#       else
         const string CONTENT_FILES_DIR = "e:/Downloads/coco14";
+#       endif
 
         Tensor::SetForcedOpMode(GPU);
+        GlobalRngSeed(1337);
 
         Tensor testImage = LoadImage(TEST_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
         testImage.SaveAsImage("_test.jpg", false);
@@ -61,7 +78,7 @@ public:
             auto contentCache = ofstream(CONTENT_FILES_DIR + "_cache");
 
             // build content files list
-            for (const auto & entry : fs::directory_iterator(CONTENT_FILES_DIR))
+            for (const auto& entry : fs::directory_iterator(CONTENT_FILES_DIR))
             {
                 contentFiles.push_back(entry.path().generic_string());
                 contentCache << contentFiles.back() << endl;
@@ -77,15 +94,15 @@ public:
 
         cout << "Pre-computing style features and grams...\n";
 
-        vector<TensorLike*> contentOutputs = { vggModel->Layer("block2_conv2")->Outputs()[0] };
-        vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv2")->Outputs()[0],
-                                             vggModel->Layer("block2_conv2")->Outputs()[0],
-                                             vggModel->Layer("block3_conv3")->Outputs()[0],
-                                             vggModel->Layer("block4_conv3")->Outputs()[0] };//,
-                                             //vggModel->Layer("block5_conv1")->Outputs()[0] };
+        vector<TensorLike*> contentOutputs = { vggModel->Layer("block5_conv2")->Outputs()[0] };
+        vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv1")->Outputs()[0],
+                                             vggModel->Layer("block2_conv1")->Outputs()[0],
+                                             vggModel->Layer("block3_conv1")->Outputs()[0],
+                                             vggModel->Layer("block4_conv1")->Outputs()[0],
+                                             vggModel->Layer("block5_conv1")->Outputs()[0] };
 
-        auto vggFeaturesModel = Flow(vggModel->InputsAt(-1), MergeVectors({ contentOutputs, styleOutputs }));
-        
+        auto vggFeaturesModel = Flow(vggModel->InputsAt(-1), MergeVectors({ contentOutputs, styleOutputs }), "vgg_features");
+
         // pre-compute style features of style image (we only need to do it once since that image won't change either)
         Tensor styleImage = LoadImage(STYLE_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
         styleImage.SaveAsImage("_style.jpg", false);
@@ -98,16 +115,20 @@ public:
             Tensor* x = styleFeatures[i];
             uint32_t elementsPerFeature = x->Width() * x->Height();
             auto features = x->Reshaped(Shape(elementsPerFeature, x->Depth()));
-            styleGrams.push_back(new Constant(features.Mul(features.Transposed()).Mul(1.f / (elementsPerFeature * x->Depth())), "style_" + to_string(i) + "_gram"));
+            styleGrams.push_back(new Constant(features.Mul(features.Transposed()).Mul(1.f / elementsPerFeature), "style_" + to_string(i) + "_gram"));
         }
 
         cout << "Building computational graph...\n";
 
         // generate final computational graph
+        auto training = new Placeholder(Shape(1), "training");
         auto content = new Placeholder(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), "content");
 
-        //auto outputImg = new Variable(contentImage, "output_image");
-        auto stylizedContent = CreateTransformerNet(content, new Constant(1.f)); // normalize input images
+#ifdef SLOW
+        auto stylizedContent = new Variable(testImage, "output_image");
+#else
+        auto stylizedContent = CreateTransformerNet(content, training);
+#endif
 
         auto stylizedFeatures = vggFeaturesModel(stylizedContent);
 
@@ -131,51 +152,82 @@ public:
 
         Tensor contentBatch(Shape::From(content->GetShape(), BATCH_SIZE));
 
+#if defined(SLOW) || defined(FAST_SINGLE_CONTENT)
+        size_t steps = 1000;
+#else
         size_t samples = contentFiles.size();
         size_t steps = samples / BATCH_SIZE;
+#endif
 
-        for (int e = 1; e <= NUM_EPOCHS; ++e)
+        /*Debug::LogAllOutputs(true);
+        Debug::LogAllGrads(true);*/
+
+        auto trainingOn = Tensor({ 1 }, Shape(1), "training_on");
+        auto trainingOff = Tensor({ 0 }, Shape(1), "training_off");
+
+        for (int e = 0; e < NUM_EPOCHS; ++e)
         {
-            cout << "Epoch " << e << endl;
+            cout << "Epoch " << e+1 << endl;
 
-            /*Tqdm progress(steps, 0);
-            progress.ShowStep(true).ShowPercent(false).ShowElapsed(false).EnableSeparateLines(true);*/
-            for (int i = 0; i < steps; ++i)
+            Tqdm progress(steps, 0);
+            progress.ShowStep(true).ShowPercent(false).ShowElapsed(false);// .EnableSeparateLines(true);
+            for (int i = 0; i < steps; ++i, progress.NextStep())
             {
                 contentBatch.OverrideHost();
-                //load images
+#ifdef SLOW
+                testImage.CopyTo(contentBatch);
+                // test image is already preprocessed
+#else
                 for (int j = 0; j < BATCH_SIZE; ++j)
-                    LoadImage(contentFiles[i * BATCH_SIZE + j], &contentBatch.Values()[0] + j * contentBatch.BatchLength(), content->GetShape().Width(), content->GetShape().Height(), NCHW);
-
+                    LoadImage(contentFiles[(i * BATCH_SIZE + j)%contentFiles.size()], &contentBatch.Values()[0] + j * contentBatch.BatchLength(), content->GetShape().Width(), content->GetShape().Height(), NCHW);
                 VGG16::PreprocessImage(contentBatch, NCHW);
+#endif
+
+                //contentBatch.SaveAsImage("batch" + to_string(i) + ".jpg", false);
+
                 auto contentFeatures = *vggFeaturesModel.Eval(contentOutputs, { { (Placeholder*)(vggFeaturesModel.InputsAt(0)[0]), &contentBatch } })[0];
 
-                auto results = Session::Default()->Run({ stylizedContent, contentLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], totalLoss, minimize }, 
-                                                       { { content, &contentBatch }, { targetContentFeatures, &contentFeatures } });
-
-                //MemoryManager::Default().PrintMemoryState("mem.log");
-
-                /*uint64_t cLoss = (uint64_t)(*results[1])(0);
+                /*auto results = Session::Default()->Run({ stylizedContent, contentLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], totalLoss, minimize }, 
+                                                       { { content, &contentBatch }, { targetContentFeatures, &contentFeatures }, { training, &trainingOn } });
+                
+                uint64_t cLoss = (uint64_t)(*results[1])(0);
                 uint64_t sLoss1 = (uint64_t)(*results[2])(0);
                 uint64_t sLoss2 = (uint64_t)(*results[3])(0);
                 uint64_t sLoss3 = (uint64_t)(*results[4])(0);
                 uint64_t sLoss4 = (uint64_t)(*results[5])(0);
                 stringstream extString;
-                extString << " - content_l: " << cLoss << " - style1_l: " << sLoss1 << " - style2_l: " << sLoss2 << 
-                    " - style3_l: " << sLoss3 << " - style4_l: " << sLoss4 << " - total_l: " << (cLoss + sLoss1 + sLoss2 + sLoss3 + sLoss4);
+                extString << setprecision(4) << " - cL: " << cLoss << " - s1L: " << sLoss1 << " - s2L: " << sLoss2 <<
+                    " - s3L: " << sLoss3 << " - s4L: " << sLoss4 << " - tL: " << (cLoss + sLoss1 + sLoss2 + sLoss3 + sLoss4);
+                progress.SetExtraString(extString.str());*/
+
+                auto results = Session::Default()->Run({ stylizedContent, weightedContentLoss, weightedStyleLoss, totalLoss, minimize },
+                                                       { { content, &contentBatch }, { targetContentFeatures, &contentFeatures }, { training, &trainingOn } });
+
+                stringstream extString;
+                extString << setprecision(4) << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - total_l: " << (*results[3])(0);
                 progress.SetExtraString(extString.str());
-                progress.NextStep();*/
 
                 if (i % 10 == 0)
                 {
-                    auto result = Session::Default()->Run({ stylizedContent, weightedContentLoss, weightedStyleLoss }, { { content, &testImage } });
+                    auto genImage = *results[0];
+                    VGG16::UnprocessImage(genImage, NCHW);
+                    genImage.SaveAsImage("fnst_e" + PadLeft(to_string(e), 4, '0') + "_b" + PadLeft(to_string(i), 4, '0') + ".png", false);
+                    /*auto result = Session::Default()->Run({ stylizedContent, weightedContentLoss, weightedStyleLoss }, { { content, &testImage }, { training, &trainingOff } });
                     cout << "test content_loss: " << (*result[1])(0) << " style_loss: " << (*result[2])(0) << endl;
                     auto genImage = *result[0];
                     VGG16::UnprocessImage(genImage, NCHW);
-                    genImage.SaveAsImage("fnst_e" + PadLeft(to_string(e), 4, '0') + "_b" + PadLeft(to_string(i), 4, '0') + ".png", false);
+                    genImage.SaveAsImage("fnst_e" + PadLeft(to_string(e), 4, '0') + "_b" + PadLeft(to_string(i), 4, '0') + ".png", false);*/
                 }
             }
         }
+
+        /*{
+            auto result = Session::Default()->Run({ stylizedContent, weightedContentLoss, weightedStyleLoss }, { { content, &testImage }, { training, &trainingOff } });
+            cout << "test content_loss: " << (*result[1])(0) << " style_loss: " << (*result[2])(0) << endl;
+            auto genImage = *result[0];
+            VGG16::UnprocessImage(genImage, NCHW);
+            genImage.SaveAsImage("fnst.png", false);
+        }*/
 
         //auto results = Session::Default()->Run({ outputImg }, {});
         //auto genImage = *results[0];

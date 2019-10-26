@@ -21,7 +21,7 @@ public:
     const uint32_t IMAGE_HEIGHT = 300;
 
     const string CONTENT_FILE = "content.jpg";
-    const string STYLE_FILE = "style_legion.jpg";
+    const string STYLE_FILE = "style.jpg";
 
     void Run()
     {
@@ -36,8 +36,14 @@ public:
 
         assert(contentImage.GetShape() == styleImage.GetShape());
         
-        auto vggModel = VGG19::CreateModel(NCHW, contentImage.GetShape(), false);
+        auto vggModel = VGG16::CreateModel(NCHW, contentImage.GetShape(), false);
         vggModel->SetTrainable(false);
+
+        /*vector<TensorLike*> contentOutputs = { vggModel->Layer("block2_conv2")->Outputs()[0] };
+        vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv2")->Outputs()[0],
+                                             vggModel->Layer("block2_conv2")->Outputs()[0],
+                                             vggModel->Layer("block3_conv3")->Outputs()[0],
+                                             vggModel->Layer("block4_conv3")->Outputs()[0] };*/
 
         vector<TensorLike*> contentOutputs = { vggModel->Layer("block5_conv2")->Outputs()[0] };
         vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv1")->Outputs()[0], 
@@ -93,7 +99,7 @@ public:
         const int EPOCHS = 1000;
         Tqdm progress(EPOCHS, 10);
         progress.ShowStep(false).ShowElapsed(false);
-        for (int e = 1; e <= EPOCHS; ++e, progress.NextStep())
+        for (int e = 0; e < EPOCHS; ++e, progress.NextStep())
         {
             auto results = Session::Default()->Run({ outputImg, contentLoss, styleLoss, totalLoss, minimize }, {});
 
@@ -107,7 +113,7 @@ public:
             {
                 auto genImage = *results[0];
                 VGG16::UnprocessImage(genImage, NCHW);
-                genImage.SaveAsImage("neural_transfer_" + to_string(e) + ".png", false);
+                genImage.SaveAsImage("nst_" + to_string(e) + ".png", false);
             }
         }
 

@@ -3,7 +3,7 @@
 //////////////////////////////////////////////////////////////////////////
 Neuro::TensorLike* NeuralStyleTransfer::GramMatrix(TensorLike* x, const string& name)
 {
-    NameScope scope(name + "_gram_matrix");
+    NameScope scope(name + "_gram");
     assert(x->GetShape().Batch() == 1);
 
     uint32_t elementsPerFeature = x->GetShape().Width() * x->GetShape().Height();
