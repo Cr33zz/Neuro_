@@ -733,7 +733,7 @@ namespace Neuro
                     {
                         for (int poolW = 0; poolW < (int)filterSize; ++poolW)
                         {
-                            float value = input.TryGet(-numeric_limits<float>().max(), w + poolW, h + poolH, outD, outN);
+                            float value = input.TryGet(-numeric_limits<float>().max(), outD, w + poolW, h + poolH, outN);
                             if (value == output(outD, outW, outH, outN))
                             {
                                 inputGradient.TrySet(inputGradient.TryGet(-numeric_limits<float>().max(), outD, w + poolW, h + poolH, outN) + outputGradient(outD, outW, outH, outN), outD, w + poolW, h + poolH, outN);
@@ -763,7 +763,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::UpSample2D(const Tensor& input, uint32_t scaleFactor, Tensor& output) const
     {
-        output.CopyToHost();
+        input.CopyToHost();
         output.OverrideHost();
         
         for (uint32_t n = 0; n < input.Batch(); ++n)
@@ -831,8 +831,8 @@ namespace Neuro
             runningMean->CopyToHost();
         if (runningVar)
             runningVar->CopyToHost();
-        saveMean.CopyToHost();
-        saveInvVariance.CopyToHost();
+        saveMean.OverrideHost();
+        saveInvVariance.OverrideHost();
         output.OverrideHost();
 
         EAxis axis;
