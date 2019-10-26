@@ -393,7 +393,7 @@ namespace Neuro
     DeviceMemoryManager::DeviceMemoryManager()
         : MemoryManagerBase(DEVICE_ALLOC_GRANULARITY, DEVICE_NATIVE_GRANULARITY)
     {
-        cudaStreamCreate(&m_MemoryStream);
+        CUDA_CHECK(cudaStreamCreate(&m_MemoryStream));
     }
 
     //////////////////////////////////////////////////////////////////////////
