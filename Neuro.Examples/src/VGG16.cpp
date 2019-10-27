@@ -40,6 +40,7 @@ Neuro::ModelBase* VGG16::CreateModel(EDataFormat dataFormat, Shape inputShape, b
     model->AddLayer(new Conv2D(512, 3, 1, 1, new ReLU(), dataFormat, "block5_conv2"));
     model->AddLayer(new Conv2D(512, 3, 1, 1, new ReLU(), dataFormat, "block5_conv3"));
     model->AddLayer(new MaxPooling2D(2, 2, 0, dataFormat, "block5_pool"));
+    
     if (includeTop)
     {
         model->AddLayer(new Flatten("flatten"));

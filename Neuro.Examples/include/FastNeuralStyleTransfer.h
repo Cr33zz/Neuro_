@@ -36,8 +36,8 @@ public:
         const float LEARNING_RATE = 1.0f;
         const uint32_t BATCH_SIZE = 1;
 #else
-        const float CONTENT_WEIGHT = 1000.f;
-        const float STYLE_WEIGHT = 0.01f;
+        const float CONTENT_WEIGHT = 7.5f;
+        const float STYLE_WEIGHT = 100.f;
         const float LEARNING_RATE = 0.001f;
 
 #       ifdef FAST_SINGLE_CONTENT
@@ -93,7 +93,7 @@ public:
 
         cout << "Pre-computing style features and grams...\n";
 
-        vector<TensorLike*> contentOutputs = { vggModel->Layer("block5_conv2")->Outputs()[0] };
+        vector<TensorLike*> contentOutputs = { vggModel->Layer("block4_conv2")->Outputs()[0] };
         vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv1")->Outputs()[0],
                                              vggModel->Layer("block2_conv1")->Outputs()[0],
                                              vggModel->Layer("block3_conv1")->Outputs()[0],
@@ -107,43 +107,45 @@ public:
         styleImage.SaveAsImage("_style.jpg", false);
         VGG16::PreprocessImage(styleImage, NCHW);
 
-        auto styleFeatures = vggFeaturesModel.Eval(styleOutputs, { { (Placeholder*)(vggFeaturesModel.Inputs()[0]), &styleImage } });
-        vector<Constant*> styleGrams;
-        for (size_t i = 0; i < styleFeatures.size(); ++i)
+        auto targetStyleFeatures = vggFeaturesModel.Eval(styleOutputs, { { (Placeholder*)(vggFeaturesModel.Inputs()[0]), &styleImage } });
+        vector<Constant*> targetStyleGrams;
+        for (size_t i = 0; i < targetStyleFeatures.size(); ++i)
         {
-            Tensor* x = styleFeatures[i];
+            Tensor* x = targetStyleFeatures[i];
             uint32_t elementsPerFeature = x->Width() * x->Height();
             auto features = x->Reshaped(Shape(elementsPerFeature, x->Depth()));
-            styleGrams.push_back(new Constant(features.Mul(features.Transposed()).Mul(1.f / elementsPerFeature), "style_" + to_string(i) + "_gram"));
+            targetStyleGrams.push_back(new Constant(features.Mul(features.Transposed()).Mul(1.f / x->GetShape().Length), "style_" + to_string(i) + "_gram"));
         }
 
         cout << "Building computational graph...\n";
 
         // generate final computational graph
         auto training = new Placeholder(Shape(1), "training");
-        auto contentPre = new Placeholder(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), "content");
+        auto input = new Placeholder(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), "input");
+        auto inputPre = VGG16::Preprocess(input, NCHW);
+
+        auto targetContentFeatures = vggFeaturesModel(inputPre)[0];
 
 #ifdef SLOW
-        TensorLike* stylizedContent = new Variable(Uniform::Random(0, 255, contentPre->GetShape()), "output_image");
+        TensorLike* stylizedContent = new Variable(Uniform::Random(0, 255, input->GetShape()), "output_image");
         stylizedContent = clip(stylizedContent, 0, 255);
 #else
-        auto stylizedContent = CreateTransformerNet(divide(contentPre, 255.f), training);
+        auto stylizedContent = CreateTransformerNet(divide(input, 255.f), training);
 #endif
 
         auto stylizedContentPre = VGG16::Preprocess(stylizedContent, NCHW);
         auto stylizedFeatures = vggFeaturesModel(stylizedContentPre);
 
         // compute content loss from first output...
-        auto targetContentFeatures = new Placeholder(contentOutputs[0]->GetShape(), "target_content_features");
         auto contentLoss = ContentLoss(targetContentFeatures, stylizedFeatures[0]);
         auto weightedContentLoss = multiply(contentLoss, CONTENT_WEIGHT);
         stylizedFeatures.erase(stylizedFeatures.begin());
 
         vector<TensorLike*> styleLosses;
         // ... and style losses from remaining outputs
-        assert(stylizedFeatures.size() == styleGrams.size());
+        assert(stylizedFeatures.size() == targetStyleGrams.size());
         for (size_t i = 0; i < stylizedFeatures.size(); ++i)
-            styleLosses.push_back(StyleLoss(styleGrams[i], stylizedFeatures[i], (int)i));
+            styleLosses.push_back(StyleLoss(targetStyleGrams[i], stylizedFeatures[i], (int)i));
         auto weightedStyleLoss = multiply(merge_avg(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "style_loss");
 
         auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
@@ -152,7 +154,7 @@ public:
         auto optimizer = Adam(LEARNING_RATE);
         auto minimize = optimizer.Minimize({ totalLoss });
 
-        Tensor contentBatch(Shape::From(contentPre->GetShape(), BATCH_SIZE));
+        Tensor contentBatch(Shape::From(input->GetShape(), BATCH_SIZE));
 
 #if defined(SLOW) || defined(FAST_SINGLE_CONTENT)
         size_t steps = 500;
@@ -184,16 +186,14 @@ public:
                 testImage.CopyTo(contentBatch);
 #else
                 for (int j = 0; j < BATCH_SIZE; ++j)
-                    LoadImage(contentFiles[(i * BATCH_SIZE + j)%contentFiles.size()], &contentBatch.Values()[0] + j * contentBatch.BatchLength(), contentPre->GetShape().Width(), contentPre->GetShape().Height(), NCHW);
+                    LoadImage(contentFiles[(i * BATCH_SIZE + j)%contentFiles.size()], contentBatch.Values() + j * contentBatch.BatchLength(), input->GetShape().Width(), input->GetShape().Height(), NCHW);
 #endif
-                VGG16::PreprocessImage(contentBatch, NCHW);
-
+                //VGG16::PreprocessImage(contentBatch, NCHW);
                 //contentBatch.SaveAsImage("batch" + to_string(i) + ".jpg", false);
-
-                auto contentFeatures = *vggFeaturesModel.Eval(contentOutputs, { { (Placeholder*)(vggFeaturesModel.InputsAt(0)[0]), &contentBatch } })[0];
+                //auto contentFeatures = *vggFeaturesModel.Eval(contentOutputs, { { (Placeholder*)(vggFeaturesModel.InputsAt(0)[0]), &contentBatch } })[0];
 
                 /*auto results = Session::Default()->Run({ stylizedContent, contentLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], totalLoss, minimize }, 
-                                                       { { content, &contentBatch }, { targetContentFeatures, &contentFeatures }, { training, &trainingOn } });
+                                                       { { content, &contentBatch }, { training, &trainingOn } });
                 
                 uint64_t cLoss = (uint64_t)(*results[1])(0);
                 uint64_t sLoss1 = (uint64_t)(*results[2])(0);
@@ -206,7 +206,7 @@ public:
                 progress.SetExtraString(extString.str());*/
 
                 auto results = Session::Default()->Run({ stylizedContent, weightedContentLoss, weightedStyleLoss, totalLoss, minimize },
-                                                       { { contentPre, &contentBatch }, { targetContentFeatures, &contentFeatures }, { training, &trainingOn } });
+                                                       { { input, &contentBatch }, { training, &trainingOn } });
 
                 stringstream extString;
                 extString << setprecision(4) << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - total_l: " << (*results[3])(0);

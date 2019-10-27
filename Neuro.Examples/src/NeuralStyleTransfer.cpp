@@ -8,28 +8,22 @@ Neuro::TensorLike* NeuralStyleTransfer::GramMatrix(TensorLike* x, const string& 
 
     uint32_t elementsPerFeature = x->GetShape().Width() * x->GetShape().Height();
     auto features = reshape(x, Shape(elementsPerFeature, x->GetShape().Depth()));
-    return multiply(matmul(features, transpose(features)), 1.f / elementsPerFeature, "result");
+    return multiply(matmul(features, transpose(features)), 1.f / x->GetShape().Length, "result");
 }
 
 //////////////////////////////////////////////////////////////////////////
-Neuro::TensorLike* NeuralStyleTransfer::StyleLoss(TensorLike* styleGram, TensorLike* gen, int index)
+Neuro::TensorLike* NeuralStyleTransfer::StyleLoss(TensorLike* targetStyleGram, TensorLike* styleFeatures, int index)
 {
     NameScope scope("style_loss_" + to_string(index));
-    assert(gen->GetShape().Batch() == 1);
+    assert(styleFeatures->GetShape().Batch() == 1);
 
-    //auto s = GramMatrix(style, index);
-    auto genGram = GramMatrix(gen, "gen_style_" + to_string(index));
-
-    float channels = (float)gen->GetShape().Depth();
-    float size = (float)(gen->GetShape().Height() * gen->GetShape().Width());
-
-    //return multiply(mean(square(sub(styleGram, genGram))), 1.f / (4.f * (channels * channels) * (size * size)), "total");
-    return mean(square(sub(styleGram, genGram)), GlobalAxis, "total");
+    auto styleGram = GramMatrix(styleFeatures, "gen_style_" + to_string(index));
+    return mean(square(sub(targetStyleGram, styleGram)), GlobalAxis, "total");
 }
 
 //////////////////////////////////////////////////////////////////////////
-Neuro::TensorLike* NeuralStyleTransfer::ContentLoss(TensorLike* content, TensorLike* gen)
+Neuro::TensorLike* NeuralStyleTransfer::ContentLoss(TensorLike* targetContentFeatures, TensorLike* contentFeatures)
 {
     NameScope scope("content_loss");
-    return mean(square(sub(gen, content)), GlobalAxis, "total");
+    return mean(square(sub(targetContentFeatures, contentFeatures)), GlobalAxis, "total");
 }
