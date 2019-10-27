@@ -2189,13 +2189,13 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     Tensor pow(const Tensor& t, float p)
     {
-        return t.Map([&](float x) { return ::pow(x, p); });
+        return t.Pow(p);
     }
 
     //////////////////////////////////////////////////////////////////////////
     Tensor sqr(const Tensor& t)
     {
-        return t.Map([&](float x) { return x * x; });
+        return t.Pow(2);
     }
 
     //////////////////////////////////////////////////////////////////////////
