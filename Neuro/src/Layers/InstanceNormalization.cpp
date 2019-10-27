@@ -32,10 +32,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<TensorLike*> InstanceNormalization::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
     {
-        auto _mean = mean(inputs[0], _01Axes);
-        auto xmu = sub(inputs[0], _mean);
-        auto var = mean(square(xmu), _01Axes, "variance");
-        auto normed = divide(xmu, add(sqrt(var, "stddev"), m_Epsilon), "normed");
-        return { add(multiply(normed, m_Gamma, "gamma_scaled"), m_Beta, "beta_shifted") };
+        return { instance_norm(inputs[0], m_Gamma, m_Beta, 0, m_Epsilon, training) };
     }
 }
