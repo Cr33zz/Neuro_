@@ -162,6 +162,26 @@ namespace NeuroTests
             Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new MultiplyOp(&x, 7.f)).get()));
         }
 
+        TEST_METHOD(Divide_Same)
+        {
+            auto x = Variable(Shape(2, 3, 4, 2));
+            auto y = Variable(Shape(2, 3, 4, 2));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new DivideOp(&x, &y)).get()));
+        }
+
+        TEST_METHOD(Divide_Broadcast)
+        {
+            auto x = Variable(Shape(2, 3, 4, 2));
+            auto y = Variable(Shape(1, 3, 1, 1));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new DivideOp(&x, &y)).get()));
+        }
+
+        TEST_METHOD(Divide_Value)
+        {
+            auto x = Variable(Shape(2, 3, 4, 2));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new DivideOp(&x, 7.f)).get()));
+        }
+
         TEST_METHOD(MatMul)
         {
             auto x = Variable(Shape(4, 3, 4, 2));
@@ -267,6 +287,8 @@ namespace NeuroTests
             float DERIVATIVE_EPSILON = 1e-4f;
             float LOSS_DERIVATIVE_EPSILON = 1e-5f;
 
+            GlobalRngSeed(101);
+
             vector<Tensor> inputs;
             inputs.reserve(op->InputNodes().size());
             vector<const Tensor*> inputsPtrs;
@@ -276,8 +298,6 @@ namespace NeuroTests
                 inputs.back().FillWithRand();
                 inputsPtrs.push_back(&inputs.back());
             }
-
-            GlobalRngSeed(101);
 
             float GRAD_VALUE = 2.f;
 
@@ -325,7 +345,7 @@ namespace NeuroTests
 
                     if (abs(approxGradient - op->InputsGrads()[n].GetFlat(i)) > 0.02f)
                     {
-                        //Assert::Fail(string("Input gradient validation failed at element ") + to_string(i) + " of input " + to_string(n) + ", expected " + to_string(approxGradient) + " actual " + to_string(layer->InputsGradient[n].GetFlat(i)) + "!");
+                        Logger::WriteMessage((string("Input gradient validation failed at element ") + to_string(i) + " of input " + to_string(n) + ", expected " + to_string(approxGradient) + " actual " + to_string(op->InputsGrads()[n].GetFlat(i)) + "!").c_str());
                         return false;
                     }
                 }
