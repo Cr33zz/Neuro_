@@ -36,6 +36,6 @@ TensorLike* FastNeuralStyleTransfer::CreateTransformerNet(TensorLike* input, Ten
     auto resid5 = residualBlock(resid4, 3);
     auto up1 = convLayer(resid5, 64, 3, 1, true);
     auto up2 = convLayer(up1, 32, 3, 1, true);
-    auto up3 = convLayer(up2, 3, 9, 1, false, false, false);
-    return multiply(tanh(up3), 150.f);
+    auto up3 = convLayer(up2, 3, 9, 1, false, true, false);
+    return add(multiply(tanh(up3), 127.5f), 127.5f);
 }

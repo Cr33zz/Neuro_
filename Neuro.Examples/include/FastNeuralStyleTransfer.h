@@ -28,16 +28,16 @@ public:
     {
         const uint32_t IMAGE_WIDTH = 256;
         const uint32_t IMAGE_HEIGHT = 256;
-        const int NUM_EPOCHS = 2;
+        const int NUM_EPOCHS = 20;
         
 #ifdef SLOW
-        const float CONTENT_WEIGHT = 1e3f;
-        const float STYLE_WEIGHT = 1e-2f;
-        const float LEARNING_RATE = 5.0f;
+        const float CONTENT_WEIGHT = 1000.f;
+        const float STYLE_WEIGHT = 0.01f;
+        const float LEARNING_RATE = 1.0f;
         const uint32_t BATCH_SIZE = 1;
 #else
-        const float CONTENT_WEIGHT = 400;
-        const float STYLE_WEIGHT = 0.1f;
+        const float CONTENT_WEIGHT = 1000.f;
+        const float STYLE_WEIGHT = 0.01f;
         const float LEARNING_RATE = 0.001f;
 
 #       ifdef FAST_SINGLE_CONTENT
@@ -60,7 +60,6 @@ public:
 
         Tensor testImage = LoadImage(TEST_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
         testImage.SaveAsImage("_test.jpg", false);
-        VGG16::PreprocessImage(testImage, NCHW);
 
         cout << "Collecting dataset files list...\n";
 
@@ -122,15 +121,17 @@ public:
 
         // generate final computational graph
         auto training = new Placeholder(Shape(1), "training");
-        auto content = new Placeholder(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), "content");
+        auto contentPre = new Placeholder(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), "content");
 
 #ifdef SLOW
-        auto stylizedContent = new Variable(testImage, "output_image");
+        TensorLike* stylizedContent = new Variable(Uniform::Random(0, 255, contentPre->GetShape()), "output_image");
+        stylizedContent = clip(stylizedContent, 0, 255);
 #else
-        auto stylizedContent = CreateTransformerNet(content, training);
+        auto stylizedContent = CreateTransformerNet(divide(contentPre, 255.f), training);
 #endif
 
-        auto stylizedFeatures = vggFeaturesModel(stylizedContent);
+        auto stylizedContentPre = VGG16::Preprocess(stylizedContent, NCHW);
+        auto stylizedFeatures = vggFeaturesModel(stylizedContentPre);
 
         // compute content loss from first output...
         auto targetContentFeatures = new Placeholder(contentOutputs[0]->GetShape(), "target_content_features");
@@ -146,21 +147,26 @@ public:
         auto weightedStyleLoss = multiply(merge_avg(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "style_loss");
 
         auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
+        //auto totalLoss = mean(square(sub(stylizedContentPre, contentPre)), GlobalAxis, "total");
 
         auto optimizer = Adam(LEARNING_RATE);
         auto minimize = optimizer.Minimize({ totalLoss });
 
-        Tensor contentBatch(Shape::From(content->GetShape(), BATCH_SIZE));
+        Tensor contentBatch(Shape::From(contentPre->GetShape(), BATCH_SIZE));
 
 #if defined(SLOW) || defined(FAST_SINGLE_CONTENT)
-        size_t steps = 1000;
+        size_t steps = 500;
 #else
         size_t samples = contentFiles.size();
         size_t steps = samples / BATCH_SIZE;
 #endif
 
-        /*Debug::LogAllOutputs(true);
-        Debug::LogAllGrads(true);*/
+        //Debug::LogAllOutputs(true);
+        //Debug::LogAllGrads(true);
+        /*Debug::LogOutput("vgg_preprocess", true);
+        Debug::LogOutput("output_image", true);
+        Debug::LogGrad("vgg_preprocess", true);
+        Debug::LogGrad("output_image", true);*/
 
         auto trainingOn = Tensor({ 1 }, Shape(1), "training_on");
         auto trainingOff = Tensor({ 0 }, Shape(1), "training_off");
@@ -176,12 +182,11 @@ public:
                 contentBatch.OverrideHost();
 #ifdef SLOW
                 testImage.CopyTo(contentBatch);
-                // test image is already preprocessed
 #else
                 for (int j = 0; j < BATCH_SIZE; ++j)
-                    LoadImage(contentFiles[(i * BATCH_SIZE + j)%contentFiles.size()], &contentBatch.Values()[0] + j * contentBatch.BatchLength(), content->GetShape().Width(), content->GetShape().Height(), NCHW);
-                VGG16::PreprocessImage(contentBatch, NCHW);
+                    LoadImage(contentFiles[(i * BATCH_SIZE + j)%contentFiles.size()], &contentBatch.Values()[0] + j * contentBatch.BatchLength(), contentPre->GetShape().Width(), contentPre->GetShape().Height(), NCHW);
 #endif
+                VGG16::PreprocessImage(contentBatch, NCHW);
 
                 //contentBatch.SaveAsImage("batch" + to_string(i) + ".jpg", false);
 
@@ -201,7 +206,7 @@ public:
                 progress.SetExtraString(extString.str());*/
 
                 auto results = Session::Default()->Run({ stylizedContent, weightedContentLoss, weightedStyleLoss, totalLoss, minimize },
-                                                       { { content, &contentBatch }, { targetContentFeatures, &contentFeatures }, { training, &trainingOn } });
+                                                       { { contentPre, &contentBatch }, { targetContentFeatures, &contentFeatures }, { training, &trainingOn } });
 
                 stringstream extString;
                 extString << setprecision(4) << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - total_l: " << (*results[3])(0);
@@ -210,7 +215,8 @@ public:
                 if (i % 10 == 0)
                 {
                     auto genImage = *results[0];
-                    VGG16::UnprocessImage(genImage, NCHW);
+                    //VGG16::UnprocessImage(genImage, NCHW);
+                    genImage.Clipped(0, 255, genImage);
                     genImage.SaveAsImage("fnst_e" + PadLeft(to_string(e), 4, '0') + "_b" + PadLeft(to_string(i), 4, '0') + ".png", false);
                     /*auto result = Session::Default()->Run({ stylizedContent, weightedContentLoss, weightedStyleLoss }, { { content, &testImage }, { training, &trainingOff } });
                     cout << "test content_loss: " << (*result[1])(0) << " style_loss: " << (*result[2])(0) << endl;
