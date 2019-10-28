@@ -372,7 +372,13 @@
     <ClInclude Include="include\Tensors\Storage.h">
       <Filter>include\Tensors</Filter>
     </ClInclude>
-    <ClInclude Include="src\ComputationalGraph\Operations\VariationOp.h">
+    <ClInclude Include="include\ComputationalGraph\Operations\VariationOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\L2LossOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\MeanSquaredErrorOp.h">
       <Filter>include\ComputationalGraph\Operations</Filter>
     </ClInclude>
   </ItemGroup>

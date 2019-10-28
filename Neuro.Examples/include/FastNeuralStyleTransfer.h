@@ -26,16 +26,19 @@ class FastNeuralStyleTransfer : public NeuralStyleTransfer
 public:
     void Run()
     {
-        const uint32_t IMAGE_WIDTH = 256;
-        const uint32_t IMAGE_HEIGHT = 256;
+        
         const int NUM_EPOCHS = 20;
         
 #ifdef SLOW
+        const uint32_t IMAGE_WIDTH = 512;
+        const uint32_t IMAGE_HEIGHT = 512;
         const float CONTENT_WEIGHT = 7.5f;
-        const float STYLE_WEIGHT = 100.f;
-        const float LEARNING_RATE = 1.0f;
+        const float STYLE_WEIGHT = 0.0001f;
+        const float LEARNING_RATE = 1.f;
         const uint32_t BATCH_SIZE = 1;
 #else
+        const uint32_t IMAGE_WIDTH = 256;
+        const uint32_t IMAGE_HEIGHT = 256;
         const float CONTENT_WEIGHT = 7.5f;
         const float STYLE_WEIGHT = 100.f;
         const float LEARNING_RATE = 0.001f;
@@ -48,7 +51,7 @@ public:
 #endif
 
         const string STYLE_FILE = "data/style.jpg";
-        const string TEST_FILE = "data/content3.jpg";
+        const string TEST_FILE = "data/content.jpg";
 #       ifdef FAST_SINGLE_CONTENT
         const string CONTENT_FILES_DIR = "e:/Downloads/fake_coco";
 #       else
@@ -94,27 +97,32 @@ public:
         cout << "Pre-computing style features and grams...\n";
 
         vector<TensorLike*> contentOutputs = { vggModel->Layer("block4_conv2")->Outputs()[0] };
-        vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv1")->Outputs()[0],
-                                             vggModel->Layer("block2_conv1")->Outputs()[0],
-                                             vggModel->Layer("block3_conv1")->Outputs()[0],
-                                             vggModel->Layer("block4_conv1")->Outputs()[0],
-                                             vggModel->Layer("block5_conv1")->Outputs()[0] };
+        vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv2")->Outputs()[0],
+                                             //vggModel->Layer("block2_conv1")->Outputs()[0],
+                                             //vggModel->Layer("block3_conv1")->Outputs()[0],
+                                             //vggModel->Layer("block4_conv1")->Outputs()[0],
+                                             //vggModel->Layer("block5_conv1")->Outputs()[0] 
+                                            };
 
         auto vggFeaturesModel = Flow(vggModel->InputsAt(-1), MergeVectors({ contentOutputs, styleOutputs }), "vgg_features");
 
         // pre-compute style features of style image (we only need to do it once since that image won't change either)
-        Tensor styleImage = LoadImage(STYLE_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
+        Tensor styleImage = LoadImage(STYLE_FILE);
         styleImage.SaveAsImage("_style.jpg", false);
         VGG16::PreprocessImage(styleImage, NCHW);
 
-        auto targetStyleFeatures = vggFeaturesModel.Eval(styleOutputs, { { (Placeholder*)(vggFeaturesModel.Inputs()[0]), &styleImage } });
+        auto styleInput = new Placeholder(styleImage.GetShape(), "style_input");
+        auto styleFeaturesNet = vggFeaturesModel(styleInput);
+
+        auto targetStyleFeatures = Session::Default()->Run(styleFeaturesNet, { { styleInput, &styleImage } });
+        targetStyleFeatures.erase(targetStyleFeatures.begin());
         vector<Constant*> targetStyleGrams;
         for (size_t i = 0; i < targetStyleFeatures.size(); ++i)
         {
             Tensor* x = targetStyleFeatures[i];
-            uint32_t elementsPerFeature = x->Width() * x->Height();
-            auto features = x->Reshaped(Shape(elementsPerFeature, x->Depth()));
-            targetStyleGrams.push_back(new Constant(features.Mul(features.Transposed()).Mul(1.f / x->GetShape().Length), "style_" + to_string(i) + "_gram"));
+            uint32_t featureMapSize = x->Width() * x->Height();
+            auto features = x->Reshaped(Shape(featureMapSize, x->Depth()));
+            targetStyleGrams.push_back(new Constant(features.Mul(features.Transposed()).Div((float)featureMapSize), "style_" + to_string(i) + "_gram"));
         }
 
         cout << "Building computational graph...\n";
@@ -127,7 +135,7 @@ public:
         auto targetContentFeatures = vggFeaturesModel(inputPre)[0];
 
 #ifdef SLOW
-        auto stylizedContent = new Variable(Uniform::Random(0, 255, input->GetShape()), "output_image");
+        auto stylizedContent = new Variable(Uniform::Random(-0.5f, 0.5f, input->GetShape()).Add(127.5f), "output_image");
 #else
         auto stylizedContent = CreateTransformerNet(divide(input, 255.f), training);
 #endif
@@ -179,7 +187,7 @@ public:
             cout << "Epoch " << e+1 << endl;
 
             Tqdm progress(steps, 0);
-            progress.ShowStep(true).ShowPercent(false).ShowElapsed(false);// .EnableSeparateLines(true);
+            progress.ShowStep(true).ShowPercent(false).ShowElapsed(false).EnableSeparateLines(true);
             for (int i = 0; i < steps; ++i, progress.NextStep())
             {
                 contentBatch.OverrideHost();
@@ -206,19 +214,26 @@ public:
                     " - s3L: " << sLoss3 << " - s4L: " << sLoss4 << " - tL: " << (cLoss + sLoss1 + sLoss2 + sLoss3 + sLoss4);
                 progress.SetExtraString(extString.str());*/
 
-                auto results = Session::Default()->Run({ stylizedContent, weightedContentLoss, weightedStyleLoss, totalLoss, minimize },
+                auto results = Session::Default()->Run({ stylizedContent, totalLoss, minimize },
+                    { { input, &contentBatch },{ training, &trainingOn } });
+
+                stringstream extString;
+                extString << setprecision(4) << " - total_l: " << (*results[1])(0);
+                progress.SetExtraString(extString.str());
+
+                /*auto results = Session::Default()->Run({ stylizedContent, weightedContentLoss, weightedStyleLoss, totalLoss, minimize },
                                                        { { input, &contentBatch }, { training, &trainingOn } });
 
                 stringstream extString;
                 extString << setprecision(4) << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - total_l: " << (*results[3])(0);
-                progress.SetExtraString(extString.str());
+                progress.SetExtraString(extString.str());*/
 
                 if (i % 10 == 0)
                 {
                     auto genImage = *results[0];
                     //VGG16::UnprocessImage(genImage, NCHW);
                     genImage.Clipped(0, 255, genImage);
-                    genImage.SaveAsImage("fnst_e" + PadLeft(to_string(e), 4, '0') + "_b" + PadLeft(to_string(i), 4, '0') + ".png", false);
+                    genImage.NormalizedMinMax(GlobalAxis, 0, 255).SaveAsImage("fnst_e" + PadLeft(to_string(e), 4, '0') + "_b" + PadLeft(to_string(i), 4, '0') + ".png", false);
                     /*auto result = Session::Default()->Run({ stylizedContent, weightedContentLoss, weightedStyleLoss }, { { content, &testImage }, { training, &trainingOff } });
                     cout << "test content_loss: " << (*result[1])(0) << " style_loss: " << (*result[2])(0) << endl;
                     auto genImage = *result[0];

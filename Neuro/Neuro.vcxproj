@@ -139,12 +139,15 @@
     <ClInclude Include="include\ComputationalGraph\Operations\GradientsOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\IdentityOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\InstanceNormalizeOp.h" />
+    <ClInclude Include="include\ComputationalGraph\Operations\L2LossOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\LeakyReLUOp.h" />
+    <ClInclude Include="include\ComputationalGraph\Operations\MeanSquaredErrorOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\MergeOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\Pool2dOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\ReshapeOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\TransposeOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\UpSample2dOp.h" />
+    <ClInclude Include="include\ComputationalGraph\Operations\VariationOp.h" />
     <ClInclude Include="include\ComputationalGraph\TensorLike.h" />
     <ClInclude Include="include\ComputationalGraph\Operation.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\AddOp.h" />
@@ -224,7 +227,6 @@
     <ClInclude Include="include\Tensors\TensorOpMultiCpu.h" />
     <ClInclude Include="include\Tools.h" />
     <ClInclude Include="include\Types.h" />
-    <ClInclude Include="src\ComputationalGraph\Operations\VariationOp.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Activations.cpp" />
