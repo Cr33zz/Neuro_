@@ -79,6 +79,7 @@ namespace Neuro
     protected:
         virtual void InternalAllocate(void** ptr, size_t size, const string& annotation = "") = 0;
         virtual void InternalFree(void* ptr) = 0;
+        virtual void InternalMemset(void* ptr, uint8_t value, size_t size) = 0;
         virtual const char* InternalName() const = 0;
 
         EMemStatus AllocateBlock(Block*& curr, Block*& prev, size_t size);
@@ -123,6 +124,7 @@ namespace Neuro
     protected:
         virtual void InternalAllocate(void** ptr, size_t size, const string& annotation = "") override;
         virtual void InternalFree(void* ptr) override;
+        virtual void InternalMemset(void* ptr, uint8_t value, size_t size) override;
         virtual const char* InternalName() const override { return "Device"; }
 
     private:
@@ -140,6 +142,7 @@ namespace Neuro
     protected:
         virtual void InternalAllocate(void** ptr, size_t size, const string& annotation = "") override;
         virtual void InternalFree(void* ptr) override;
+        virtual void InternalMemset(void* ptr, uint8_t value, size_t size) override;
         virtual const char* InternalName() const override { return "Host"; }
     };
 
@@ -153,6 +156,7 @@ namespace Neuro
     protected:
         virtual void InternalAllocate(void** ptr, size_t size, const string& annotation = "") override;
         virtual void InternalFree(void* ptr) override;
+        virtual void InternalMemset(void* ptr, uint8_t value, size_t size) override;
         virtual const char* InternalName() const override { return "Host pinned"; }
     };
 

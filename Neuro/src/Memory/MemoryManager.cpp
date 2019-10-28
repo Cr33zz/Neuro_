@@ -11,7 +11,7 @@
 
 //#define ENABLE_MEMORY_LOGS
 
-//#define MEMSET_ALLOCATED_MEMORY
+#define MEMSET_ALLOCATED_MEMORY
 
 #define DEVICE_ALLOC_GRANULARITY 512
 #define HOST_ALLOC_GRANULARITY 256
@@ -103,7 +103,7 @@ namespace Neuro
         *ptr = m_UsedBlocks->GetData();
 
 #ifdef MEMSET_ALLOCATED_MEMORY
-        cudaMemset(m_UsedBlocks->GetData(), 0xFF, m_UsedBlocks->GetSize());
+        InternalMemset(m_UsedBlocks->GetData(), 0xFF, m_UsedBlocks->GetSize());
 #endif
 
         return MEM_STATUS_SUCCESS;
@@ -423,6 +423,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void DeviceMemoryManager::InternalMemset(void* ptr, uint8_t value, size_t size)
+    {
+        CUDA_CHECK(cudaMemset(ptr, value, size));
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     EMemStatus DeviceMemoryManager::Reserve(size_t size)
     {
         Block *curr, *prev;
@@ -487,6 +493,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void HostMemoryManager::InternalMemset(void* ptr, uint8_t value, size_t size)
+    {
+        memset(ptr, value, size);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     HostPinnedMemoryManager::HostPinnedMemoryManager()
         : MemoryManagerBase(HOST_ALLOC_GRANULARITY, HOST_NATIVE_GRANULARITY)
     {
@@ -510,5 +522,11 @@ namespace Neuro
     void HostPinnedMemoryManager::InternalFree(void* ptr)
     {
         CUDA_CHECK(cudaFreeHost(ptr));
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void HostPinnedMemoryManager::InternalMemset(void* ptr, uint8_t value, size_t size)
+    {
+        memset(ptr, value, size);
     }
 }

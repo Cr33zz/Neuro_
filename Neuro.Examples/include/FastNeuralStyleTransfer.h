@@ -15,7 +15,7 @@
 #include "Neuro.h"
 #include "VGG19.h"
 
-//#define SLOW
+#define SLOW
 #define FAST_SINGLE_CONTENT
 
 namespace fs = std::experimental::filesystem;
@@ -31,8 +31,8 @@ public:
         const int NUM_EPOCHS = 20;
         
 #ifdef SLOW
-        const float CONTENT_WEIGHT = 1000.f;
-        const float STYLE_WEIGHT = 0.01f;
+        const float CONTENT_WEIGHT = 7.5f;
+        const float STYLE_WEIGHT = 100.f;
         const float LEARNING_RATE = 1.0f;
         const uint32_t BATCH_SIZE = 1;
 #else
@@ -48,7 +48,7 @@ public:
 #endif
 
         const string STYLE_FILE = "data/style.jpg";
-        const string TEST_FILE = "data/content.jpg";
+        const string TEST_FILE = "data/content3.jpg";
 #       ifdef FAST_SINGLE_CONTENT
         const string CONTENT_FILES_DIR = "e:/Downloads/fake_coco";
 #       else
@@ -127,8 +127,7 @@ public:
         auto targetContentFeatures = vggFeaturesModel(inputPre)[0];
 
 #ifdef SLOW
-        TensorLike* stylizedContent = new Variable(Uniform::Random(0, 255, input->GetShape()), "output_image");
-        stylizedContent = clip(stylizedContent, 0, 255);
+        auto stylizedContent = new Variable(Uniform::Random(0, 255, input->GetShape()), "output_image");
 #else
         auto stylizedContent = CreateTransformerNet(divide(input, 255.f), training);
 #endif
@@ -146,9 +145,11 @@ public:
         assert(stylizedFeatures.size() == targetStyleGrams.size());
         for (size_t i = 0; i < stylizedFeatures.size(); ++i)
             styleLosses.push_back(StyleLoss(targetStyleGrams[i], stylizedFeatures[i], (int)i));
-        auto weightedStyleLoss = multiply(merge_avg(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "style_loss");
+        auto weightedStyleLoss = multiply(merge_sum(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "style_loss");
 
-        auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
+        //auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
+        //auto totalLoss = weightedContentLoss;
+        auto totalLoss = weightedStyleLoss;
         //auto totalLoss = mean(square(sub(stylizedContentPre, contentPre)), GlobalAxis, "total");
 
         auto optimizer = Adam(LEARNING_RATE);
