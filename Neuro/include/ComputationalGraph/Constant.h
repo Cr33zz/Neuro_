@@ -13,5 +13,7 @@ namespace Neuro
     public:
         explicit Constant(const Tensor& value, const string& name = "");
         explicit Constant(float value, const string& name = "");
+
+        virtual bool IsConst() const { return true; }
     };
 }

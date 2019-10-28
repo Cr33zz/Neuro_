@@ -26,13 +26,23 @@ namespace Neuro
 
         const string& Name() const { return m_Name; }
 
+        const vector<TensorLike*>& InputNodes() const { return m_InputNodes; }
+
         Graph* GetGraph() const { return m_Graph; }
 
         virtual bool IsOp() const { return false; }
         virtual bool IsPlaceholder() const { return false; }
         virtual bool IsVar() const { return false; }
+        virtual bool IsConst() const { return false; }
 
+        virtual void Prefetch();
+        virtual void PrefetchForGradient();
+        
         void AddInputNode(TensorLike* node) { m_InputNodes.push_back(node); }
+
+        virtual bool CareAboutGradient() const;
+        virtual void OutputConsumed() {}
+        virtual void InputGradConsumed(TensorLike* inputNode) {}
 
         struct metadata
         {

@@ -55,6 +55,9 @@
     <Filter Include="src\ComputationalGraph\Operations">
       <UniqueIdentifier>{0b259d88-35c1-4981-a62a-89374c6ef78f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\Memory">
+      <UniqueIdentifier>{722bf6bd-4bab-4fcc-8d0b-3f6535a7b443}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Tensors\Shape.h">
@@ -152,9 +155,6 @@
     </ClInclude>
     <ClInclude Include="include\Tensors\TensorOpGpu.h">
       <Filter>include\Tensors</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Tensors\Cuda\CudaDeviceVariable.h">
-      <Filter>include\Tensors\Cuda</Filter>
     </ClInclude>
     <ClInclude Include="include\Tensors\Cuda\CudaKernels.h">
       <Filter>include\Tensors\Cuda</Filter>
@@ -359,6 +359,18 @@
     </ClInclude>
     <ClInclude Include="include\ComputationalGraph\Operations\InstanceNormalizeOp.h">
       <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Memory\MemoryManager.h">
+      <Filter>include\Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\FunctionOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\AccuracyOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tensors\Storage.h">
+      <Filter>include\Tensors</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -622,6 +634,18 @@
     </ClCompile>
     <ClCompile Include="src\ComputationalGraph\Operations\InstanceNormalizeOp.cpp">
       <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Memory\MemoryManager.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\FunctionOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\AccuracyOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tensors\Storage.cpp">
+      <Filter>src\Tensors</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

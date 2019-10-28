@@ -25,12 +25,12 @@ namespace Neuro
 	public:
         ~ModelBase();
 
-        void Optimize(OptimizerBase* optimizer, LossBase* loss);
-        void Optimize(OptimizerBase* optimizer, map<string, LossBase*> lossDict);
+        void Optimize(OptimizerBase* optimizer, LossBase* loss, int metrics = EMetric::Loss);
+        void Optimize(OptimizerBase* optimizer, map<string, LossBase*> lossDict, int metrics = EMetric::Loss);
 
-        void Fit(const Tensor& input, const Tensor& output, int batchSize = -1, uint32_t epochs = 1, const Tensor* validInputs = nullptr, const Tensor* validOutputs = nullptr, uint32_t verbose = 1, int trackFlags = ETrack::TrainError | ETrack::TestAccuracy, bool shuffle = true);
+        void Fit(const Tensor& input, const Tensor& output, int batchSize = -1, uint32_t epochs = 1, const Tensor* validInputs = nullptr, const Tensor* validOutputs = nullptr, uint32_t verbose = 1, bool shuffle = true);
         // Training method, when batch size is -1 the whole training set is used for single gradient descent step (in other words, batch size equals to training set size)
-        void Fit(const const_tensor_ptr_vec_t& inputs, const const_tensor_ptr_vec_t& outputs, int batchSize = -1, uint32_t epochs = 1, const const_tensor_ptr_vec_t* validInputs = nullptr, const const_tensor_ptr_vec_t* validOutputs = nullptr, uint32_t verbose = 1, int trackFlags = ETrack::TrainError | ETrack::TestAccuracy, bool shuffle = true);
+        void Fit(const const_tensor_ptr_vec_t& inputs, const const_tensor_ptr_vec_t& outputs, int batchSize = -1, uint32_t epochs = 1, const const_tensor_ptr_vec_t* validInputs = nullptr, const const_tensor_ptr_vec_t* validOutputs = nullptr, uint32_t verbose = 1, bool shuffle = true);
 
         tuple<float, float> TrainOnBatch(const Tensor& input, const Tensor& output);
         tuple<float, float> TrainOnBatch(const const_tensor_ptr_vec_t& inputs, const const_tensor_ptr_vec_t& outputs);
@@ -105,7 +105,8 @@ namespace Neuro
         Predicter* m_Predicter = nullptr;
         map<size_t, Predicter*> m_EvalPredicters;
 
-        map<string, pair<TensorLike*, size_t>> m_Metrics;
+        map<EMetric, pair<TensorLike*, size_t>> m_Metrics;
+        int m_TrackedMetrics;
 
         ofstream* m_LogFile = nullptr;
         void LogLine(const string& text, bool print = true);

@@ -13,7 +13,7 @@ namespace Neuro
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
 
-    protected:
+    private:
         float m_Momentum;
         float m_Epsilon;
 

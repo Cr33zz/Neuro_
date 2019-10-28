@@ -9,10 +9,14 @@ namespace Neuro
     {
     public:
         PowOp(TensorLike* x, TensorLike* p, const string& name = "");
+        PowOp(TensorLike* x, float p, const string& name = "");
 
     protected:
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
+
+    private:
+        float m_Power = 0;
     };
     
     static Operation* pow(TensorLike* x, TensorLike* p, const string& name = "")
@@ -22,6 +26,6 @@ namespace Neuro
 
     static Operation* square(TensorLike* x, const string& name = "")
     {
-        return new PowOp(x, new Constant(2), name.empty() ? "square" : name);
+        return new PowOp(x, 2.f, name.empty() ? "square" : name);
     }
 }

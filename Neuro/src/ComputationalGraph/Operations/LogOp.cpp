@@ -20,6 +20,7 @@ namespace Neuro
     void LogOp::ComputeGradientInternal(const Tensor& grad)
     {
         //in_grad = grad / x
-        grad.Map([](float g, float x) {return g / x; }, *m_Inputs[0], m_InputsGrads[0]);
+        if (m_InputNodes[0]->CareAboutGradient())
+            grad.Map([](float g, float x) {return g / x; }, *m_Inputs[0], m_InputsGrads[0]);
     }
 }

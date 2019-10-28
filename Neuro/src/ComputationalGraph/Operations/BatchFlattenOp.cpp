@@ -20,6 +20,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void BatchFlattenOp::ComputeGradientInternal(const Tensor& grad)
     {
-        grad.CopyTo(m_InputsGrads[0]);
+        if (m_InputNodes[0]->CareAboutGradient())
+            grad.CopyTo(m_InputsGrads[0]);
     }
 }

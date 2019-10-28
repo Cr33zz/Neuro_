@@ -20,6 +20,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void UpSample2dOp::ComputeGradientInternal(const Tensor& grad)
     {
-        grad.UpSample2DGradient(grad, m_ScaleFactor, m_InputsGrads[0]);
+        if (m_InputNodes[0]->CareAboutGradient())
+            grad.UpSample2DGradient(grad, m_ScaleFactor, m_InputsGrads[0]);
     }
 }

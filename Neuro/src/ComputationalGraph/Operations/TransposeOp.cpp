@@ -19,6 +19,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TransposeOp::ComputeGradientInternal(const Tensor& grad)
     {
-        grad.Transpose(m_InputsGrads[0]);
+        if (m_InputNodes[0]->CareAboutGradient())
+            grad.Transpose(m_InputsGrads[0]);
     }
 }

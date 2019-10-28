@@ -1,5 +1,10 @@
 ﻿#include "ComputationalGraph/Operation.h"
 #include "ComputationalGraph/Graph.h"
+#include "Tensors/Tensor.h"
+#include "Tools.h"
+#include "Debug.h"
+
+#include "Memory/MemoryManager.h"
 
 namespace Neuro
 {
@@ -11,6 +16,17 @@ namespace Neuro
 
         for (auto inputNode : inputNodes)
             inputNode->m_Consumers.push_back(this);
+
+        m_InputsGradsPtrs.resize(m_InputNodes.size());
+        m_InputsGrads.resize(m_InputNodes.size());
+        for (size_t i = 0; i < m_InputsGrads.size(); ++i)
+        {
+            m_InputsGrads[i].Resize(m_InputNodes[i]->GetShape());
+            m_InputsGrads[i].Name(m_Name + "/inputGrad" + to_string(i));
+            m_InputsGradsPtrs[i] = &m_InputsGrads[i];
+        }
+
+        m_Output.SetStorageType(ST_DeviceRefCounted|ST_RefCounted|ST_Offloadable);
 
         Graph::Default()->AddOperation(this);
     }
@@ -27,23 +43,64 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     const Tensor& Operation::Compute(const vector<const Tensor*>& inputs)
     {
+        if (m_Output.TryDeviceAllocate())
+            m_Output.OverrideDevice();
+        m_Output.ResetDeviceRef(m_Consumers.size());
+        m_Output.IncRef();
         m_Inputs = inputs;
+        m_InputsManuallyConsumed = false;
+
+        /*for (auto input : inputs)
+            NEURO_ASSERT(ValidateArrayNotFreed(input->Values(), input->Length()), "");*/
+
         ComputeInternal();
+
         m_LastComputeStep = m_Graph->CurrentStep();
+        if (!m_InputsManuallyConsumed)
+        {
+            for (auto inputNode : m_InputNodes)
+                inputNode->OutputConsumed();
+        }
+
+        //NEURO_ASSERT(ValidateArrayModifiedAfterAlloc(m_Output.Values(), m_Output.Length()), "");
+
+        m_Output.Offload(); // at this point output won't change so start offloading it, it will be released when all consumers used it
         return m_Output;
     }
 
     //////////////////////////////////////////////////////////////////////////
     const vector<Tensor*>& Operation::ComputeGradient(const Tensor& grad)
     {
-        m_InputsGradsPtrs.resize(m_Inputs.size());
-        m_InputsGrads.resize(m_Inputs.size());
         for (size_t i = 0; i < m_InputsGrads.size(); ++i)
         {
-            m_InputsGrads[i].Resize(m_Inputs[i]->GetShape());
-            m_InputsGradsPtrs[i] = &m_InputsGrads[i];
+            m_InputsGrads[i].ResizeBatch(m_Inputs[i]->GetShape().Batch());
+            if (m_InputsGrads[i].TryDeviceAllocate())
+                m_InputsGrads[i].OverrideDevice();
         }
+
         ComputeGradientInternal(grad);
+
         return m_InputsGradsPtrs;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Operation::OutputConsumed()
+    {
+        m_Output.DecDeviceRef();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Operation::InputGradConsumed(TensorLike* inputNode)
+    {
+        for (size_t i = 0; i < m_InputNodes.size(); ++i)
+        {
+            if (m_InputNodes[i] == inputNode)
+            {
+                m_InputsGrads[i].ReleaseData();
+                return;
+            }
+        }
+        
+        NEURO_ASSERT(false, "Unknown node consumed our input O_o");
     }
 }

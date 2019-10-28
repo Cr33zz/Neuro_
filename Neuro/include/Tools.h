@@ -8,6 +8,16 @@
 #include "Random.h"
 #include "Stopwatch.h"
 
+#define NEURO_CONCATENATE_DETAIL(x, y) x##y
+#define NEURO_CONCATENATE(x, y) NEURO_CONCATENATE_DETAIL(x, y)
+#define NEURO_UNIQUE_NAME(x) NEURO_CONCATENATE(x, __COUNTER__)
+#define NEURO_PROFILE_INTERNAL(name, operation, var) \
+Logger::WriteMessage(name##": "); \
+AutoStopwatch var; \
+operation \
+Logger::WriteMessage(var.ToString().c_str());
+#define NEURO_PROFILE(name, operation) NEURO_PROFILE_INTERNAL(name, operation, NEURO_UNIQUE_NAME(p))
+
 namespace Neuro
 {
     using namespace std;
@@ -19,11 +29,7 @@ namespace Neuro
     Random& GlobalRng();
     void GlobalRngSeed(unsigned int seed);
 
-    int AccNone(const Tensor& target, const Tensor& output);
-    int AccBinaryClassificationEquality(const Tensor& target, const Tensor& output);
-    int AccCategoricalClassificationEquality(const Tensor& target, const Tensor& output);
-
-	template<typename C> void DeleteContainer(C& container);
+    template<typename C> void DeleteContainer(C& container);
     void DeleteData(vector<const_tensor_ptr_vec_t>& data);
 
     float Clip(float value, float min, float max);
@@ -53,6 +59,8 @@ namespace Neuro
 
     template<typename T>
     vector<T> MergeVectors(initializer_list<vector<T>> vectors);
+
+    string StringFormat(const string fmt_str, ...);
 
     void ImageLibInit();
     extern bool g_ImageLibInitialized;

@@ -12,6 +12,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void AssignOp::ComputeInternal()
     {
-        m_Inputs[1]->CopyTo(m_InputNodes[0]->Output());
+        if (m_InputNodes[0]->CareAboutGradient())
+            m_Inputs[1]->CopyTo(m_InputNodes[0]->Output());
     }
 }

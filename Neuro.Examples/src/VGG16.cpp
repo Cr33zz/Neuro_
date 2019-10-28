@@ -40,6 +40,7 @@ Neuro::ModelBase* VGG16::CreateModel(EDataFormat dataFormat, Shape inputShape, b
     model->AddLayer(new Conv2D(512, 3, 1, 1, new ReLU(), dataFormat, "block5_conv2"));
     model->AddLayer(new Conv2D(512, 3, 1, 1, new ReLU(), dataFormat, "block5_conv3"));
     model->AddLayer(new MaxPooling2D(2, 2, 0, dataFormat, "block5_pool"));
+    
     if (includeTop)
     {
         model->AddLayer(new Flatten("flatten"));
@@ -59,5 +60,6 @@ Neuro::ModelBase* VGG16::CreateModel(EDataFormat dataFormat, Shape inputShape, b
 //////////////////////////////////////////////////////////////////////////
 TensorLike* VGG16::Preprocess(TensorLike* image, EDataFormat dataFormat)
 {
+    NameScope scope("vgg_preprocess");
     return sub(image, new Constant(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3))));
 }

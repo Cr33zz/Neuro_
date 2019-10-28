@@ -1,10 +1,23 @@
-﻿#include "ComputationalGraph/Graph.h"
+﻿#include <fstream>
+
+#include "ComputationalGraph/Graph.h"
 #include "ComputationalGraph/TensorLike.h"
 #include "ComputationalGraph/Placeholder.h"
 #include "ComputationalGraph/Variable.h"
 #include "ComputationalGraph/Operation.h"
 #include "Debug.h"
 #include "Tools.h"
+
+//#define ENABLE_GRAPH_LOGS
+
+#ifdef ENABLE_GRAPH_LOGS
+#include <windows.h>
+#include <debugapi.h>
+#include "Tools.h"
+#define GRAPH_DEBUG_INFO(...) do { OutputDebugString(StringFormat(__VA_ARGS__).c_str()); } while(0)
+#else
+#define GRAPH_DEBUG_INFO(...) {}
+#endif
 
 namespace Neuro
 {
@@ -72,38 +85,38 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Graph::ProcessForwardNode(TensorLike* node, vector<TensorLike*>& nodes, unordered_set<TensorLike*>& visited)
     {
+        if (visited.find(node) != visited.end())
+            return;
+
         for (auto inputNode : node->m_InputNodes)
             ProcessForwardNode(inputNode, nodes, visited);
 
-        if (!node->IsOp())
-            return;
-
-        if (visited.find(node) != visited.end())
-            return;
+        /*if (!node->IsOp())
+            return;*/
 
         visited.insert(node);
         nodes.push_back(node);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> Graph::BuildBackwardOrder(const vector<TensorLike*>& endNodes, const vector<Variable*>& params)
+    vector<TensorLike*> Graph::BuildBackwardOrder(const vector<TensorLike*>& endNodes, unordered_set<TensorLike*>& nodesAffectingEndNodes, const vector<Variable*>& params)
     {
         // we need to figure out which nodes were required to calculate end nodes
         // later on when check if all consumers were visited we will additionally check if
         // any particular consumer is required, otherwise it's inputs' gradients are not important 
         // (and won't be computed anyway)
-        auto nodesAffectingLosses = BuildForwardOrder(endNodes);
+        auto tempNodesAffectingEndNodes = BuildForwardOrder(endNodes);
 
         // build hash set for fast lookup
-        unordered_set<TensorLike*> required;
-        required.insert(nodesAffectingLosses.begin(), nodesAffectingLosses.end());
+        nodesAffectingEndNodes.clear();
+        nodesAffectingEndNodes.insert(tempNodesAffectingEndNodes.begin(), tempNodesAffectingEndNodes.end());
 
         vector<TensorLike*> result;
         unordered_set<TensorLike*> visited;
         unordered_set<TensorLike*> visitedParams;
 
         for (auto node : endNodes)
-            ProcessBackwardNode(node, result, params, false, visited, visitedParams, required);
+            ProcessBackwardNode(node, result, params, false, visited, visitedParams, nodesAffectingEndNodes);
 
         return result;
     }
@@ -159,70 +172,115 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<Variable*> Graph::ComputeGradients(const vector<TensorLike*>& losses, const vector<Variable*>& params)
     {
-        auto order = BuildBackwardOrder(losses, params);
-        return ComputeGradientsInOrder(order, params);
+        unordered_set<TensorLike*> nodesAffectingLosses;
+        auto order = BuildBackwardOrder(losses, nodesAffectingLosses, params);
+        return ComputeGradientsInOrder(order, losses, nodesAffectingLosses, params);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<Variable*> Graph::ComputeGradientsInOrder(const vector<TensorLike*>& order, const vector<Variable*>& params)
+    vector<Variable*> Graph::ComputeGradientsInOrder(const vector<TensorLike*>& order, const vector<TensorLike*>& losses, const unordered_set<TensorLike*> nodesAffectingLosses, const vector<Variable*>& params)
     {
+        const size_t PREFETCH_STEPS = 2;
         vector<Variable*> variables;
         
         for (size_t n = 0; n < order.size(); ++n)
         {
-            auto node = order[n];
-
-            if (node->IsVar())
+            for (size_t p = n + 1; p <= n + PREFETCH_STEPS; ++p)
             {
-                Variable* var = static_cast<Variable*>(node);
-                if (var->Trainable() && (params.empty() || find(params.begin(), params.end(), node) != params.end()))
-                    variables.push_back(var);
+                if (p >= order.size())
+                    break;
+
+                auto node = order[p];
+                GRAPH_DEBUG_INFO("##Graph: Prefetching '%s'...\n", node->Name().c_str());
+                node->PrefetchForGradient();
             }
 
-            auto& nodeOutputGrad = node->m_OutputGrad;
-            nodeOutputGrad.Resize(node->m_Output.GetShape());
-            nodeOutputGrad.Zero(); // reset gradient
+            auto node = order[n];
+            GRAPH_DEBUG_INFO("##Graph: Computing gradient '%s'... (care about grad: %d)\n", node->Name().c_str(), node->CareAboutGradient() ? 1 : 0);
 
-            if (node->IsVar() && !static_cast<Variable*>(node)->Trainable())
-                continue;
-
-            int inputGradsUsed = 0;
-
-            for (auto consumer : node->m_Consumers)
+            if (node->CareAboutGradient())
             {
-                assert(consumer->IsOp());
-                Operation* consumerOp = static_cast<Operation*>(consumer);
-
-                auto& inputsGrad = consumerOp->InputsGrads();
-
-                // ignore consumer when it didn't participate in forward step or its input gradients were not computed
-                // the latter can happen when it wasn't required for loss computation (alternatively we could pass
-                // required nodes to this function and check against that but it would be more involving from 'user'
-                // point of view
-                if (consumerOp->LastComputeStep() != m_CurrentStep || inputsGrad.empty())
-                    continue;
-
-                ++inputGradsUsed;
-
-                if (inputsGrad.size() == 1)
+                if (node->IsVar())
                 {
-                    assert(inputsGrad[0].Length());
-                    nodeOutputGrad.Add(inputsGrad[0], nodeOutputGrad);
+                    Variable* var = static_cast<Variable*>(node);
+                    if (var->Trainable() && (params.empty() || find(params.begin(), params.end(), node) != params.end()))
+                        variables.push_back(var);
+                }
+
+                auto& nodeOutputGrad = node->m_OutputGrad;
+                nodeOutputGrad.Resize(node->m_Output.GetShape());
+                if (nodeOutputGrad.TryDeviceAllocate())
+                    nodeOutputGrad.OverrideDevice();
+                nodeOutputGrad.Zero(); // reset gradient
+
+                if (find(losses.begin(), losses.end(), node) != losses.end())
+                {
+                    // gradient of loss w.r.t to loss is 1
+                    nodeOutputGrad.One();
                 }
                 else
                 {
-                    auto nodeIndexInConsumerInputs = distance(consumer->m_InputNodes.begin(), find(consumer->m_InputNodes.begin(), consumer->m_InputNodes.end(), node));
-                    auto& lossGradWrtNode = inputsGrad[nodeIndexInConsumerInputs];
-                    assert(lossGradWrtNode.Length());
-                    nodeOutputGrad.Add(lossGradWrtNode, nodeOutputGrad);
+                    for (auto consumer : node->m_Consumers)
+                    {
+                        assert(consumer->IsOp());
+                        Operation* consumerOp = static_cast<Operation*>(consumer);
+
+                        // ignore consumer when it didn't affect loss. one example of such consumers might be accuracy operation
+                        if (nodesAffectingLosses.find(consumer) == nodesAffectingLosses.end())
+                            continue;
+
+                        auto& inputsGrad = consumerOp->InputsGrads();
+
+                        if (inputsGrad.size() == 1)
+                        {
+                            assert(inputsGrad[0].Length());
+                            nodeOutputGrad.Add(inputsGrad[0], nodeOutputGrad);
+                        }
+                        else
+                        {
+                            auto nodeIndexInConsumerInputs = distance(consumer->m_InputNodes.begin(), find(consumer->m_InputNodes.begin(), consumer->m_InputNodes.end(), node));
+                            auto& lossGradWrtNode = inputsGrad[nodeIndexInConsumerInputs];
+                            assert(lossGradWrtNode.Length());
+                            nodeOutputGrad.Add(lossGradWrtNode, nodeOutputGrad);
+                        }
+                    }
+                }
+
+                Operation* opNode = node->IsOp() ? static_cast<Operation*>(node) : nullptr;
+                
+                if (opNode)
+                {
+                    opNode->ComputeGradient(nodeOutputGrad);
+
+                    if (Debug::ShouldLogGrad(node->Name()))
+                    {
+                        nodeOutputGrad.DebugDumpValues(Replace(node->Name() + "_output0_grad_step" + to_string(Debug::GetStep()) + ".log", "/", "_"));
+                        for (size_t i = 0; i < opNode->InputsGrads().size(); ++i)
+                        {
+                            if (opNode->InputNodes()[i]->CareAboutGradient())
+                                opNode->InputsGrads()[i].DebugDumpValues(Replace(node->Name() + "_input" + to_string(i) + "_grad_step" + to_string(Debug::GetStep()) + ".log", "/", "_"));
+                            else
+                            {
+                                ofstream s(Replace(node->Name() + "_input" + to_string(i) + "_grad_step" + to_string(Debug::GetStep()) + ".log", "/", "_"));
+                                s << "doesn't care about gradient";
+                                s.close();
+                            }
+                        }
+                    }
+
+                    node->Output().DecRef(); // output is no longer needed, we've already used it to compute input gradients
+                    node->OutputGrad().ReleaseData(); // output grad is no longer needed, we've already used it to compute input gradients
+                }
+                else
+                {
+                    if (Debug::ShouldLogGrad(node->Name()))
+                        nodeOutputGrad.DebugDumpValues(Replace(node->Name() + "_grad_step" + to_string(Debug::GetStep()) + ".log", "/", "_"));
                 }
             }
 
-            if (inputGradsUsed == 0) // it must be one the loss nodes (gradient of loss w.r.t to loss is 1)
-                nodeOutputGrad.One();
-
-            if (node->IsOp())
-                static_cast<Operation*>(node)->ComputeGradient(nodeOutputGrad);
+            // all consumers contributing to this node's output grad can be notified so they can release their corresponding input gradient
+            for (auto consumerNode : node->m_Consumers)
+                consumerNode->InputGradConsumed(node);
         }
 
         return variables;
@@ -242,28 +300,10 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Graph::DebugLog()
     {
-#ifdef DEBUG_LOG_ENABLED
-        for (auto node : m_Operations)
-        {
-            if (node->LastComputeStep() != m_CurrentStep)
-                continue;
-
-            if (Debug::ShouldLogOutput(node->Name()))
-                node->Output().DebugDumpValues(Replace(node->Name() + "_step" + to_string(m_CurrentStep) + ".log", "/", "_"));
-
-            if (Debug::ShouldLogGrad(node->Name()))
-            {
-                auto& inputGrads = static_cast<Operation*>(node)->InputsGrads();
-                for (size_t i = 0; i < inputGrads.size(); ++i)
-                    inputGrads[i].DebugDumpValues(Replace(node->Name() + "_grad" + to_string(i) + "_step" + to_string(m_CurrentStep) + ".log", "/", "_"));
-            }
-        }
-
         for (auto node : m_Variables)
         {
             if (Debug::ShouldLogGrad(node->Name()))
                 node->OutputGrad().DebugDumpValues(Replace(node->Name() + "_grad_step" + to_string(m_CurrentStep) + ".log", "/", "_"));
         }
-#endif
     }
 }

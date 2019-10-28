@@ -28,19 +28,20 @@ void GAN::Run()
     m_ImageShape = Shape(images.Width(), images.Height(), images.Depth());
     images.Map([](float x) { return (x - 127.5f) / 127.5f; }, images);
     images.Reshape(Shape::From(dModel->InputShapesAt(-1)[0], images.Batch()));
+    images.Name("images");
 
     const uint32_t BATCH_SIZE = 128;
     const uint32_t BATCHES_PER_EPOCH = images.Batch() / BATCH_SIZE;
     const uint32_t EPOCHS = 100;
 
-    Tensor testNoise(Shape::From(gModel->InputShapesAt(-1)[0], 100)); testNoise.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
+    Tensor testNoise(Shape::From(gModel->InputShapesAt(-1)[0], 100), "test_noise"); testNoise.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
     
-    Tensor noise(Shape::From(gModel->InputShapesAt(-1)[0], BATCH_SIZE));
-    Tensor real(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE)); real.FillWithValue(1.f);
+    Tensor noise(Shape::From(gModel->InputShapesAt(-1)[0], BATCH_SIZE), "noise");
+    Tensor real(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE), "real"); real.FillWithValue(1.f);
     
-    Tensor noiseHalf(Shape::From(gModel->InputShapesAt(-1)[0], BATCH_SIZE / 2));
-    Tensor realHalf(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE / 2)); realHalf.FillWithValue(1.f);
-    Tensor fakeHalf(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE / 2)); fakeHalf.FillWithValue(0.f);
+    Tensor noiseHalf(Shape::From(gModel->InputShapesAt(-1)[0], BATCH_SIZE / 2), "noise_half");
+    Tensor realHalf(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE / 2), "real_half"); realHalf.FillWithValue(1.f);
+    Tensor fakeHalf(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE / 2), "fake_half"); fakeHalf.FillWithValue(0.f);
 
     for (uint32_t e = 1; e <= EPOCHS; ++e)
     {
@@ -56,8 +57,10 @@ void GAN::Run()
             
             // generate fake images from noise
             Tensor fakeImages = *gModel->Predict(noiseHalf)[0];
+            fakeImages.Name("fake_images");
             // grab random batch of real images
             Tensor realImages = images.GetRandomBatches(BATCH_SIZE / 2);
+            realImages.Name("real_images");
 
             // perform step of training discriminator to distinguish fake from real images
             dModel->SetTrainable(true);

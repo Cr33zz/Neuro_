@@ -6,6 +6,8 @@ namespace Neuro
     DropoutOp::DropoutOp(TensorLike* x, float prob, TensorLike* training, const string& name)
         : Operation({ x, training }, name.empty() ? "dropout" : name), m_Prob(prob)
     {
+        m_Mask.Resize(x->GetShape());
+        m_Mask.Name(Name() + "/mask");
         m_Output.Resize(x->GetShape());
     }
 
@@ -18,7 +20,7 @@ namespace Neuro
         m_Output.ResizeBatch(m_Inputs[0]->Batch());
         if (training)
         {
-            m_Mask.Resize(m_Inputs[0]->GetShape());
+            m_Mask.ResizeBatch(m_Inputs[0]->Batch());
             m_Inputs[0]->Dropout(m_Prob, m_Mask, m_Output);
         }
         else
@@ -30,6 +32,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void DropoutOp::ComputeGradientInternal(const Tensor& grad)
     {
-        grad.DropoutGradient(grad, m_Mask, m_InputsGrads[0]);
+        if (m_InputNodes[0]->CareAboutGradient())
+            grad.DropoutGradient(grad, m_Mask, m_InputsGrads[0]);
     }
 }

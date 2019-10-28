@@ -2,6 +2,8 @@
 
 #include "Debug.h"
 
+#define DEBUG_LOG_ENABLED
+
 namespace Neuro
 {
     int Debug::g_Step = 0;
@@ -62,12 +64,20 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     bool Debug::ShouldLogOutput(const string& name)
     {
+#ifdef DEBUG_LOG_ENABLED
         return g_LogAllOutputs || find_if(g_LogOutputs.begin(), g_LogOutputs.end(), [&](const string& str) { return name.find(str, 0) != string::npos; }) != g_LogOutputs.end();
+#else
+        return false;
+#endif
     }
 
     //////////////////////////////////////////////////////////////////////////
     bool Debug::ShouldLogGrad(const string& name)
     {
+#ifdef DEBUG_LOG_ENABLED
         return g_LogAllGrads || find_if(g_LogGrads.begin(), g_LogGrads.end(), [&](const string& str) { return name.find(str, 0) != string::npos; }) != g_LogGrads.end();
+#else
+        return false;
+#endif
     }
 }

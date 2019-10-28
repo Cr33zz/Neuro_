@@ -26,7 +26,9 @@ namespace Neuro
         auto& x = *m_Inputs[0];
         auto& kernels = *m_Inputs[1];
 
-        grad.Conv2DInputsGradient(grad, kernels, m_Stride, m_Padding, m_DataFormat, m_InputsGrads[0]);
-        grad.Conv2DKernelsGradient(x, grad, m_Stride, m_Padding, m_DataFormat, m_InputsGrads[1]);
+        if (m_InputNodes[0]->CareAboutGradient())
+            grad.Conv2DInputsGradient(grad, kernels, m_Stride, m_Padding, m_DataFormat, m_InputsGrads[0]);
+        if (m_InputNodes[1]->CareAboutGradient())
+            grad.Conv2DKernelsGradient(x, grad, m_Stride, m_Padding, m_DataFormat, m_InputsGrads[1]);
     }
 }

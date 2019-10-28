@@ -8,7 +8,10 @@ namespace Neuro
     Variable::Variable(const Tensor& initValue, const string& name)
         : TensorLike(name)
     {
-        m_Output = initValue;
+        m_Output.Resize(initValue.GetShape());
+        m_Output.SetStorageType(ST_KeepDevMem);
+        m_OutputGrad.SetStorageType(ST_Offloadable);
+        initValue.CopyTo(m_Output);
         Graph::Default()->AddVariable(this);
         m_Initialized = true;
     }
@@ -24,6 +27,8 @@ namespace Neuro
         : TensorLike(name), m_Initializer(initializer)
     {
         m_Output.Resize(shape);
+        m_Output.SetStorageType(ST_KeepDevMem);
+        m_OutputGrad.SetStorageType(ST_Offloadable);
         Graph::Default()->AddVariable(this);
     }
 
@@ -43,5 +48,11 @@ namespace Neuro
 
         if (m_Initializer)
             m_Initializer->Init(m_Output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    bool Variable::CareAboutGradient() const
+    {
+        return m_Trainable || __super::CareAboutGradient();
     }
 }

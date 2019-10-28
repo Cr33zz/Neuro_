@@ -19,6 +19,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Pool2dOp::ComputeGradientInternal(const Tensor& grad)
     {
-        m_Inputs[0]->Pool2DGradient(m_Output, *m_Inputs[0], grad, m_FilterSize, m_Stride, m_Mode, m_Padding, m_DataFormat, m_InputsGrads[0]);
+        if (m_InputNodes[0]->CareAboutGradient())
+            m_Inputs[0]->Pool2DGradient(m_Output, *m_Inputs[0], grad, m_FilterSize, m_Stride, m_Mode, m_Padding, m_DataFormat, m_InputsGrads[0]);
     }
 }

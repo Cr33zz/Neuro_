@@ -20,6 +20,7 @@ namespace Neuro
     void NegativeOp::ComputeGradientInternal(const Tensor& grad)
     {
         //in_grad = -grad
-        grad.Map([](float g) {return -g; }, m_InputsGrads[0]);
+        if (m_InputNodes[0]->CareAboutGradient())
+            grad.Map([](float g) {return -g; }, m_InputsGrads[0]);
     }
 }

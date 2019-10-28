@@ -12,12 +12,14 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void ReshapeOp::ComputeInternal()
     {
+        m_Output.ResizeBatch(m_Inputs[0]->Batch());
         m_Inputs[0]->CopyTo(m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void ReshapeOp::ComputeGradientInternal(const Tensor& grad)
     {
-        grad.CopyTo(m_InputsGrads[0]);
+        if (m_InputNodes[0]->CareAboutGradient())
+            grad.CopyTo(m_InputsGrads[0]);
     }
 }

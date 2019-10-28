@@ -71,7 +71,7 @@
     </ClCompile>
     <Lib>
       <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\h5cpp\lib;$(CudaToolkitLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>cudart_static.lib;cudnn.lib;cublas.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib</AdditionalDependencies>
+      <AdditionalDependencies>cuda.lib;cudart_static.lib;cudnn.lib;cublas.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Lib>
     <CudaCompile>
@@ -105,7 +105,7 @@
     </Link>
     <Lib>
       <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\h5cpp\lib;$(CudaToolkitLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>cudart_static.lib;cudnn.lib;cublas.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib</AdditionalDependencies>
+      <AdditionalDependencies>cuda.lib;cudart_static.lib;cudnn.lib;cublas.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Lib>
     <CudaCompile>
@@ -125,6 +125,7 @@
     <ClInclude Include="include\ComputationalGraph\Constant.h" />
     <ClInclude Include="include\ComputationalGraph\Graph.h" />
     <ClInclude Include="include\ComputationalGraph\NameScope.h" />
+    <ClInclude Include="include\ComputationalGraph\Operations\AccuracyOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\AssignOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\BatchFlattenOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\BatchNormalizeOp.h" />
@@ -134,6 +135,7 @@
     <ClInclude Include="include\ComputationalGraph\Operations\DivideOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\DropoutOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\DumpOp.h" />
+    <ClInclude Include="include\ComputationalGraph\Operations\FunctionOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\GradientsOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\IdentityOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\InstanceNormalizeOp.h" />
@@ -200,6 +202,7 @@
     <ClInclude Include="include\Layers\SingleLayer.h" />
     <ClInclude Include="include\Layers\UpSampling2D.h" />
     <ClInclude Include="include\Loss.h" />
+    <ClInclude Include="include\Memory\MemoryManager.h" />
     <ClInclude Include="include\Models\Flow.h" />
     <ClInclude Include="include\Models\ModelBase.h" />
     <ClInclude Include="include\Models\Sequential.h" />
@@ -210,10 +213,10 @@
     <ClInclude Include="include\ParameterAndGradient.h" />
     <ClInclude Include="include\Random.h" />
     <ClInclude Include="include\Stopwatch.h" />
-    <ClInclude Include="include\Tensors\Cuda\CudaDeviceVariable.h" />
     <ClInclude Include="include\Tensors\Cuda\CudaErrorCheck.h" />
     <ClInclude Include="include\Tensors\Cuda\CudaKernels.h" />
     <ClInclude Include="include\Tensors\Shape.h" />
+    <ClInclude Include="include\Tensors\Storage.h" />
     <ClInclude Include="include\Tensors\Tensor.h" />
     <ClInclude Include="include\Tensors\TensorFormatter.h" />
     <ClInclude Include="include\Tensors\TensorOpCpu.h" />
@@ -228,6 +231,7 @@
     <ClCompile Include="src\ComputationalGraph\Constant.cpp" />
     <ClCompile Include="src\ComputationalGraph\Graph.cpp" />
     <ClCompile Include="src\ComputationalGraph\NameScope.cpp" />
+    <ClCompile Include="src\ComputationalGraph\Operations\AccuracyOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\AssignOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\BatchFlattenOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\BatchNormalizeOp.cpp" />
@@ -237,6 +241,7 @@
     <ClCompile Include="src\ComputationalGraph\Operations\DivideOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\DropoutOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\DumpOp.cpp" />
+    <ClCompile Include="src\ComputationalGraph\Operations\FunctionOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\GradientsOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\IdentityOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\InstanceNormalizeOp.cpp" />
@@ -294,6 +299,7 @@
     <ClCompile Include="src\Layers\SingleLayer.cpp" />
     <ClCompile Include="src\Layers\UpSampling2D.cpp" />
     <ClCompile Include="src\Loss.cpp" />
+    <ClCompile Include="src\Memory\MemoryManager.cpp" />
     <ClCompile Include="src\Models\Flow.cpp" />
     <ClCompile Include="src\Models\ModelBase.cpp" />
     <ClCompile Include="src\Models\Sequential.cpp" />
@@ -304,6 +310,7 @@
     <ClCompile Include="src\Stopwatch.cpp" />
     <ClCompile Include="src\Tensors\Cuda\CudaErrorCheck.cpp" />
     <ClCompile Include="src\Tensors\Shape.cpp" />
+    <ClCompile Include="src\Tensors\Storage.cpp" />
     <ClCompile Include="src\Tensors\Tensor.cpp" />
     <ClCompile Include="src\Tensors\TensorFormatter.cpp" />
     <ClCompile Include="src\Tensors\TensorOpCpu.cpp" />

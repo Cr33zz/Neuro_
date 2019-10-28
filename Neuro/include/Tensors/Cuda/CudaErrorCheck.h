@@ -4,11 +4,14 @@
 #include <cudnn.h>
 #include <cublas.h>
 
+#include "Memory/MemoryManager.h"
+
 namespace Neuro
 {
     void CudaAssert(cudaError_t code);
     void CudaAssert(cudnnStatus_t status);
     void CudaAssert(cublasStatus_t status);
+    void CudaAssert(EMemStatus status);
     void CudaAssert(const char* error);
 }
 

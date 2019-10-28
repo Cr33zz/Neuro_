@@ -4,7 +4,6 @@
 #include <FreeImage.h>
 
 #include "Tensors/Tensor.h"
-#include "Tensors/Cuda/CudaDeviceVariable.h"
 #include "Tensors/TensorOpCpu.h"
 #include "Tensors/TensorOpMultiCpu.h"
 #include "Tensors/TensorOpGpu.h"
@@ -34,28 +33,19 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor::Tensor(const Shape& shape, const string& name)
-        : Tensor(name)
+    Tensor::Tensor(const Shape& shape, const string& name, EStorageType storageType)
+        : m_Name(name), m_Shape(shape), m_Storage(storageType, shape.Length, name)
     {
         m_Shape = shape;
-        m_Values.resize(shape.Length);
+        m_Op = DefaultOp();
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor::Tensor(istream& stream)
-        : Tensor("")
+    Tensor::Tensor(istream& stream, EStorageType storageType)
+        : Tensor(Shape(0), "", storageType)
     {
         LoadBin(stream);
     }
-
-    //////////////////////////////////////////////////////////////////////////
-    Tensor::Tensor(const string& name)
-        : m_Name(name), m_Shape(0)
-	{
-		OverrideHost();
-        m_Values.resize(m_Shape.Length);
-		m_Op = DefaultOp();
-	}
 
 	//////////////////////////////////////////////////////////////////////////
 	Tensor::Tensor(const Tensor& t)
@@ -64,14 +54,29 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
+    Tensor::Tensor(Tensor&& t)
+    {
+        *this = move(t);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     Tensor& Tensor::operator=(const Tensor& t)
     {
         if (this != &t)
         {
-            t.CopyToHost();
-            m_GpuData.Release();
-            OverrideHost();
-            m_Values = t.m_Values;
+            m_Storage = t.m_Storage;
+            m_Shape = t.m_Shape;
+            m_Op = t.m_Op;
+        }
+        return *this;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor& Tensor::operator=(Tensor&& t)
+    {
+        if (this != &t)
+        {
+            m_Storage = move(t.m_Storage);
             m_Name = t.m_Name;
             m_Shape = t.m_Shape;
             m_Op = t.m_Op;
@@ -80,25 +85,22 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor::Tensor(const vector<float>& values, const string& name)
-		: Tensor(name)
+    Tensor::Tensor(const vector<float>& values, const string& name, EStorageType storageType)
+		: Tensor(values, Shape((int)values.size()), name, storageType)
 	{
-		m_Shape = Shape((int)values.size());
-		m_Values = values;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor::Tensor(const vector<float>& values, const Shape& shape, const string& name)
-		: Tensor(name)
+    Tensor::Tensor(const vector<float>& values, const Shape& shape, const string& name, EStorageType storageType)
+		: Tensor(shape, name, storageType)
 	{
 		assert(values.size() == shape.Length);// && string("Invalid array size ") + to_string(values.size()) + ". Expected " + to_string(shape.Length) + ".");
-		m_Shape = shape;
-		m_Values = values;
+        memcpy(m_Storage.Data(), &values[0], values.size() * sizeof(float));
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor::Tensor(const string& imageFile, bool normalize, bool grayScale, const string& name)
-        : Tensor(name)
+    Tensor::Tensor(const string& imageFile, bool normalize, bool grayScale, const string& name, EStorageType storageType)
+        : Tensor(Shape(0), name, storageType)
 	{
         ImageLibInit();
 
@@ -113,7 +115,7 @@ namespace Neuro
         const uint32_t HEIGHT = FreeImage_GetHeight(image);
 
         m_Shape = Shape(WIDTH, HEIGHT, grayScale ? 1 : 3);
-        m_Values.resize(m_Shape.Length);
+        m_Storage.Resize(m_Shape.Length);
 
         RGBQUAD color;
 
@@ -173,7 +175,7 @@ namespace Neuro
         FreeImage_Unload(image);
     }
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
 	void Tensor::SetDefaultOpMode(EOpMode mode)
 	{
 		g_DefaultOp = GetOpFromMode(mode);
@@ -197,18 +199,31 @@ namespace Neuro
 		m_Op = GetOpFromMode(mode);
 	}
 
-	//////////////////////////////////////////////////////////////////////////
-	std::vector<float>& Tensor::GetValues()
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Name(const string& name)
+    {
+        m_Name = name;
+        m_Storage.Rename(name);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+	float* Tensor::Values()
 	{
-		CopyToHost();
-		return m_Values;
+		CopyToHost(true);
+		return m_Storage.Data();
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    const std::vector<float>& Tensor::GetValues() const
+    const float* Tensor::Values() const
     {
         CopyToHost();
-        return m_Values;
+        return m_Storage.Data();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::SetStorageType(int type)
+    {
+        m_Storage.ChangeType(type);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -218,8 +233,8 @@ namespace Neuro
 
 		auto fillUp = [&](Random& rng)
 		{
-			for (uint32_t i = offset; i < m_Values.size(); ++i)
-				m_Values[i] = min + (max - min) * rng.NextFloat();
+			for (uint32_t i = offset; i < m_Storage.Size(); ++i)
+				m_Storage.Data()[i] = min + (max - min) * rng.NextFloat();
 		};
 
         if (seed > 0)
@@ -237,8 +252,8 @@ namespace Neuro
     Tensor& Tensor::FillWithRange(float start, float increment, uint32_t offset)
 	{
 		OverrideHost();
-        for (uint32_t i = offset; i < m_Values.size(); ++i)
-			m_Values[i] = start + i * increment;
+        for (uint32_t i = offset; i < m_Storage.Size(); ++i)
+			m_Storage.Data()[i] = start + i * increment;
 		return *this;
 	}
 
@@ -246,8 +261,8 @@ namespace Neuro
 	Tensor& Tensor::FillWithValue(float value, uint32_t offset)
 	{
 		OverrideHost();
-		for (uint32_t i = offset; i < m_Values.size(); ++i)
-			m_Values[i] = value;
+		for (uint32_t i = offset; i < m_Storage.Size(); ++i)
+			m_Storage.Data()[i] = value;
 		return *this;
 	}
 
@@ -255,29 +270,29 @@ namespace Neuro
     Tensor& Tensor::FillWithFunc(const function<float()>& func, uint32_t offset)
     {
         OverrideHost();
-        for (uint32_t i = offset; i < m_Values.size(); ++i)
-            m_Values[i] = func();
+        for (uint32_t i = offset; i < m_Storage.Size(); ++i)
+            m_Storage.Data()[i] = func();
         return *this;
     }
 
     //////////////////////////////////////////////////////////////////////////
 	void Tensor::Zero()
 	{
-        if (m_CurrentLocation == ELocation::Host)
-            fill(m_Values.begin(), m_Values.end(), 0.f);
+        NEURO_ASSERT(m_Storage.Location() != None, "");
+        if (m_Storage.Location() == Host)
+            g_OpCpu->Zero(*this);
         else
-            GetDeviceVar().ZeroOnDevice();
+            g_OpGpu->Zero(*this);
 	}
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::One()
     {
-        OverrideHost();
-        fill(m_Values.begin(), m_Values.end(), 1.f);
-        /*if (m_CurrentLocation == ELocation::Host)
-            fill(m_Values.begin(), m_Values.end(), 1.f);
+        NEURO_ASSERT(m_Storage.Location() != None, "");
+        if (m_Storage.Location() == Host)
+            g_OpCpu->One(*this);
         else
-            GetDeviceVar().OneOnDevice();*/
+            g_OpGpu->One(*this);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -293,7 +308,7 @@ namespace Neuro
         {
             for (uint32_t j = 0; j < Depth(); ++j, ++i)
             {
-                result(w, h, j, n) = m_Values[i];
+                result(w, h, j, n) = m_Storage.Data()[i];
             }
         }
 
@@ -312,7 +327,7 @@ namespace Neuro
         {
             for (uint32_t j = 0; j < Depth(); ++j, ++i)
             {
-                result.m_Values[i] = Get(w, h, j, n);
+                result.m_Storage.Data()[i] = Get(w, h, j, n);
             }
         }
 
@@ -322,11 +337,12 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
 	void Tensor::Mul(bool transposeT, const Tensor& t, Tensor& result) const
 	{
+        NEURO_ASSERT(!transposeT, "");
 		assert((!transposeT && Width() == t.Height()) || (transposeT && Width() == t.Width()));
 		assert(t.Depth() == Depth());
         assert(result.Batch() == max(Batch(), t.Batch()));
 
-		Op()->Mul(false, transposeT, *this, t, result);
+		Op()->MatMul(false, transposeT, *this, t, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -366,11 +382,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Mul(float v, Tensor& result) const
 	{
-		CopyToHost();
-		result.OverrideHost();
-
-		for (uint32_t i = 0; i < m_Values.size(); ++i)
-			result.m_Values[i] = m_Values[i] * v;
+        Op()->Mul(*this, v, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -384,16 +396,8 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Div(const Tensor& t, Tensor& result) const
 	{
-		CopyToHost();
-		result.OverrideHost();
-
-		assert(SameDimensionsExceptBatches(t));
-		assert(t.Batch() == result.Batch());
-
-		for (uint32_t i = 0; i < m_Values.size(); ++i)
-			result.m_Values[i] = m_Values[i] / t.m_Values[i];
+        Op()->Div(*this, t, result);
 	}
-
 
 	//////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::Div(const Tensor& t) const
@@ -448,11 +452,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Add(float v, Tensor& result) const
 	{
-		CopyToHost();
-        result.OverrideHost();
-
-		for (uint32_t i = 0; i < m_Values.size(); ++i)
-			result.m_Values[i] = m_Values[i] + v;
+        Op()->Add(*this, v, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -480,11 +480,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Sub(float v, Tensor& result) const
 	{
-		CopyToHost();
-        result.OverrideHost();
-
-		for (uint32_t i = 0; i < m_Values.size(); ++i)
-			result.m_Values[i] = m_Values[i] - v;
+        Add(-v, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -498,10 +494,11 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Negated(Tensor& result) const
 	{
+        CopyToHost();
         result.OverrideHost();
 
-		for (uint32_t i = 0; i < m_Values.size(); ++i)
-			result.m_Values[i] = -m_Values[i];
+		for (uint32_t i = 0; i < m_Storage.Size(); ++i)
+			result.m_Storage.Data()[i] = -m_Storage.Data()[i];
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -530,18 +527,38 @@ namespace Neuro
 	Tensor Tensor::DiagFlat() const
 	{
         CopyToHost();
-		Tensor result(Shape(BatchLength(), BatchLength(), 1, Batch()));
+		Tensor result(zeros(Shape(BatchLength(), BatchLength(), 1, Batch())));
 
         uint32_t batchLen = BatchLength();
 
 		for (uint32_t b = 0; b < Batch(); ++b)
 		for (uint32_t i = 0; i < batchLen; ++i)
-			result(i, i, 0, b) = m_Values[b * batchLen + i];
+			result(i, i, 0, b) = m_Storage.Data()[b * batchLen + i];
 
 		return result;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::Pow(float power) const
+    {
+        Tensor result(m_Shape);
+        Pow(power, result);
+        return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Pow(float power, Tensor& result) const
+    {
+        Op()->Pow(*this, power, result);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::PowGradient(const Tensor& input, float power, const Tensor& outputGradient, Tensor& inputGradient) const
+    {
+        Op()->PowGradient(input, power, outputGradient, inputGradient);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void Tensor::Map(const function<float(float)>& func, Tensor& result) const
 	{
 		Op()->Map(func, *this, result);
@@ -652,21 +669,21 @@ namespace Neuro
 
         if (axis == GlobalAxis)
             output.Div((float)Length(), output);
-        if (axis == WidthAxis)
+        else if (axis == WidthAxis)
             output.Div((float)Width(), output);
-        if (axis == HeightAxis)
+        else if (axis == HeightAxis)
             output.Div((float)Height(), output);
-        if (axis == DepthAxis)
+        else if (axis == DepthAxis)
             output.Div((float)Depth(), output);
-        if (axis == BatchAxis)
+        else if (axis == BatchAxis)
             output.Div((float)Batch(), output);
-        if (axis == _01Axes)
+        else if (axis == _01Axes)
             output.Div((float)(Len(0)*Len(1)), output);
-        if (axis == _012Axes)
+        else if (axis == _012Axes)
             output.Div((float)(Len(0)*Len(1)*Len(2)), output);
-        if (axis == _013Axes)
+        else if (axis == _013Axes)
             output.Div((float)(Len(0)*Len(1)*Len(3)), output);
-        if (axis == _123Axes)
+        else if (axis == _123Axes)
             output.Div((float)(Len(1)*Len(2)*Len(3)), output);
     }
 
@@ -682,7 +699,7 @@ namespace Neuro
 		{
 			const Tensor& t = tensors[n];
 			t.CopyToHost();
-			copy(t.m_Values.begin(), t.m_Values.end(), output.m_Values.begin() + t.Length() * n);
+			copy(t.m_Storage.Data(), t.m_Storage.DataEnd(), output.m_Storage.Data() + t.Length() * n);
 		}
 
 		return output;
@@ -703,14 +720,14 @@ namespace Neuro
 
 		for (uint32_t n = 0; n < t0_copies; ++n)
 		{
-			copy(t.m_Values.begin(), t.m_Values.end(), output.m_Values.begin() + t.Length() * n);
+			copy(t.m_Storage.Data(), t.m_Storage.DataEnd(), output.m_Storage.Data() + t.Length() * n);
 		}
 
 		for (uint32_t n = t0_copies; n < output.Depth(); ++n)
 		{
 			const Tensor& t = tensors[n - t0_copies];
 			t.CopyToHost();
-			copy(t.m_Values.begin(), t.m_Values.end(), output.m_Values.begin() + t.Length() * n);
+			copy(t.m_Storage.Data(), t.m_Storage.DataEnd(), output.m_Storage.Data() + t.Length() * n);
 		}
 
 		return output;
@@ -728,7 +745,7 @@ namespace Neuro
 
         for (uint32_t i = 0; i < (uint32_t)inputs.size(); ++i)
         {
-            auto& inputValues = inputs[0]->GetValues();
+            auto inputValues = inputs[0]->Values();
             size_t j = 0;
             for (uint32_t n = 0; n < batch; ++n)
             for (uint32_t d = 0; d < depth; ++d)
@@ -749,7 +766,7 @@ namespace Neuro
             for (uint32_t i = 0; i < inputs.size(); ++i)
             {
                 inputs[i]->CopyToHost();
-                copy(inputs[i]->m_Values.begin(), inputs[i]->m_Values.end(), result.m_Values.begin() + elementsCopied);
+                copy(inputs[i]->m_Storage.Data(), inputs[i]->m_Storage.DataEnd(), result.m_Storage.Data() + elementsCopied);
                 elementsCopied += inputs[i]->Length();
             }
         }
@@ -781,7 +798,7 @@ namespace Neuro
 
         for (uint32_t i = 0; i < (uint32_t)outputs.size(); ++i)
         {
-            auto& outputValues = outputs[0]->GetValues();
+            auto outputValues = outputs[0]->Values();
             size_t j = 0;
             for (uint32_t n = 0; n < batch; ++n)
             for (uint32_t d = 0; d < depth; ++d)
@@ -804,7 +821,7 @@ namespace Neuro
             for (uint32_t i = 0; i < outputs.size(); ++i)
             {
                 outputs[i]->OverrideHost();
-                copy(m_Values.begin() + elementsCopied, m_Values.begin() + elementsCopied + singleOutputLen, outputs[i]->m_Values.begin());
+                copy(m_Storage.Data() + elementsCopied, m_Storage.Data() + elementsCopied + singleOutputLen, outputs[i]->m_Storage.Data());
                 elementsCopied += singleOutputLen;
             }
         }
@@ -831,17 +848,22 @@ namespace Neuro
 		inputs[0]->CopyTo(result);
 		for (uint32_t i = 1; i < inputs.size(); ++i)
 		for (uint32_t j = 0; j < result.Length(); ++j)
-			result.m_Values[j] = result.m_Values[j] > inputs[i]->m_Values[j] ? inputs[i]->m_Values[j] : result.m_Values[j];
+			result.m_Storage.Data()[j] = result.m_Storage.Data()[j] > inputs[i]->m_Storage.Data()[j] ? inputs[i]->m_Storage.Data()[j] : result.m_Storage.Data()[j];
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::MergeMax(const const_tensor_ptr_vec_t& inputs, Tensor& result)
 	{
         result.OverrideHost();
+        inputs[0]->CopyToHost();
 		inputs[0]->CopyTo(result);
-		for (uint32_t i = 1; i < inputs.size(); ++i)
-		for (uint32_t j = 0; j < result.Length(); ++j)
-			result.m_Values[j] = result.m_Values[j] < inputs[i]->m_Values[j] ? inputs[i]->m_Values[j] : result.m_Values[j];
+
+        for (uint32_t i = 1; i < inputs.size(); ++i)
+        {
+            inputs[i]->CopyToHost();
+            for (uint32_t j = 0; j < result.Length(); ++j)
+                result.m_Storage.Data()[j] = result.m_Storage.Data()[j] < inputs[i]->m_Storage.Data()[j] ? inputs[i]->m_Storage.Data()[j] : result.m_Storage.Data()[j];
+        }
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -849,9 +871,12 @@ namespace Neuro
 	{
         result.OverrideHost();
 		result.Zero();
-		for (uint32_t i = 0; i < inputs.size(); ++i)
-		for (uint32_t j = 0; j < result.Length(); ++j)
-			result.m_Values[j] += inputs[i]->m_Values[j];
+        for (uint32_t i = 0; i < inputs.size(); ++i)
+        {
+            inputs[i]->CopyToHost();
+            for (uint32_t j = 0; j < result.Length(); ++j)
+                result.m_Storage.Data()[j] += inputs[i]->m_Storage.Data()[j];
+        }
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -870,7 +895,7 @@ namespace Neuro
             results[i]->OverrideHost();
 			results[i]->Zero();
 			for (uint32_t j = 0; j < output.Length(); ++j)
-				results[i]->m_Values[j] = inputs[i]->m_Values[j] == output.m_Values[j] ? outputGradient.m_Values[j] : 0;
+				results[i]->m_Storage.Data()[j] = inputs[i]->m_Storage.Data()[j] == output.m_Storage.Data()[j] ? outputGradient.m_Storage.Data()[j] : 0;
 		}
 	}
 
@@ -924,18 +949,18 @@ namespace Neuro
 
                 for (uint32_t n = 0; n < Batch(); ++n)
                 for (uint32_t i = 0, idx = n * BatchLength(); i < BatchLength(); ++i, ++idx)
-                    norm(n) += normMode == ENormMode::L1 ? abs(m_Values[idx]) : (m_Values[idx] * m_Values[idx]);
+                    norm(n) += normMode == ENormMode::L1 ? abs(m_Storage.Data()[idx]) : (m_Storage.Data()[idx] * m_Storage.Data()[idx]);
 
                 if (normMode == ENormMode::L2)
                 {
                     for (uint32_t i = 0; i < norm.Length(); ++i)
-                        norm.m_Values[i] = sqrt(norm.m_Values[i]);
+                        norm.m_Storage.Data()[i] = sqrt(norm.m_Storage.Data()[i]);
                 }
             }
         
             for (uint32_t n = 0; n < Batch(); ++n)
             for (uint32_t i = 0, idx = n * BatchLength(); i < BatchLength(); ++i, ++idx)
-                result.m_Values[idx] = m_Values[idx] / norm(n);
+                result.m_Storage.Data()[idx] = m_Storage.Data()[idx] / norm(n);
 
             return norm;
         }
@@ -959,7 +984,7 @@ namespace Neuro
                 if (normMode == ENormMode::L2)
                 {
                     for (uint32_t i = 0; i < norm.Length(); ++i)
-                        norm.m_Values[i] = ::sqrt(norm.m_Values[i]);
+                        norm.m_Storage.Data()[i] = ::sqrt(norm.m_Storage.Data()[i]);
                 }
             }
 
@@ -981,17 +1006,17 @@ namespace Neuro
             {
                 norm = Tensor({ 0 }, Shape(1));
                 for (uint32_t i = 0; i < Length(); ++i)
-                    norm(0) += normMode == ENormMode::L1 ? abs(m_Values[i]) : (m_Values[i] * m_Values[i]);
+                    norm(0) += normMode == ENormMode::L1 ? abs(m_Storage.Data()[i]) : (m_Storage.Data()[i] * m_Storage.Data()[i]);
 
                 if (normMode == ENormMode::L2)
                 {
                     for (uint32_t i = 0; i < norm.Length(); ++i)
-                        norm.m_Values[i] = ::sqrt(norm.m_Values[i]);
+                        norm.m_Storage.Data()[i] = ::sqrt(norm.m_Storage.Data()[i]);
                 }
             }
 
             for (uint32_t i = 0; i < Length(); ++i)
-                result.m_Values[i] = m_Values[i] / norm(0);
+                result.m_Storage.Data()[i] = m_Storage.Data()[i] / norm(0);
 
             return norm;
         }
@@ -1034,7 +1059,7 @@ namespace Neuro
                 const float spread = max(n) - minVal;
 
                 for (uint32_t i = 0, idx = n * BatchLength(); i < BatchLength(); ++i, ++idx)
-                    result.m_Values[idx] = rangeSpread * (m_Values[idx] - minVal) / spread + scaleMin;
+                    result.m_Storage.Data()[idx] = rangeSpread * (m_Storage.Data()[idx] - minVal) / spread + scaleMin;
             }
         }
         else */if (axis == BatchAxis)
@@ -1059,7 +1084,7 @@ namespace Neuro
             const float spread = max(0) - minVal;
 
             for (uint32_t i = 0; i < Length(); ++i)
-                result.m_Values[i] = rangeSpread * (m_Values[i] - minVal) / spread + scaleMin;
+                result.m_Storage.Data()[i] = rangeSpread * (m_Storage.Data()[i] - minVal) / spread + scaleMin;
         }
         else
         {
@@ -1198,7 +1223,7 @@ namespace Neuro
         for (uint32_t w = 0; w < result.Width(); ++w)
         {
             int inIndex = w * m_Shape.Stride[permutation[0]] + h * m_Shape.Stride[permutation[1]] + d * m_Shape.Stride[permutation[2]] + n * m_Shape.Stride[permutation[3]];
-            result(w, h, d, n) = m_Values[inIndex];
+            result(w, h, d, n) = m_Storage.Data()[inIndex];
         }
     }
 
@@ -1212,7 +1237,9 @@ namespace Neuro
 	Tensor Tensor::Reshaped(const Shape& shape) const
 	{
         CopyToHost();
-		return Tensor(m_Values, m_Shape.Reshaped((int)shape.Width(), (int)shape.Height(), (int)shape.Depth(), (int)shape.Batch()));
+        Tensor result(*this);
+        result.Reshape(shape);
+		return result;
 	}
 
     //////////////////////////////////////////////////////////////////////////
@@ -1235,9 +1262,7 @@ namespace Neuro
             return;
 
         m_Shape = shape;
-        m_Values.resize(shape.Length);
-        if (m_GpuData.Resize(shape.Length))
-            OverrideHost(); // data will have to be re-copied when necessary
+        m_Storage.Resize(shape.Length);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1256,7 +1281,7 @@ namespace Neuro
 		Tensor result(Shape(width, height, depth, m_Shape.Batch()));
 		for (uint32_t n = 0; n < Batch(); ++n)
 		for (uint32_t i = 0, idx = n * newBatchLength; i < newBatchLength; ++i, ++idx)
-			result.m_Values[idx] = m_Values[n * BatchLength() + i % BatchLength()];
+			result.m_Storage.Data()[idx] = m_Storage.Data()[n * BatchLength() + i % BatchLength()];
 		return result;
 	}
 
@@ -1310,14 +1335,12 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Conv2DInputsGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& inputsGradient) const
 	{
-		inputsGradient.Zero();
 		Op()->Conv2DInputGradient(gradient, kernels, stride, padding, padding, dataFormat, inputsGradient);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& kernelsGradient) const
 	{
-		kernelsGradient.Zero();
 		Op()->Conv2DKernelsGradient(input, gradient, stride, padding, padding, dataFormat, kernelsGradient);
 	}
 
@@ -1339,14 +1362,12 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Conv2DTransposedInputsGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& inputsGradient) const
     {
-        inputsGradient.Zero();
         gradient.Conv2D(kernels, stride, padding, dataFormat, inputsGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Conv2DTransposedKernelsGradient(const Tensor& input, const Tensor& gradient, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& kernelsGradient) const
     {
-        kernelsGradient.Zero();
         Op()->Conv2DKernelsGradient(gradient, input, stride, padding, padding, dataFormat, kernelsGradient);
     }
 
@@ -1360,7 +1381,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::Pool2D(uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t padding, EDataFormat dataFormat) const
 	{
-		Tensor result(GetConvOutputShape(GetShape(), GetShape().Depth(), filterSize, filterSize, stride, padding, padding, dataFormat));
+		Tensor result(GetPooling2DOutputShape(GetShape(), filterSize, filterSize, stride, padding, padding, dataFormat));
 		Pool2D(filterSize, stride, type, padding, dataFormat, result);
 
 		return result;
@@ -1394,14 +1415,16 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::BatchNorm(const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor& runningMean, const Tensor& runningVar, Tensor& result) const
+    void Tensor::BatchNorm(const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor* runningMean, const Tensor* runningVar, Tensor& result) const
     {
+        NEURO_ASSERT((runningMean && runningVar) || (!runningMean && !runningVar), "Both running mean and var must be present or absent at the same time.");
         Op()->BatchNormalization(*this, m_Shape.Depth() > 1 ? Spatial : PerActivation, gamma, beta, epsilon, runningMean, runningVar, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::BatchNormTrain(const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const
+    void Tensor::BatchNormTrain(const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor* runningMean, Tensor* runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const
     {
+        NEURO_ASSERT((runningMean && runningVar) || (!runningMean && !runningVar), "Both running mean and var must be present or absent at the same time.");
         Op()->BatchNormalizationTrain(*this, m_Shape.Depth() > 1 ? Spatial : PerActivation, gamma, beta, momentum, epsilon, runningMean, runningVar, saveMean, saveInvVariance, result);
     }
 
@@ -1412,15 +1435,15 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::InstanceNorm(const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor& runningMean, const Tensor& runningVar, Tensor& result) const
+    void Tensor::InstanceNorm(const Tensor& gamma, const Tensor& beta, float epsilon, Tensor& result) const
     {
-        Op()->BatchNormalization(*this, Instance, gamma, beta, epsilon, runningMean, runningVar, result);
+        Op()->BatchNormalization(*this, Instance, gamma, beta, epsilon, nullptr, nullptr, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::InstanceNormTrain(const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const
+    void Tensor::InstanceNormTrain(const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const
     {
-        Op()->BatchNormalizationTrain(*this, Instance, gamma, beta, momentum, epsilon, runningMean, runningVar, saveMean, saveInvVariance, result);
+        Op()->BatchNormalizationTrain(*this, Instance, gamma, beta, momentum, epsilon, nullptr, nullptr, saveMean, saveInvVariance, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1480,11 +1503,17 @@ namespace Neuro
     {
         assert(stride > 0);
         if (dataFormat == NCHW)
+        {
+            NEURO_ASSERT((inputShape.Width() + 2 * paddingX - kernelWidth) > 0, "");
+            NEURO_ASSERT((inputShape.Height() + 2 * paddingY - kernelHeight) > 0, "");
             return Shape((int)floor((inputShape.Width() + 2 * paddingX - kernelWidth) / (float)stride) + 1, 
                          (int)floor((inputShape.Height() + 2 * paddingY - kernelHeight) / (float)stride) + 1,
                          inputShape.Depth(),
                          inputShape.Batch());
+        }
 
+        NEURO_ASSERT((inputShape.Len(1) + 2 * paddingX - kernelWidth) > 0, "");
+        NEURO_ASSERT((inputShape.Len(2) + 2 * paddingY - kernelHeight) > 0, "");
         return Shape(inputShape.Len(0), 
                      (int)floor((inputShape.Len(1) + 2 * paddingX - kernelWidth) / (float)stride) + 1,
                      (int)floor((inputShape.Len(2) + 2 * paddingY - kernelHeight) / (float)stride) + 1,
@@ -1496,11 +1525,17 @@ namespace Neuro
     {
         assert(stride > 0);
         if (dataFormat == NCHW)
+        {
+            NEURO_ASSERT((inputShape.Width() + 2 * paddingX - kernelWidth) > 0, "");
+            NEURO_ASSERT((inputShape.Height() + 2 * paddingY - kernelHeight) > 0, "");
             return Shape((int)floor((inputShape.Width() + 2 * paddingX - kernelWidth) / (float)stride) + 1, 
                          (int)floor((inputShape.Height() + 2 * paddingY - kernelHeight) / (float)stride) + 1,
                          kernelsNum,
                          inputShape.Batch());
+        }
 
+        NEURO_ASSERT((inputShape.Len(1) + 2 * paddingX - kernelWidth) > 0, "");
+        NEURO_ASSERT((inputShape.Len(2) + 2 * paddingY - kernelHeight) > 0, "");
         return Shape(kernelsNum, 
                      (int)floor((inputShape.Len(1) + 2 * paddingX - kernelWidth) / (float)stride) + 1,
                      (int)floor((inputShape.Len(2) + 2 * paddingY - kernelHeight) / (float)stride) + 1,
@@ -1512,11 +1547,17 @@ namespace Neuro
     {
         assert(stride > 0);
         if (dataFormat == NCHW)
+        {
+            NEURO_ASSERT(((inputShape.Width() - 1) * stride + kernelWidth - 2 * paddingX) > 0, "");
+            NEURO_ASSERT(((inputShape.Height() - 1) * stride + kernelHeight - 2 * paddingY) > 0, "");
             return Shape((inputShape.Width() - 1) * stride + kernelWidth - 2 * paddingX,
                          (inputShape.Height() - 1) * stride + kernelHeight - 2 * paddingY,
                          outputDepth, 
                          inputShape.Batch());
+        }
 
+        NEURO_ASSERT(((inputShape.Len(1) - 1) * stride + kernelWidth - 2 * paddingX) > 0, "");
+        NEURO_ASSERT(((inputShape.Len(2) - 1) * stride + kernelHeight - 2 * paddingY) > 0, "");
         return Shape(outputDepth, 
                      (inputShape.Len(1) - 1) * stride + kernelWidth - 2 * paddingX,
                      (inputShape.Len(2) - 1) * stride + kernelHeight - 2 * paddingY,
@@ -1525,26 +1566,26 @@ namespace Neuro
 
     void Tensor::SaveBin(ostream& stream) const
     {
-        m_Shape.SaveBin(stream);
-        size_t valuesNum = m_Values.size();
+        /*m_Shape.SaveBin(stream);
+        size_t valuesNum = m_Storage.UsedSize();
         stream.write((const char*)&valuesNum, sizeof(valuesNum));
-        stream.write((const char*)&m_Values[0], valuesNum * sizeof(float));
+        stream.write((const char*)&m_Storage.Data()[0], valuesNum * sizeof(float));
         size_t nameLen = m_Name.length();
         stream.write((const char*)&nameLen, sizeof(nameLen));
-        stream.write(m_Name.c_str(), nameLen);
+        stream.write(m_Name.c_str(), nameLen);*/
     }
 
     void Tensor::LoadBin(istream& stream)
     {
-        m_Shape.LoadBin(stream);
+        /*m_Shape.LoadBin(stream);
+        m_Storage.Resize(m_Shape.Length);
         size_t valuesNum = 0;
         stream.read((char*)&valuesNum, sizeof(valuesNum));
-        m_Values.resize(valuesNum);
-        stream.read((char*)&m_Values[0], valuesNum * sizeof(float));
+        stream.read((char*)m_Storage.Data(), valuesNum * sizeof(float));
         size_t nameLen = 0;
         stream.read((char*)&nameLen, sizeof(nameLen));
         m_Name.resize(nameLen);
-        stream.read(&m_Name[0], nameLen);
+        stream.read(&m_Name[0], nameLen);*/
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -1566,50 +1607,51 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::CopyTo(Tensor& result, float tau) const
+	void Tensor::CopyTo(Tensor& target, float tau) const
 	{
-        NEURO_ASSERT(m_Shape.Length == result.m_Shape.Length, "");
+        NEURO_ASSERT(m_Shape.Length == target.m_Shape.Length, "");
 
-        if (tau <= 0 && IsOnDevice() && result.IsOnDevice())
+        if (tau <= 0 && target.IsOnDevice()) // target is more important
         {
-            GetDeviceVar().CopyTo(result.GetDevicePtr());
+            CopyToDevice();
+            m_Storage.CopyWithinDevice(target.GetDevicePtr());
             return;
         }
 
 		CopyToHost();
-        result.OverrideHost();
+        target.OverrideHost();
 
 		if (tau <= 0)
-			copy(m_Values.begin(), m_Values.end(), result.m_Values.begin());
+            memcpy(target.m_Storage.Data(), m_Storage.Data(), m_Storage.SizeInBytes());
 		else
-			Map([&](float v1, float v2) { return v1 * tau + v2 * (1 - tau); }, result, result);
+			Map([&](float v1, float v2) { return v1 * tau + v2 * (1 - tau); }, target, target);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::CopyBatchTo(uint32_t batchId, uint32_t targetBatchId, Tensor& result) const
+	void Tensor::CopyBatchTo(uint32_t batchId, uint32_t targetBatchId, Tensor& target) const
 	{
-        assert(SameDimensionsExceptBatches(result));
+        assert(SameDimensionsExceptBatches(target));
         assert(batchId < Batch());
-        assert(targetBatchId < result.Batch());
+        assert(targetBatchId < target.Batch());
 		
         CopyToHost();
-		result.OverrideHost();
+		target.OverrideHost();
         
-		copy(m_Values.begin() + batchId * m_Shape.Dim0Dim1Dim2, 
-			 m_Values.begin() + batchId * m_Shape.Dim0Dim1Dim2 + m_Shape.Dim0Dim1Dim2,
-			 result.m_Values.begin() + targetBatchId * m_Shape.Dim0Dim1Dim2);
+		copy(m_Storage.Data() + batchId * m_Shape.Dim0Dim1Dim2, 
+			 m_Storage.Data() + batchId * m_Shape.Dim0Dim1Dim2 + m_Shape.Dim0Dim1Dim2,
+			 target.m_Storage.Data() + targetBatchId * m_Shape.Dim0Dim1Dim2);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::CopyDepthTo(uint32_t depthId, uint32_t batchId, uint32_t targetDepthId, uint32_t targetBatchId, Tensor& result) const
+	void Tensor::CopyDepthTo(uint32_t depthId, uint32_t batchId, uint32_t targetDepthId, uint32_t targetBatchId, Tensor& target) const
 	{
 		CopyToHost();
-		result.OverrideHost();
+		target.OverrideHost();
 		//if (m_Shape.Width != result.m_Shape.Width || m_Shape.Height != result.m_Shape.Height) throw new Exception("Incompatible tensors.");
 
-		copy(m_Values.begin() + batchId * m_Shape.Dim0Dim1Dim2 + depthId * m_Shape.Dim0Dim1, 
-			 m_Values.begin() + batchId * m_Shape.Dim0Dim1Dim2 + depthId * m_Shape.Dim0Dim1 + m_Shape.Dim0Dim1,
-		     result.m_Values.begin() + targetBatchId * m_Shape.Dim0Dim1Dim2 + targetDepthId * m_Shape.Dim0Dim1);
+		copy(m_Storage.Data() + batchId * m_Shape.Dim0Dim1Dim2 + depthId * m_Shape.Dim0Dim1, 
+			 m_Storage.Data() + batchId * m_Shape.Dim0Dim1Dim2 + depthId * m_Shape.Dim0Dim1 + m_Shape.Dim0Dim1,
+		     target.m_Storage.Data() + targetBatchId * m_Shape.Dim0Dim1Dim2 + targetDepthId * m_Shape.Dim0Dim1);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -1666,14 +1708,14 @@ namespace Neuro
 		other.CopyToHost();
 
 		//assert(Values.size() == other.Values.size(), "Comparing tensors with different number of elements!");
-		if (m_Values.size() != other.m_Values.size())
+		if (m_Storage.Size() != other.m_Storage.Size())
 			return false;
 
 		if (epsilon == 0)
-			return m_Values == other.m_Values;
+            return memcmp(m_Storage.Data(), other.m_Storage.Data(), m_Storage.SizeInBytes()) == 0;
 
-		for (uint32_t i = 0; i < m_Values.size(); ++i)
-			if (abs(m_Values[i] - other.m_Values[i]) > epsilon)
+		for (uint32_t i = 0; i < m_Storage.Size(); ++i)
+			if (abs(m_Storage.Data()[i] - other.m_Storage.Data()[i]) > epsilon)
 				return false;
 
 		return true;
@@ -1690,8 +1732,8 @@ namespace Neuro
 
         auto& minValueShape = maxValue.GetShape();
 
-        auto& inputValues = input.GetValues();
-        auto& minValueValues = maxValue.GetValues();
+        auto inputValues = input.Values();
+        auto minValueValues = maxValue.Values();
 
         if (maxIndex)
             maxIndex->FillWithValue(-1);
@@ -1709,11 +1751,11 @@ namespace Neuro
                 if (maxIndex)
                 {
                     if (W && H && D && N)
-                        maxIndex->GetValues()[idx] = (float)inputShape.GetIndex(w, h, d, n);
+                        maxIndex->Values()[idx] = (float)inputShape.GetIndex(w, h, d, n);
                     else if (W && H && D)
-                        maxIndex->GetValues()[idx] = (float)inputShape.GetIndex(w, h, d, 0u);
+                        maxIndex->Values()[idx] = (float)inputShape.GetIndex(w, h, d, 0u);
                     else
-                        maxIndex->GetValues()[idx] = (float)(w * W + h * H + d * D + n * N);
+                        maxIndex->Values()[idx] = (float)(w * W + h * H + d * D + n * N);
                     // I didn't bother to come up with indices for other combinations :(
                 }
             }
@@ -1761,8 +1803,8 @@ namespace Neuro
 
         auto& minValueShape = minValue.GetShape();
 
-        auto& inputValues = input.GetValues();
-        auto& minValueValues = minValue.GetValues();
+        auto inputValues = input.Values();
+        auto minValueValues = minValue.Values();
 
         if (minIndex)
             minIndex->FillWithValue(-1);
@@ -1780,11 +1822,11 @@ namespace Neuro
                 if (minIndex)
                 {
                     if (W && H && D && N)
-                        minIndex->GetValues()[idx] = (float)inputShape.GetIndex(w, h, d, n);
+                        minIndex->Values()[idx] = (float)inputShape.GetIndex(w, h, d, n);
                     else if (W && H && D)
-                        minIndex->GetValues()[idx] = (float)inputShape.GetIndex(w, h, d, 0u);
+                        minIndex->Values()[idx] = (float)inputShape.GetIndex(w, h, d, 0u);
                     else
-                        minIndex->GetValues()[idx] = (float)(w * W + h * H + d * D + n * N);
+                        minIndex->Values()[idx] = (float)(w * W + h * H + d * D + n * N);
                     // I didn't bother to come up with indices for other combinations :(
                 }
             }
@@ -1896,47 +1938,126 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::CopyToDevice() const
 	{
-        if (m_CurrentLocation == ELocation::Device)
-            return;
-        
-		GetDeviceVar().CopyToDevice(m_Values);
-		m_CurrentLocation = ELocation::Device;
+        m_Storage.CopyToDevice();
 	}
 
     //////////////////////////////////////////////////////////////////////////
-	void Tensor::CopyToHost() const
+	void Tensor::CopyToHost(bool allowAlloc) const
 	{
-		if (m_CurrentLocation == ELocation::Host)
-			return;
-
-		GetDeviceVar().CopyToHost(m_Values);
-		m_CurrentLocation = ELocation::Host;
+        m_Storage.CopyToHost(allowAlloc);
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::OverrideHost() const
+    void Tensor::SyncToHost() const
     {
-        m_CurrentLocation = ELocation::Host;
+        m_Storage.SyncToHost();
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const Neuro::CudaDeviceVariable<float>& Tensor::GetDeviceVar() const
+    bool Tensor::TryDeviceAllocate() const
     {
-        if (!m_GpuData.m_DeviceVar)
-            m_GpuData.m_DeviceVar = new CudaDeviceVariable<float>(m_Values.size());
-        return *m_GpuData.m_DeviceVar;
+        if (!m_Storage.IsHostAllocated())
+            m_Storage.AllocateOnHost();
+        if (Op() == g_OpGpu)
+        {
+            m_Storage.AllocateOnDevice();
+            return m_Storage.IsDeviceAllocated();
+        }
+        return false;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    bool Tensor::TryDeviceRelease()
+    {
+        if (Op() != g_OpGpu)
+            return false;
+
+        m_Storage.FreeOnDevice();
+        return true;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Prefetch() const
+    {
+        if (Op() != g_OpGpu)
+            return;
+
+        m_Storage.Prefetch();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Offload() const
+    {
+        if (Op() != g_OpGpu)
+            return;
+
+        m_Storage.Offload();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::ResetDeviceRef(size_t n)
+    {
+        m_Storage.ResetDeviceRef(n);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::IncDeviceRef(size_t n)
+    {
+        m_Storage.IncDeviceRef(n);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::DecDeviceRef(size_t n)
+    {
+        m_Storage.DecDeviceRef(n);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::ResetRef(size_t n)
+    {
+        m_Storage.ResetRef(n);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::IncRef(size_t n)
+    {
+        m_Storage.IncRef(n);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::DecRef(size_t n)
+    {
+        m_Storage.DecRef(n);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::ReleaseData()
+    {
+        m_Storage.Release();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::OverrideHost()
+    {
+        m_Storage.OverrideHost();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::OverrideDevice()
+    {
+        m_Storage.OverrideDevice();
     }
 
     //////////////////////////////////////////////////////////////////////////
     const float* Tensor::GetDevicePtr() const
     {
-        return static_cast<const float*>(GetDeviceVar().GetDevicePtr());
+        return m_Storage.DeviceData();
     }
 
     //////////////////////////////////////////////////////////////////////////
     float* Tensor::GetDevicePtr()
     {
-        return static_cast<float*>(GetDeviceVar().GetDevicePtr());
+        return m_Storage.DeviceData();
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1957,27 +2078,34 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::DebugDumpValues(const string& outFile) const
     {
-        CopyToHost();
+        if (!m_Storage.AllocSizeInBytes() || !m_Storage.IsHostAllocated())
+            return;
+
+        SyncToHost();
         ofstream stream(outFile);
         for (int i = 0; i < 4; ++i)
             stream << m_Shape.Dimensions[i] << "\n";
-        for (int i = 0; i < m_Values.size(); ++i)
-            stream << m_Values[i] << "\n";
+        for (uint32_t i = 0; i < m_Shape.Length; ++i)
+            stream << m_Storage.DataUnsafe()[i] << "\n";
         stream.close();
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::DebugRecoverValues(const string& inFile)
     {
-        OverrideHost();
         ifstream stream(inFile);
+
+        if (!stream)
+            return;
+
+        OverrideHost();
         vector<int> dimensions(4);
         for (int i = 0; i < 4; ++i)
             stream >> dimensions[i];
         m_Shape = Shape::From(dimensions);
-        m_Values.resize(m_Shape.Length);
-        for (int i = 0; i < m_Values.size(); ++i)
-            stream >> m_Values[i];
+        m_Storage.Resize(m_Shape.Length);
+        for (uint32_t i = 0; i < m_Shape.Length; ++i)
+            stream >> m_Storage.Data()[i];
         stream.close();
     }
 
@@ -1997,49 +2125,6 @@ namespace Neuro
 		return nullptr;
 	}
 
-    //////////////////////////////////////////////////////////////////////////
-    Tensor::GPUData::~GPUData()
-    {
-        Release();
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void Tensor::GPUData::Release()
-    {
-        delete(m_DeviceVar);
-        m_DeviceVar = nullptr;
-        delete(m_ConvWorkspace);
-        m_ConvWorkspace = nullptr;
-        delete(m_ConvBackWorkspace);
-        m_ConvBackWorkspace = nullptr;
-        delete(m_ConvBackKernelWorkspace);
-        m_ConvBackKernelWorkspace = nullptr;
-        delete(m_DropoutWorkspace);
-        m_DropoutWorkspace = nullptr;
-        delete(m_DropoutStates);
-        m_DropoutStates = nullptr;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    bool Tensor::GPUData::Resize(size_t size)
-    {
-        if (m_DeviceVar)
-            return m_DeviceVar->Resize(size);
-        return false;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void Tensor::GPUData::UpdateWorkspace(CudaDeviceVariable<char>*& workspace, size_t size)
-    {
-        if (workspace && workspace->GetSizeInBytes() != size)
-        {
-            delete workspace;
-            workspace = nullptr;
-        }
-
-        if (!workspace)
-            workspace = new CudaDeviceVariable<char>(size);
-    }
 
     //////////////////////////////////////////////////////////////////////////
     Tensor operator*(const Tensor& t1, const Tensor& t2)
@@ -2104,13 +2189,13 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     Tensor pow(const Tensor& t, float p)
     {
-        return t.Map([&](float x) { return ::pow(x, p); });
+        return t.Pow(p);
     }
 
     //////////////////////////////////////////////////////////////////////////
     Tensor sqr(const Tensor& t)
     {
-        return t.Map([&](float x) { return x * x; });
+        return t.Pow(2);
     }
 
     //////////////////////////////////////////////////////////////////////////

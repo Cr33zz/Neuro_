@@ -9,12 +9,19 @@ namespace Neuro
 	public:
 		virtual ~TensorOpCpu() {}
 
+        virtual void Zero(Tensor& input) const;
+        virtual void One(Tensor& input) const;
         virtual void Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const;
         virtual void Sub(const Tensor& t1, const Tensor& t2, Tensor& output) const;
-        virtual void Mul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const;
+        virtual void MatMul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const;
 		virtual void MulElem(const Tensor& t1, const Tensor& t2, Tensor& output) const;
+        virtual void Div(const Tensor& t1, const Tensor& t2, Tensor& output) const;
+        virtual void Mul(const Tensor& input, float v, Tensor& output) const;
         virtual void Div(const Tensor& input, float v, Tensor& output) const;
+        virtual void Add(const Tensor& input, float v, Tensor& output) const;
         virtual void Sum(const Tensor& input, EAxis axis, Tensor& output) const;
+        virtual void Pow(const Tensor& input, float power, Tensor& output) const;
+        virtual void PowGradient(const Tensor& input, float power, const Tensor& outputGradient, Tensor& inputGradient) const;
         virtual void Transpose(const Tensor& input, Tensor& output) const;
         virtual void Conv2D(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& output) const;
         virtual void Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& inputGradient) const;
@@ -23,8 +30,8 @@ namespace Neuro
         virtual void Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& inputGradient) const;
         virtual void UpSample2D(const Tensor& input, uint32_t scaleFactor, Tensor& output) const;
         virtual void UpSample2DGradient(const Tensor& outputGradient, uint32_t scaleFactor, Tensor& inputGradient) const;
-        virtual void BatchNormalization(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor& runningMean, const Tensor& runningVar, Tensor& output) const;
-        virtual void BatchNormalizationTrain(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor& runningMean, Tensor& runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& output) const;
+        virtual void BatchNormalization(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor* runningMean, const Tensor* runningVar, Tensor& output) const;
+        virtual void BatchNormalizationTrain(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor* runningMean, Tensor* runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& output) const;
         virtual void BatchNormalizationGradient(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, float epsilon, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const;
         virtual void Dropout(const Tensor& input, float prob, Tensor& saveMask, Tensor& output);
         virtual void DropoutGradient(const Tensor& outputGradient, const Tensor& savedMask, Tensor& inputGradient);

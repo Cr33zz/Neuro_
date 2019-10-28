@@ -31,5 +31,11 @@
     <ClCompile Include="src\ComputationalGraphTests.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\OperationsTests.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TrainingModelsTests.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

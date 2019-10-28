@@ -56,6 +56,13 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void CudaAssert(EMemStatus status)
+    {
+        if (status != MEM_STATUS_SUCCESS)
+            CudaAssert(MemGetErrorString(status));
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void CudaAssert(const char* error)
     {
         stringstream ss;

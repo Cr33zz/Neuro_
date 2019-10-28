@@ -2,8 +2,6 @@
 
 #include <unordered_set>
 
-#define DEBUG_LOG_ENABLED
-
 //#ifdef LOG_OUTPUTS
 //#define _dump(x) dump(x)
 //#define _dumpn(x, name) dump(x, name)

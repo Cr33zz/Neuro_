@@ -19,6 +19,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void ClipOp::ComputeGradientInternal(const Tensor& grad)
     {
-        grad.Map([&](float g, float x) {return (x >= m_Min && x <= m_Max) ? g : 0; }, m_Output, m_InputsGrads[0]);
+        if (m_InputNodes[0]->CareAboutGradient())
+            grad.Map([&](float g, float x) {return (x >= m_Min && x <= m_Max) ? g : 0; }, *m_Inputs[0], m_InputsGrads[0]);
     }
 }

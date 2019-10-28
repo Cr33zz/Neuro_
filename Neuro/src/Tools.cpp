@@ -4,6 +4,7 @@
 #include <sstream>
 #include <fstream>
 #include <memory>
+#include <stdarg.h>
 #include <FreeImage.h>
 
 #include "Tools.h"
@@ -196,6 +197,7 @@ namespace Neuro
                (x << 24);
     }
 
+    //////////////////////////////////////////////////////////////////////////
     unique_ptr<char[]> LoadBinFileContents(const string& file, size_t* length = nullptr)
     {
         ifstream stream(file, ios::in | ios::binary | ios::ate);
@@ -250,9 +252,8 @@ namespace Neuro
             FreeImage_FillBackground(image, &imageColor);
         }
 
-        input = Tensor(Shape(imgWidth, imgHeight, 1, maxImages));
-        output = Tensor(Shape(outputsNum, 1, 1, maxImages));
-        output.Zero();
+        input = Tensor(zeros(Shape(imgWidth, imgHeight, 1, maxImages)));
+        output = Tensor(zeros(Shape(outputsNum, 1, 1, maxImages)));
 
         uint8_t* pixelOffset = reinterpret_cast<uint8_t*>(imagesBuffer.get() + 16);
         uint8_t* labelOffset = reinterpret_cast<uint8_t*>(labelsBuffer.get() + 8);
@@ -318,9 +319,8 @@ namespace Neuro
             FreeImage_FillBackground(image, &imageColor);
         }
 
-        input = Tensor(Shape(imgWidth, imgHeight, 3, maxImages));
-        output = Tensor(Shape(outputsNum, 1, 1, maxImages));
-        output.Zero();
+        input = Tensor(zeros(Shape(imgWidth, imgHeight, 3, maxImages)));
+        output = Tensor(zeros(Shape(outputsNum, 1, 1, maxImages)));
 
         for (uint32_t i = 0; i < (uint32_t)maxImages; ++i)
         {
@@ -537,9 +537,30 @@ namespace Neuro
         FIBITMAP* image = LoadResizedImage(filename, targetSizeX, targetSizeY, sizeX, sizeY);
         Shape imageShape = targetFormat == NCHW ? Shape(sizeX, sizeY, 3) : Shape(3, sizeX, sizeY);
         Tensor result(imageShape);
-        LoadImageInternal(image, imageShape, targetFormat, &result.GetValues()[0]);
+        LoadImageInternal(image, imageShape, targetFormat, &result.Values()[0]);
         FreeImage_Unload(image);
         return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    string StringFormat(const string fmt_str, ...)
+    {
+        int final_n, n = ((int)fmt_str.size()) * 2;
+        unique_ptr<char[]> formatted;
+        va_list ap;
+        while (1)
+        {
+            formatted.reset(new char[n]); /* Wrap the plain char array into the unique_ptr */
+            strcpy(&formatted[0], fmt_str.c_str());
+            va_start(ap, fmt_str);
+            final_n = vsnprintf(&formatted[0], n, fmt_str.c_str(), ap);
+            va_end(ap);
+            if (final_n < 0 || final_n >= n)
+                n += abs(final_n - n + 1);
+            else
+                break;
+        }
+        return string(formatted.get());
     }
 
     //////////////////////////////////////////////////////////////////////////

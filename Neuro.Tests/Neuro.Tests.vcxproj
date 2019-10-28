@@ -21,11 +21,13 @@
   <ItemGroup>
     <ClCompile Include="src\ComputationalGraphTests.cpp" />
     <ClCompile Include="src\ModelTests.cpp" />
+    <ClCompile Include="src\OperationsTests.cpp" />
     <ClCompile Include="src\RandomTests.cpp" />
     <ClCompile Include="src\ShapeTests.cpp" />
     <ClCompile Include="src\TensorOpGpuTests.cpp" />
     <ClCompile Include="src\TensorOpMultiCpuTests.cpp" />
     <ClCompile Include="src\TensorTests.cpp" />
+    <ClCompile Include="src\TrainingModelsTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Neuro\Neuro.vcxproj">
@@ -110,7 +112,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\Neuro\include;$(ProjectDir)include;$(VCInstallDir)UnitTest\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CUDA_PATH)\include;$(ProjectDir)..\Neuro\include;$(ProjectDir)include;$(VCInstallDir)UnitTest\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UseFullPaths>true</UseFullPaths>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -160,7 +162,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\Neuro\include;$(ProjectDir)include;$(VCInstallDir)UnitTest\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CUDA_PATH)\include;$(ProjectDir)..\Neuro\include;$(ProjectDir)include;$(VCInstallDir)UnitTest\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <UseFullPaths>true</UseFullPaths>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>

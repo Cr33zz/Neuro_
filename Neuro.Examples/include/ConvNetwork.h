@@ -12,6 +12,9 @@ class ConvNetwork
 public:
 	void Run()
 	{
+        Debug::LogAllGrads();
+        Debug::LogAllOutputs();
+
 		Tensor::SetDefaultOpMode(GPU);
         GlobalRngSeed(1337);
 
@@ -30,11 +33,11 @@ public:
         model.Optimize(new Adam(), new BinaryCrossEntropy());
 
         auto input = Tensor(Shape(64, 64, 4, 32)); input.FillWithRand();
-        auto output = Tensor(Shape(3, 1, 1, 32));
+        auto output = Tensor(zeros(Shape(3, 1, 1, 32)));
         for (uint32_t n = 0; n < output.Batch(); ++n)
             output(0, GlobalRng().Next(output.Height()), 0, n) = 1.0f;
 
-        model.Fit(input, output, -1, 10, nullptr, nullptr, 2, TrainError);
+        model.Fit(input, output, -1, 2, nullptr, nullptr, 2);
 
         cout << model.TrainSummary();
 

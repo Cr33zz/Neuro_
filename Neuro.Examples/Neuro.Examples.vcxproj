@@ -86,7 +86,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include;$(ProjectDir)..\Neuro\include;$(ProjectDir)include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CUDA_PATH)\include;$(ProjectDir)..\Neuro\include;$(ProjectDir)include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -127,7 +127,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.1\include;$(ProjectDir)..\Neuro\include;$(ProjectDir)include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CUDA_PATH)\include;$(ProjectDir)..\Neuro\include;$(ProjectDir)include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -141,8 +141,10 @@
   <ItemGroup>
     <ClCompile Include="src\CifarGAN.cpp" />
     <ClCompile Include="src\DeepConvGAN.cpp" />
+    <ClCompile Include="src\FastNeuralStyleTransfer.cpp" />
     <ClCompile Include="src\GAN.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\NeuralStyleTransfer.cpp" />
     <ClCompile Include="src\VGG16.cpp" />
     <ClCompile Include="src\VGG19.cpp" />
   </ItemGroup>

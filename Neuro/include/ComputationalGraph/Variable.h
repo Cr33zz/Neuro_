@@ -24,6 +24,8 @@ namespace Neuro
         void Initialize();
         void ForceInitialized() { m_Initialized = true; }
 
+        virtual bool CareAboutGradient() const override;
+
     private:
         bool m_Trainable = true;
         bool m_Initialized = false;

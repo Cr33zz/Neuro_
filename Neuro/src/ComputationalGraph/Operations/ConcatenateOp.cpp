@@ -37,6 +37,17 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void ConcatenateOp::ComputeGradientInternal(const Tensor& grad)
     {
-        grad.Split(m_Axis, m_InputsGradsPtrs);
+        bool anyInputCareAboutGrad = false;
+        for (auto inputNode : m_InputNodes)
+        {
+            if (inputNode->CareAboutGradient())
+            {
+                anyInputCareAboutGrad = true;
+                break;
+            }
+        }
+
+        if (anyInputCareAboutGrad)
+            grad.Split(m_Axis, m_InputsGradsPtrs);
     }
 }

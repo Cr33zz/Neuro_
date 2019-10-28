@@ -46,7 +46,7 @@ public:
         Tensor input, output;
         LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, true);
 
-        model.Fit(input, input, 256, 10, nullptr, nullptr, 2, TrainError);
+        model.Fit(input, input, 256, 10, nullptr, nullptr, 2);
 
         cout << model.TrainSummary();
 

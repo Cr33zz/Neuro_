@@ -24,9 +24,9 @@ namespace Neuro
         m_SaveInvVar.Resize(gamma.GetShape());
 
         if (training)
-            m_Inputs[0]->BatchNormTrain(gamma, beta, m_Momentum, m_Epsilon, runningMean, runningVar, m_SaveMean, m_SaveInvVar, m_Output);
+            m_Inputs[0]->BatchNormTrain(gamma, beta, m_Momentum, m_Epsilon, &runningMean, &runningVar, m_SaveMean, m_SaveInvVar, m_Output);
         else
-            m_Inputs[0]->BatchNorm(gamma, beta, m_Epsilon, runningMean, runningVar, m_Output);
+            m_Inputs[0]->BatchNorm(gamma, beta, m_Epsilon, &runningMean, &runningVar, m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -36,6 +36,7 @@ namespace Neuro
         auto& gamma = *m_Inputs[1];
         auto& beta = *m_Inputs[2];
 
-        grad.BatchNormGradient(x, gamma, m_Epsilon, grad, m_SaveMean, m_SaveInvVar, m_InputsGrads[1], m_InputsGrads[2], true, m_InputsGrads[0]);
+        if (m_InputNodes[0]->CareAboutGradient() || m_InputNodes[1]->CareAboutGradient() || m_InputNodes[2]->CareAboutGradient())
+            grad.BatchNormGradient(x, gamma, m_Epsilon, grad, m_SaveMean, m_SaveInvVar, m_InputsGrads[1], m_InputsGrads[2], true, m_InputsGrads[0]);
     }
 }

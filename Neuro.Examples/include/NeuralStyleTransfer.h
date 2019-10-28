@@ -4,8 +4,10 @@
 #include <string>
 #include <vector>
 #include <numeric>
+#include <iomanip>
 
 #include "Neuro.h"
+#include "Memory/MemoryManager.h"
 #include "VGG19.h"
 
 using namespace std;
@@ -18,8 +20,8 @@ public:
     const uint32_t IMAGE_WIDTH = 400;
     const uint32_t IMAGE_HEIGHT = 300;
 
-    const string CONTENT_FILE = "content3.jpg";
-    const string STYLE_FILE = "style9.jpg";
+    const string CONTENT_FILE = "content.jpg";
+    const string STYLE_FILE = "style.jpg";
 
     void Run()
     {
@@ -34,8 +36,14 @@ public:
 
         assert(contentImage.GetShape() == styleImage.GetShape());
         
-        auto vggModel = VGG19::CreateModel(NCHW, contentImage.GetShape(), false);
+        auto vggModel = VGG16::CreateModel(NCHW, contentImage.GetShape(), false);
         vggModel->SetTrainable(false);
+
+        /*vector<TensorLike*> contentOutputs = { vggModel->Layer("block2_conv2")->Outputs()[0] };
+        vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv2")->Outputs()[0],
+                                             vggModel->Layer("block2_conv2")->Outputs()[0],
+                                             vggModel->Layer("block3_conv3")->Outputs()[0],
+                                             vggModel->Layer("block4_conv3")->Outputs()[0] };*/
 
         vector<TensorLike*> contentOutputs = { vggModel->Layer("block5_conv2")->Outputs()[0] };
         vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv1")->Outputs()[0], 
@@ -86,22 +94,26 @@ public:
         auto optimizer = Adam(5.f, 0.99f, 0.999f, 0.1f);
         auto minimize = optimizer.Minimize({ totalLoss }, { outputImg });
 
+        DumpMemoryManagers("mem_before.log");
+
         const int EPOCHS = 1000;
         Tqdm progress(EPOCHS, 10);
         progress.ShowStep(false).ShowElapsed(false);
-        for (int e = 1; e <= EPOCHS; ++e, progress.NextStep())
+        for (int e = 0; e < EPOCHS; ++e, progress.NextStep())
         {
             auto results = Session::Default()->Run({ outputImg, contentLoss, styleLoss, totalLoss, minimize }, {});
 
+            DumpMemoryManagers("mem.log");
+
             stringstream extString;
-            extString << setprecision(4) << fixed << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - total_l: " << (*results[3])(0);
+            extString << setprecision(4) << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - total_l: " << (*results[3])(0);
             progress.SetExtraString(extString.str());
 
             if (e % 20 == 0)
             {
                 auto genImage = *results[0];
                 VGG16::UnprocessImage(genImage, NCHW);
-                genImage.SaveAsImage("neural_transfer_" + to_string(e) + ".png", false);
+                genImage.SaveAsImage("nst_" + to_string(e) + ".png", false);
             }
         }
 
@@ -111,36 +123,7 @@ public:
         genImage.SaveAsImage("_neural_transfer.jpg", false);
     }
 
-    //////////////////////////////////////////////////////////////////////////
-    TensorLike* GramMatrix(TensorLike* x, const string& name)
-    {
-        assert(x->GetShape().Batch() == 1);
-
-        uint32_t elementsPerFeature = x->GetShape().Width() * x->GetShape().Height();
-        auto features = reshape(x, Shape(elementsPerFeature, x->GetShape().Depth()));
-        return multiply(matmul(features, transpose(features)), 1.f / (float)elementsPerFeature, name + "_gram_matrix");
-        //return matmul(features, transpose(features));
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    TensorLike* StyleLoss(TensorLike* styleGram, TensorLike* gen, int index)
-    {
-        assert(gen->GetShape().Batch() == 1);
-
-        //auto s = GramMatrix(style, index);
-        auto genGram = GramMatrix(gen, "gen_style_" + to_string(index));
-
-        float channels = (float)gen->GetShape().Depth();
-        float size = (float)(gen->GetShape().Height() * gen->GetShape().Width());
-
-        //return multiply(mean(square(sub(styleGram, genGram))), 1.f / (4.f * (channels * channels) * (size * size)), "style_loss_" + to_string(index));
-        //return div(mean(square(sub(styleGram, genGram))), new Constant(4.f * (channels * channels) * (size * size)), "style_loss_" + to_string(index));
-        return mean(square(sub(styleGram, genGram)));
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    TensorLike* ContentLoss(TensorLike* content, TensorLike* gen)
-    {
-        return mean(square(sub(gen, content)), GlobalAxis, "content_loss");
-    }
+    TensorLike* GramMatrix(TensorLike* x, const string& name);
+    TensorLike* StyleLoss(TensorLike* styleGram, TensorLike* gen, int index);
+    TensorLike* ContentLoss(TensorLike* content, TensorLike* gen);
 };

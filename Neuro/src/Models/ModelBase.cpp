@@ -273,31 +273,31 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::Optimize(OptimizerBase* optimizer, LossBase* loss)
+    void ModelBase::Optimize(OptimizerBase* optimizer, LossBase* loss, int metrics)
     {
         map<string, LossBase*> lossDict;
         for (auto outLayer : m_OutputLayers)
             lossDict[outLayer->Name()] = loss;
 
-        Optimize(optimizer, lossDict);
+        Optimize(optimizer, lossDict, metrics);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::Optimize(OptimizerBase* optimizer, map<string, LossBase*> lossDict)
+    void ModelBase::Optimize(OptimizerBase* optimizer, map<string, LossBase*> lossDict, int metrics)
     {
         NameScope scope(Name());
 
+        m_TrackedMetrics = metrics;
         m_Optimizer = optimizer;
 
         NEURO_ASSERT(lossDict.size() == m_OutputLayers.size(), "Each output layer must have a corresponding loss function provided.");
-
-        //m_AccuracyFuncs.resize(outputsShapes.size());
 
         vector<Placeholder*> targets;
         vector<TensorLike*> fetches;
 
         vector<TensorLike*> losses;
         TensorLike* totalLoss = nullptr;
+        TensorLike* totalAcc = nullptr;
 
         {
             NameScope scope("loss");
@@ -306,8 +306,6 @@ namespace Neuro
             {
                 auto output = m_Outputs[i];
                 auto layer = output->m_Metadata->layer;
-
-                //m_AccuracyFuncs[i] = outputsShapes[i].Length == 1 ? AccBinaryClassificationEquality : AccCategoricalClassificationEquality;
 
                 targets.push_back(new Placeholder(Shape(output->GetShape()), "target" + to_string(i)));
                 auto loss = lossDict[layer->Name()]->Build(targets.back(), output);
@@ -319,11 +317,28 @@ namespace Neuro
                     totalLoss = mean(loss, GlobalAxis, "mean_loss" + to_string(i));
                 else
                     totalLoss = merge_sum({ totalLoss, mean(loss) }, "total_loss");
+
+                if (metrics & Accuracy)
+                {
+                    auto acc = output->GetShape().Length == 1 ? 
+                        binary_accuracy(targets.back(), output, "accuracy" + to_string(i)) :
+                        accuracy(targets.back(), output, "accuracy" + to_string(i));
+
+                    if (!totalAcc)
+                        totalAcc = acc;
+                    else
+                        totalAcc = merge_avg({ totalAcc, acc }, "total_accuracy");
+                }
             }
         }
 
         fetches.push_back(totalLoss);
-        m_Metrics["loss"] = make_pair(totalLoss, fetches.size() - 1);
+        m_Metrics[Loss] = make_pair(totalLoss, fetches.size() - 1);
+        if (totalAcc)
+        {
+            fetches.push_back(totalAcc);
+            m_Metrics[Accuracy] = make_pair(totalAcc, fetches.size() - 1);
+        }
         // any additional metrics should go in here
 
         vector<Variable*> params;
@@ -438,7 +453,7 @@ namespace Neuro
                     dims.push_back(wShape.Dimensions[i]);
 
                 DataSet dataset(g.createDataSet("param_" + to_string(i), PredType::NATIVE_FLOAT, DataSpace(wShape.NDim, &dims[0])));
-                dataset.write(&w->GetValues()[0], PredType::NATIVE_FLOAT);
+                dataset.write(&w->Values()[0], PredType::NATIVE_FLOAT);
             }
         }
 
@@ -560,7 +575,7 @@ namespace Neuro
                 for (int i = wShape.NDim - 1, n = 0; i >= 0; --i, ++n)
                     NEURO_ASSERT(weightDims[n] == wShape.Dimensions[i], "Dimension " << i << " of parameter '" << w->Name() << "' doesn't match corresponding dimension of saved parameter. Found " << weightDims[i] << " expected " << wShape.Dimensions[i] << ".");
 
-                dataset.read(&w->GetValues()[0], PredType::NATIVE_FLOAT);
+                dataset.read(&w->Values()[0], PredType::NATIVE_FLOAT);
 
                 if (is_keras && !params[i].transAxesKeras.empty())
                 {
@@ -600,14 +615,14 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::Fit(const Tensor& input, const Tensor& output, int batchSize, uint32_t epochs, const Tensor* validInput, const Tensor* validOutput, uint32_t verbose, int trackFlags, bool shuffle)
+    void ModelBase::Fit(const Tensor& input, const Tensor& output, int batchSize, uint32_t epochs, const Tensor* validInput, const Tensor* validOutput, uint32_t verbose, bool shuffle)
     {
         const_tensor_ptr_vec_t validInputs = { validInput }, validOutputs = { validOutput };
-        Fit({ &input }, { &output }, batchSize, epochs, validInput ? &validInputs : nullptr, validOutput ? &validOutputs : nullptr, verbose, trackFlags, shuffle);
+        Fit({ &input }, { &output }, batchSize, epochs, validInput ? &validInputs : nullptr, validOutput ? &validOutputs : nullptr, verbose, shuffle);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::Fit(const const_tensor_ptr_vec_t& inputs, const const_tensor_ptr_vec_t& outputs, int batchSize, uint32_t epochs, const const_tensor_ptr_vec_t* validInputs, const const_tensor_ptr_vec_t* validOutputs, uint32_t verbose, int trackFlags, bool shuffle)
+    void ModelBase::Fit(const const_tensor_ptr_vec_t& inputs, const const_tensor_ptr_vec_t& outputs, int batchSize, uint32_t epochs, const const_tensor_ptr_vec_t* validInputs, const const_tensor_ptr_vec_t* validOutputs, uint32_t verbose, bool shuffle)
     {
         cout << unitbuf; // disable buffering so progress 'animations' can work
 
@@ -632,17 +647,17 @@ namespace Neuro
             m_LogFile = new ofstream(outFilename + ".log");
 
         ChartGenerator* chartGen = nullptr;
-        if (trackFlags != Nothing)
-            chartGen = new ChartGenerator(outFilename, Name()/* + "\nloss=" + [{string.Join(", ", Losses.Select(x => x.GetType().Name))}] optimizer={Optimizer} batch_size={trainBatchSize}\nseed={(Seed > 0 ? Seed.ToString() : "None")}"*/, "Epoch");
+        //if (m_TrackedMetrics != Nothing)
+        //    chartGen = new ChartGenerator(outFilename, Name()/* + "\nloss=" + [{string.Join(", ", Losses.Select(x => x.GetType().Name))}] optimizer={Optimizer} batch_size={trainBatchSize}\nseed={(Seed > 0 ? Seed.ToString() : "None")}"*/, "Epoch");
 
-        if (trackFlags & TrainError)
-            chartGen->AddSeries((int)TrainError, "Error on train data\n(left Y axis)", 2/*Color.DarkRed*/);
-        if (trackFlags & TestError)
-            chartGen->AddSeries((int)TestError, "Error on test data\n(left Y axis)", 2/*Color.IndianRed*/);
-        if (trackFlags & TrainAccuracy)
-            chartGen->AddSeries((int)TrainAccuracy, "Accuracy on train data\n(right Y axis)", 2/*Color.DarkBlue*/, true);
-        if (trackFlags & TestAccuracy)
-            chartGen->AddSeries((int)TestAccuracy, "Accuracy on test\n(right Y axis)", 2/*Color.CornflowerBlue*/, true);
+        //if (m_TrackedMetrics & Loss)
+        //    chartGen->AddSeries((int)Loss, "Error on train data\n(left Y axis)", 2/*Color.DarkRed*/);
+        //if (m_TrackedMetrics & Loss && validInputs)
+        //    chartGen->AddSeries((int)TestLoss, "Error on test data\n(left Y axis)", 2/*Color.IndianRed*/);
+        //if (m_TrackedMetrics & Accuracy)
+        //    chartGen->AddSeries((int)Accuracy, "Accuracy on train data\n(right Y axis)", 2/*Color.DarkBlue*/, true);
+        //if (m_TrackedMetrics & TestAccuracy)
+        //    chartGen->AddSeries((int)TestAccuracy, "Accuracy on test\n(right Y axis)", 2/*Color.CornflowerBlue*/, true);
 
         vector<uint32_t> indices(trainSamplesCount);
         iota(indices.begin(), indices.end(), 0);
@@ -704,7 +719,7 @@ namespace Neuro
 
                     samplesInBatch = inputsBatch[0]->Batch();
 
-                    TrainStep(inputsBatch, outputsBatch, &loss, (trackFlags & TrainAccuracy) ? &acc: nullptr);
+                    TrainStep(inputsBatch, outputsBatch, &loss, (m_TrackedMetrics & Accuracy) ? &acc: nullptr);
 
                     DeleteContainer(inputsBatch);
                     DeleteContainer(outputsBatch);
@@ -716,7 +731,12 @@ namespace Neuro
                 trainTotalAcc += acc;
 
                 if (progress)
+                {
+                    stringstream extString;
+                    extString << setprecision(4) << " - loss: " << loss;
+                    progress->SetExtraString(extString.str());
                     progress->NextStep(samplesInBatch);
+                }
             }
 
             if (progress)
@@ -728,8 +748,8 @@ namespace Neuro
 
             if (chartGen)
             {
-                chartGen->AddData((float)e, trainLoss, (int)TrainError);
-                chartGen->AddData((float)e, trainAcc, (int)TrainAccuracy);
+                chartGen->AddData((float)e, trainLoss, (int)Loss);
+                chartGen->AddData((float)e, trainAcc, (int)Accuracy);
             }
 
             stringstream summary;
@@ -737,9 +757,9 @@ namespace Neuro
 
             if (verbose > 0)
             {
-                if (trackFlags & TrainError)
+                if (m_TrackedMetrics & Loss)
                     summary << " - loss: " << trainLoss;
-                if (trackFlags & TrainAccuracy)
+                if (m_TrackedMetrics & Accuracy)
                     summary << " - acc: " << trainAcc;
             }
 
@@ -761,7 +781,7 @@ namespace Neuro
                         m_LossFuncs[i]->Compute(*validOutputsBatches[b][i], *modelOutputs[i], out[i]);
 
                         validationTotalLoss += out[i].Sum(GlobalAxis)(0) / modelOutputs[i]->BatchLength();
-                        if (trackFlags & TestAccuracy)
+                        if (m_TrackedMetrics & TestAccuracy)
                             validationHits += m_AccuracyFuncs[i](*validOutputsBatches[b][i], *modelOutputs[i]);
                     }
 
@@ -780,9 +800,9 @@ namespace Neuro
 
                 if (verbose > 0)
                 {
-                    if (trackFlags & TestError)
+                    if (m_TrackedMetrics & Loss)
                         summary << " - val_loss: " << validationLoss;
-                    if (trackFlags & TestAccuracy)
+                    if (m_TrackedMetrics & Accuracy)
                         summary << " - val_acc: " << validationAcc;
                 }
 
@@ -976,9 +996,9 @@ namespace Neuro
         auto results = m_Trainer->Train(inputs, outputs);
 
         if (loss)
-            *loss = (*results[m_Metrics["loss"].second])(0) / (float)outputs.size();
-
-        Debug::Step();
+            *loss = (*results[m_Metrics[Loss].second])(0) / (float)outputs.size();
+        if (acc && (m_TrackedMetrics & Accuracy))
+            *acc = (*results[m_Metrics[Accuracy].second])(0);
     }
 
     //////////////////////////////////////////////////////////////////////////

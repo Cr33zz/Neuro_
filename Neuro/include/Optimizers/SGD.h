@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <unordered_set>
+
 #include "Optimizers/OptimizerBase.h"
 
 namespace Neuro
@@ -12,21 +14,22 @@ namespace Neuro
 		virtual string ToString() override;
 		const char* ClassName() const;
 
-        virtual Operation* Minimize(const vector<TensorLike*>& losses, const vector<Variable*>& vars = {}) override { return new MinimizationOperation(losses, vars, this); }
+        virtual Operation* Minimize(const vector<TensorLike*>& losses, const vector<Variable*>& vars = {}) override { return new MinimizationOperation(losses, vars, m_LearningRate); }
 
     private:
         class MinimizationOperation : public Operation
         {
         public:
-            MinimizationOperation(const vector<TensorLike*>& losses, const vector<Variable*>& vars, SGD* owner);
+            MinimizationOperation(const vector<TensorLike*>& losses, const vector<Variable*>& vars, float lr);
         protected:
             virtual void ComputeInternal();
             virtual void ComputeGradientInternal(const Tensor& grad) {}
 
         private:
-            SGD* m_Owner;
+            float m_LearningRate;
             vector<Variable*> m_Vars;
             vector<TensorLike*> m_Order;
+            unordered_set<TensorLike*> m_NodesAffectingLosses;
         };
 
         float m_LearningRate;

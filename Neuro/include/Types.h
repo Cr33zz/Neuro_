@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <iostream>
+#include <cassert>
 
 #ifndef NDEBUG
 #   define NEURO_ASSERT(condition, msg) \
@@ -37,6 +38,7 @@ namespace Neuro
 
     enum ELocation
     {
+        None,
         Host,
         Device
     };
@@ -94,13 +96,11 @@ namespace Neuro
         _123Axes, // reduces height depth and batch dimensions to size 1, equivalent to axis (1, 2, 3)
     };
 
-    enum ETrack
+    enum EMetric
     {
         Nothing = 0,
-        TrainError = 1 << 0,
-        TestError = 1 << 1,
-        TrainAccuracy = 1 << 2,
-        TestAccuracy = 1 << 3,
-        All = -1
+        Loss = 1 << 0,
+        Accuracy = 1 << 1,
+        All = Loss | Accuracy
     };
 }

@@ -9,7 +9,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     string TensorFormatter::ToString(const Tensor& t)
     {
-        return ToStringRecursive(t, {}, " ", 75, Dragon4FloatFormatter(t.GetValues()));
+        return ToStringRecursive(t, {}, " ", 75, Dragon4FloatFormatter(t.Values(), t.Length()));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -130,9 +130,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    TensorFormatter::Dragon4FloatFormatter::Dragon4FloatFormatter(const vector<float>& a)
+    TensorFormatter::Dragon4FloatFormatter::Dragon4FloatFormatter(const float* a, size_t size)
     {
-        for (uint32_t i = 0; i < a.size(); ++i)
+        for (uint32_t i = 0; i < size; ++i)
         {
             auto s = Split(Float2Str(a[i]), ".");
             m_PadLeft = max(m_PadLeft, s[0].length());

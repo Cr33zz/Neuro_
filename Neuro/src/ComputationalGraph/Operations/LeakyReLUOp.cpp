@@ -19,6 +19,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void LeakyReLUOp::ComputeGradientInternal(const Tensor& grad)
     {
-        m_Output.LeakyReLUGradient(m_Output, grad, m_Alpha, m_InputsGrads[0]);
+        if (m_InputNodes[0]->CareAboutGradient())
+            m_Output.LeakyReLUGradient(m_Output, grad, m_Alpha, m_InputsGrads[0]);
     }
 }

@@ -19,6 +19,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TanHOp::ComputeGradientInternal(const Tensor& grad)
     {
-        m_Output.TanhGradient(m_Output, grad, m_InputsGrads[0]);
+        if (m_InputNodes[0]->CareAboutGradient())
+            m_Output.TanhGradient(m_Output, grad, m_InputsGrads[0]);
     }
 }
