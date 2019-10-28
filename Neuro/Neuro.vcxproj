@@ -224,6 +224,7 @@
     <ClInclude Include="include\Tensors\TensorOpMultiCpu.h" />
     <ClInclude Include="include\Tools.h" />
     <ClInclude Include="include\Types.h" />
+    <ClInclude Include="src\ComputationalGraph\Operations\VariationOp.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Activations.cpp" />
@@ -251,6 +252,7 @@
     <ClCompile Include="src\ComputationalGraph\Operations\ReshapeOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\TransposeOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\UpSample2dOp.cpp" />
+    <ClCompile Include="src\ComputationalGraph\Operations\VariationOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\TensorLike.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operation.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\EluOp.cpp" />

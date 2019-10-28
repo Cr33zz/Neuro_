@@ -372,6 +372,9 @@
     <ClInclude Include="include\Tensors\Storage.h">
       <Filter>include\Tensors</Filter>
     </ClInclude>
+    <ClInclude Include="src\ComputationalGraph\Operations\VariationOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -646,6 +649,9 @@
     </ClCompile>
     <ClCompile Include="src\Tensors\Storage.cpp">
       <Filter>src\Tensors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\VariationOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
