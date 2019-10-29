@@ -8,7 +8,7 @@ Neuro::TensorLike* NeuralStyleTransfer::GramMatrix(TensorLike* x, const string& 
 
     uint32_t featureMapSize = x->GetShape().Width() * x->GetShape().Height();
     auto features = reshape(x, Shape(featureMapSize, x->GetShape().Depth()));
-    return div(matmul(features, transpose(features)), (float)featureMapSize, "result");
+    return div(matmul(features, transpose(features)), (float)features->GetShape().Length, "result");
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -17,15 +17,15 @@ Neuro::TensorLike* NeuralStyleTransfer::StyleLoss(TensorLike* targetStyleGram, T
     NameScope scope("style_loss_" + to_string(index));
     assert(styleFeatures->GetShape().Batch() == 1);
 
-    float channels = styleFeatures->GetShape().Depth();
-
+    float channels = (float)styleFeatures->GetShape().Depth();
     auto styleGram = GramMatrix(styleFeatures, "gen_style_" + to_string(index));
-    return div(sum(l2_loss(sub(targetStyleGram, styleGram))), channels * channels);
+    return sum(square(sub(targetStyleGram, styleGram)));
 }
 
 //////////////////////////////////////////////////////////////////////////
 Neuro::TensorLike* NeuralStyleTransfer::ContentLoss(TensorLike* targetContentFeatures, TensorLike* contentFeatures)
 {
     NameScope scope("content_loss");
-    return mean(square(sub(targetContentFeatures, contentFeatures)), GlobalAxis, "total");
+    auto& shape = contentFeatures->GetShape();
+    return div(sum(square(sub(targetContentFeatures, contentFeatures))), shape.Width() * shape.Height() * shape.Depth());
 }

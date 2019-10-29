@@ -35,7 +35,7 @@ namespace Neuro
         Variable* m_RunningMean;
         Variable* m_RunningVar;
 
-        float m_Momentum = 0.9f;
+        float m_Momentum = 0.99f;
         float m_Epsilon = 0.001f;
     };
 }

@@ -3,6 +3,13 @@
 //////////////////////////////////////////////////////////////////////////
 void VGG16::PreprocessImage(Tensor& image, EDataFormat dataFormat)
 {
+    Tensor temp(image);
+    //convert RGB to BGR
+    for (uint32_t n = 0; n < image.Batch(); ++n)
+    {
+        temp.CopyDepthTo(0, n, 2, n, image);
+        temp.CopyDepthTo(2, n, 0, n, image);
+    }
     image.Sub(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), image);
 }
 
@@ -10,6 +17,13 @@ void VGG16::PreprocessImage(Tensor& image, EDataFormat dataFormat)
 void VGG16::UnprocessImage(Tensor& image, EDataFormat dataFormat)
 {
     image.Add(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), image);
+    Tensor temp(image);
+    //convert BGR to RGB
+    for (uint32_t n = 0; n < image.Batch(); ++n)
+    {
+        temp.CopyDepthTo(0, n, 2, n, image);
+        temp.CopyDepthTo(2, n, 0, n, image);
+    }
     image.Clipped(0, 255, image);
 }
 
@@ -61,5 +75,6 @@ Neuro::ModelBase* VGG16::CreateModel(EDataFormat dataFormat, Shape inputShape, b
 TensorLike* VGG16::Preprocess(TensorLike* image, EDataFormat dataFormat)
 {
     NameScope scope("vgg_preprocess");
+    image = swap_red_blue_channels(image);
     return sub(image, new Constant(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3))));
 }

@@ -2082,9 +2082,10 @@ namespace Neuro
             return;
 
         SyncToHost();
-        ofstream stream(outFile);
+        ofstream stream(Replace(outFile, "/", "_"));
         for (int i = 0; i < 4; ++i)
             stream << m_Shape.Dimensions[i] << "\n";
+        stream << fixed << setprecision(6);
         for (uint32_t i = 0; i < m_Shape.Length; ++i)
             stream << m_Storage.DataUnsafe()[i] << "\n";
         stream.close();
@@ -2093,7 +2094,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::DebugRecoverValues(const string& inFile)
     {
-        ifstream stream(inFile);
+        ifstream stream(Replace(inFile, "/", "_"));
 
         if (!stream)
             return;

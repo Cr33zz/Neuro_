@@ -381,6 +381,9 @@
     <ClInclude Include="include\ComputationalGraph\Operations\MeanSquaredErrorOp.h">
       <Filter>include\ComputationalGraph\Operations</Filter>
     </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\SwapRedBlueChannelsOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -657,6 +660,9 @@
       <Filter>src\Tensors</Filter>
     </ClCompile>
     <ClCompile Include="src\ComputationalGraph\Operations\VariationOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\SwapRedBlueChannelsOp.cpp">
       <Filter>src\ComputationalGraph\Operations</Filter>
     </ClCompile>
   </ItemGroup>
