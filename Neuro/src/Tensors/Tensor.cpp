@@ -2097,7 +2097,10 @@ namespace Neuro
         ifstream stream(Replace(inFile, "/", "_"));
 
         if (!stream)
+        {
+            NEURO_ASSERT(false, "File '" << Replace(inFile, "/", "_") << "' not found.");
             return;
+        }
 
         OverrideHost();
         vector<int> dimensions(4);

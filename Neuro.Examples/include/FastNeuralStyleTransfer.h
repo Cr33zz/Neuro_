@@ -61,10 +61,12 @@ public:
         Tensor::SetForcedOpMode(GPU);
         GlobalRngSeed(1337);
 
-        Tensor testImage = LoadImage(TEST_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
+        //Tensor testImage = LoadImage(TEST_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
+        Tensor testImage;
+        testImage.DebugRecoverValues("test_raw");
         testImage.SaveAsImage("_test.jpg", false);
-        VGG16::PreprocessImage(testImage, NCHW);
-        testImage.DebugDumpValues("test");
+        //VGG16::PreprocessImage(testImage, NCHW);
+        //testImage.DebugDumpValues("test");
 
         cout << "Collecting dataset files list...\n";
 
@@ -110,15 +112,15 @@ public:
 
         // pre-compute style features of style image (we only need to do it once since that image won't change either)
         //Tensor styleImage = LoadImage(STYLE_FILE);
-        Tensor styleImage = LoadImage(STYLE_FILE, IMAGE_WIDTH, IMAGE_HEIGHT);
-        /*Tensor styleImage;
-        styleImage.DebugRecoverValues("style_raw");*/
+        //Tensor styleImage = LoadImage(STYLE_FILE, IMAGE_WIDTH, IMAGE_HEIGHT);
+        Tensor styleImage;
+        styleImage.DebugRecoverValues("style_raw");
         styleImage.SaveAsImage("_style.jpg", false);
         VGG16::PreprocessImage(styleImage, NCHW);
         //styleImage.DebugDumpValues("style");
 
         auto styleInput = new Placeholder(styleImage.GetShape(), "style_input");
-        auto styleFeaturesNet = vggFeaturesModel(styleInput);
+        auto styleFeaturesNet = vggFeaturesModel(styleInput, nullptr, "target_style_features");
 
         auto targetStyleFeatures = Session::Default()->Run(styleFeaturesNet, { { styleInput, &styleImage } });
         targetStyleFeatures.erase(targetStyleFeatures.begin());
@@ -147,13 +149,13 @@ public:
         //auto stylizedContent = CreateTransformerNet(inputPre, training);
         auto generator = CreateGeneratorModel(IMAGE_WIDTH, IMAGE_HEIGHT, training);
         generator->LoadWeights("data/generator_weights.h5", false, true);
-        auto stylizedContentPre = (*generator)(input, training)[0];
+        auto stylizedContentPre = (*generator)(inputPre, training)[0];
 #endif
         //auto stylizedContentPre = VGG16::Preprocess(stylizedContent, NCHW);
-        auto stylizedFeatures = vggFeaturesModel(stylizedContentPre);
+        auto stylizedFeatures = vggFeaturesModel(stylizedContentPre, nullptr, "generated_features");
 
         // compute content loss from first output...
-        auto targetContentFeatures = vggFeaturesModel(inputPre)[0];
+        auto targetContentFeatures = vggFeaturesModel(inputPre, nullptr, "target_content_features")[0];
         auto contentLoss = ContentLoss(targetContentFeatures, stylizedFeatures[0]);
         auto weightedContentLoss = multiply(contentLoss, CONTENT_WEIGHT);
         stylizedFeatures.erase(stylizedFeatures.begin());
@@ -213,8 +215,10 @@ public:
                 //contentBatch.SaveAsImage("batch" + to_string(i) + ".jpg", false);
                 //auto contentFeatures = *vggFeaturesModel.Eval(contentOutputs, { { (Placeholder*)(vggFeaturesModel.InputsAt(0)[0]), &contentBatch } })[0];
 
-                auto results = Session::Default()->Run({ stylizedContentPre, contentLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], totalLoss, minimize }, 
-                                                       { { input, &contentBatch }, { training, &trainingOn } });
+                auto results = Session::Default()->Run({ stylizedContentPre, contentLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], totalLoss }, { { input, &testImage }, { training, &trainingOff } });
+
+                /*auto results = Session::Default()->Run({ stylizedContentPre, contentLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], totalLoss, minimize }, 
+                                                       { { input, &contentBatch }, { training, &trainingOn } });*/
                 
                 uint64_t cLoss = (uint64_t)((*results[1])(0) * CONTENT_WEIGHT);
                 const float SINGLE_STYLE_WEIGHT = STYLE_WEIGHT / styleLosses.size();

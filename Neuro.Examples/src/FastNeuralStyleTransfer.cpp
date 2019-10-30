@@ -77,17 +77,17 @@ ModelBase* FastNeuralStyleTransfer::CreateGeneratorModel(uint32_t width, uint32_
     auto r4 = residual_block(r3, 4);
     auto r5 = residual_block(r4, 5);
 
-    auto d1 = (new UpSampling2D(2, "upscale_1"))->Call(r5)[0];
-    d1 = (new Conv2D(64, 3, 1, Tensor::GetPadding(Same, 3), nullptr, NCHW, "_conv_4"))->Call(d1)[0];
+    auto d1 = (new UpSampling2D(2, "up_1"))->Call(r5)[0];
+    d1 = (new Conv2D(64, 3, 1, Tensor::GetPadding(Same, 3), nullptr, NCHW, "conv_4"))->Call(d1)[0];
     d1 = (new BatchNormalization("normal_4"))->Call(d1, training)[0];
     d1 = (new Activation(new ReLU(), "relu_4"))->Call(d1)[0];
 
-    auto d2 = (new UpSampling2D(2, "upscale_2"))->Call(d1)[0];
-    d2 = (new Conv2D(32, 3, 1, Tensor::GetPadding(Same, 3), nullptr, NCHW, "_conv_5"))->Call(d2)[0];
+    auto d2 = (new UpSampling2D(2, "up_2"))->Call(d1)[0];
+    d2 = (new Conv2D(32, 3, 1, Tensor::GetPadding(Same, 3), nullptr, NCHW, "conv_5"))->Call(d2)[0];
     d2 = (new BatchNormalization("normal_5"))->Call(d2, training)[0];
     d2 = (new Activation(new ReLU(), "relu_5"))->Call(d2)[0];
 
-    auto c4 = (new Conv2D(3, 9, 1, Tensor::GetPadding(Same, 9), nullptr, NCHW, "_conv_6"))->Call(d2)[0];
+    auto c4 = (new Conv2D(3, 9, 1, Tensor::GetPadding(Same, 9), nullptr, NCHW, "conv_6"))->Call(d2)[0];
     c4 = (new BatchNormalization("normal_6"))->Call(c4, training)[0];
     c4 = (new Activation(new Tanh(), "tanh_1"))->Call(c4)[0];
     c4 = (new OutputScale("output"))->Call(c4)[0];

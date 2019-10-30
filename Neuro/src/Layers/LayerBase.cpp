@@ -177,9 +177,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const vector<TensorLike*>& LayerBase::Call(const vector<TensorLike*>& inputs, TensorLike* training)
+    const vector<TensorLike*>& LayerBase::Call(const vector<TensorLike*>& inputs, TensorLike* training, const string& name)
     {
-        NameScope scope(Name());
+        NameScope scope(name.empty() ? Name() : name);
 
         vector<Shape> inputShapes = CollectShapes(inputs);
         CheckInputCompatibility(inputs);
@@ -198,22 +198,22 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const vector<TensorLike*>& LayerBase::Call(TensorLike* input, TensorLike* training)
+    const vector<TensorLike*>& LayerBase::Call(TensorLike* input, TensorLike* training, const string& name)
     {
         vector<TensorLike*> inputs{ input };
-        return Call(inputs, training);
+        return Call(inputs, training, name);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const vector<TensorLike*>& LayerBase::operator()(const vector<TensorLike*>& inputs, TensorLike* training)
+    const vector<TensorLike*>& LayerBase::operator()(const vector<TensorLike*>& inputs, TensorLike* training, const string& name)
     {
-        return Call(inputs, training);
+        return Call(inputs, training, name);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const vector<TensorLike*>& LayerBase::operator()(TensorLike* input, TensorLike* training)
+    const vector<TensorLike*>& LayerBase::operator()(TensorLike* input, TensorLike* training, const string& name)
     {
-        return Call(input, training);
+        return Call(input, training, name);
     }
 
     //////////////////////////////////////////////////////////////////////////

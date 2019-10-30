@@ -162,10 +162,10 @@ namespace Neuro
 
         for (auto inputNode : node->m_InputNodes)
         {
-            ProcessBackwardNode(inputNode, nodes, params, false, visited, visitedParams, required);
+            if (visited.find(inputNode) != visited.end())
+                continue;
 
-            if (!params.empty() && visitedParams.size() == params.size())
-                return;
+            ProcessBackwardNode(inputNode, nodes, params, false, visited, visitedParams, required);
         }
     }
 

@@ -57,10 +57,10 @@ namespace Neuro
         //virtual Shape ComputeOutputShape(const vector<Shape>& inputShapes) = 0;
         virtual bool CheckInputCompatibility(const vector<TensorLike*>& inputNodes) { return true; }
 
-        const vector<TensorLike*>& Call(TensorLike* input, TensorLike* training = nullptr);
-        const vector<TensorLike*>& Call(const vector<TensorLike*>& inputs, TensorLike* training = nullptr);
-        const vector<TensorLike*>& operator()(const vector<TensorLike*>& inputs, TensorLike* training = nullptr);
-        const vector<TensorLike*>& operator()(TensorLike* input, TensorLike* training = nullptr);
+        const vector<TensorLike*>& Call(TensorLike* input, TensorLike* training = nullptr, const string& name = "");
+        const vector<TensorLike*>& Call(const vector<TensorLike*>& inputs, TensorLike* training = nullptr, const string& name = "");
+        const vector<TensorLike*>& operator()(const vector<TensorLike*>& inputs, TensorLike* training = nullptr, const string& name = "");
+        const vector<TensorLike*>& operator()(TensorLike* input, TensorLike* training = nullptr, const string& name = "");
 
 	protected:
         LayerBase(const string& constructorName, const Shape& expectedInputShape, const string& name = "");
