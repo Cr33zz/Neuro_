@@ -17,7 +17,6 @@ Neuro::TensorLike* NeuralStyleTransfer::StyleLoss(TensorLike* targetStyleGram, T
     NameScope scope("style_loss_" + to_string(index));
     assert(styleFeatures->GetShape().Batch() == 1);
 
-    float channels = (float)styleFeatures->GetShape().Depth();
     auto styleGram = GramMatrix(styleFeatures, "gen_style_" + to_string(index));
     return sum(square(sub(targetStyleGram, styleGram)));
 }

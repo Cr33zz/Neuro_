@@ -145,12 +145,11 @@ public:
         //auto stylizedContent = new Variable(Uniform::Random(0, 255, input->GetShape()), "output_image");
         auto stylizedContent = new Variable(Uniform::Random(-0.5f, 0.5f, input->GetShape()).Add(127.5f), "output_image");
         //auto stylizedContent = new Variable(testImage, "output_image");
-        stylizedContent = VGG16::Preprocess(stylizedContent, NCHW);
 #else
-        auto stylizedContent = CreateTransformerNet(inputPre, training);
+        auto stylizedContent = CreateTransformerNet(divide(input, 255.f), training);
 #endif
-        
-        auto stylizedFeatures = vggFeaturesModel(stylizedContent);
+        auto stylizedContentPre = VGG16::Preprocess(stylizedContent, NCHW);
+        auto stylizedFeatures = vggFeaturesModel(stylizedContentPre);
 
         // compute content loss from first output...
         auto contentLoss = ContentLoss(targetContentFeatures, stylizedFeatures[0]);
@@ -254,9 +253,9 @@ public:
                 if (i % 10 == 0)
                 {
                     auto genImage = *results[0];
-                    VGG16::UnprocessImage(genImage, NCHW);
+                    //VGG16::UnprocessImage(genImage, NCHW);
                     genImage.Clipped(0, 255, genImage);
-                    genImage.SaveAsImage("fnst_e" + PadLeft(to_string(e), 4, '0') + "_b" + PadLeft(to_string(i), 4, '0') + ".png", false);
+                    genImage.SaveAsImage("fnst_" + to_string(e) + "_" + to_string(i) + ".png", false);
                     /*auto result = Session::Default()->Run({ stylizedContent, weightedContentLoss, weightedStyleLoss }, { { content, &testImage }, { training, &trainingOff } });
                     cout << "test content_loss: " << (*result[1])(0) << " style_loss: " << (*result[2])(0) << endl;
                     auto genImage = *result[0];

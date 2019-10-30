@@ -189,6 +189,12 @@ namespace NeuroTests
             Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new MatMulOp(&x, &y)).get()));
         }
 
+        TEST_METHOD(SwapRedBlueChannels)
+        {
+            auto x = Variable(Shape(6, 7, 3, 2));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new SwapRedBlueChannelsOp(&x)).get()));
+        }
+
         TEST_METHOD(Sub_Same)
         {
             auto x = Variable(Shape(2, 3, 4, 2));

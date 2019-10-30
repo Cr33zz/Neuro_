@@ -1635,7 +1635,7 @@ namespace Neuro
         assert(targetBatchId < target.Batch());
 		
         CopyToHost();
-		target.OverrideHost();
+		target.CopyToHost();
         
 		copy(m_Storage.Data() + batchId * m_Shape.Dim0Dim1Dim2, 
 			 m_Storage.Data() + batchId * m_Shape.Dim0Dim1Dim2 + m_Shape.Dim0Dim1Dim2,
@@ -1646,11 +1646,11 @@ namespace Neuro
 	void Tensor::CopyDepthTo(uint32_t depthId, uint32_t batchId, uint32_t targetDepthId, uint32_t targetBatchId, Tensor& target) const
 	{
 		CopyToHost();
-		target.OverrideHost();
+		target.CopyToHost();
 		//if (m_Shape.Width != result.m_Shape.Width || m_Shape.Height != result.m_Shape.Height) throw new Exception("Incompatible tensors.");
 
 		copy(m_Storage.Data() + batchId * m_Shape.Dim0Dim1Dim2 + depthId * m_Shape.Dim0Dim1, 
-			 m_Storage.Data() + batchId * m_Shape.Dim0Dim1Dim2 + depthId * m_Shape.Dim0Dim1 + m_Shape.Dim0Dim1,
+			 m_Storage.Data() + batchId * m_Shape.Dim0Dim1Dim2 + (depthId + 1) * m_Shape.Dim0Dim1,
 		     target.m_Storage.Data() + targetBatchId * m_Shape.Dim0Dim1Dim2 + targetDepthId * m_Shape.Dim0Dim1);
 	}
 
