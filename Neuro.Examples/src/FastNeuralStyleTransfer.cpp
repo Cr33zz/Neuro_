@@ -37,5 +37,60 @@ TensorLike* FastNeuralStyleTransfer::CreateTransformerNet(TensorLike* input, Ten
     auto up1 = convLayer(resid5, 64, 3, 1, true);
     auto up2 = convLayer(up1, 32, 3, 1, true);
     auto up3 = convLayer(up2, 3, 9, 1, false, true, false);
-    return add(multiply(tanh(up3), 127.5f), 127.5f);
+    return multiply(tanh(up3), 150.f);
+}
+
+//////////////////////////////////////////////////////////////////////////
+ModelBase* FastNeuralStyleTransfer::CreateGeneratorModel(uint32_t width, uint32_t height, Placeholder* training)
+{
+    NameScope scope("generator");
+
+    auto residual_block = [&](TensorLike* x, int num)
+    {
+        auto shortcut = x;
+        x = (new Conv2D(128, 3, 1, Tensor::GetPadding(Same, 3), nullptr, NCHW, "resi_conv_" + to_string(num) + "_1"))->Call(x)[0];
+        x = (new BatchNormalization("resi_normal_" + to_string(num) + "_1"))->Call(x, training)[0];
+        x = (new Activation(new ReLU(), "resi_relu_" + to_string(num) + "_1"))->Call(x)[0];
+        x = (new Conv2D(128, 3, 1, Tensor::GetPadding(Same, 3), nullptr, NCHW, "resi_conv_" + to_string(num) + "_2"))->Call(x)[0];
+        x = (new BatchNormalization("resi_normal_" + to_string(num) + "_2"))->Call(x, training)[0];
+        auto m = (new Merge(MergeSum, nullptr, "resi_add_" + to_string(num)))->Call({ x, shortcut })[0];
+        return m;
+    };
+
+    auto input_o = new Input(Shape(width, height, 3), "input_o");
+
+    auto c1 = (new Conv2D(32, 9, 1, Tensor::GetPadding(Same, 9), nullptr, NCHW, "conv_1"))->Call(input_o->Outputs())[0];
+    c1 = (new BatchNormalization("normal_1"))->Call(c1, training)[0];
+    c1 = (new Activation(new ReLU(), "relu_1"))->Call(c1)[0];
+
+    auto c2 = (new Conv2D(64, 3, 2, Tensor::GetPadding(Same, 3), nullptr, NCHW, "conv_2"))->Call(c1)[0];
+    c2 = (new BatchNormalization("normal_2"))->Call(c2, training)[0];
+    c2 = (new Activation(new ReLU(), "relu_2"))->Call(c2)[0];
+
+    auto c3 = (new Conv2D(128, 3, 2, Tensor::GetPadding(Same, 3), nullptr, NCHW, "conv_3"))->Call(c2)[0];
+    c3 = (new BatchNormalization("normal_3"))->Call(c3, training)[0];
+    c3 = (new Activation(new ReLU(), "relu_3"))->Call(c3)[0];
+
+    auto r1 = residual_block(c3, 1);
+    auto r2 = residual_block(r1, 2);
+    auto r3 = residual_block(r2, 3);
+    auto r4 = residual_block(r3, 4);
+    auto r5 = residual_block(r4, 5);
+
+    auto d1 = (new UpSampling2D(2, "upscale_1"))->Call(r5)[0];
+    d1 = (new Conv2D(64, 3, 1, Tensor::GetPadding(Same, 3), nullptr, NCHW, "_conv_4"))->Call(d1)[0];
+    d1 = (new BatchNormalization("normal_4"))->Call(d1, training)[0];
+    d1 = (new Activation(new ReLU(), "relu_4"))->Call(d1)[0];
+
+    auto d2 = (new UpSampling2D(2, "upscale_2"))->Call(d1)[0];
+    d2 = (new Conv2D(32, 3, 1, Tensor::GetPadding(Same, 3), nullptr, NCHW, "_conv_5"))->Call(d2)[0];
+    d2 = (new BatchNormalization("normal_5"))->Call(d2, training)[0];
+    d2 = (new Activation(new ReLU(), "relu_5"))->Call(d2)[0];
+
+    auto c4 = (new Conv2D(3, 9, 1, Tensor::GetPadding(Same, 9), nullptr, NCHW, "_conv_6"))->Call(d2)[0];
+    c4 = (new BatchNormalization("normal_6"))->Call(c4, training)[0];
+    c4 = (new Activation(new Tanh(), "tanh_1"))->Call(c4)[0];
+    c4 = (new OutputScale("output"))->Call(c4)[0];
+
+    return new Flow(input_o->Outputs(), { c4 }, "generator_model");
 }

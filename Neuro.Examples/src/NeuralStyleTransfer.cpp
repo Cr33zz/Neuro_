@@ -26,5 +26,5 @@ Neuro::TensorLike* NeuralStyleTransfer::ContentLoss(TensorLike* targetContentFea
 {
     NameScope scope("content_loss");
     auto& shape = contentFeatures->GetShape();
-    return div(sum(square(sub(targetContentFeatures, contentFeatures))), shape.Width() * shape.Height() * shape.Depth());
+    return div(sum(square(sub(targetContentFeatures, contentFeatures))), (float)shape.Width() * shape.Height() * shape.Depth());
 }

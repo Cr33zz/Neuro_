@@ -50,7 +50,7 @@ public:
 #       endif
 #endif
 
-        const string STYLE_FILE = "data/wave.png";
+        const string STYLE_FILE = "data/style.jpg";
         const string TEST_FILE = "data/test.jpg";
 #       ifdef FAST_SINGLE_CONTENT
         const string CONTENT_FILES_DIR = "e:/Downloads/fake_coco";
@@ -110,9 +110,9 @@ public:
 
         // pre-compute style features of style image (we only need to do it once since that image won't change either)
         //Tensor styleImage = LoadImage(STYLE_FILE);
-        //Tensor styleImage = LoadImage(STYLE_FILE, IMAGE_WIDTH, IMAGE_HEIGHT);
-        Tensor styleImage;
-        styleImage.DebugRecoverValues("style_raw");
+        Tensor styleImage = LoadImage(STYLE_FILE, IMAGE_WIDTH, IMAGE_HEIGHT);
+        /*Tensor styleImage;
+        styleImage.DebugRecoverValues("style_raw");*/
         styleImage.SaveAsImage("_style.jpg", false);
         VGG16::PreprocessImage(styleImage, NCHW);
         //styleImage.DebugDumpValues("style");
@@ -139,19 +139,21 @@ public:
         auto input = new Placeholder(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), "input");
         auto inputPre = VGG16::Preprocess(input, NCHW);
 
-        auto targetContentFeatures = vggFeaturesModel(inputPre)[0];
-
 #ifdef SLOW
         //auto stylizedContent = new Variable(Uniform::Random(0, 255, input->GetShape()), "output_image");
         auto stylizedContent = new Variable(Uniform::Random(-0.5f, 0.5f, input->GetShape()).Add(127.5f), "output_image");
         //auto stylizedContent = new Variable(testImage, "output_image");
 #else
-        auto stylizedContent = CreateTransformerNet(divide(input, 255.f), training);
+        //auto stylizedContent = CreateTransformerNet(inputPre, training);
+        auto generator = CreateGeneratorModel(IMAGE_WIDTH, IMAGE_HEIGHT, training);
+        generator->LoadWeights("data/generator_weights.h5", false, true);
+        auto stylizedContentPre = (*generator)(input, training)[0];
 #endif
-        auto stylizedContentPre = VGG16::Preprocess(stylizedContent, NCHW);
+        //auto stylizedContentPre = VGG16::Preprocess(stylizedContent, NCHW);
         auto stylizedFeatures = vggFeaturesModel(stylizedContentPre);
 
         // compute content loss from first output...
+        auto targetContentFeatures = vggFeaturesModel(inputPre)[0];
         auto contentLoss = ContentLoss(targetContentFeatures, stylizedFeatures[0]);
         auto weightedContentLoss = multiply(contentLoss, CONTENT_WEIGHT);
         stylizedFeatures.erase(stylizedFeatures.begin());
@@ -211,7 +213,7 @@ public:
                 //contentBatch.SaveAsImage("batch" + to_string(i) + ".jpg", false);
                 //auto contentFeatures = *vggFeaturesModel.Eval(contentOutputs, { { (Placeholder*)(vggFeaturesModel.InputsAt(0)[0]), &contentBatch } })[0];
 
-                auto results = Session::Default()->Run({ stylizedContent, contentLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], totalLoss, minimize }, 
+                auto results = Session::Default()->Run({ stylizedContentPre, contentLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], totalLoss, minimize }, 
                                                        { { input, &contentBatch }, { training, &trainingOn } });
                 
                 uint64_t cLoss = (uint64_t)((*results[1])(0) * CONTENT_WEIGHT);
@@ -253,8 +255,7 @@ public:
                 if (i % 10 == 0)
                 {
                     auto genImage = *results[0];
-                    //VGG16::UnprocessImage(genImage, NCHW);
-                    genImage.Clipped(0, 255, genImage);
+                    VGG16::UnprocessImage(genImage, NCHW);
                     genImage.SaveAsImage("fnst_" + to_string(e) + "_" + to_string(i) + ".png", false);
                     /*auto result = Session::Default()->Run({ stylizedContent, weightedContentLoss, weightedStyleLoss }, { { content, &testImage }, { training, &trainingOff } });
                     cout << "test content_loss: " << (*result[1])(0) << " style_loss: " << (*result[2])(0) << endl;
@@ -280,4 +281,14 @@ public:
     }
 
     TensorLike* CreateTransformerNet(TensorLike* input, TensorLike* training);
+
+    ModelBase* CreateGeneratorModel(uint32_t width, uint32_t height, Placeholder* training);
+
+    class OutputScale : public LayerBase
+    {
+    public:
+        OutputScale(const string& name = "") : LayerBase(__FUNCTION__, Shape(), name) {}
+    protected:
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override { return { multiply(inputNodes[0], 150.f) }; }
+    };
 };

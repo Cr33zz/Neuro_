@@ -6,7 +6,7 @@
 #include "Tensors/Cuda/CudaErrorCheck.h"
 
 //#define DISABLE_OFFLOAD_PREFETCH
-//#define ENABLE_STORAGE_LOGS
+#define ENABLE_STORAGE_LOGS
 
 #ifdef ENABLE_STORAGE_LOGS
 #include <windows.h>
