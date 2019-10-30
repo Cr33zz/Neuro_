@@ -19,11 +19,12 @@ namespace Neuro
 
     struct SerializedParameter
     {
-        SerializedParameter(Variable* parameter, const vector<EAxis>& tranposeAxesKeras = {})
-            : param(parameter), transAxesKeras(tranposeAxesKeras)
+        SerializedParameter(Variable* parameter, const vector<EAxis>& tranposeAxesKeras = {}, bool reshapeKeras = false)
+            : param(parameter), transAxesKeras(tranposeAxesKeras), reshapeKeras(reshapeKeras)
         {}
 
         Variable* param;
         vector<EAxis> transAxesKeras;
+        bool reshapeKeras;
     };
 }
