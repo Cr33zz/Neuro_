@@ -16,15 +16,13 @@ namespace Neuro
 
         virtual void CopyParametersTo(LayerBase& target, float tau) const override;
         virtual void Parameters(vector<Variable*>& params, bool onlyTrainable = true) const override;
+        virtual void SerializedParameters(vector<SerializedParameter>& params) override;
 
         BatchNormalization* SetMomentum(float momentum);
 
     protected:
         BatchNormalization(const string& constructorName, const Shape& inputShape, const string& name = "");
-        BatchNormalization(bool) {}
 
-        virtual LayerBase* GetCloneInstance() const override;
-        
         virtual void Build(const vector<Shape>& inputShapes) override;
         virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs, TensorLike* training) override;
 

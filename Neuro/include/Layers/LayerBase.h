@@ -73,7 +73,7 @@ namespace Neuro
         // Creates internal chain of operations based on input tensors and returns output tensors
         virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs, TensorLike* training);
 
-        virtual LayerBase* GetCloneInstance() const = 0;
+        virtual LayerBase* GetCloneInstance() const { return nullptr; }
         virtual void OnClone(const LayerBase& source);
         
 		string GenerateName() const;

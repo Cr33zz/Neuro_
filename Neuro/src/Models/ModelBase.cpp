@@ -466,13 +466,14 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::LoadWeights(const string& filename, bool ignoreInputLayer)
+    void ModelBase::LoadWeights(const string& filename, bool ignoreInputLayer, bool byName)
     {
         if (!m_Built)
             Build();
 
         H5File file = H5File(filename, H5F_ACC_RDONLY);
 
+        // layer names determine layers' order in model
         bool is_keras = file.attrExists("layer_names");
 
         Shape tranposedParamShape;
@@ -487,18 +488,19 @@ namespace Neuro
         hsize_t layerGroupsNum;
         H5Gget_num_objs(file.getId(), &layerGroupsNum);
 
-        NEURO_ASSERT((size_t)layerGroupsNum == layers.size(), "Number of saved layers doesn't match number of layers in the model. Found " << layerGroupsNum << " expected " << layers.size() << ".");
+        if (!byName)
+            NEURO_ASSERT((size_t)layerGroupsNum == layers.size(), "Number of saved layers doesn't match number of layers in the model. Found " << layerGroupsNum << " expected " << layers.size() << ".");
 
         vector<hsize_t> layersOrder(layers.size());
         iota(layersOrder.begin(), layersOrder.end(), 0); // creation order by default
 
-        // Keras specifies order of layers by attribute containing array of layer names
-        if (is_keras)
-        {
-            map<string, hsize_t> layerNameToIdx;
-            for (hsize_t i = 0; i < layerGroupsNum; ++i)
-                layerNameToIdx[file.getObjnameByIdx(i)] = i;
+        map<string, hsize_t> layerNameToIdx;
+        for (hsize_t i = 0; i < layerGroupsNum; ++i)
+            layerNameToIdx[file.getObjnameByIdx(i)] = i;
 
+        // Keras specifies order of layers by attribute containing array of layer names
+        if (is_keras && !byName)
+        {
             Attribute att(file.openAttribute("layer_names"));
             hsize_t layersNamesNum = 0;
             att.getSpace().getSimpleExtentDims(&layersNamesNum);
@@ -519,7 +521,14 @@ namespace Neuro
         {
             auto layer = layers[l];
 
-            Group g(file.openGroup(file.getObjnameByIdx(layersOrder[l])));
+            if (byName && layerNameToIdx.find(layer->Name()) == layerNameToIdx.end())
+            {
+                cout << "Weights for layer '" << layer->Name() << "' not found.\n";
+                continue;
+            }
+
+            hsize_t groupIdx = byName ? layerNameToIdx[layer->Name()] : layersOrder[l];
+            Group g(file.openGroup(file.getObjnameByIdx(groupIdx)));
 
             params.clear();
             layer->SerializedParameters(params);
@@ -559,7 +568,9 @@ namespace Neuro
 
                 NEURO_ASSERT(w->GetShape().Length == dataset.getSpace().getSimpleExtentNpoints(), "Number of values in parameter '" << w->Name() << "' doesn't match saved parameter. Found " << dataset.getSpace().getSimpleExtentNpoints() << " expected " << w->GetShape().Length  << ".");
 
-                if (is_keras && !params[i].transAxesKeras.empty())
+                NEURO_ASSERT(params[i].transAxesKeras.empty() || !params[i].reshapeKeras, "Cannot perform both transposition and reshape on Keras data.");
+
+                if (is_keras && (!params[i].transAxesKeras.empty() || params[i].reshapeKeras))
                 {
                     vector<int> dims(weightNDims);
                     for (size_t n = 0; n < dims.size(); ++n)
@@ -577,9 +588,12 @@ namespace Neuro
 
                 dataset.read(&w->Values()[0], PredType::NATIVE_FLOAT);
 
-                if (is_keras && !params[i].transAxesKeras.empty())
+                if (is_keras && (!params[i].transAxesKeras.empty() || params[i].reshapeKeras))
                 {
-                    params[i].param->Output() = w->Transposed(params[i].transAxesKeras);
+                    if (!params[i].transAxesKeras.empty())
+                        params[i].param->Output() = w->Transposed(params[i].transAxesKeras);
+                    if (params[i].reshapeKeras)
+                        params[i].param->Output() = w->Reshaped(params[i].param->Output().GetShape());
                     params[i].param->Output().Name(kerasParam.Name());
                 }
 

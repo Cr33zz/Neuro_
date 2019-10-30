@@ -52,16 +52,19 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void BatchNormalization::SerializedParameters(vector<SerializedParameter>& params)
+    {
+        params.push_back({ m_Gamma, {}, true });
+        params.push_back({ m_Beta, {}, true });
+        params.push_back({ m_RunningMean, {}, true });
+        params.push_back({ m_RunningVar, {}, true });
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     Neuro::BatchNormalization* BatchNormalization::SetMomentum(float momentum)
     {
         m_Momentum = momentum;
         return this;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    LayerBase* BatchNormalization::GetCloneInstance() const
-    {
-        return new BatchNormalization(false);
     }
 
     //////////////////////////////////////////////////////////////////////////
