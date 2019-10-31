@@ -19,6 +19,8 @@ namespace Neuro
 
         const vector<Tensor>& InputsGrads() const { return m_InputsGrads; }
 
+        virtual bool CareAboutGradient() const override { return m_CareAboutGradient; }
+        virtual void RefreshCareAboutGradient() override;
         virtual void OutputConsumed() override;
         virtual void InputGradConsumed(TensorLike* inputNode) override;
 
@@ -37,5 +39,6 @@ namespace Neuro
         /// Some operations like optimizer minimizations will consume outputs before computing gradients
         /// This flag in a hint for operation not to notify input nodes again
         bool m_InputsManuallyConsumed = false;
+        bool m_CareAboutGradient = false;
     };
 }

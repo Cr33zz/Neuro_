@@ -18,7 +18,7 @@ namespace Neuro
 
         virtual bool IsVar() const override { return true; }
 
-        void SetTrainable(bool enabled) { m_Trainable = enabled; }
+        void SetTrainable(bool enabled);
         bool Trainable() const { return m_Trainable; }
 
         void Initialize();

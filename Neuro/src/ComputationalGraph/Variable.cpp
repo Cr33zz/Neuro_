@@ -39,6 +39,18 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void Variable::SetTrainable(bool enabled)
+    {
+        if (m_Trainable == enabled)
+            return;
+
+        m_Trainable = enabled;
+
+        for (auto consumer : m_Consumers)
+            consumer->RefreshCareAboutGradient();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void Variable::Initialize()
     {
         if (m_Initialized)

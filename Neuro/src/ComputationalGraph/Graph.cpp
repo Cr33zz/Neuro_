@@ -101,6 +101,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<TensorLike*> Graph::BuildBackwardOrder(const vector<TensorLike*>& endNodes, unordered_set<TensorLike*>& nodesAffectingEndNodes, const vector<Variable*>& params)
     {
+        for (auto param : params)
+            NEURO_ASSERT(param->CareAboutGradient(), "Parameter '" << param->Name() << "' doesn't care about gradient.");
+
         // we need to figure out which nodes were required to calculate end nodes
         // later on when check if all consumers were visited we will additionally check if
         // any particular consumer is required, otherwise it's inputs' gradients are not important 
@@ -182,20 +185,25 @@ namespace Neuro
     {
         const size_t PREFETCH_STEPS = 2;
         vector<Variable*> variables;
+
+        /// remove all node which don't care about gradient. it has to be done at runtime since variables can be switched beween trainable and non-trainable state
+        /// between consecutive session runs
+        auto newOrder = order;
+        newOrder.erase(remove_if(newOrder.begin(), newOrder.end(), [](const TensorLike* node) { return !node->CareAboutGradient(); }), newOrder.end());
         
-        for (size_t n = 0; n < order.size(); ++n)
+        for (size_t n = 0; n < newOrder.size(); ++n)
         {
             for (size_t p = n + 1; p <= n + PREFETCH_STEPS; ++p)
             {
-                if (p >= order.size())
+                if (p >= newOrder.size())
                     break;
 
-                auto node = order[p];
+                auto node = newOrder[p];
                 GRAPH_DEBUG_INFO("##Graph: Prefetching '%s'...\n", node->Name().c_str());
                 node->PrefetchForGradient();
             }
 
-            auto node = order[n];
+            auto node = newOrder[n];
             GRAPH_DEBUG_INFO("##Graph: Computing gradient '%s'... (care about grad: %d)\n", node->Name().c_str(), node->CareAboutGradient() ? 1 : 0);
 
             if (node->CareAboutGradient())

@@ -41,6 +41,7 @@ namespace Neuro
         void AddInputNode(TensorLike* node) { m_InputNodes.push_back(node); }
 
         virtual bool CareAboutGradient() const;
+        virtual void RefreshCareAboutGradient() {}
         virtual void OutputConsumed() {}
         virtual void InputGradConsumed(TensorLike* inputNode) {}
 

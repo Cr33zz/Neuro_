@@ -15,7 +15,10 @@ namespace Neuro
         m_InputNodes = inputNodes;
 
         for (auto inputNode : inputNodes)
+        {
             inputNode->m_Consumers.push_back(this);
+            m_CareAboutGradient |= inputNode->CareAboutGradient();
+        }
 
         m_InputsGradsPtrs.resize(m_InputNodes.size());
         m_InputsGrads.resize(m_InputNodes.size());
@@ -56,9 +59,10 @@ namespace Neuro
         ComputeInternal();
 
         m_LastComputeStep = m_Graph->CurrentStep();
-        if (!m_InputsManuallyConsumed)
-        {
-            for (auto inputNode : m_InputNodes)
+        
+        for (auto inputNode : m_InputNodes)
+        {            
+            if (!m_InputsManuallyConsumed)
                 inputNode->OutputConsumed();
         }
 
@@ -81,6 +85,22 @@ namespace Neuro
         ComputeGradientInternal(grad);
 
         return m_InputsGradsPtrs;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Operation::RefreshCareAboutGradient()
+    {
+        bool oldCAG = m_CareAboutGradient;
+
+        m_CareAboutGradient = false;
+        for (auto inputNode : m_InputNodes)
+            m_CareAboutGradient |= inputNode->CareAboutGradient();
+
+        if (oldCAG == m_CareAboutGradient)
+            return;
+
+        for (auto consumer : m_Consumers)
+            consumer->RefreshCareAboutGradient();
     }
 
     //////////////////////////////////////////////////////////////////////////
