@@ -8,7 +8,7 @@
 #include "Debug.h"
 #include "Tools.h"
 
-#define ENABLE_GRAPH_LOGS
+//#define ENABLE_GRAPH_LOGS
 
 #ifdef ENABLE_GRAPH_LOGS
 #include <windows.h>
