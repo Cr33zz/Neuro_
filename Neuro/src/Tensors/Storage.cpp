@@ -6,7 +6,7 @@
 #include "Tensors/Cuda/CudaErrorCheck.h"
 
 //#define DISABLE_OFFLOAD_PREFETCH
-#define ENABLE_STORAGE_LOGS
+//#define ENABLE_STORAGE_LOGS
 
 #ifdef ENABLE_STORAGE_LOGS
 #include <windows.h>
@@ -57,10 +57,8 @@ namespace Neuro
                 NEURO_ASSERT(other.m_DataLocation != None, "");
                 m_DataLocation = Host;
                 AllocateOnHost();
-                if (other.m_DataLocation == Host)
-                    memcpy(m_DataPtr, other.m_DataPtr, SizeInBytes());
-                else
-                    cudaMemcpy(m_DataPtr, other.m_DeviceDataPtr, SizeInBytes(), cudaMemcpyDeviceToHost);
+                other.SyncToHost();
+                memcpy(m_DataPtr, other.m_DataPtr, SizeInBytes());
             }
             else
             {
