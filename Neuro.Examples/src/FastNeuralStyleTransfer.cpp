@@ -41,7 +41,7 @@ TensorLike* FastNeuralStyleTransfer::CreateTransformerNet(TensorLike* input, Ten
 }
 
 //////////////////////////////////////////////////////////////////////////
-ModelBase* FastNeuralStyleTransfer::CreateGeneratorModel(uint32_t width, uint32_t height, Placeholder* training)
+ModelBase* FastNeuralStyleTransfer::CreateGeneratorModel(uint32_t width, uint32_t height, TensorLike* training)
 {
     NameScope scope("generator");
 

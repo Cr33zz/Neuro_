@@ -10,13 +10,15 @@
 #include <experimental/filesystem>
 
 #undef LoadImage
-
 #include "NeuralStyleTransfer.h"
 #include "Memory/MemoryManager.h"
 #include "Neuro.h"
 #include "VGG19.h"
 
-//#define SLOW
+#define STYLE "great_wave"
+
+//#define EVALUATE_SINGLE_STYLE
+#define SLOW
 //#define FAST_SINGLE_CONTENT
 
 namespace fs = std::experimental::filesystem;
@@ -27,15 +29,14 @@ class FastNeuralStyleTransfer : public NeuralStyleTransfer
 public:
     void Run()
     {
-        
         const int NUM_EPOCHS = 20;
         
-#ifdef SLOW
+#if defined(SLOW)
         const uint32_t IMAGE_WIDTH = 512;
         const uint32_t IMAGE_HEIGHT = 512;
         const float CONTENT_WEIGHT = 400.f;
         const float STYLE_WEIGHT = 0.1f;
-        const float LEARNING_RATE = 1.f;
+        const float LEARNING_RATE = 5.f;
         const uint32_t BATCH_SIZE = 1;
 #else
         const uint32_t IMAGE_WIDTH = 256;
@@ -51,13 +52,13 @@ public:
 #       endif
 #endif
 
-        const string STYLE_FILE = "data/style3.jpg";
+        const string STYLE_FILE = string("data/styles/") + STYLE + ".jpg";
         const string TEST_FILE = "data/test.jpg";
-#       ifdef FAST_SINGLE_CONTENT
+#ifdef FAST_SINGLE_CONTENT
         const string CONTENT_FILES_DIR = "e:/Downloads/fake_coco";
-#       else
+#else
         const string CONTENT_FILES_DIR = "e:/Downloads/coco14";
-#       endif
+#endif
 
         Tensor::SetForcedOpMode(GPU);
         //GlobalRngSeed(1337);
@@ -103,15 +104,11 @@ public:
         cout << "Pre-computing style features and grams...\n";
 
         vector<TensorLike*> contentOutputs = { vggModel->Layer("block2_conv2")->Outputs()[0] };
-        /*vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv2")->Outputs()[0],
-                                             vggModel->Layer("block2_conv2")->Outputs()[0],
-                                             vggModel->Layer("block3_conv3")->Outputs()[0],
-                                             vggModel->Layer("block4_conv3")->Outputs()[0],
-                                            };*/
+        vector<float> styleOutputsWeights = { 2, 1, 2, 500 };
         vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv2")->Outputs()[0],
-                                             vggModel->Layer("block2_conv1")->Outputs()[0],
-                                             vggModel->Layer("block3_conv1")->Outputs()[0],
-                                             vggModel->Layer("block4_conv1")->Outputs()[0],
+                                             vggModel->Layer("block2_conv2")->Outputs()[0],
+                                             vggModel->Layer("block3_conv2")->Outputs()[0],
+                                             vggModel->Layer("block4_conv3")->Outputs()[0],
                                             };
 
         auto vggFeaturesModel = Flow(vggModel->InputsAt(-1), MergeVectors({ contentOutputs, styleOutputs }), "vgg_features");
@@ -148,7 +145,7 @@ public:
 #else
         //auto stylizedContent = CreateTransformerNet(inputPre, training);
         auto generator = CreateGeneratorModel(IMAGE_WIDTH, IMAGE_HEIGHT, training);
-        generator->LoadWeights("fnst_weights.h5", false, true);
+        generator->LoadWeights(string(STYLE) + "_weights.h5", false, true);
         auto stylizedContentPre = (*generator)(inputPre, training)[0];
 #endif
         auto stylizedFeatures = vggFeaturesModel(stylizedContentPre, nullptr, "generated_features");
@@ -163,7 +160,7 @@ public:
         // ... and style losses from remaining outputs
         assert(stylizedFeatures.size() == targetStyleGrams.size());
         for (size_t i = 0; i < stylizedFeatures.size(); ++i)
-            styleLosses.push_back(StyleLoss(targetStyleGrams[i], stylizedFeatures[i], (int)i));
+            styleLosses.push_back(multiply(StyleLoss(targetStyleGrams[i], stylizedFeatures[i], (int)i), styleOutputsWeights[i]));
         auto weightedStyleLoss = multiply(merge_avg(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "style_loss");
 
         //auto totalLoss = weightedContentLoss;
@@ -191,8 +188,9 @@ public:
         //Debug::LogGrad("vgg_preprocess", true);
         //Debug::LogGrad("output_image", true);
 
-        float bestLoss = -1;
-        int detailsIter = 10;
+        float minLoss = 0;
+        float lastLoss = 0;
+        int DETAILS_ITER = 10;
 
         for (int e = 0; e < NUM_EPOCHS; ++e)
         {
@@ -210,34 +208,43 @@ public:
                     LoadImage(contentFiles[(i * BATCH_SIZE + j)%contentFiles.size()], contentBatch.Values() + j * contentBatch.BatchLength(), input->GetShape().Width(), input->GetShape().Height(), NCHW);
 #endif
 
-                if (i % detailsIter == 0)
+                if (i % DETAILS_ITER == 0)
                 {
+#ifndef EVALUATE_SINGLE_STYLE
                     auto results = Session::Default()->Run({ stylizedContentPre, contentLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], totalLoss }, { { input, &testImage }, { training, &trainingOff } });
-                    auto genImage = *results[0];
                     float loss = (*results[6])(0);
-                    VGG16::UnprocessImage(genImage, NCHW);
-                    genImage.SaveAsImage("fnst_" + to_string(e) + "_" + to_string(i) + "_output.png", false);
-#if !defined(SLOW)
-                    if (bestLoss < 0 || loss < bestLoss)
-                    {
-                        generator->SaveWeights("fnst_weights.h5");
-                        bestLoss = loss;
-                    }
+#else
+                    auto results = Session::Default()->Run({ stylizedContentPre, totalLoss }, { { input, &testImage }, { training, &trainingOff } });
+                    float loss = (*results[1])(0);
 #endif
+                    auto genImage = *results[0];
+                    VGG16::UnprocessImage(genImage, NCHW);
+                    genImage.SaveAsImage(string(STYLE) + "_" + to_string(e) + "_" + to_string(i) + "_output.png", false);
+                    if (minLoss <= 0 || loss < minLoss)
+                    {
+#if !defined(SLOW)
+                        generator->SaveWeights(string(STYLE) + "_weights.h5");
+#endif
+                        minLoss = loss;
+                    }
 
-                    uint64_t cLoss = (uint64_t)((*results[1])(0) * CONTENT_WEIGHT);
+#ifndef EVALUATE_SINGLE_STYLE
                     const float SINGLE_STYLE_WEIGHT = STYLE_WEIGHT / styleLosses.size();
-                    uint64_t sLoss1 = (uint64_t)((*results[2])(0) * SINGLE_STYLE_WEIGHT);
-                    uint64_t sLoss2 = (uint64_t)((*results[3])(0) * SINGLE_STYLE_WEIGHT);
-                    uint64_t sLoss3 = (uint64_t)((*results[4])(0) * SINGLE_STYLE_WEIGHT);
-                    uint64_t sLoss4 = (uint64_t)((*results[5])(0) * SINGLE_STYLE_WEIGHT);
 
-                    cout << "Iter: " << i << ", Total loss: " << (uint64_t)loss << ", Best loss : " << (uint64_t)bestLoss <<  endl;
+                    float change = 0;
+                    if (lastLoss > 0)
+                        change = (lastLoss - loss) / lastLoss * 100.f;
+                    lastLoss = loss;
+
+                    cout << setprecision(4) << "iter: " << i << " - total loss: " << loss << "(min: " << minLoss << ") - change: " << change << "%"<< endl;
                     cout << "----------------------------------------------------" << endl;
-                    cout << "Content loss: " << cLoss << endl;
-                    cout << "Style_1 loss: " << sLoss1 << ", Style_2 loss: " << sLoss2 << endl;
-                    cout << "Style_3 loss: " << sLoss3 << ", Style_4 loss: " << sLoss4 << endl;
+                    cout << "content loss: " << (*results[1])(0) * CONTENT_WEIGHT << endl;
+                    cout << "style_1 loss: " << (*results[2])(0) * SINGLE_STYLE_WEIGHT << " - style_2 loss: " << (*results[3])(0) * SINGLE_STYLE_WEIGHT << endl;
+                    cout << "style_3 loss: " << (*results[4])(0) * SINGLE_STYLE_WEIGHT << " - style_4 loss: " << (*results[5])(0) * SINGLE_STYLE_WEIGHT << endl;
                     cout << "----------------------------------------------------" << endl;
+#else
+                    cout << setprecision(4) << "iter: " << i << " - total loss: " << loss << endl;
+#endif
                 }
 
                 //auto results = Session::Default()->Run({ stylizedContentPre, totalLoss, minimize }, { { input, &testImage }, { training, &trainingOn } });
@@ -271,24 +278,29 @@ public:
                 progress.SetExtraString(extString.str());*/
             }
         }
+    }
 
-        /*{
-            auto result = Session::Default()->Run({ stylizedContent, weightedContentLoss, weightedStyleLoss }, { { content, &testImage }, { training, &trainingOff } });
-            cout << "test content_loss: " << (*result[1])(0) << " style_loss: " << (*result[2])(0) << endl;
-            auto genImage = *result[0];
-            VGG16::UnprocessImage(genImage, NCHW);
-            genImage.SaveAsImage("fnst.png", false);
-        }*/
+    void Test()
+    {
+        Tensor::SetForcedOpMode(GPU);
+        const string TEST_FILE = "data/contents/content.jpg";
 
-        //auto results = Session::Default()->Run({ outputImg }, {});
-        //auto genImage = *results[0];
-        //VGG16::UnprocessImage(genImage, NCHW);
-        //genImage.SaveAsImage("_neural_transfer.jpg", false);
+        Tensor testImage = LoadImage(TEST_FILE);
+        auto input = new Placeholder(testImage.GetShape(), "input");
+        auto inputPre = VGG16::Preprocess(input, NCHW);
+        auto generator = CreateGeneratorModel(testImage.GetShape().Width(), testImage.GetShape().Height(), new Constant(0));
+        generator->LoadWeights(string("data/") + STYLE + "_weights.h5", false, true);
+        auto stylizedContentPre = (*generator)(inputPre, new Constant(0))[0];
+
+        auto results = Session::Default()->Run({ stylizedContentPre }, { { input, &testImage } });
+        auto genImage = *results[0];
+        VGG16::UnprocessImage(genImage, NCHW);
+        genImage.SaveAsImage(string(STYLE) + "_test_output.png", false);
     }
 
     TensorLike* CreateTransformerNet(TensorLike* input, TensorLike* training);
 
-    ModelBase* CreateGeneratorModel(uint32_t width, uint32_t height, Placeholder* training);
+    ModelBase* CreateGeneratorModel(uint32_t width, uint32_t height, TensorLike* training);
 
     class OutputScale : public LayerBase
     {

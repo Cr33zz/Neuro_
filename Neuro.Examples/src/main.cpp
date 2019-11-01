@@ -98,6 +98,7 @@ int main()
     //VGG16().Run();
     //NeuralStyleTransfer().Run();
     FastNeuralStyleTransfer().Run();
+    //FastNeuralStyleTransfer().Test();
 
     cin.get();
     return 0;
