@@ -76,5 +76,5 @@ TensorLike* VGG16::Preprocess(TensorLike* image, EDataFormat dataFormat)
 {
     NameScope scope("vgg_preprocess");
     image = swap_red_blue_channels(image);
-    return sub(image, new Constant(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3))));
+    return sub(image, new Constant(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), "mean_RGB"));
 }

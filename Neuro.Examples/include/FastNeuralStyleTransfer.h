@@ -16,7 +16,7 @@
 #include "VGG19.h"
 
 //#define SLOW
-#define FAST_SINGLE_CONTENT
+//#define FAST_SINGLE_CONTENT
 
 namespace fs = std::experimental::filesystem;
 using namespace Neuro;
@@ -60,6 +60,9 @@ public:
 
         Tensor::SetForcedOpMode(GPU);
         GlobalRngSeed(1337);
+
+        auto trainingOn = Tensor({ 1 }, Shape(1), "training_on");
+        auto trainingOff = Tensor({ 0 }, Shape(1), "training_off");
 
         //Tensor testImage = LoadImage(TEST_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
         Tensor testImage;
@@ -111,8 +114,8 @@ public:
         auto vggFeaturesModel = Flow(vggModel->InputsAt(-1), MergeVectors({ contentOutputs, styleOutputs }), "vgg_features");
 
         // pre-compute style features of style image (we only need to do it once since that image won't change either)
-        //Tensor styleImage = LoadImage(STYLE_FILE);
-        //Tensor styleImage = LoadImage(STYLE_FILE, IMAGE_WIDTH, IMAGE_HEIGHT);
+        /*Tensor styleImage = LoadImage(STYLE_FILE);
+        Tensor styleImage = LoadImage(STYLE_FILE, IMAGE_WIDTH, IMAGE_HEIGHT);*/
         Tensor styleImage;
         styleImage.DebugRecoverValues("style_raw");
         styleImage.SaveAsImage("_style.jpg", false);
@@ -151,7 +154,6 @@ public:
         generator->LoadWeights("data/generator_weights.h5", false, true);
         auto stylizedContentPre = (*generator)(inputPre, training)[0];
 #endif
-        //auto stylizedContentPre = VGG16::Preprocess(stylizedContent, NCHW);
         auto stylizedFeatures = vggFeaturesModel(stylizedContentPre, nullptr, "generated_features");
 
         // compute content loss from first output...
@@ -186,13 +188,11 @@ public:
 
         //Debug::LogAllOutputs(true);
         //Debug::LogAllGrads(true);
-        /*Debug::LogOutput("vgg_preprocess", true);
-        Debug::LogOutput("output_image", true);
-        Debug::LogGrad("vgg_preprocess", true);
-        Debug::LogGrad("output_image", true);*/
-
-        auto trainingOn = Tensor({ 1 }, Shape(1), "training_on");
-        auto trainingOff = Tensor({ 0 }, Shape(1), "training_off");
+        //Debug::LogOutput("generator_model/output", true);
+        //Debug::LogOutput("vgg_preprocess", true);
+        //Debug::LogOutput("output_image", true);
+        //Debug::LogGrad("vgg_preprocess", true);
+        //Debug::LogGrad("output_image", true);
 
         int detailsIter = 10;
 
@@ -205,38 +205,50 @@ public:
             for (int i = 0; i < steps; ++i/*, progress.NextStep()*/)
             {
                 contentBatch.OverrideHost();
-#ifdef SLOW
+#if defined(SLOW) || defined(FAST_SINGLE_CONTENT)
                 testImage.CopyTo(contentBatch);
 #else
                 for (int j = 0; j < BATCH_SIZE; ++j)
                     LoadImage(contentFiles[(i * BATCH_SIZE + j)%contentFiles.size()], contentBatch.Values() + j * contentBatch.BatchLength(), input->GetShape().Width(), input->GetShape().Height(), NCHW);
 #endif
-                //VGG16::PreprocessImage(contentBatch, NCHW);
-                //contentBatch.SaveAsImage("batch" + to_string(i) + ".jpg", false);
-                //auto contentFeatures = *vggFeaturesModel.Eval(contentOutputs, { { (Placeholder*)(vggFeaturesModel.InputsAt(0)[0]), &contentBatch } })[0];
-
-                auto results = Session::Default()->Run({ stylizedContentPre, contentLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], totalLoss }, { { input, &testImage }, { training, &trainingOff } });
-
-                /*auto results = Session::Default()->Run({ stylizedContentPre, contentLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], totalLoss, minimize }, 
-                                                       { { input, &contentBatch }, { training, &trainingOn } });*/
-                
-                uint64_t cLoss = (uint64_t)((*results[1])(0) * CONTENT_WEIGHT);
-                const float SINGLE_STYLE_WEIGHT = STYLE_WEIGHT / styleLosses.size();
-                uint64_t sLoss1 = (uint64_t)((*results[2])(0) * SINGLE_STYLE_WEIGHT);
-                uint64_t sLoss2 = (uint64_t)((*results[3])(0) * SINGLE_STYLE_WEIGHT);
-                uint64_t sLoss3 = (uint64_t)((*results[4])(0) * SINGLE_STYLE_WEIGHT);
-                uint64_t sLoss4 = (uint64_t)((*results[5])(0) * SINGLE_STYLE_WEIGHT);
 
                 if (i % detailsIter == 0)
                 {
+                    auto results = Session::Default()->Run({ stylizedContentPre, contentLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], totalLoss }, { { input, &testImage }, { training, &trainingOff } });
+                    auto genImage = *results[0];
+                    VGG16::UnprocessImage(genImage, NCHW);
+                    genImage.SaveAsImage("fnst_" + to_string(e) + "_" + to_string(i) + "_output.png", false);
+                    generator->SaveWeights("fnst_" + to_string(e) + "_" + to_string(i) + "_weights.h5");
+
+                    uint64_t cLoss = (uint64_t)((*results[1])(0) * CONTENT_WEIGHT);
+                    const float SINGLE_STYLE_WEIGHT = STYLE_WEIGHT / styleLosses.size();
+                    uint64_t sLoss1 = (uint64_t)((*results[2])(0) * SINGLE_STYLE_WEIGHT);
+                    uint64_t sLoss2 = (uint64_t)((*results[3])(0) * SINGLE_STYLE_WEIGHT);
+                    uint64_t sLoss3 = (uint64_t)((*results[4])(0) * SINGLE_STYLE_WEIGHT);
+                    uint64_t sLoss4 = (uint64_t)((*results[5])(0) * SINGLE_STYLE_WEIGHT);
+
                     cout << "Iter: " << i << ", Total loss: " << (uint64_t)(*results[6])(0) << endl;
                     cout << "----------------------------------------------------" << endl;
                     cout << "content_loss: " << cLoss << ", style_loss_1: " << sLoss1 << ", style_loss_2: " << sLoss2 << endl;
                     cout << "style_loss_3: " << sLoss3 << ", style_loss_4: " << sLoss4 << endl;
                     cout << "----------------------------------------------------" << endl;
-                }
-                
 
+                    /*auto result = Session::Default()->Run({ stylizedContent, weightedContentLoss, weightedStyleLoss }, { { content, &testImage }, { training, &trainingOff } });
+                    cout << "test content_loss: " << (*result[1])(0) << " style_loss: " << (*result[2])(0) << endl;
+                    auto genImage = *result[0];
+                    VGG16::UnprocessImage(genImage, NCHW);
+                    genImage.SaveAsImage("fnst_e" + PadLeft(to_string(e), 4, '0') + "_b" + PadLeft(to_string(i), 4, '0') + ".png", false);*/
+                }
+
+                //VGG16::PreprocessImage(contentBatch, NCHW);
+                //contentBatch.SaveAsImage("batch" + to_string(i) + ".jpg", false);
+                //auto contentFeatures = *vggFeaturesModel.Eval(contentOutputs, { { (Placeholder*)(vggFeaturesModel.InputsAt(0)[0]), &contentBatch } })[0];
+
+                auto results = Session::Default()->Run({ stylizedContentPre, contentLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], totalLoss, minimize }, 
+                                                       { { input, &contentBatch }, { training, &trainingOn } });
+                /*auto results = Session::Default()->Run({ stylizedContentPre, contentLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], totalLoss },
+                                                       { { input, &contentBatch }, { training, &trainingOff } });*/
+                
                 /*stringstream extString;
                 extString << setprecision(4) << " - cL: " << cLoss << " - s1L: " << sLoss1 << " - s2L: " << sLoss2 <<
                     " - s3L: " << sLoss3 << " - s4L: " << sLoss4 << " - tL: " << (cLoss + sLoss1 + sLoss2 + sLoss3 + sLoss4);
@@ -255,18 +267,6 @@ public:
                 stringstream extString;
                 extString << setprecision(4) << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - total_l: " << (*results[3])(0);
                 progress.SetExtraString(extString.str());*/
-
-                if (i % 10 == 0)
-                {
-                    auto genImage = *results[0];
-                    VGG16::UnprocessImage(genImage, NCHW);
-                    genImage.SaveAsImage("fnst_" + to_string(e) + "_" + to_string(i) + ".png", false);
-                    /*auto result = Session::Default()->Run({ stylizedContent, weightedContentLoss, weightedStyleLoss }, { { content, &testImage }, { training, &trainingOff } });
-                    cout << "test content_loss: " << (*result[1])(0) << " style_loss: " << (*result[2])(0) << endl;
-                    auto genImage = *result[0];
-                    VGG16::UnprocessImage(genImage, NCHW);
-                    genImage.SaveAsImage("fnst_e" + PadLeft(to_string(e), 4, '0') + "_b" + PadLeft(to_string(i), 4, '0') + ".png", false);*/
-                }
             }
         }
 
