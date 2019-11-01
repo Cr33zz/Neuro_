@@ -4,6 +4,7 @@
 #include <cctype>
 #include <iomanip>
 #include <memory>
+#include <experimental/filesystem>
 #include <H5Cpp.h>
 
 #include "Models/ModelBase.h"
@@ -470,6 +471,18 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::LoadWeights(const string& filename, bool ignoreInputLayer, bool byName)
     {
+        if (!std::experimental::filesystem::exists(filename))
+        {
+            cout << "File '" << filename << "' does not exist.\n";
+            return;
+        }
+
+        if (!H5File::isHdf5(filename.c_str()))
+        {
+            cout << "File '" << filename << "' is not valid HDF5 file.\n";
+            return;
+        }
+
         if (!m_Built)
             Build();
 
@@ -586,7 +599,12 @@ namespace Neuro
 
                 NEURO_ASSERT(wShape.NDim == dataset.getSpace().getSimpleExtentNdims(), "Number of dimensions of parameter '" << w->Name() << "' doesn't match saved parameter. Found " << dataset.getSpace().getSimpleExtentNdims() << " expected " << wShape.NDim << ".");
                 for (int i = wShape.NDim - 1, n = 0; i >= 0; --i, ++n)
-                    NEURO_ASSERT(weightDims[n] == wShape.Dimensions[i], "Dimension " << i << " of parameter '" << w->Name() << "' doesn't match corresponding dimension of saved parameter. Found " << weightDims[i] << " expected " << wShape.Dimensions[i] << ".");
+                {
+                    if (is_keras)
+                        NEURO_ASSERT(weightDims[n] == wShape.Dimensions[i], "Dimension " << n << " of parameter '" << w->Name() << "' doesn't match corresponding dimension of saved parameter. Found " << weightDims[n] << " expected " << wShape.Dimensions[i] << ".");
+                    else
+                        NEURO_ASSERT(weightDims[i] == wShape.Dimensions[i], "Dimension " << i << " of parameter '" << w->Name() << "' doesn't match corresponding dimension of saved parameter. Found " << weightDims[i] << " expected " << wShape.Dimensions[i] << ".");
+                }
 
                 dataset.read(&w->Values()[0], PredType::NATIVE_FLOAT);
 
