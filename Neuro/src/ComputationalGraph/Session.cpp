@@ -54,6 +54,7 @@ namespace Neuro
         for (auto feed : feeds)
         {
             SESSION_DEBUG_INFO("##Session: Feeding '%s'...\n", feed.first->Name().c_str());
+            NEURO_ASSERT(feed.second->GetShape() == feed.first->m_Output.GetShape(), "Mismatched feed shape. Expected: " << feed.first->m_Output.GetShape().ToString() << " received: " << feed.second->GetShape().ToString());
             feed.first->m_Output.ResizeBatch(feed.second->Batch());
             feed.second->CopyTo(feed.first->m_Output);
         }
