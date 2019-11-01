@@ -40,7 +40,7 @@ public:
 #else
         const uint32_t IMAGE_WIDTH = 256;
         const uint32_t IMAGE_HEIGHT = 256;
-        const float CONTENT_WEIGHT = 200.f;
+        const float CONTENT_WEIGHT = 400.f;
         const float STYLE_WEIGHT = 0.1f;
         const float LEARNING_RATE = 0.001f;
 
@@ -60,7 +60,7 @@ public:
 #       endif
 
         Tensor::SetForcedOpMode(GPU);
-        GlobalRngSeed(1337);
+        //GlobalRngSeed(1337);
 
         auto trainingOn = Tensor({ 1 }, Shape(1), "training_on");
         auto trainingOff = Tensor({ 0 }, Shape(1), "training_off");
@@ -92,6 +92,8 @@ public:
 
             contentCache.close();
         }
+
+        random_shuffle(contentFiles.begin(), contentFiles.end(), [&](size_t max) { return GlobalRng().Next((int)max); });
 
         cout << "Creating VGG model...\n";
         
