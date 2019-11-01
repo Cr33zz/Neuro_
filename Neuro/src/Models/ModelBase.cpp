@@ -433,7 +433,8 @@ namespace Neuro
         int layerIdx = 0;
         for (auto layer : Layers())
         {
-            Group g(file.createGroup("layer" + to_string(layerIdx++)));
+            //Group g(file.createGroup("layer" + to_string(layerIdx++)));
+            Group g(file.createGroup(layer->Name()));
 
             params.clear();
             paramNames.clear();
@@ -445,7 +446,7 @@ namespace Neuro
             
             for (auto i = 0; i < params.size(); ++i)
             {
-                auto w = params[i].param->OutputGradPtr();
+                auto w = params[i].param->OutputPtr();
                 auto& wShape = w->GetShape();
                 
                 vector<hsize_t> dims;
@@ -453,7 +454,8 @@ namespace Neuro
                     dims.push_back(wShape.Dimensions[i]);
 
                 DataSet dataset(g.createDataSet("param_" + to_string(i), PredType::NATIVE_FLOAT, DataSpace(wShape.NDim, &dims[0])));
-                dataset.write(&w->Values()[0], PredType::NATIVE_FLOAT);
+                //DataSet dataset(g.createDataSet(params[i].param->Name(), PredType::NATIVE_FLOAT, DataSpace(wShape.NDim, &dims[0])));
+                dataset.write(w->Values(), PredType::NATIVE_FLOAT);
             }
         }
 
