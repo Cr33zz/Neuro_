@@ -40,7 +40,7 @@ public:
 #else
         const uint32_t IMAGE_WIDTH = 256;
         const uint32_t IMAGE_HEIGHT = 256;
-        const float CONTENT_WEIGHT = 400.f;
+        const float CONTENT_WEIGHT = 200.f;
         const float STYLE_WEIGHT = 0.1f;
         const float LEARNING_RATE = 0.001f;
 
@@ -51,7 +51,7 @@ public:
 #       endif
 #endif
 
-        const string STYLE_FILE = "data/style.jpg";
+        const string STYLE_FILE = "data/style3.jpg";
         const string TEST_FILE = "data/test.jpg";
 #       ifdef FAST_SINGLE_CONTENT
         const string CONTENT_FILES_DIR = "e:/Downloads/fake_coco";
@@ -101,10 +101,15 @@ public:
         cout << "Pre-computing style features and grams...\n";
 
         vector<TensorLike*> contentOutputs = { vggModel->Layer("block2_conv2")->Outputs()[0] };
-        vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv2")->Outputs()[0],
+        /*vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv2")->Outputs()[0],
                                              vggModel->Layer("block2_conv2")->Outputs()[0],
                                              vggModel->Layer("block3_conv3")->Outputs()[0],
                                              vggModel->Layer("block4_conv3")->Outputs()[0],
+                                            };*/
+        vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv2")->Outputs()[0],
+                                             vggModel->Layer("block2_conv1")->Outputs()[0],
+                                             vggModel->Layer("block3_conv1")->Outputs()[0],
+                                             vggModel->Layer("block4_conv1")->Outputs()[0],
                                             };
 
         auto vggFeaturesModel = Flow(vggModel->InputsAt(-1), MergeVectors({ contentOutputs, styleOutputs }), "vgg_features");
@@ -191,9 +196,9 @@ public:
         {
             cout << "Epoch " << e+1 << endl;
 
-            Tqdm progress(steps, 0);
-            progress.ShowStep(true).ShowPercent(false).ShowElapsed(false);// .EnableSeparateLines(true);
-            for (int i = 0; i < steps; ++i, progress.NextStep())
+            //Tqdm progress(steps, 0);
+            //progress.ShowStep(true).ShowPercent(false).ShowElapsed(false);// .EnableSeparateLines(true);
+            for (int i = 0; i < steps; ++i/*, progress.NextStep()*/)
             {
                 contentBatch.OverrideHost();
 #if defined(SLOW) || defined(FAST_SINGLE_CONTENT)
@@ -218,18 +223,19 @@ public:
                     }
 #endif
 
-                    /*uint64_t cLoss = (uint64_t)((*results[1])(0) * CONTENT_WEIGHT);
+                    uint64_t cLoss = (uint64_t)((*results[1])(0) * CONTENT_WEIGHT);
                     const float SINGLE_STYLE_WEIGHT = STYLE_WEIGHT / styleLosses.size();
                     uint64_t sLoss1 = (uint64_t)((*results[2])(0) * SINGLE_STYLE_WEIGHT);
                     uint64_t sLoss2 = (uint64_t)((*results[3])(0) * SINGLE_STYLE_WEIGHT);
                     uint64_t sLoss3 = (uint64_t)((*results[4])(0) * SINGLE_STYLE_WEIGHT);
                     uint64_t sLoss4 = (uint64_t)((*results[5])(0) * SINGLE_STYLE_WEIGHT);
 
-                    cout << "Iter: " << i << ", Total loss: " << (uint64_t)(*results[6])(0) << endl;
+                    cout << "Iter: " << i << ", Total loss: " << (uint64_t)loss << ", Best loss : " << (uint64_t)bestLoss <<  endl;
                     cout << "----------------------------------------------------" << endl;
-                    cout << "content_loss: " << cLoss << ", style_loss_1: " << sLoss1 << ", style_loss_2: " << sLoss2 << endl;
-                    cout << "style_loss_3: " << sLoss3 << ", style_loss_4: " << sLoss4 << endl;
-                    cout << "----------------------------------------------------" << endl;*/
+                    cout << "Content loss: " << cLoss << endl;
+                    cout << "Style_1 loss: " << sLoss1 << ", Style_2 loss: " << sLoss2 << endl;
+                    cout << "Style_3 loss: " << sLoss3 << ", Style_4 loss: " << sLoss4 << endl;
+                    cout << "----------------------------------------------------" << endl;
                 }
 
                 //auto results = Session::Default()->Run({ stylizedContentPre, totalLoss, minimize }, { { input, &testImage }, { training, &trainingOn } });
@@ -258,9 +264,9 @@ public:
                 auto results = Session::Default()->Run({ weightedContentLoss, weightedStyleLoss, totalLoss, minimize },
                                                        { { input, &contentBatch }, { training, &trainingOn } });
 
-                stringstream extString;
+                /*stringstream extString;
                 extString << setprecision(4) << " - cL: " << (*results[0])(0) << " - sL: " << (*results[1])(0) << " - tL: " << (*results[2])(0);
-                progress.SetExtraString(extString.str());
+                progress.SetExtraString(extString.str());*/
             }
         }
 
