@@ -332,5 +332,8 @@ ASALocalRun/
 # Images
 *.png
 
+# HDF5
+*.h5
+
 # Training data
 data/
