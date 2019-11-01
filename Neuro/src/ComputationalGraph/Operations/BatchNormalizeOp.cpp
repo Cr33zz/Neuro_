@@ -24,7 +24,7 @@ namespace Neuro
         m_SaveInvVar.Resize(gamma.GetShape());
 
         if (training)
-            m_Inputs[0]->BatchNormTrain(gamma, beta, m_Momentum, m_Epsilon, &runningMean, &runningVar, m_SaveMean, m_SaveInvVar, m_Output);
+            m_Inputs[0]->BatchNormTrain(gamma, beta, 1.f - m_Momentum, m_Epsilon, &runningMean, &runningVar, m_SaveMean, m_SaveInvVar, m_Output);
         else
             m_Inputs[0]->BatchNorm(gamma, beta, m_Epsilon, &runningMean, &runningVar, m_Output);
     }
