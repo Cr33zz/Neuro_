@@ -20,6 +20,7 @@
 #include "ComputationalGraph/NameScope.h"
 #include "ComputationalGraph/Trainer.h"
 #include "ComputationalGraph/Predicter.h"
+#include "ComputationalGraph/Session.h"
 
 using namespace H5;
 
@@ -256,10 +257,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     tensor_ptr_vec_t ModelBase::Eval(const vector<TensorLike*>& fetches, const map<Placeholder*, const Tensor*>& feeds)
     {
-        size_t fetchesHash = 0;
-        std::hash<TensorLike*> hasher;
-        for (size_t i = 0; i < fetches.size(); ++i)
-            fetchesHash = fetchesHash * 31 + hasher(fetches[i]);
+        size_t fetchesHash = Session::GetFetchesHash(fetches);
 
         auto predicter = m_EvalPredicters[fetchesHash];
 

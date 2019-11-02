@@ -40,9 +40,27 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    size_t Session::GetFetchesHash(const vector<TensorLike*>& fetches)
+    {
+        size_t fetchesHash = 0;
+        std::hash<TensorLike*> hasher;
+        for (size_t i = 0; i < fetches.size(); ++i)
+            fetchesHash = fetchesHash * 31 + hasher(fetches[i]);
+        return fetchesHash;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     vector<Tensor*> Session::Run(const vector<TensorLike*>& fetches, const map<Placeholder*, const Tensor*>& feeds)
     {
-        return RunInOrder(m_Graph->BuildForwardOrder(fetches), fetches, feeds);
+        size_t fetchesHash = GetFetchesHash(fetches);
+        auto orderIt = m_OrderCache.find(fetchesHash);
+        if (orderIt == m_OrderCache.end())
+        {
+            m_OrderCache[fetchesHash] = m_Graph->BuildForwardOrder(fetches);
+            orderIt = m_OrderCache.find(fetchesHash);
+        }
+
+        return RunInOrder(orderIt->second, fetches, feeds);
     }
 
     //////////////////////////////////////////////////////////////////////////
