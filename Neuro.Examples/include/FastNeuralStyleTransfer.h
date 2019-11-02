@@ -15,7 +15,7 @@
 #include "Neuro.h"
 #include "VGG19.h"
 
-#define STYLE "great_wave"
+#define STYLE "starry_night"
 
 //#define EVALUATE_SINGLE_STYLE
 #define SLOW
@@ -33,14 +33,16 @@ public:
         
 #if defined(SLOW)
         const uint32_t IMAGE_WIDTH = 512;
-        const uint32_t IMAGE_HEIGHT = 512;
+        const uint32_t IMAGE_HEIGHT = 384;//512;
         const float CONTENT_WEIGHT = 400.f;
         const float STYLE_WEIGHT = 0.1f;
         const float LEARNING_RATE = 5.f;
         const uint32_t BATCH_SIZE = 1;
+
+        const string TEST_FILE = "data/contents/content4.jpg";
 #else
-        const uint32_t IMAGE_WIDTH = 256;
-        const uint32_t IMAGE_HEIGHT = 256;
+        const uint32_t IMAGE_WIDTH = 320;
+        const uint32_t IMAGE_HEIGHT = 320;
         const float CONTENT_WEIGHT = 400.f;
         const float STYLE_WEIGHT = 0.1f;
         const float LEARNING_RATE = 0.001f;
@@ -48,12 +50,13 @@ public:
 #       ifdef FAST_SINGLE_CONTENT
         const uint32_t BATCH_SIZE = 1;
 #       else
-        const uint32_t BATCH_SIZE = 4;
+        const uint32_t BATCH_SIZE = 2;
 #       endif
+
+        const string TEST_FILE = "data/test.jpg";
 #endif
 
-        const string STYLE_FILE = string("data/styles/") + STYLE + ".jpg";
-        const string TEST_FILE = "data/test.jpg";
+        const string STYLE_FILE = string("data/styles/") + STYLE + ".jpg";        
 #ifdef FAST_SINGLE_CONTENT
         const string CONTENT_FILES_DIR = "e:/Downloads/fake_coco";
 #else
@@ -98,17 +101,24 @@ public:
 
         cout << "Creating VGG model...\n";
         
-        auto vggModel = VGG16::CreateModel(NCHW, Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), false);
+        auto vggModel = VGG16::CreateModel(NCHW, Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), false, AvgPool);
         vggModel->SetTrainable(false);
 
         cout << "Pre-computing style features and grams...\n";
 
-        vector<TensorLike*> contentOutputs = { vggModel->Layer("block2_conv2")->Outputs()[0] };
-        vector<float> styleOutputsWeights = { 2, 1, 2, 500 };
-        vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv2")->Outputs()[0],
+        vector<TensorLike*> contentOutputs = { vggModel->Layer("block4_conv2")->Outputs()[0] };
+        //vector<float> styleOutputsWeights = { 2, 1, 2, 500 };
+        vector<float> styleOutputsWeights = { 1, 1, 1, 1, 1 };
+        /*vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv2")->Outputs()[0],
                                              vggModel->Layer("block2_conv2")->Outputs()[0],
                                              vggModel->Layer("block3_conv2")->Outputs()[0],
                                              vggModel->Layer("block4_conv3")->Outputs()[0],
+                                            };*/
+        vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv1")->Outputs()[0],
+                                             vggModel->Layer("block2_conv1")->Outputs()[0],
+                                             vggModel->Layer("block3_conv1")->Outputs()[0],
+                                             vggModel->Layer("block4_conv1")->Outputs()[0],
+                                             vggModel->Layer("block5_conv1")->Outputs()[0],
                                             };
 
         auto vggFeaturesModel = Flow(vggModel->InputsAt(-1), MergeVectors({ contentOutputs, styleOutputs }), "vgg_features");
@@ -140,7 +150,8 @@ public:
         auto inputPre = VGG16::Preprocess(input, NCHW);
 
 #ifdef SLOW
-        auto stylizedContent = new Variable(Uniform::Random(-0.5f, 0.5f, input->GetShape()).Add(127.5f), "output_image");
+        //auto stylizedContent = new Variable(Uniform::Random(-0.5f, 0.5f, input->GetShape()).Add(127.5f), "output_image");
+        auto stylizedContent = new Variable(testImage, "output_image");
         auto stylizedContentPre = VGG16::Preprocess(stylizedContent, NCHW);
 #else
         //auto stylizedContent = CreateTransformerNet(inputPre, training);
@@ -164,8 +175,8 @@ public:
         auto weightedStyleLoss = multiply(merge_avg(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "style_loss");
 
         //auto totalLoss = weightedContentLoss;
-        //auto totalLoss = weightedStyleLoss;
-        auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
+        auto totalLoss = weightedStyleLoss;
+        //auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
         //auto totalLoss = mean(square(sub(stylizedContentPre, contentPre)), GlobalAxis, "total");
 
         auto optimizer = Adam(LEARNING_RATE);
@@ -191,6 +202,8 @@ public:
         float minLoss = 0;
         float lastLoss = 0;
         int DETAILS_ITER = 10;
+
+        //DumpMemoryManagers("mem.log");
 
         for (int e = 0; e < NUM_EPOCHS; ++e)
         {

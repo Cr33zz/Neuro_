@@ -25,5 +25,5 @@ public:
         cout << prediction->ArgMax(WidthAxis)(0) << " " << prediction->Max(WidthAxis)(0) * 100 << "%" << endl;
     }
 
-    static ModelBase* CreateModel(EDataFormat dataFormat, Shape inputShape = Shape(), bool includeTop = true);
+    static ModelBase* CreateModel(EDataFormat dataFormat, Shape inputShape = Shape(), bool includeTop = true, EPoolingMode poolMode = MaxPool);
 };

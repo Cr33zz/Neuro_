@@ -53,7 +53,7 @@ ModelBase* FastNeuralStyleTransfer::CreateGeneratorModel(uint32_t width, uint32_
         x = (new Activation(new ReLU(), "resi_relu_" + to_string(num) + "_1"))->Call(x)[0];
         x = (new Conv2D(128, 3, 1, Tensor::GetPadding(Same, 3), nullptr, NCHW, "resi_conv_" + to_string(num) + "_2"))->Call(x)[0];
         x = (new BatchNormalization("resi_normal_" + to_string(num) + "_2"))->Call(x, training)[0];
-        auto m = (new Merge(MergeSum, nullptr, "resi_add_" + to_string(num)))->Call({ x, shortcut })[0];
+        auto m = (new Merge(SumMerge, nullptr, "resi_add_" + to_string(num)))->Call({ x, shortcut })[0];
         return m;
     };
 
