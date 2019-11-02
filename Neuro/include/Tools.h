@@ -7,6 +7,7 @@
 #include "Types.h"
 #include "Random.h"
 #include "Stopwatch.h"
+#include "Tensors/Shape.h"
 
 #define NEURO_CONCATENATE_DETAIL(x, y) x##y
 #define NEURO_CONCATENATE(x, y) NEURO_CONCATENATE_DETAIL(x, y)
@@ -56,6 +57,7 @@ namespace Neuro
     // Loaded tensor is flat and internal data layout is NHWC, it should be transposed and normalized before use
     void LoadImage(const string& filename, float* buffer, uint32_t targetSizeX = 0, uint32_t targetSizeY = 0, EDataFormat targetFormat = NCHW);
     Tensor LoadImage(const string& filename, uint32_t targetSizeX = 0, uint32_t targetSizeY = 0, EDataFormat targetFormat = NCHW);
+    Shape GetImageDims(const string& filename);
 
     template<typename T>
     vector<T> MergeVectors(initializer_list<vector<T>> vectors);

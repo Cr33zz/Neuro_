@@ -15,7 +15,7 @@
 #include "Neuro.h"
 #include "VGG19.h"
 
-#define STYLE "starry_night"
+#define STYLE "great_wave"
 
 //#define EVALUATE_SINGLE_STYLE
 #define SLOW
@@ -34,12 +34,13 @@ public:
 #if defined(SLOW)
         const uint32_t IMAGE_WIDTH = 512;
         const uint32_t IMAGE_HEIGHT = 384;//512;
-        const float CONTENT_WEIGHT = 400.f;
-        const float STYLE_WEIGHT = 0.1f;
+        const float CONTENT_WEIGHT = 1000.f;
+        const float STYLE_WEIGHT = 0.01f;
         const float LEARNING_RATE = 5.f;
         const uint32_t BATCH_SIZE = 1;
 
-        const string TEST_FILE = "data/contents/content4.jpg";
+        const string TEST_FILE = "data/contents/content.jpg";
+        //const string TEST_FILE = "e:/!!!/Green_Sea_Turtle_grazing_seagrass.jpg";
 #else
         const uint32_t IMAGE_WIDTH = 320;
         const uint32_t IMAGE_HEIGHT = 320;
@@ -56,7 +57,8 @@ public:
         const string TEST_FILE = "data/test.jpg";
 #endif
 
-        const string STYLE_FILE = string("data/styles/") + STYLE + ".jpg";        
+        const string STYLE_FILE = string("data/styles/") + STYLE + ".jpg";
+        //const string STYLE_FILE = "e:/!!!/The_Great_Wave_off_Kanagawa.jpg";
 #ifdef FAST_SINGLE_CONTENT
         const string CONTENT_FILES_DIR = "e:/Downloads/fake_coco";
 #else
@@ -101,14 +103,13 @@ public:
 
         cout << "Creating VGG model...\n";
         
-        auto vggModel = VGG16::CreateModel(NCHW, Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), false, AvgPool);
+        auto vggModel = VGG19::CreateModel(NCHW, Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), false, MaxPool);
         vggModel->SetTrainable(false);
 
         cout << "Pre-computing style features and grams...\n";
 
-        vector<TensorLike*> contentOutputs = { vggModel->Layer("block4_conv2")->Outputs()[0] };
+        vector<TensorLike*> contentOutputs = { vggModel->Layer("block5_conv2")->Outputs()[0] };
         //vector<float> styleOutputsWeights = { 2, 1, 2, 500 };
-        vector<float> styleOutputsWeights = { 1, 1, 1, 1, 1 };
         /*vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv2")->Outputs()[0],
                                              vggModel->Layer("block2_conv2")->Outputs()[0],
                                              vggModel->Layer("block3_conv2")->Outputs()[0],
@@ -121,10 +122,23 @@ public:
                                              vggModel->Layer("block5_conv1")->Outputs()[0],
                                             };
 
+        vector<float> styleOutputsWeights(styleOutputs.size());
+        fill(styleOutputsWeights.begin(), styleOutputsWeights.end(), 1.f / styleOutputs.size());
+
         auto vggFeaturesModel = Flow(vggModel->InputsAt(-1), MergeVectors({ contentOutputs, styleOutputs }), "vgg_features");
 
         // pre-compute style features of style image (we only need to do it once since that image won't change either)
-        Tensor styleImage = LoadImage(STYLE_FILE);
+        Tensor styleImage;
+        {
+            // style transfer works best when both style and content images have similar resolutions
+            float maxDim = (float)max(IMAGE_WIDTH, IMAGE_HEIGHT);
+            auto styleDims = GetImageDims(STYLE_FILE);
+            float longDim = (float)max(styleDims.Width(), styleDims.Height());
+            float scale = maxDim / longDim;
+            styleImage = LoadImage(STYLE_FILE, (uint32_t)round(styleDims.Width() * scale), (uint32_t)round(styleDims.Height() * scale));
+        }
+        //styleImage.DebugRecoverValues("The_Great_Wave_off_Kanagawa.jpg_raw");
+        //Tensor styleImage = LoadImage(STYLE_FILE);
         styleImage.SaveAsImage("_style.png", false);
         VGG16::PreprocessImage(styleImage, NCHW);
         
@@ -139,7 +153,7 @@ public:
             Tensor* x = targetStyleFeatures[i];
             uint32_t featureMapSize = x->Width() * x->Height();
             auto features = x->Reshaped(Shape(featureMapSize, x->Depth()));
-            targetStyleGrams.push_back(new Constant(features.Mul(features.Transposed()).Div((float)features.GetShape().Length), "style_" + to_string(i) + "_gram"));
+            targetStyleGrams.push_back(new Constant(features.Mul(features.Transposed()).Div((float)featureMapSize), "style_" + to_string(i) + "_gram"));
         }
 
         cout << "Building computational graph...\n";
@@ -172,14 +186,14 @@ public:
         assert(stylizedFeatures.size() == targetStyleGrams.size());
         for (size_t i = 0; i < stylizedFeatures.size(); ++i)
             styleLosses.push_back(multiply(StyleLoss(targetStyleGrams[i], stylizedFeatures[i], (int)i), styleOutputsWeights[i]));
-        auto weightedStyleLoss = multiply(merge_avg(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "style_loss");
+        auto weightedStyleLoss = multiply(merge_sum(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "style_loss");
 
         //auto totalLoss = weightedContentLoss;
-        auto totalLoss = weightedStyleLoss;
-        //auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
+        //auto totalLoss = weightedStyleLoss;
+        auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
         //auto totalLoss = mean(square(sub(stylizedContentPre, contentPre)), GlobalAxis, "total");
 
-        auto optimizer = Adam(LEARNING_RATE);
+        auto optimizer = Adam(LEARNING_RATE, 0.99f, 0.999f, 1e-1f);
         auto minimize = optimizer.Minimize({ totalLoss });
 
         Tensor contentBatch(Shape::From(input->GetShape(), BATCH_SIZE));
@@ -220,16 +234,18 @@ public:
                 for (int j = 0; j < BATCH_SIZE; ++j)
                     LoadImage(contentFiles[(i * BATCH_SIZE + j)%contentFiles.size()], contentBatch.Values() + j * contentBatch.BatchLength(), input->GetShape().Width(), input->GetShape().Height(), NCHW);
 #endif
+                
+                auto results = Session::Default()->Run({ stylizedContentPre, totalLoss, weightedContentLoss, weightedStyleLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], styleLosses[4], minimize },
+                                                       { { input, &contentBatch }, { training, &trainingOn } });
 
                 if (i % DETAILS_ITER == 0)
                 {
-#ifndef EVALUATE_SINGLE_STYLE
-                    auto results = Session::Default()->Run({ stylizedContentPre, contentLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], totalLoss }, { { input, &testImage }, { training, &trainingOff } });
-                    float loss = (*results[6])(0);
-#else
-                    auto results = Session::Default()->Run({ stylizedContentPre, totalLoss }, { { input, &testImage }, { training, &trainingOff } });
+//#ifndef EVALUATE_SINGLE_STYLE
+//                    auto results = Session::Default()->Run({ stylizedContentPre, totalLoss, weightedContentLoss, weightedStyleLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], styleLosses[4] }, { { input, &testImage }, { training, &trainingOff } });
+//#else
+//                    auto results = Session::Default()->Run({ stylizedContentPre, totalLoss }, { { input, &testImage }, { training, &trainingOff } });
+//#endif
                     float loss = (*results[1])(0);
-#endif
                     auto genImage = *results[0];
                     VGG16::UnprocessImage(genImage, NCHW);
                     genImage.SaveAsImage(string(STYLE) + "_" + to_string(e) + "_" + to_string(i) + "_output.png", false);
@@ -251,9 +267,10 @@ public:
 
                     cout << setprecision(4) << "iter: " << i << " - total loss: " << loss << "(min: " << minLoss << ") - change: " << change << "%"<< endl;
                     cout << "----------------------------------------------------" << endl;
-                    cout << "content loss: " << (*results[1])(0) * CONTENT_WEIGHT << endl;
-                    cout << "style_1 loss: " << (*results[2])(0) * SINGLE_STYLE_WEIGHT << " - style_2 loss: " << (*results[3])(0) * SINGLE_STYLE_WEIGHT << endl;
-                    cout << "style_3 loss: " << (*results[4])(0) * SINGLE_STYLE_WEIGHT << " - style_4 loss: " << (*results[5])(0) * SINGLE_STYLE_WEIGHT << endl;
+                    cout << "content loss: " << (*results[2])(0) << " - style loss: " << (*results[3])(0) << endl;
+                    cout << "style_1 loss: " << (*results[4])(0) * SINGLE_STYLE_WEIGHT << " - style_2 loss: " << (*results[5])(0) * SINGLE_STYLE_WEIGHT << endl;
+                    cout << "style_3 loss: " << (*results[6])(0) * SINGLE_STYLE_WEIGHT << " - style_4 loss: " << (*results[7])(0) * SINGLE_STYLE_WEIGHT << endl;
+                    cout << "style_5 loss: " << (*results[8])(0) * SINGLE_STYLE_WEIGHT << endl;
                     cout << "----------------------------------------------------" << endl;
 #else
                     cout << setprecision(4) << "iter: " << i << " - total loss: " << loss << endl;
@@ -282,9 +299,6 @@ public:
                 stringstream extString;
                 extString << setprecision(4) << " - total_l: " << (*results[1])(0);
                 progress.SetExtraString(extString.str());*/
-
-                auto results = Session::Default()->Run({ weightedContentLoss, weightedStyleLoss, totalLoss, minimize },
-                                                       { { input, &contentBatch }, { training, &trainingOn } });
 
                 /*stringstream extString;
                 extString << setprecision(4) << " - cL: " << (*results[0])(0) << " - sL: " << (*results[1])(0) << " - tL: " << (*results[2])(0);

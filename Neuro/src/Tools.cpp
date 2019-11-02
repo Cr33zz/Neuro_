@@ -483,7 +483,7 @@ namespace Neuro
 
         if (targetSizeX > 0 || targetSizeY > 0)
         {
-            auto resizedImage = FreeImage_Rescale(image, WIDTH, HEIGHT, FILTER_BILINEAR);
+            auto resizedImage = FreeImage_Rescale(image, WIDTH, HEIGHT);
             FreeImage_Unload(image);
             image = resizedImage;
         }
@@ -540,6 +540,24 @@ namespace Neuro
         LoadImageInternal(image, imageShape, targetFormat, &result.Values()[0]);
         FreeImage_Unload(image);
         return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Shape GetImageDims(const string& filename)
+    {
+        ImageLibInit();
+
+        auto format = FreeImage_GetFileType(filename.c_str());
+        assert(format != FIF_UNKNOWN);
+
+        FIBITMAP* image = FreeImage_Load(format, filename.c_str());
+        assert(image);
+
+        Shape shape(FreeImage_GetWidth(image), FreeImage_GetHeight(image), 3);
+            
+        FreeImage_Unload(image);
+        
+        return shape;
     }
 
     //////////////////////////////////////////////////////////////////////////
