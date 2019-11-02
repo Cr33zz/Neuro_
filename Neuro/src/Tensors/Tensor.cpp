@@ -494,11 +494,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Negated(Tensor& result) const
 	{
-        CopyToHost();
-        result.OverrideHost();
-
-		for (uint32_t i = 0; i < m_Storage.Size(); ++i)
-			result.m_Storage.Data()[i] = -m_Storage.Data()[i];
+        Op()->Negate(*this, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////

@@ -144,6 +144,17 @@ __global__ void powGrad(int inputLen, const float* __restrict input, float power
     }
 }
 
+__global__ void negate(int inputLen, const float* __restrict input, float* __restrict output, int subLen)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+
+    int maxN = i * subLen + subLen;
+    if (maxN > inputLen)
+        maxN = inputLen;
+    for (int n = i * subLen; n < maxN; ++n)
+        output[n] = -input[n];
+}
+
 __global__ void add(int inputLen, const float* __restrict input, float v, float* __restrict output, int subLen)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -529,6 +540,12 @@ namespace Neuro
     void CudaKernels::PowGradient(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float power, const float* outputGradientDev, float* inputGradientDev, int subLen)
     {
         powGrad<<<blocks, threads>>>(inputLen, inputDev, power, outputGradientDev, inputGradientDev, subLen);
+        cudaStreamSynchronize(0);
+    }
+
+    void CudaKernels::Negate(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float* outputDev, int subLen)
+    {
+        negate<<<blocks, threads>>>(inputLen, inputDev, outputDev, subLen);
         cudaStreamSynchronize(0);
     }
 
