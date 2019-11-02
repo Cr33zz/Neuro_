@@ -51,7 +51,7 @@ namespace Neuro
             m_Size = other.m_Size;
             m_DataRefCount = m_DeviceDataRefCount = 0;
             FreeOnHost();
-            FreeOnDevice(true);
+            FreeOnDevice(true, true);
             ChangeType(other.m_Type);
             if (other.m_DataPtr)
             {
@@ -81,7 +81,7 @@ namespace Neuro
                 CUDA_CHECK(cudaEventDestroy(m_OffloadEvent));
             if (m_PrefetchEvent)
                 CUDA_CHECK(cudaEventDestroy(m_PrefetchEvent));
-            FreeOnDevice(true);
+            FreeOnDevice(true, true);
             FreeOnHost();
             m_Type = other.m_Type;
             m_AllocSize = other.m_AllocSize;
@@ -155,7 +155,7 @@ namespace Neuro
         bool wasAllocatedOnHost = m_DataPtr != nullptr;
 
         if (m_DeviceDataPtr)
-            FreeOnDevice(true);
+            FreeOnDevice(true, true);
         if (m_DataPtr)
             FreeOnHost();
 
@@ -179,7 +179,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Storage::Release()
     {
-        FreeOnDevice();
+        FreeOnDevice(false, true);
         FreeOnHost();
         m_DataLocation = None;
         m_DeviceDataRefCount = 0;
