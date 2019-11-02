@@ -64,6 +64,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     EMemStatus MemoryManagerBase::Allocate(void** ptr, size_t size, const string& annotation)
     {
+        ScopedMutex m(m_AllocMtx);
         size = ceilInt(size, m_AllocGranularity);
 
         // Find the best fit.
@@ -105,7 +106,6 @@ namespace Neuro
 #ifdef MEMSET_ALLOCATED_MEMORY
         InternalMemset(m_UsedBlocks->GetData(), 0xFF, m_UsedBlocks->GetSize());
 #endif
-
         return MEM_STATUS_SUCCESS;
     }
 
@@ -114,6 +114,8 @@ namespace Neuro
     {
         if (!ptr)
             return MEM_STATUS_SUCCESS;
+
+        ScopedMutex m(m_FreeMtx);
 
         // Find the node in the list of used blocks.
         Block* curr = m_UsedBlocks, *prev = nullptr;
@@ -437,12 +439,14 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    EMemStatus DeviceMemoryManager::Offload(void* dst, void* src, size_t size, cudaEvent_t memEvent)
+    EMemStatus DeviceMemoryManager::Offload(void* dst, void* src, size_t size, cudaEvent_t memEvent, cudaHostFn_t callback, void* userData)
     {
         NEURO_ASSERT(dst, "Host pinned memory is not allocated.");
         NEURO_ASSERT(cudaEventQuery(memEvent) == cudaSuccess, "Memory sync event is not ready.");
         CUDA_CHECK(cudaMemcpyAsync(dst, src, size, cudaMemcpyDeviceToHost, m_MemoryStream));
         CUDA_CHECK(cudaEventRecord(memEvent, m_MemoryStream));
+        if (callback)
+            CUDA_CHECK(cudaLaunchHostFunc(m_MemoryStream, callback, userData));
         return MEM_STATUS_SUCCESS;
     }
 

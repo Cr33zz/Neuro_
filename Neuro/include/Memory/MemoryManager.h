@@ -2,6 +2,7 @@
 
 #include <cstdio>
 #include <list>
+#include <mutex>
 #include <driver_types.h>
 
 namespace Neuro
@@ -107,6 +108,17 @@ namespace Neuro
         const size_t m_NativeAllocGranularity;
         size_t m_AllocatedMemSize = 0;
         size_t m_AllocatedMemPeakSize = 0;
+
+        mutex m_AllocMtx;
+        mutex m_FreeMtx;
+    };
+
+    struct ScopedMutex
+    {
+        ScopedMutex(mutex& m) : mtx(&m) { mtx->lock(); }
+        ~ScopedMutex() { mtx->unlock(); }
+    private:
+        mutex* mtx;
     };
 
     // Memory manager for GPU memory
@@ -117,7 +129,7 @@ namespace Neuro
         static DeviceMemoryManager& Default();
 
         EMemStatus Reserve(size_t size);
-        EMemStatus Offload(void* dst, void* src, size_t size, cudaEvent_t memEvent);
+        EMemStatus Offload(void* dst, void* src, size_t size, cudaEvent_t memEvent, cudaHostFn_t callback = nullptr, void* userData = nullptr);
         EMemStatus Prefetch(void* dst, void* src, size_t size, cudaEvent_t memEvent);
         EMemStatus WaitForMemEvent(cudaEvent_t memEvent);
 

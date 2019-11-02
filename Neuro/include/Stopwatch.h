@@ -32,8 +32,8 @@ namespace Neuro
 
     enum EAutoStopwatchMode
     {
-        Milliseconds,
         Microseconds,
+        Milliseconds,
         Seconds
     };
 

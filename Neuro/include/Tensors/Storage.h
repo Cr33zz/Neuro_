@@ -38,7 +38,7 @@ namespace Neuro
         void FreeOnHost();
 
         void AllocateOnDevice() const;
-        void FreeOnDevice(bool force = false);
+        void FreeOnDevice(bool force = false, bool forceWaitForOffload = false);
 
         void Offload() const;
         void Prefetch() const;
@@ -76,6 +76,8 @@ namespace Neuro
         size_t AllocSizeInBytes() const { return m_AllocSize * sizeof(float); }
 
     private:
+        static void OnOffloadDone(void* userData);
+
         float* m_DataPtr = nullptr;
         float* m_DeviceDataPtr = nullptr;
         int m_Type = ST_Default;
@@ -84,6 +86,7 @@ namespace Neuro
         int m_DeviceDataRefCount = 0;
         int m_DataRefCount = 0;
         cudaEvent_t m_OffloadEvent = nullptr;
+        bool m_FreeDeviceMemOnOffloadDone = false;
         mutable bool m_PrefetchRequested = false;
         cudaEvent_t m_PrefetchEvent = nullptr;
         mutable ELocation m_DataLocation = None;
