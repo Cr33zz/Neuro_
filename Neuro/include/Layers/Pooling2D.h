@@ -8,9 +8,9 @@ namespace Neuro
     class Pooling2D : public SingleLayer
     {
     public:
-        Pooling2D(uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, EPoolingMode mode = EPoolingMode::Max, EDataFormat dataFormat = NCHW, const string& name = "");
+        Pooling2D(uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, EPoolingMode mode = MaxPool, EDataFormat dataFormat = NCHW, const string& name = "");
         // Use this constructor for input layer only!
-        Pooling2D(Shape inputShape, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, EPoolingMode mode = EPoolingMode::Max, EDataFormat dataFormat = NCHW, const string& name = "");
+        Pooling2D(Shape inputShape, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, EPoolingMode mode = MaxPool, EDataFormat dataFormat = NCHW, const string& name = "");
 
     protected:
         Pooling2D(const string& constructorName, Shape inputShape, uint32_t filterSize, uint32_t stride, uint32_t padding, EPoolingMode mode, EDataFormat dataFormat, const string& name);

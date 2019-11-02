@@ -38,16 +38,16 @@ namespace Neuro
         TensorLike* output = nullptr;
         switch (m_MergeMode)
         {
-        case MergeAvg:
+        case AvgMerge:
             output = merge_avg(inputs);
             break;
-        case MergeMax:
+        case MaxMerge:
             output = merge_max(inputs);
             break;
-        case MergeMin:
+        case MinMerge:
             output = merge_min(inputs);
             break;
-        case MergeSum:
+        case SumMerge:
             output = merge_sum(inputs);
             break;
         }

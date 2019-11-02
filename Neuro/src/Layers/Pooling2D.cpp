@@ -63,25 +63,25 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     MaxPooling2D::MaxPooling2D(uint32_t filterSize, uint32_t stride, uint32_t padding, EDataFormat dataFormat, const string& name)
-        : Pooling2D(__FUNCTION__, filterSize, stride, padding, EPoolingMode::Max, dataFormat, name)
+        : Pooling2D(__FUNCTION__, filterSize, stride, padding, MaxPool, dataFormat, name)
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
     MaxPooling2D::MaxPooling2D(Shape inputShape, uint32_t filterSize, uint32_t stride, uint32_t padding, EDataFormat dataFormat, const string& name)
-        : Pooling2D(__FUNCTION__, inputShape, filterSize, stride, padding, EPoolingMode::Max, dataFormat, name)
+        : Pooling2D(__FUNCTION__, inputShape, filterSize, stride, padding, MaxPool, dataFormat, name)
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
     AvgPooling2D::AvgPooling2D(uint32_t filterSize, uint32_t stride, uint32_t padding, EDataFormat dataFormat, const string& name)
-        : Pooling2D(__FUNCTION__, filterSize, stride, padding, EPoolingMode::Avg, dataFormat, name)
+        : Pooling2D(__FUNCTION__, filterSize, stride, padding, AvgPool, dataFormat, name)
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
     AvgPooling2D::AvgPooling2D(Shape inputShape, uint32_t filterSize, uint32_t stride, uint32_t padding, EDataFormat dataFormat, const string& name)
-        : Pooling2D(__FUNCTION__, inputShape, filterSize, stride, padding, EPoolingMode::Avg, dataFormat, name)
+        : Pooling2D(__FUNCTION__, inputShape, filterSize, stride, padding, AvgPool, dataFormat, name)
     {
     }
 }

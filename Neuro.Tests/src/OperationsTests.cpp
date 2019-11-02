@@ -50,13 +50,13 @@ namespace NeuroTests
         TEST_METHOD(Pool2d_Max)
         {
             auto x = Variable(Shape(9, 9, 3, 2));
-            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new Pool2dOp(&x, 2, 1, 1, Max, NCHW)).get()));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new Pool2dOp(&x, 2, 1, 1, MaxPool, NCHW)).get()));
         }
 
         TEST_METHOD(Pool2d_Avg)
         {
             auto x = Variable(Shape(9, 9, 3, 2));
-            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new Pool2dOp(&x, 2, 1, 1, Avg, NCHW)).get()));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new Pool2dOp(&x, 2, 1, 1, AvgPool, NCHW)).get()));
         }
 
         TEST_METHOD(Add_Same)
@@ -97,7 +97,7 @@ namespace NeuroTests
             vector<TensorLike*> inputs;
             for (int i = 0; i < 5; ++i)
                 inputs.push_back(new Variable(Shape(2, 3, 4, 2)));
-            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new MergeOp(inputs, MergeAvg)).get()));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new MergeOp(inputs, AvgMerge)).get()));
         }
 
         TEST_METHOD(Merge_Sum)
@@ -105,7 +105,7 @@ namespace NeuroTests
             vector<TensorLike*> inputs;
             for (int i = 0; i < 5; ++i)
                 inputs.push_back(new Variable(Shape(2, 3, 4, 2)));
-            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new MergeOp(inputs, MergeSum)).get()));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new MergeOp(inputs, SumMerge)).get()));
         }
 
         TEST_METHOD(Merge_Min)
@@ -113,7 +113,7 @@ namespace NeuroTests
             vector<TensorLike*> inputs;
             for (int i = 0; i < 5; ++i)
                 inputs.push_back(new Variable(Shape(2, 3, 4, 2)));
-            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new MergeOp(inputs, MergeMin)).get()));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new MergeOp(inputs, MinMerge)).get()));
         }
 
         TEST_METHOD(Merge_Max)
@@ -121,7 +121,7 @@ namespace NeuroTests
             vector<TensorLike*> inputs;
             for (int i = 0; i < 5; ++i)
                 inputs.push_back(new Variable(Shape(2, 3, 4, 2)));
-            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new MergeOp(inputs, MergeMax)).get()));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new MergeOp(inputs, MaxMerge)).get()));
         }
 
         TEST_METHOD(Mean_None)

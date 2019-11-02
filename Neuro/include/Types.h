@@ -52,16 +52,16 @@ namespace Neuro
 
     enum EPoolingMode
     {
-        Max,
-        Avg
+        MaxPool,
+        AvgPool
     };
 
     enum EMergeMode
     {
-        MergeSum,
-        MergeAvg,
-        MergeMax,
-        MergeMin
+        SumMerge,
+        AvgMerge,
+        MaxMerge,
+        MinMerge
     };
 
     enum EBatchNormMode

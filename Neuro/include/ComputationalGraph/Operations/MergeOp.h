@@ -19,21 +19,21 @@ namespace Neuro
 
     static Operation* merge_avg(const vector<TensorLike*>& xs, const string& name = "")
     {
-        return new MergeOp(xs, MergeAvg, name);
+        return new MergeOp(xs, AvgMerge, name);
     }
 
     static Operation* merge_min(const vector<TensorLike*>& xs, const string& name = "")
     {
-        return new MergeOp(xs, MergeMin, name);
+        return new MergeOp(xs, MinMerge, name);
     }
 
     static Operation* merge_max(const vector<TensorLike*>& xs, const string& name = "")
     {
-        return new MergeOp(xs, MergeMax, name);
+        return new MergeOp(xs, MaxMerge, name);
     }
 
     static Operation* merge_sum(const vector<TensorLike*>& xs, const string& name = "")
     {
-        return new MergeOp(xs, MergeSum, name);
+        return new MergeOp(xs, SumMerge, name);
     }
 }

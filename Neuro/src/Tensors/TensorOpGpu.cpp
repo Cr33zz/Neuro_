@@ -1231,7 +1231,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     cudnnPoolingMode_t TensorOpGpu::GetCudnnPoolType(EPoolingMode mode)
     {
-        if (mode == EPoolingMode::Max)
+        if (mode == MaxPool)
             return CUDNN_POOLING_MAX;
         return CUDNN_POOLING_AVERAGE_COUNT_INCLUDE_PADDING;
     }

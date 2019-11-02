@@ -345,7 +345,7 @@ namespace Neuro
 		    for (int outH = 0, h = -(int)paddingY; outH < (int)output.Height(); h += (int)stride, ++outH)
 		    for (int outW = 0, w = -(int)paddingX; outW < (int)output.Width(); w += (int)stride, ++outW)
 		    {
-			    if (type == EPoolingMode::Max)
+			    if (type == MaxPool)
 			    {
 				    float value = -numeric_limits<float>().max();
 
@@ -355,7 +355,7 @@ namespace Neuro
 
 				    output(outW, outH, outD, outN) = value;
 			    }
-			    else if (type == EPoolingMode::Avg)
+			    else if (type == AvgPool)
 			    {
 				    float sum = 0;
 				    for (int poolY = 0; poolY < (int)filterSize; ++poolY)
@@ -375,7 +375,7 @@ namespace Neuro
             for (int outH = 0, h = -(int)paddingY; outH < (int)output.Len(2); h += (int)stride, ++outH)
 		    for (int outW = 0, w = -(int)paddingX; outW < (int)output.Len(1); w += (int)stride, ++outW)
 		    {
-			    if (type == EPoolingMode::Max)
+			    if (type == MaxPool)
 			    {
 				    float value = -numeric_limits<float>().max();
 
@@ -385,7 +385,7 @@ namespace Neuro
 
 				    output(outD, outW, outH, outN) = value;
 			    }
-			    else if (type == EPoolingMode::Avg)
+			    else if (type == AvgPool)
 			    {
 				    float sum = 0;
 				    for (int poolY = 0; poolY < (int)filterSize; ++poolY)
@@ -416,7 +416,7 @@ namespace Neuro
 		    for (int outH = 0, h = -(int)paddingY; outH < (int)output.Height(); ++outH, h += (int)stride)
 		    for (int outW = 0, w = -(int)paddingX; outW < (int)output.Width(); ++outW, w += (int)stride)
 		    {
-			    if (type == EPoolingMode::Max)
+			    if (type == MaxPool)
 			    {
                     bool maxFound = false;
                     for (int poolH = 0; poolH < (int)filterSize; ++poolH)
@@ -436,7 +436,7 @@ namespace Neuro
                             break;
                     }
 			    }
-			    else if (type == EPoolingMode::Avg)
+			    else if (type == AvgPool)
 			    {
                     float filterElementsNum = (float)(filterSize * filterSize);
 
@@ -457,7 +457,7 @@ namespace Neuro
 		    for (int outH = 0, h = -(int)paddingY; outH < (int)output.Len(2); ++outH, h += (int)stride)
 		    for (int outW = 0, w = -(int)paddingX; outW < (int)output.Len(1); ++outW, w += (int)stride)
 		    {
-			    if (type == EPoolingMode::Max)
+			    if (type == MaxPool)
 			    {
                     bool maxFound = false;
                     for (int poolH = 0; poolH < (int)filterSize; ++poolH)
@@ -477,7 +477,7 @@ namespace Neuro
                             break;
                     }
 			    }
-			    else if (type == EPoolingMode::Avg)
+			    else if (type == AvgPool)
 			    {
                     float filterElementsNum = (float)(filterSize * filterSize);
 

@@ -20,16 +20,16 @@ namespace Neuro
 
         switch (m_Mode)
         {
-        case MergeAvg:
+        case AvgMerge:
             Tensor::MergeAvg(m_Inputs, m_Output);
             break;
-        case MergeMax:
+        case MaxMerge:
             Tensor::MergeMax(m_Inputs, m_Output);
             break;
-        case MergeMin:
+        case MinMerge:
             Tensor::MergeMin(m_Inputs, m_Output);
             break;
-        case MergeSum:
+        case SumMerge:
             Tensor::MergeSum(m_Inputs, m_Output);
             break;
         }
@@ -52,14 +52,14 @@ namespace Neuro
         {
             switch (m_Mode)
             {
-            case MergeAvg:
+            case AvgMerge:
                 Tensor::MergeAvgGradient(m_Output, m_Inputs, grad, m_InputsGradsPtrs);
                 break;
-            case MergeMax:
-            case MergeMin:
+            case MaxMerge:
+            case MinMerge:
                 Tensor::MergeMinMaxGradient(m_Output, m_Inputs, grad, m_InputsGradsPtrs);
                 break;
-            case MergeSum:
+            case SumMerge:
                 Tensor::MergeSumGradient(m_Output, m_Inputs, grad, m_InputsGradsPtrs);
                 break;
             }
