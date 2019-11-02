@@ -17,7 +17,6 @@
 
 #define STYLE "great_wave"
 
-//#define EVALUATE_SINGLE_STYLE
 #define SLOW
 //#define FAST_SINGLE_CONTENT
 
@@ -115,11 +114,11 @@ public:
                                              vggModel->Layer("block3_conv2")->Outputs()[0],
                                              vggModel->Layer("block4_conv3")->Outputs()[0],
                                             };*/
-        vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv1")->Outputs()[0],
+        vector<TensorLike*> styleOutputs = { //vggModel->Layer("block1_conv1")->Outputs()[0],
                                              vggModel->Layer("block2_conv1")->Outputs()[0],
                                              vggModel->Layer("block3_conv1")->Outputs()[0],
                                              vggModel->Layer("block4_conv1")->Outputs()[0],
-                                             vggModel->Layer("block5_conv1")->Outputs()[0],
+                                             //vggModel->Layer("block5_conv1")->Outputs()[0],
                                             };
 
         vector<float> styleOutputsWeights(styleOutputs.size());
@@ -235,16 +234,11 @@ public:
                     LoadImage(contentFiles[(i * BATCH_SIZE + j)%contentFiles.size()], contentBatch.Values() + j * contentBatch.BatchLength(), input->GetShape().Width(), input->GetShape().Height(), NCHW);
 #endif
                 
-                auto results = Session::Default()->Run({ stylizedContentPre, totalLoss, weightedContentLoss, weightedStyleLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], styleLosses[4], minimize },
+                auto results = Session::Default()->Run(MergeVectors({ vector<TensorLike*>{ stylizedContentPre, totalLoss, weightedContentLoss, weightedStyleLoss, minimize }, styleLosses }),
                                                        { { input, &contentBatch }, { training, &trainingOn } });
 
                 if (i % DETAILS_ITER == 0)
                 {
-//#ifndef EVALUATE_SINGLE_STYLE
-//                    auto results = Session::Default()->Run({ stylizedContentPre, totalLoss, weightedContentLoss, weightedStyleLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], styleLosses[4] }, { { input, &testImage }, { training, &trainingOff } });
-//#else
-//                    auto results = Session::Default()->Run({ stylizedContentPre, totalLoss }, { { input, &testImage }, { training, &trainingOff } });
-//#endif
                     float loss = (*results[1])(0);
                     auto genImage = *results[0];
                     VGG16::UnprocessImage(genImage, NCHW);
@@ -257,7 +251,6 @@ public:
                         minLoss = loss;
                     }
 
-#ifndef EVALUATE_SINGLE_STYLE
                     const float SINGLE_STYLE_WEIGHT = STYLE_WEIGHT / styleLosses.size();
 
                     float change = 0;
@@ -268,13 +261,10 @@ public:
                     cout << setprecision(4) << "iter: " << i << " - total loss: " << loss << "(min: " << minLoss << ") - change: " << change << "%"<< endl;
                     cout << "----------------------------------------------------" << endl;
                     cout << "content loss: " << (*results[2])(0) << " - style loss: " << (*results[3])(0) << endl;
-                    cout << "style_1 loss: " << (*results[4])(0) * SINGLE_STYLE_WEIGHT << " - style_2 loss: " << (*results[5])(0) * SINGLE_STYLE_WEIGHT << endl;
-                    cout << "style_3 loss: " << (*results[6])(0) * SINGLE_STYLE_WEIGHT << " - style_4 loss: " << (*results[7])(0) * SINGLE_STYLE_WEIGHT << endl;
-                    cout << "style_5 loss: " << (*results[8])(0) * SINGLE_STYLE_WEIGHT << endl;
+                    cout << "style_1 loss: " << (*results[5])(0) * SINGLE_STYLE_WEIGHT; if (styleLosses.size() > 1) cout << " - style_2 loss: " << (*results[6])(0) * SINGLE_STYLE_WEIGHT; cout << endl;
+                    if (styleLosses.size() > 2) cout << "style_3 loss: " << (*results[7])(0) * SINGLE_STYLE_WEIGHT; if (styleLosses.size() > 3) cout << " - style_4 loss: " << (*results[8])(0) * SINGLE_STYLE_WEIGHT; cout << endl;
+                    if (styleLosses.size() > 4) cout << "style_5 loss: " << (*results[9])(0) * SINGLE_STYLE_WEIGHT; cout << endl;
                     cout << "----------------------------------------------------" << endl;
-#else
-                    cout << setprecision(4) << "iter: " << i << " - total loss: " << loss << endl;
-#endif
                 }
 
                 //auto results = Session::Default()->Run({ stylizedContentPre, totalLoss, minimize }, { { input, &testImage }, { training, &trainingOn } });
