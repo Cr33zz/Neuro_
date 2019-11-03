@@ -15,7 +15,7 @@
 #include "Neuro.h"
 #include "VGG19.h"
 
-#define STYLE "great_wave"
+#define STYLE "mosaic"
 
 //#define SLOW
 //#define FAST_SINGLE_CONTENT
@@ -28,12 +28,12 @@ class FastNeuralStyleTransfer : public NeuralStyleTransfer
 public:
     void Run()
     {
-        const int NUM_EPOCHS = 20;
+        const int NUM_EPOCHS = 2;
         
 #if defined(SLOW)
         const uint32_t IMAGE_WIDTH = 512;
         const uint32_t IMAGE_HEIGHT = 512;
-        const float CONTENT_WEIGHT = 400.f;
+        const float CONTENT_WEIGHT = 1000.f;
         const float STYLE_WEIGHT = 0.1f;
         const float LEARNING_RATE = 2.f;
         const uint32_t BATCH_SIZE = 1;
@@ -268,8 +268,8 @@ public:
                     cout << "content loss: " << (*results[2])(0) << " - style loss: " << (*results[3])(0) << endl;
 #if defined(SLOW) || defined(FAST_SINGLE_CONTENT)
                     cout << "style_1 loss: " << (*results[5])(0) * SINGLE_STYLE_WEIGHT; if (styleLosses.size() > 1) cout << " - style_2 loss: " << (*results[6])(0) * SINGLE_STYLE_WEIGHT; cout << endl;
-                    if (styleLosses.size() > 2) cout << "style_3 loss: " << (*results[7])(0) * SINGLE_STYLE_WEIGHT; if (styleLosses.size() > 3) cout << " - style_4 loss: " << (*results[8])(0) * SINGLE_STYLE_WEIGHT; cout << endl;
-                    if (styleLosses.size() > 4) cout << "style_5 loss: " << (*results[9])(0) * SINGLE_STYLE_WEIGHT; cout << endl;
+                    if (styleLosses.size() > 2) cout << "style_3 loss: " << (*results[7])(0) * SINGLE_STYLE_WEIGHT; if (styleLosses.size() > 3) cout << " - style_4 loss: " << (*results[8])(0) * SINGLE_STYLE_WEIGHT; if (styleLosses.size() > 2) cout << endl;
+                    if (styleLosses.size() > 4) cout << "style_5 loss: " << (*results[9])(0) * SINGLE_STYLE_WEIGHT; if (styleLosses.size() > 4) cout << endl;
 #endif
                     cout << "----------------------------------------------------" << endl;
                 }
