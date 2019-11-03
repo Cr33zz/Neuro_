@@ -1,6 +1,8 @@
 #pragma once
 
 #include <driver_types.h>
+#include <future>
+#include <mutex>
 #include <string>
 
 #include "Types.h"
@@ -86,7 +88,10 @@ namespace Neuro
         int m_DeviceDataRefCount = 0;
         int m_DataRefCount = 0;
         cudaEvent_t m_OffloadEvent = nullptr;
+        mutex m_FreeDeviceMemOnOffloadMtx;
         bool m_FreeDeviceMemOnOffloadDone = false;
+        mutable promise<void> m_OffloadPromise;
+        mutable future<void> m_OffloadFuture;
         mutable bool m_PrefetchRequested = false;
         cudaEvent_t m_PrefetchEvent = nullptr;
         mutable ELocation m_DataLocation = None;

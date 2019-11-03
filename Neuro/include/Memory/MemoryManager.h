@@ -109,16 +109,7 @@ namespace Neuro
         size_t m_AllocatedMemSize = 0;
         size_t m_AllocatedMemPeakSize = 0;
 
-        mutex m_AllocMtx;
-        mutex m_FreeMtx;
-    };
-
-    struct ScopedMutex
-    {
-        ScopedMutex(mutex& m) : mtx(&m) { mtx->lock(); }
-        ~ScopedMutex() { mtx->unlock(); }
-    private:
-        mutex* mtx;
+        mutex m_AllocFreeMtx;
     };
 
     // Memory manager for GPU memory

@@ -240,6 +240,13 @@ namespace Neuro
 
         if (!m_DataPtr)
             AllocateOnHost();
+
+        if (m_OffloadFuture.valid())
+        {
+            m_OffloadFuture.get();
+            m_OffloadPromise = promise<void>();
+        }
+
         NEURO_ASSERT(m_DataPtr, "Data cannot be only on device.");
         STORAGE_DEBUG_INFO("Allocating on device '%s' ", m_Name.c_str());
         if (m_DeviceDataPtr)
@@ -254,6 +261,14 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Storage::FreeOnDevice(bool force, bool forceWaitForOffload)
     {
+        if (forceWaitForOffload && m_FreeDeviceMemOnOffloadDone)
+        {
+            AutoStopwatch prof(Microseconds);
+            STORAGE_DEBUG_INFO("Waiting for offload callback... '%s'[%d]\n", m_Name.c_str(), m_Type);
+            m_OffloadFuture.get();
+            STORAGE_DEBUG_INFO("--> waited %s\n", prof.ToString().c_str());
+        }
+
         STORAGE_DEBUG_INFO("Releasing on device '%s' ", m_Name.c_str());
         if (!m_DeviceDataPtr)
         {
@@ -267,8 +282,10 @@ namespace Neuro
             return;
         }
 
+        m_FreeDeviceMemOnOffloadDone = false;
         if (m_Type & ST_Offloadable)
         {
+            unique_lock<mutex> mtx(m_FreeDeviceMemOnOffloadMtx);
             if (cudaEventQuery(m_OffloadEvent) == cudaErrorNotReady)
             {
                 if (forceWaitForOffload)
@@ -279,36 +296,45 @@ namespace Neuro
                     STORAGE_DEBUG_INFO("--> waited %s\n", prof.ToString().c_str());
                 }
                 else
+                {                    
                     m_FreeDeviceMemOnOffloadDone = true;
+                    m_OffloadFuture = m_OffloadPromise.get_future();
+                    STORAGE_DEBUG_INFO("<<< release will take place on offload-done callback.\n");
+                    return;
+                }
             }
         }
 
-        if (m_FreeDeviceMemOnOffloadDone)
-        {
-            STORAGE_DEBUG_INFO("<<< release will take place on offload-done callback.\n");
-        }
-        else
-        {
-            STORAGE_DEBUG_INFO("<<< release incoming.\n");
-            CUDA_CHECK(DeviceMemoryManager::Default().Free((void*)m_DeviceDataPtr));
-            m_DeviceDataPtr = nullptr;
+        STORAGE_DEBUG_INFO("<<< release incoming.\n");
+        CUDA_CHECK(DeviceMemoryManager::Default().Free((void*)m_DeviceDataPtr));
+        m_DeviceDataPtr = nullptr;
 
-            // at this point the only place where values are stored is host memory
-            if (m_DataPtr)
-                m_DataLocation = Host;
-        }
+        // at this point the only place where values are stored is host memory
+        if (m_DataPtr)
+            m_DataLocation = Host;
     }
 
+    //////////////////////////////////////////////////////////////////////////
     void Storage::OnOffloadDone(void* userData)
     {
         Storage* storage = (Storage*)userData;
 
+        unique_lock<mutex> mtx(storage->m_FreeDeviceMemOnOffloadMtx);
         if (storage->m_FreeDeviceMemOnOffloadDone)
         {
             STORAGE_DEBUG_INFO("Offload done '%s'[%d]\n", storage->m_Name.c_str(), storage->m_Type);
-            storage->m_FreeDeviceMemOnOffloadDone = false;
-            storage->FreeOnDevice(false, true);
+            CUDA_CHECK(DeviceMemoryManager::Default().Free((void*)storage->m_DeviceDataPtr));
+            storage->m_DeviceDataPtr = nullptr;
+
+            if (storage->m_DataPtr)
+                storage->m_DataLocation = Host;
+        
+            storage->m_OffloadPromise.set_value();
         }
+        else
+            STORAGE_DEBUG_INFO("Offload done '%s'[%d] <<< not releasing device memory\n", storage->m_Name.c_str(), storage->m_Type);
+
+        storage->m_FreeDeviceMemOnOffloadDone = false;
     }
 
     //////////////////////////////////////////////////////////////////////////

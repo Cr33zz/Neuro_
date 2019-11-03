@@ -64,7 +64,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     EMemStatus MemoryManagerBase::Allocate(void** ptr, size_t size, const string& annotation)
     {
-        ScopedMutex m(m_AllocMtx);
+        unique_lock<mutex> mtx(m_AllocFreeMtx);
+
         size = ceilInt(size, m_AllocGranularity);
 
         // Find the best fit.
@@ -115,7 +116,7 @@ namespace Neuro
         if (!ptr)
             return MEM_STATUS_SUCCESS;
 
-        ScopedMutex m(m_FreeMtx);
+        unique_lock<mutex> mtx(m_AllocFreeMtx);
 
         // Find the node in the list of used blocks.
         Block* curr = m_UsedBlocks, *prev = nullptr;
