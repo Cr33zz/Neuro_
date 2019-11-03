@@ -17,7 +17,7 @@
 
 #define STYLE "great_wave"
 
-#define SLOW
+//#define SLOW
 //#define FAST_SINGLE_CONTENT
 
 namespace fs = std::experimental::filesystem;
@@ -32,25 +32,25 @@ public:
         
 #if defined(SLOW)
         const uint32_t IMAGE_WIDTH = 512;
-        const uint32_t IMAGE_HEIGHT = 384;//512;
-        const float CONTENT_WEIGHT = 1000.f;
-        const float STYLE_WEIGHT = 0.01f;
-        const float LEARNING_RATE = 5.f;
+        const uint32_t IMAGE_HEIGHT = 512;
+        const float CONTENT_WEIGHT = 400.f;
+        const float STYLE_WEIGHT = 0.1f;
+        const float LEARNING_RATE = 2.f;
         const uint32_t BATCH_SIZE = 1;
 
         const string TEST_FILE = "data/contents/content.jpg";
         //const string TEST_FILE = "e:/!!!/Green_Sea_Turtle_grazing_seagrass.jpg";
 #else
-        const uint32_t IMAGE_WIDTH = 320;
-        const uint32_t IMAGE_HEIGHT = 320;
-        const float CONTENT_WEIGHT = 400.f;
+        const uint32_t IMAGE_WIDTH = 256;
+        const uint32_t IMAGE_HEIGHT = 256;
+        const float CONTENT_WEIGHT = 1000.f;
         const float STYLE_WEIGHT = 0.1f;
         const float LEARNING_RATE = 0.001f;
 
 #       ifdef FAST_SINGLE_CONTENT
         const uint32_t BATCH_SIZE = 1;
 #       else
-        const uint32_t BATCH_SIZE = 2;
+        const uint32_t BATCH_SIZE = 4;
 #       endif
 
         const string TEST_FILE = "data/test.jpg";
@@ -65,7 +65,7 @@ public:
 #endif
 
         Tensor::SetForcedOpMode(GPU);
-        //GlobalRngSeed(1337);
+        ///GlobalRngSeed(1337);
 
         auto trainingOn = Tensor({ 1 }, Shape(1), "training_on");
         auto trainingOff = Tensor({ 0 }, Shape(1), "training_off");
@@ -97,29 +97,27 @@ public:
 
             contentCache.close();
         }
-
         random_shuffle(contentFiles.begin(), contentFiles.end(), [&](size_t max) { return GlobalRng().Next((int)max); });
 
         cout << "Creating VGG model...\n";
         
-        auto vggModel = VGG19::CreateModel(NCHW, Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), false, MaxPool);
+        auto vggModel = VGG16::CreateModel(NCHW, Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), false, MaxPool);
         vggModel->SetTrainable(false);
 
         cout << "Pre-computing style features and grams...\n";
 
-        vector<TensorLike*> contentOutputs = { vggModel->Layer("block5_conv2")->Outputs()[0] };
-        //vector<float> styleOutputsWeights = { 2, 1, 2, 500 };
-        /*vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv2")->Outputs()[0],
+        vector<TensorLike*> contentOutputs = { vggModel->Layer("block2_conv2")->Outputs()[0] };
+        vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv2")->Outputs()[0],
                                              vggModel->Layer("block2_conv2")->Outputs()[0],
-                                             vggModel->Layer("block3_conv2")->Outputs()[0],
+                                             vggModel->Layer("block3_conv3")->Outputs()[0],
                                              vggModel->Layer("block4_conv3")->Outputs()[0],
-                                            };*/
-        vector<TensorLike*> styleOutputs = { //vggModel->Layer("block1_conv1")->Outputs()[0],
+                                            };
+        /*vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv1")->Outputs()[0],
                                              vggModel->Layer("block2_conv1")->Outputs()[0],
                                              vggModel->Layer("block3_conv1")->Outputs()[0],
                                              vggModel->Layer("block4_conv1")->Outputs()[0],
-                                             //vggModel->Layer("block5_conv1")->Outputs()[0],
-                                            };
+                                             ///vggModel->Layer("block5_conv1")->Outputs()[0],
+                                            };*/
 
         vector<float> styleOutputsWeights(styleOutputs.size());
         fill(styleOutputsWeights.begin(), styleOutputsWeights.end(), 1.f / styleOutputs.size());
@@ -136,8 +134,8 @@ public:
             float scale = maxDim / longDim;
             styleImage = LoadImage(STYLE_FILE, (uint32_t)round(styleDims.Width() * scale), (uint32_t)round(styleDims.Height() * scale));
         }
-        //styleImage.DebugRecoverValues("The_Great_Wave_off_Kanagawa.jpg_raw");
-        //Tensor styleImage = LoadImage(STYLE_FILE);
+        ///styleImage.DebugRecoverValues("The_Great_Wave_off_Kanagawa.jpg_raw");
+        ///Tensor styleImage = LoadImage(STYLE_FILE);
         styleImage.SaveAsImage("_style.png", false);
         VGG16::PreprocessImage(styleImage, NCHW);
         
@@ -149,10 +147,12 @@ public:
         vector<Constant*> targetStyleGrams;
         for (size_t i = 0; i < targetStyleFeatures.size(); ++i)
         {
+            // make sure this computation method is in sync with NeuralStyleTransfer::GramMatrix
             Tensor* x = targetStyleFeatures[i];
             uint32_t featureMapSize = x->Width() * x->Height();
             auto features = x->Reshaped(Shape(featureMapSize, x->Depth()));
-            targetStyleGrams.push_back(new Constant(features.Mul(features.Transposed()).Div((float)featureMapSize), "style_" + to_string(i) + "_gram"));
+            targetStyleGrams.push_back(new Constant(features.Mul(features.Transposed()).Div((float)features.GetShape().Length), "style_" + to_string(i) + "_gram"));
+            ///targetStyleGrams.push_back(new Constant(features.Mul(features.Transposed()).Div((float)featureMapSize), "style_" + to_string(i) + "_gram"));
         }
 
         cout << "Building computational graph...\n";
@@ -163,8 +163,8 @@ public:
         auto inputPre = VGG16::Preprocess(input, NCHW);
 
 #ifdef SLOW
-        //auto stylizedContent = new Variable(Uniform::Random(-0.5f, 0.5f, input->GetShape()).Add(127.5f), "output_image");
-        auto stylizedContent = new Variable(testImage, "output_image");
+        auto stylizedContent = new Variable(Uniform::Random(-0.5f, 0.5f, input->GetShape()).Add(127.5f), "output_image");
+        //auto stylizedContent = new Variable(testImage, "output_image");
         auto stylizedContentPre = VGG16::Preprocess(stylizedContent, NCHW);
 #else
         //auto stylizedContent = CreateTransformerNet(inputPre, training);
@@ -187,12 +187,12 @@ public:
             styleLosses.push_back(multiply(StyleLoss(targetStyleGrams[i], stylizedFeatures[i], (int)i), styleOutputsWeights[i]));
         auto weightedStyleLoss = multiply(merge_sum(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "style_loss");
 
-        //auto totalLoss = weightedContentLoss;
-        //auto totalLoss = weightedStyleLoss;
+        ///auto totalLoss = weightedContentLoss;
+        ///auto totalLoss = weightedStyleLoss;
         auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
-        //auto totalLoss = mean(square(sub(stylizedContentPre, contentPre)), GlobalAxis, "total");
+        ///auto totalLoss = mean(square(sub(stylizedContentPre, contentPre)), GlobalAxis, "total");
 
-        auto optimizer = Adam(LEARNING_RATE, 0.99f, 0.999f, 1e-1f);
+        auto optimizer = Adam(LEARNING_RATE);
         auto minimize = optimizer.Minimize({ totalLoss });
 
         Tensor contentBatch(Shape::From(input->GetShape(), BATCH_SIZE));
@@ -204,13 +204,13 @@ public:
         size_t steps = samples / BATCH_SIZE;
 #endif
 
-        //Debug::LogAllOutputs(true);
-        //Debug::LogAllGrads(true);
-        //Debug::LogOutput("generator_model/output", true);
-        //Debug::LogOutput("vgg_preprocess", true);
-        //Debug::LogOutput("output_image", true);
-        //Debug::LogGrad("vgg_preprocess", true);
-        //Debug::LogGrad("output_image", true);
+        ///Debug::LogAllOutputs(true);
+        ///Debug::LogAllGrads(true);
+        ///Debug::LogOutput("generator_model/output", true);
+        ///Debug::LogOutput("vgg_preprocess", true);
+        ///Debug::LogOutput("output_image", true);
+        ///Debug::LogGrad("vgg_preprocess", true);
+        ///Debug::LogGrad("output_image", true);
 
         float minLoss = 0;
         float lastLoss = 0;
@@ -222,8 +222,8 @@ public:
         {
             cout << "Epoch " << e+1 << endl;
 
-            //Tqdm progress(steps, 0);
-            //progress.ShowStep(true).ShowPercent(false).ShowElapsed(false);// .EnableSeparateLines(true);
+            ///Tqdm progress(steps, 0);
+            ///progress.ShowStep(true).ShowPercent(false).ShowElapsed(false);// .EnableSeparateLines(true);
             for (int i = 0; i < steps; ++i/*, progress.NextStep()*/)
             {
                 contentBatch.OverrideHost();
@@ -239,6 +239,11 @@ public:
 
                 if (i % DETAILS_ITER == 0)
                 {
+#if !defined(SLOW) && !defined(FAST_SINGLE_CONTENT)
+                    auto results = Session::Default()->Run({ stylizedContentPre, totalLoss, weightedContentLoss, weightedStyleLoss },
+                                                           { { input, &testImage }, { training, &trainingOff } });
+#endif
+
                     float loss = (*results[1])(0);
                     auto genImage = *results[0];
                     VGG16::UnprocessImage(genImage, NCHW);
@@ -261,9 +266,11 @@ public:
                     cout << setprecision(4) << "iter: " << i << " - total loss: " << loss << "(min: " << minLoss << ") - change: " << change << "%"<< endl;
                     cout << "----------------------------------------------------" << endl;
                     cout << "content loss: " << (*results[2])(0) << " - style loss: " << (*results[3])(0) << endl;
+#if defined(SLOW) || defined(FAST_SINGLE_CONTENT)
                     cout << "style_1 loss: " << (*results[5])(0) * SINGLE_STYLE_WEIGHT; if (styleLosses.size() > 1) cout << " - style_2 loss: " << (*results[6])(0) * SINGLE_STYLE_WEIGHT; cout << endl;
                     if (styleLosses.size() > 2) cout << "style_3 loss: " << (*results[7])(0) * SINGLE_STYLE_WEIGHT; if (styleLosses.size() > 3) cout << " - style_4 loss: " << (*results[8])(0) * SINGLE_STYLE_WEIGHT; cout << endl;
                     if (styleLosses.size() > 4) cout << "style_5 loss: " << (*results[9])(0) * SINGLE_STYLE_WEIGHT; cout << endl;
+#endif
                     cout << "----------------------------------------------------" << endl;
                 }
 

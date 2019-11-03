@@ -78,7 +78,6 @@ public:
 
         // compute content loss from first output...
         auto contentLoss = multiply(ContentLoss(content, outputs[0]), contentLossWeight);
-        //auto contentLoss = ContentLoss(content, outputs[0]);
         outputs.erase(outputs.begin());
 
         vector<TensorLike*> styleLosses;
