@@ -384,7 +384,7 @@ namespace NeuroTests
 
         TEST_METHOD(Sum_013Axes_CompareWithCpuResult)
         {
-            Tensor t(Shape(20, 30, 40, 50)); t.FillWithRand();
+            Tensor t(Shape(20, 30, 40, 50)); t.FillWithRand(10);
 
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t.Sum(_013Axes);)

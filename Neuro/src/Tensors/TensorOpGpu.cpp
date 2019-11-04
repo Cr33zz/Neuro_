@@ -943,7 +943,14 @@ namespace Neuro
         input.CopyToDevice();
         output.OverrideDevice();
 
-        auto sumGlobalInternal = [](const float* inputDevPtr, uint32_t inputLen, float* outputDevPtr)
+        auto sumKernelCall = [](uint32_t outputLen, const Shape& inputShape, EAxis axis, const float* inputDevPtr, float* outputDevPtr)
+        {
+            dim3 blocks, threads;
+            GetKernelRunParams(outputLen, blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
+            return CudaKernels::Sum(blocks, threads, inputDevPtr, inputShape.Width(), inputShape.Height(), inputShape.Depth(), inputShape.Batch(), axis, outputDevPtr);
+        };
+
+        auto sumGlobalInternal = [](uint32_t inputLen, const float* inputDevPtr, float* outputDevPtr)
         {
             const size_t THREADS_PER_BLOCK = 512;
 
@@ -998,7 +1005,7 @@ namespace Neuro
         
         if (axis == GlobalAxis)
         {
-            return sumGlobalInternal(input.GetDevicePtr(), input.Length(), output.GetDevicePtr());
+            return sumGlobalInternal(input.Length(), input.GetDevicePtr(), output.GetDevicePtr());
         }
 
         output.Zero();
@@ -1018,11 +1025,22 @@ namespace Neuro
         //    return;
         //}
 
+        if (axis == _013Axes)
+        {
+            Tensor tmp(Shape(1, input.Height(), input.Depth(), input.Batch()));
+            tmp.OverrideDevice();
+            Tensor tmp2(Shape(1, 1, input.Depth(), input.Batch()));
+            tmp2.OverrideDevice();
+
+            sumKernelCall(tmp.Length(), input.GetShape(), WidthAxis, input.GetDevicePtr(), tmp.GetDevicePtr());
+            sumKernelCall(tmp2.Length(), tmp.GetShape(), HeightAxis, tmp.GetDevicePtr(), tmp2.GetDevicePtr());
+            sumKernelCall(output.Length(), tmp2.GetShape(), BatchAxis, tmp2.GetDevicePtr(), output.GetDevicePtr());
+            return;
+        }
+
         if (axis != EAxis::BatchAxis)
         {
-            dim3 blocks, threads;
-            GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
-            return CudaKernels::Sum(blocks, threads, input.GetDevicePtr(), input.Width(), input.Height(), input.Depth(), input.Batch(), axis, output.GetDevicePtr());
+            return sumKernelCall(output.Length(), input.GetShape(), axis, input.GetDevicePtr(), output.GetDevicePtr());
         }
 
         float alpha = 1, beta = 1;
