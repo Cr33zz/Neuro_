@@ -302,23 +302,29 @@ __global__ void sumTemplate(const float* __restrict input, int width, int height
         __shared__ float sdata[THREADS_PER_BLOCK];
 
         unsigned int tid = threadIdx.x;
-        unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
+        unsigned int i = blockIdx.x*(blockDim.x * 2) + threadIdx.x;
 
-        sdata[tid] = (idx < width) ? input[idx] : 0;
+        float mySum = (i < width) ? input[i] : 0;
+
+        if (i + blockDim.x < width)
+            mySum += input[i + blockDim.x];
+
+        sdata[tid] = mySum;
         __syncthreads();
 
-        // parallel reduction
-        for (unsigned int s = 1; s < blockDim.x; s *= 2)
+        // do reduction in shared mem
+        for (unsigned int s = blockDim.x / 2; s>0; s >>= 1)
         {
-            int index = 2 * s * tid;
-            if (index < blockDim.x)
-                sdata[index] += sdata[index + s];
+            if (tid < s)
+            {
+                sdata[tid] = mySum = mySum + sdata[tid + s];
+            }
 
             __syncthreads();
         }
 
-        if (tid == 0)
-            output[blockIdx.x] = sdata[0];
+        // write result for this block to global mem
+        if (tid == 0) output[blockIdx.x] = mySum;
     }
     else if (W && !H && !D && !N)
     {

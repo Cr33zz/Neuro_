@@ -408,12 +408,28 @@ namespace NeuroTests
                 Assert::IsTrue(r.Equals(r2));
         }
 
+        float ReduceCPU(float* data, int size)
+        {
+            float sum = data[0];
+            float c = 0;
+
+            for (int i = 1; i < size; i++)
+            {
+                float y = data[i] - c;
+                float t = sum + y;
+                c = (t - sum) - y;
+                sum = t;
+            }
+
+            return sum;
+        }
+
         TEST_METHOD(Sum_GlobalAxis_1_CompareWithCpuResult)
         {
             Tensor t(Shape(256, 1, 1, 1)); t.FillWithRand(10, 0, 1);
 
             Tensor::SetForcedOpMode(CPU);
-            NEURO_PROFILE("CPU", Tensor r = t.Sum(GlobalAxis);)
+            NEURO_PROFILE("CPU", Tensor r({ ReduceCPU(t.Values(), t.Length()) }, Shape(1));)/*t.Sum(GlobalAxis);*/
 
             Tensor::SetForcedOpMode(GPU);
             NEURO_PROFILE("GPU", Tensor r2 = t.Sum(GlobalAxis);)
@@ -426,12 +442,12 @@ namespace NeuroTests
             Tensor t(Shape(2871, 1, 1, 1)); t.FillWithRand(12, 0, 1);
 
             Tensor::SetForcedOpMode(CPU);
-            NEURO_PROFILE("CPU", Tensor r = t.Sum(GlobalAxis);)
+            NEURO_PROFILE("CPU", Tensor r({ ReduceCPU(t.Values(), t.Length()) }, Shape(1));)/*t.Sum(GlobalAxis);*/
 
             Tensor::SetForcedOpMode(GPU);
             NEURO_PROFILE("GPU", Tensor r2 = t.Sum(GlobalAxis);)
 
-            Assert::AreEqual(r(0), r2(0), 0.001f);
+            Assert::AreEqual(r(0), r2(0), 0.0001f);
         }
 
         TEST_METHOD(Sum_GlobalAxis_3_CompareWithCpuResult)
@@ -439,12 +455,12 @@ namespace NeuroTests
             Tensor t(Shape(2945726, 1, 1, 1)); t.FillWithRand(11, 0, 1);
 
             Tensor::SetForcedOpMode(CPU);
-            NEURO_PROFILE("CPU", Tensor r = t.Sum(GlobalAxis);)
+            NEURO_PROFILE("CPU", Tensor r({ ReduceCPU(t.Values(), t.Length()) }, Shape(1));)/*t.Sum(GlobalAxis);*/
 
             Tensor::SetForcedOpMode(GPU);
             NEURO_PROFILE("GPU", Tensor r2 = t.Sum(GlobalAxis);)
 
-            Assert::AreEqual(r(0), r2(0), 100.f);
+            Assert::AreEqual(r(0), r2(0), 0.0001f);
         }
 
         TEST_METHOD(Mul_Value_CompareWithCpuResult)

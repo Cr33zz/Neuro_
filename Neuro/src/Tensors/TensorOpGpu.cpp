@@ -940,8 +940,11 @@ namespace Neuro
         if (axis == GlobalAxis && s_CudaDevProp.maxThreadsPerBlock < 1024)
             __super::Sum(input, axis, output);
 
+
         input.CopyToDevice();
         output.OverrideDevice();
+            
+        const int THREADS_PER_BLOCK = 512;
 
         auto sumKernelCall = [](uint32_t outputLen, const Shape& inputShape, EAxis axis, const float* inputDevPtr, float* outputDevPtr)
         {
@@ -950,57 +953,45 @@ namespace Neuro
             return CudaKernels::Sum(blocks, threads, inputDevPtr, inputShape.Width(), inputShape.Height(), inputShape.Depth(), inputShape.Batch(), axis, outputDevPtr);
         };
 
-        auto sumGlobalInternal = [](uint32_t inputLen, const float* inputDevPtr, float* outputDevPtr)
+        auto globalSumKernelCall = [&](uint32_t n, const float* inputDevPtr, float* outputDevPtr)
         {
-            const size_t THREADS_PER_BLOCK = 512;
-
             dim3 blocks, threads;
-            GetKernelRunParams(inputLen, blocks, threads, THREADS_PER_BLOCK);
+            GetGlobalSumKernelRunParams(n, blocks, threads, THREADS_PER_BLOCK);
+            return CudaKernels::Sum(blocks, threads, inputDevPtr, n, 1, 1, 1, GlobalAxis, outputDevPtr);
+        };
+
+        auto sumGlobalInternal = [&](uint32_t inputLen, const float* inputDevPtr, float* outputDevPtr)
+        {
+            dim3 blocks, threads;
+            GetGlobalSumKernelRunParams(inputLen, blocks, threads, THREADS_PER_BLOCK);
+            
             if (blocks.x == 1)
-                return CudaKernels::Sum(blocks, THREADS_PER_BLOCK, inputDevPtr, inputLen, 1, 1, 1, GlobalAxis, outputDevPtr);
+                return CudaKernels::Sum(blocks, threads, inputDevPtr, inputLen, 1, 1, 1, GlobalAxis, outputDevPtr);
 
             void* tempOutput;
             int tempOutputLen = blocks.x;
+            DeviceMemoryManager::Default().Allocate(&tempOutput, blocks.x * sizeof(float));
 
-            if (blocks.x < THREADS_PER_BLOCK)
+            CudaKernels::Sum(blocks, threads, inputDevPtr, inputLen, 1, 1, 1, GlobalAxis, (float*)tempOutput);
+
+            while(true)
             {
-                DeviceMemoryManager::Default().Allocate(&tempOutput, tempOutputLen * sizeof(float));
-                CudaKernels::Sum(blocks, THREADS_PER_BLOCK, inputDevPtr, inputLen, 1, 1, 1, GlobalAxis, (float*)tempOutput);
+                int n = blocks.x;
+                GetGlobalSumKernelRunParams(n, blocks, threads, THREADS_PER_BLOCK);
 
-                vector<float> tmp(blocks.x);
-                cudaMemcpy(&tmp[0], tempOutput, tmp.size() * sizeof(float), cudaMemcpyDeviceToHost);
+                //for debug
+                /*vector<float> tmp(blocks.x);
+                cudaMemcpy(&tmp[0], tempOutput, tmp.size() * sizeof(float), cudaMemcpyDeviceToHost);*/
 
-                GetKernelRunParams(tempOutputLen, blocks, threads, THREADS_PER_BLOCK);
-                CudaKernels::Sum(blocks, THREADS_PER_BLOCK, (float*)tempOutput, tempOutputLen, 1, 1, 1, GlobalAxis, outputDevPtr);
-
-                DeviceMemoryManager::Default().Free(tempOutput);
-                return;
+                CudaKernels::Sum(blocks, threads, (float*)tempOutput, n, 1, 1, 1, GlobalAxis, (float*)tempOutput);
+                
+                if (blocks.x == 1)
+                    break;
             }
 
-            void* tempOutput2;
-            int tempOutput2Len = (int)ceil(blocks.x / (float)THREADS_PER_BLOCK);
-
-            DeviceMemoryManager::Default().Allocate(&tempOutput2, tempOutput2Len * sizeof(float));
-
-            DeviceMemoryManager::Default().Allocate(&tempOutput, THREADS_PER_BLOCK * sizeof(float));
-
-            for (size_t i = 0; i < tempOutput2Len; ++i)
-            {
-                int inputFragmentLen = (int)min(THREADS_PER_BLOCK * THREADS_PER_BLOCK, inputLen - THREADS_PER_BLOCK * THREADS_PER_BLOCK * i);
-                GetKernelRunParams(inputFragmentLen, blocks, threads, THREADS_PER_BLOCK);
-                CudaKernels::Sum(blocks, THREADS_PER_BLOCK, inputDevPtr + i * THREADS_PER_BLOCK * THREADS_PER_BLOCK, inputFragmentLen, 1, 1, 1, GlobalAxis, (float*)tempOutput);
-                tempOutputLen = blocks.x;
-                GetKernelRunParams(tempOutputLen, blocks, threads, THREADS_PER_BLOCK);
-                CudaKernels::Sum(blocks, THREADS_PER_BLOCK, (float*)tempOutput, tempOutputLen, 1, 1, 1, GlobalAxis, outputDevPtr);
-                cudaMemcpy((float*)tempOutput2 + i, outputDevPtr, sizeof(float), cudaMemcpyDeviceToDevice);
-            }
-
+            cudaMemcpy(outputDevPtr, tempOutput, sizeof(float), cudaMemcpyDeviceToDevice);
             DeviceMemoryManager::Default().Free(tempOutput);
-
-            GetKernelRunParams(tempOutput2Len, blocks, threads, THREADS_PER_BLOCK);
-            CudaKernels::Sum(blocks, THREADS_PER_BLOCK, (float*)tempOutput2, tempOutput2Len, 1, 1, 1, GlobalAxis, outputDevPtr);
-
-            DeviceMemoryManager::Default().Free(tempOutput2);
+            return;
         };
         
         if (axis == GlobalAxis)
@@ -1293,18 +1284,70 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::GetKernelRunParams(int count, dim3& blocks, dim3& threads, int threadsPerBlock)
+    void TensorOpGpu::GetKernelRunParams(int count, dim3& blocksDim, dim3& threadsDim, int maxThreads)
     {
-        int blockCount = GetBlocksNum(count, threadsPerBlock);
+        int blocks = GetBlocksNum(count, maxThreads);
 
-        if (count <= threadsPerBlock)
+        if (count <= maxThreads)
         {
-            blockCount = 1;
-            threadsPerBlock = count;
+            blocks = 1;
+            maxThreads = count;
         }
 
-        blocks = dim3(blockCount, 1, 1);
-        threads = dim3(threadsPerBlock, 1, 1);
+        blocksDim = dim3(blocks, 1, 1);
+        threadsDim = dim3(maxThreads, 1, 1);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    unsigned int nextPow2(unsigned int x)
+    {
+        --x;
+        x |= x >> 1;
+        x |= x >> 2;
+        x |= x >> 4;
+        x |= x >> 8;
+        x |= x >> 16;
+        return ++x;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::GetGlobalSumKernelRunParams(int count, dim3& blocksDim, dim3& threadsDim, int maxThreads)
+    {
+        int whichKernel = 3;
+        int blocks, threads;
+
+        if (whichKernel < 3)
+        {
+            threads = (count < maxThreads) ? nextPow2(count) : maxThreads;
+            blocks = (count + threads - 1) / threads;
+        }
+        else
+        {
+            threads = (count < maxThreads * 2) ? nextPow2((count + 1) / 2) : maxThreads;
+            blocks = (count + (threads * 2 - 1)) / (threads * 2);
+        }
+
+        if ((float)threads*blocks > (float)s_CudaDevProp.maxGridSize[0] * s_CudaDevProp.maxThreadsPerBlock)
+        {
+            printf("n is too large, please choose a smaller number!\n");
+        }
+
+        if (blocks > s_CudaDevProp.maxGridSize[0])
+        {
+            printf("Grid size <%d> exceeds the device capability <%d>, set block size as %d (original %d)\n",
+                blocks, s_CudaDevProp.maxGridSize[0], threads * 2, threads);
+
+            blocks /= 2;
+            threads *= 2;
+        }
+
+        /*if (whichKernel == 6)
+        {
+            blocks = min(maxBlocks, blocks);
+        }*/
+
+        blocksDim = dim3(blocks, 1, 1);
+        threadsDim = dim3(threads, 1, 1);
     }
 
     //////////////////////////////////////////////////////////////////////////
