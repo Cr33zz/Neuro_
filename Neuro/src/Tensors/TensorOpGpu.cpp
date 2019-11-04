@@ -76,26 +76,46 @@ namespace Neuro
             dim3 blocks, threads;
             GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock / 2);
 
-            return CudaKernels::AddBroadcast(
-                blocks, 
-                threads, 
-                alpha, 
-                t1.GetDevicePtr(),
-                t1.Width(),
-                t1.Height(),
-                t1.Depth(),
-                t1.Batch(),
-                beta,
-                t2.GetDevicePtr(),
-                t2.Width(),
-                t2.Height(),
-                t2.Depth(),
-                t2.Batch(),
-                output.GetDevicePtr(),
-                output.Width(),
-                output.Height(),
-                output.Depth(),
-                output.Batch());
+            if (t2.SameDimensionsExceptBatches(output))
+            {
+                return CudaKernels::AddBroadcast(
+                    blocks,
+                    threads,
+                    beta,
+                    t2.GetDevicePtr(),
+                    alpha,
+                    t1.GetDevicePtr(),
+                    t1.Width(),
+                    t1.Height(),
+                    t1.Depth(),
+                    t1.Batch(),
+                    output.GetDevicePtr(),
+                    output.Width(),
+                    output.Height(),
+                    output.Depth(),
+                    output.Batch());
+            }
+            else if (t1.SameDimensionsExceptBatches(output))
+            {
+                return CudaKernels::AddBroadcast(
+                    blocks,
+                    threads,
+                    alpha,
+                    t1.GetDevicePtr(),
+                    beta,
+                    t2.GetDevicePtr(),
+                    t2.Width(),
+                    t2.Height(),
+                    t2.Depth(),
+                    t2.Batch(),
+                    output.GetDevicePtr(),
+                    output.Width(),
+                    output.Height(),
+                    output.Depth(),
+                    output.Batch());
+            }
+            else
+                __super::Add(alpha, t1, beta, t2, output);
         }
 
         if (t2.Batch() == t1.Batch())

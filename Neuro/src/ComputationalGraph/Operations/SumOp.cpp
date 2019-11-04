@@ -37,7 +37,7 @@ namespace Neuro
     {
         if (m_InputNodes[0]->CareAboutGradient())
         {
-            m_InputsGrads[0].FillWithValue(1);
+            m_InputsGrads[0].One();
             m_InputsGrads[0].MulElem(grad, m_InputsGrads[0]);
         }
     }
