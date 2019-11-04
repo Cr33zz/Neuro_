@@ -43,7 +43,7 @@ namespace Neuro
         void FreeOnDevice(bool force = false, bool forceWaitForOffload = false);
 
         void Offload() const;
-        void Prefetch() const;
+        void Preload() const;
 
         ELocation Location() const { return m_DataLocation; }
 
@@ -79,6 +79,9 @@ namespace Neuro
 
     private:
         static void OnOffloadDone(void* userData);
+        static void OnPreloadDone(void* userData);
+
+        void WaitForPreload() const;
 
         float* m_DataPtr = nullptr;
         float* m_DeviceDataPtr = nullptr;
@@ -92,8 +95,10 @@ namespace Neuro
         bool m_FreeDeviceMemOnOffloadDone = false;
         mutable promise<void> m_OffloadPromise;
         mutable future<void> m_OffloadFuture;
-        mutable bool m_PrefetchRequested = false;
-        cudaEvent_t m_PrefetchEvent = nullptr;
+        mutable promise<void> m_PreloadPromise;
+        mutable future<void> m_PreloadFuture;
+        mutable bool m_PreloadRequested = false;
+        cudaEvent_t m_PreloadEvent = nullptr;
         mutable ELocation m_DataLocation = None;
         string m_Name = "";
     };

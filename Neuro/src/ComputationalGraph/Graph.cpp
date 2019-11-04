@@ -14,7 +14,7 @@
 #include <windows.h>
 #include <debugapi.h>
 #include "Tools.h"
-#define GRAPH_DEBUG_INFO(...) do { OutputDebugString(StringFormat(__VA_ARGS__).c_str()); } while(0)
+#define GRAPH_DEBUG_INFO(...) do { static char timeBuffer[128]; SYSTEMTIME sysTime; GetLocalTime(&sysTime); sprintf(timeBuffer, "%02d:%02d:%02d.%03d - ", sysTime.wHour, sysTime.wMinute, sysTime.wSecond, sysTime.wMilliseconds); OutputDebugString(timeBuffer); static char buffer[1024]; sprintf(buffer, __VA_ARGS__); OutputDebugString(buffer); } while (0)
 #else
 #define GRAPH_DEBUG_INFO(...) {}
 #endif
@@ -190,10 +190,12 @@ namespace Neuro
         /// between consecutive session runs
         auto newOrder = order;
         newOrder.erase(remove_if(newOrder.begin(), newOrder.end(), [](const TensorLike* node) { return !node->CareAboutGradient(); }), newOrder.end());
+
+        size_t lastPrefetched = 0;
         
         for (size_t n = 0; n < newOrder.size(); ++n)
         {
-            for (size_t p = n + 1; p <= n + PREFETCH_STEPS; ++p)
+            for (size_t p = lastPrefetched + 1; p <= n + PREFETCH_STEPS; ++p)
             {
                 if (p >= newOrder.size())
                     break;
@@ -201,6 +203,7 @@ namespace Neuro
                 auto node = newOrder[p];
                 GRAPH_DEBUG_INFO("##Graph: Prefetching '%s'...\n", node->Name().c_str());
                 node->PrefetchForGradient();
+                lastPrefetched = p;
             }
 
             auto node = newOrder[n];

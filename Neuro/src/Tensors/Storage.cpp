@@ -12,8 +12,10 @@
 #ifdef ENABLE_STORAGE_LOGS
 #include <windows.h>
 #include <debugapi.h>
-#define STORAGE_DEBUG_INFO(...) do { static char buffer[1024]; sprintf(buffer, __VA_ARGS__); OutputDebugString(buffer); } while(0)
+#define STORAGE_DEBUG_INFO_NO_TS(...) do { static char buffer[1024]; sprintf(buffer, __VA_ARGS__); OutputDebugString(buffer); } while (0)
+#define STORAGE_DEBUG_INFO(...) do { static char timeBuffer[128]; SYSTEMTIME sysTime; GetLocalTime(&sysTime); sprintf(timeBuffer, "%02d:%02d:%02d.%03d - ", sysTime.wHour, sysTime.wMinute, sysTime.wSecond, sysTime.wMilliseconds); OutputDebugString(timeBuffer); static char buffer[1024]; sprintf(buffer, __VA_ARGS__); OutputDebugString(buffer); } while (0)
 #else
+#define STORAGE_DEBUG_INFO_NO_TS(...) {}
 #define STORAGE_DEBUG_INFO(...) {}
 #endif
 
@@ -26,7 +28,7 @@ namespace Neuro
         if (m_Type & ST_Offloadable)
         {
             CUDA_CHECK(cudaEventCreate(&m_OffloadEvent));
-            CUDA_CHECK(cudaEventCreate(&m_PrefetchEvent));
+            CUDA_CHECK(cudaEventCreate(&m_PreloadEvent));
         }
     }
 
@@ -67,7 +69,7 @@ namespace Neuro
                 m_DataPtr = nullptr;
             }
             m_DeviceDataPtr = nullptr;
-            m_PrefetchRequested = false;
+            m_PreloadRequested = false;
         }
         return *this;
     }
@@ -79,8 +81,8 @@ namespace Neuro
         {
             if (m_OffloadEvent)
                 CUDA_CHECK(cudaEventDestroy(m_OffloadEvent));
-            if (m_PrefetchEvent)
-                CUDA_CHECK(cudaEventDestroy(m_PrefetchEvent));
+            if (m_PreloadEvent)
+                CUDA_CHECK(cudaEventDestroy(m_PreloadEvent));
             FreeOnDevice(true, true);
             FreeOnHost();
             m_Type = other.m_Type;
@@ -96,9 +98,11 @@ namespace Neuro
             other.m_DataPtr = nullptr;
             m_OffloadEvent = other.m_OffloadEvent;
             other.m_OffloadEvent = nullptr;
-            m_PrefetchRequested = other.m_PrefetchRequested;
-            m_PrefetchEvent = other.m_PrefetchEvent;
-            other.m_PrefetchEvent = nullptr;
+            NEURO_ASSERT(!other.m_PreloadRequested, "Moving while preload in progress, this is not going to end well...");
+            other.WaitForPreload();
+            m_PreloadRequested = other.m_PreloadRequested;
+            m_PreloadEvent = other.m_PreloadEvent;
+            other.m_PreloadEvent = nullptr;
         }
         return *this;
     }
@@ -110,8 +114,8 @@ namespace Neuro
         FreeOnHost();
         if (m_OffloadEvent)
             CUDA_CHECK(cudaEventDestroy(m_OffloadEvent));
-        if (m_PrefetchEvent)
-            CUDA_CHECK(cudaEventDestroy(m_PrefetchEvent));
+        if (m_PreloadEvent)
+            CUDA_CHECK(cudaEventDestroy(m_PreloadEvent));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -125,12 +129,12 @@ namespace Neuro
         if ((m_Type & ST_Offloadable) && !(type & ST_Offloadable))
         {
             CUDA_CHECK(cudaEventDestroy(m_OffloadEvent));
-            CUDA_CHECK(cudaEventDestroy(m_PrefetchEvent));
+            CUDA_CHECK(cudaEventDestroy(m_PreloadEvent));
         }
         else if (!(m_Type & ST_Offloadable) && (type & ST_Offloadable))
         {
             CUDA_CHECK(cudaEventCreate(&m_OffloadEvent));
-            CUDA_CHECK(cudaEventCreate(&m_PrefetchEvent));
+            CUDA_CHECK(cudaEventCreate(&m_PreloadEvent));
         }
 
         m_Type = type;
@@ -142,12 +146,12 @@ namespace Neuro
         STORAGE_DEBUG_INFO("Resizing '%s' from %zu to %zu (alloc size %zu)", m_Name.c_str(), m_Size, size, m_AllocSize);
         if (size < m_AllocSize)
         {
-            STORAGE_DEBUG_INFO(" <<< no reallocation required.\n");
+            STORAGE_DEBUG_INFO_NO_TS(" <<< no reallocation required.\n");
             m_Size = size;
             return;
         }
 
-        STORAGE_DEBUG_INFO(" <<< reallocating.\n");
+        STORAGE_DEBUG_INFO_NO_TS(" <<< reallocating.\n");
 
         m_AllocSize = m_Size = size;
 
@@ -196,10 +200,10 @@ namespace Neuro
         STORAGE_DEBUG_INFO("Allocating on host '%s' ", m_Name.c_str());
         if (m_DataPtr)
         {
-            STORAGE_DEBUG_INFO("<<< already allocated.\n");
+            STORAGE_DEBUG_INFO_NO_TS("<<< already allocated.\n");
             return;
         }
-        STORAGE_DEBUG_INFO("<<< allocating.\n");
+        STORAGE_DEBUG_INFO_NO_TS("<<< allocating.\n");
 #ifndef DISABLE_OFFLOAD_PREFETCH
         if (m_Type & ST_Offloadable)
             HostPinnedMemoryManager::Default().Allocate((void**)&m_DataPtr, AllocSizeInBytes(), m_Name);
@@ -217,10 +221,10 @@ namespace Neuro
         STORAGE_DEBUG_INFO("Releasing on host '%s' ", m_Name.c_str());
         if (!m_DataPtr)
         {
-            STORAGE_DEBUG_INFO("<<< not allocated.\n");
+            STORAGE_DEBUG_INFO_NO_TS("<<< not allocated.\n");
             return;
         }
-        STORAGE_DEBUG_INFO("<<< release incoming.\n");
+        STORAGE_DEBUG_INFO_NO_TS("<<< release incoming.\n");
 #ifndef DISABLE_OFFLOAD_PREFETCH
         if (m_Type & ST_Offloadable)
             HostPinnedMemoryManager::Default().Free(m_DataPtr);
@@ -247,20 +251,29 @@ namespace Neuro
             m_OffloadPromise = promise<void>();
         }
 
+        if (m_PreloadFuture.valid())
+        {
+            m_PreloadRequested = false;
+            m_PreloadFuture.get();
+            m_PreloadPromise = promise<void>();
+        }
+
         NEURO_ASSERT(m_DataPtr, "Data cannot be only on device.");
         STORAGE_DEBUG_INFO("Allocating on device '%s' ", m_Name.c_str());
         if (m_DeviceDataPtr)
         {
-            STORAGE_DEBUG_INFO("<<< already allocated.\n");
+            STORAGE_DEBUG_INFO_NO_TS("<<< already allocated.\n");
             return;
         }
-        STORAGE_DEBUG_INFO("<<< allocating.\n");
+        STORAGE_DEBUG_INFO_NO_TS("<<< allocating.\n");
         CUDA_CHECK(DeviceMemoryManager::Default().Allocate((void**)&m_DeviceDataPtr, AllocSizeInBytes(), m_Name));
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Storage::FreeOnDevice(bool force, bool forceWaitForOffload)
     {
+        WaitForPreload();
+
         if (forceWaitForOffload && m_FreeDeviceMemOnOffloadDone)
         {
             AutoStopwatch prof(Microseconds);
@@ -272,13 +285,13 @@ namespace Neuro
         STORAGE_DEBUG_INFO("Releasing on device '%s' ", m_Name.c_str());
         if (!m_DeviceDataPtr)
         {
-            STORAGE_DEBUG_INFO("<<< not allocated.\n");
+            STORAGE_DEBUG_INFO_NO_TS("<<< not allocated.\n");
             return;
         }
 
         if (!force && (m_Type & ST_KeepDevMem))
         {
-            STORAGE_DEBUG_INFO("<<< not allowed.\n");
+            STORAGE_DEBUG_INFO_NO_TS("<<< not allowed.\n");
             return;
         }
 
@@ -299,13 +312,13 @@ namespace Neuro
                 {                    
                     m_FreeDeviceMemOnOffloadDone = true;
                     m_OffloadFuture = m_OffloadPromise.get_future();
-                    STORAGE_DEBUG_INFO("<<< release will take place on offload-done callback.\n");
+                    STORAGE_DEBUG_INFO_NO_TS("<<< release will take place on offload-done callback.\n");
                     return;
                 }
             }
         }
 
-        STORAGE_DEBUG_INFO("<<< release incoming.\n");
+        STORAGE_DEBUG_INFO_NO_TS("<<< release incoming.\n");
         CUDA_CHECK(DeviceMemoryManager::Default().Free((void*)m_DeviceDataPtr));
         m_DeviceDataPtr = nullptr;
 
@@ -338,34 +351,58 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void Storage::OnPreloadDone(void* userData)
+    {
+        Storage* storage = (Storage*)userData;
+
+        // user better not deallocate storage/device memory before this callback is called
+        // perhaps in the future I will add appropriate locks
+        if (storage->m_DeviceDataPtr)
+            storage->m_DataLocation = Device;
+        storage->m_PreloadPromise.set_value();
+        STORAGE_DEBUG_INFO("Preload done '%s'[%d]\n", storage->m_Name.c_str(), storage->m_Type);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Storage::WaitForPreload() const
+    {
+        if (m_PreloadRequested)
+        {
+            m_PreloadFuture.get(); // wait for callback
+            m_PreloadPromise = promise<void>();
+            m_PreloadRequested = false;
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void Storage::Offload() const
     {
 #ifndef DISABLE_OFFLOAD_PREFETCH
         if (!m_AllocSize)
             return;
 
-        STORAGE_DEBUG_INFO("Offloading '%s'[%d] ", m_Name.c_str(), m_Type);
+        STORAGE_DEBUG_INFO("Offload '%s'[%d] ", m_Name.c_str(), m_Type);
         if (m_Type & ST_Offloadable)
         {
             NEURO_ASSERT(m_DataPtr, "Attempting to offload to deallocated host storage.");
             if (!m_DeviceDataPtr || m_DataLocation == Host)
             {
-                STORAGE_DEBUG_INFO("<<< data already on host.\n");
+                STORAGE_DEBUG_INFO_NO_TS("<<< data already on host.\n");
                 return;
             }
 
             NEURO_ASSERT(m_DataPtr && m_DeviceDataPtr, "");
 
-            STORAGE_DEBUG_INFO("<<< requested.\n");
+            STORAGE_DEBUG_INFO_NO_TS("<<< requested.\n");
             CUDA_CHECK(DeviceMemoryManager::Default().Offload((void*)m_DataPtr, (void*)m_DeviceDataPtr, SizeInBytes(), m_OffloadEvent, OnOffloadDone, (void*)this));
         }
         else
-            STORAGE_DEBUG_INFO("<<< not supported.\n");
+            STORAGE_DEBUG_INFO_NO_TS("<<< not supported.\n");
 #endif
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Storage::Prefetch() const
+    void Storage::Preload() const
     {
 #ifndef DISABLE_OFFLOAD_PREFETCH
         if (!m_AllocSize)
@@ -375,11 +412,9 @@ namespace Neuro
         {
             if (m_DataLocation == Device)
             {
-                STORAGE_DEBUG_INFO("<<< data already on device.\n");
+                STORAGE_DEBUG_INFO("Preload '%s'[%d] <<< data already on device.\n", m_Name.c_str(), m_Type);
                 return;
             }
-
-            m_PrefetchRequested = true;
 
             NEURO_ASSERT(m_DataPtr, "Attempting to preload from deallocated host storage.");
             if (!m_DeviceDataPtr)
@@ -387,18 +422,20 @@ namespace Neuro
 
             NEURO_ASSERT(m_DataPtr && m_DeviceDataPtr, "");
 
-            if (cudaEventQuery(m_PrefetchEvent) != cudaSuccess)
+            if (m_PreloadRequested)
             {
-                STORAGE_DEBUG_INFO("Prefetching '%s'[%d] <<< requested already.\n", m_Name.c_str(), m_Type);
+                STORAGE_DEBUG_INFO("Preload '%s'[%d] <<< requested already.\n", m_Name.c_str(), m_Type);
             }
             else
             {
-                STORAGE_DEBUG_INFO("Prefetching '%s'[%d] <<< requested.\n", m_Name.c_str(), m_Type);
-                CUDA_CHECK(DeviceMemoryManager::Default().Prefetch((void*)m_DeviceDataPtr, (void*)m_DataPtr, SizeInBytes(), m_PrefetchEvent));
+                m_PreloadFuture = m_PreloadPromise.get_future();
+                m_PreloadRequested = true;
+                STORAGE_DEBUG_INFO("Preload '%s'[%d] <<< requested.\n", m_Name.c_str(), m_Type);
+                CUDA_CHECK(DeviceMemoryManager::Default().Preload((void*)m_DeviceDataPtr, (void*)m_DataPtr, SizeInBytes(), m_PreloadEvent, OnPreloadDone, (void*)this));
             }
         }
         else
-            STORAGE_DEBUG_INFO("Prefetching '%s'[%d] <<< not supported.\n", m_Name.c_str(), m_Type);
+            STORAGE_DEBUG_INFO("Preload '%s'[%d] <<< not supported.\n", m_Name.c_str(), m_Type);
 #endif
     }
 
@@ -417,7 +454,7 @@ namespace Neuro
         NEURO_ASSERT(m_DeviceDataPtr, "");
 
 #ifndef DISABLE_OFFLOAD_PREFETCH
-        if ((m_Type & ST_Offloadable) && m_PrefetchRequested)
+        if ((m_Type & ST_Offloadable) && m_PreloadRequested)
         {
             STORAGE_DEBUG_INFO("Copy to device '%s'[%d] <<< prefetch completed check only\n", m_Name.c_str(), m_Type);
             // we don't have to wait for offload because a valid copy still exists in GPU memory
@@ -425,13 +462,14 @@ namespace Neuro
                 CUDA_VAR_DEBUG_INFO("Waiting for offload... '%s'[%d]\n", m_Name.c_str(), m_Type);
             MemoryManager::Default().WaitForMemEvent(m_OffloadEvent);*/
             // we have to make sure copy to device is blocked until prefetch is completed
-            if (cudaEventQuery(m_PrefetchEvent) == cudaErrorNotReady)
+            if (cudaEventQuery(m_PreloadEvent) == cudaErrorNotReady)
             {
                 AutoStopwatch prof(Microseconds);
-                STORAGE_DEBUG_INFO("Waiting for prefetch... '%s'[%d]\n", m_Name.c_str(), m_Type);
-                DeviceMemoryManager::Default().WaitForMemEvent(m_PrefetchEvent);
+                STORAGE_DEBUG_INFO("Waiting for preload... '%s'[%d]\n", m_Name.c_str(), m_Type);
+                DeviceMemoryManager::Default().WaitForMemEvent(m_PreloadEvent);                
                 STORAGE_DEBUG_INFO("--> waited %s\n", prof.ToString().c_str());
             }
+            WaitForPreload();
         }
         else
 #endif
@@ -440,14 +478,14 @@ namespace Neuro
             CUDA_CHECK(cudaMemcpy((void*)m_DeviceDataPtr, (void*)m_DataPtr, SizeInBytes(), cudaMemcpyHostToDevice));
         }
 
-        m_PrefetchRequested = false;
         m_DataLocation = Device;
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Storage::CopyToHost(bool allowAlloc) const
     {
-        m_PrefetchRequested = false;
+        WaitForPreload();
+
         if (m_DataLocation == Host)
             return;
 

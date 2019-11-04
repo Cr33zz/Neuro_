@@ -121,7 +121,7 @@ namespace Neuro
 
         EMemStatus Reserve(size_t size);
         EMemStatus Offload(void* dst, void* src, size_t size, cudaEvent_t memEvent, cudaHostFn_t callback = nullptr, void* userData = nullptr);
-        EMemStatus Prefetch(void* dst, void* src, size_t size, cudaEvent_t memEvent);
+        EMemStatus Preload(void* dst, void* src, size_t size, cudaEvent_t memEvent, cudaHostFn_t callback = nullptr, void* userData = nullptr);
         EMemStatus WaitForMemEvent(cudaEvent_t memEvent);
 
     protected:

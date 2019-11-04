@@ -1978,7 +1978,7 @@ namespace Neuro
         if (Op() != g_OpGpu)
             return;
 
-        m_Storage.Prefetch();
+        m_Storage.Preload();
     }
 
     //////////////////////////////////////////////////////////////////////////

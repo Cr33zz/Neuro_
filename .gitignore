@@ -338,3 +338,4 @@ ASALocalRun/
 # Training data
 data/
 *.lib
+*.diagsession

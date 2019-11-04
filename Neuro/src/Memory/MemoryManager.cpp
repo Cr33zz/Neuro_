@@ -452,12 +452,14 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    EMemStatus DeviceMemoryManager::Prefetch(void* dst, void* src, size_t size, cudaEvent_t memEvent)
+    EMemStatus DeviceMemoryManager::Preload(void* dst, void* src, size_t size, cudaEvent_t memEvent, cudaHostFn_t callback, void* userData)
     {
         NEURO_ASSERT(src, "Host pinned memory is not allocated.");
         NEURO_ASSERT(cudaEventQuery(memEvent) == cudaSuccess, "Memory sync event is not ready.");
         CUDA_CHECK(cudaMemcpyAsync(dst, src, size, cudaMemcpyHostToDevice, m_MemoryStream));
         CUDA_CHECK(cudaEventRecord(memEvent, m_MemoryStream));
+        if (callback)
+            CUDA_CHECK(cudaLaunchHostFunc(m_MemoryStream, callback, userData));
         return MEM_STATUS_SUCCESS;
     }
 
