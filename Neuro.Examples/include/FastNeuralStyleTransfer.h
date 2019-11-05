@@ -15,7 +15,7 @@
 #include "Neuro.h"
 #include "VGG19.h"
 
-#define STYLE "mosaic"
+#define STYLE "starry_night"
 
 //#define SLOW
 //#define FAST_SINGLE_CONTENT
@@ -43,7 +43,7 @@ public:
 #else
         const uint32_t IMAGE_WIDTH = 256;
         const uint32_t IMAGE_HEIGHT = 256;
-        const float CONTENT_WEIGHT = 1000.f;
+        const float CONTENT_WEIGHT = 500.f;
         const float STYLE_WEIGHT = 0.1f;
         const float LEARNING_RATE = 0.001f;
 
@@ -222,9 +222,9 @@ public:
         {
             cout << "Epoch " << e+1 << endl;
 
-            ///Tqdm progress(steps, 0);
-            ///progress.ShowStep(true).ShowPercent(false).ShowElapsed(false);// .EnableSeparateLines(true);
-            for (int i = 0; i < steps; ++i/*, progress.NextStep()*/)
+            Tqdm progress(steps, 0);
+            progress.ShowStep(true).ShowPercent(false).ShowElapsed(false).ShowIterTime(true);// .EnableSeparateLines(true);
+            for (int i = 0; i < steps; ++i, progress.NextStep())
             {
                 contentBatch.OverrideHost();
 #if defined(SLOW) || defined(FAST_SINGLE_CONTENT)
@@ -263,6 +263,7 @@ public:
                         change = (lastLoss - loss) / lastLoss * 100.f;
                     lastLoss = loss;
 
+                    cout << endl;
                     cout << setprecision(4) << "iter: " << i << " - total loss: " << loss << "(min: " << minLoss << ") - change: " << change << "%"<< endl;
                     cout << "----------------------------------------------------" << endl;
                     cout << "content loss: " << (*results[2])(0) << " - style loss: " << (*results[3])(0) << endl;
