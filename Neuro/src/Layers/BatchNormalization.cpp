@@ -46,8 +46,10 @@ namespace Neuro
         params.push_back(m_Beta);
         if (!onlyTrainable)
         {
-            params.push_back(m_RunningMean);
-            params.push_back(m_RunningVar);
+            if (m_RunningMean)
+                params.push_back(m_RunningMean);
+            if (m_RunningVar)
+                params.push_back(m_RunningVar);
         }
     }
 
@@ -56,8 +58,10 @@ namespace Neuro
     {
         params.push_back({ m_Gamma, {}, true });
         params.push_back({ m_Beta, {}, true });
-        params.push_back({ m_RunningMean, {}, true });
-        params.push_back({ m_RunningVar, {}, true });
+        if (m_RunningMean)
+            params.push_back({ m_RunningMean, {}, true });
+        if (m_RunningVar)
+            params.push_back({ m_RunningVar, {}, true });
     }
 
     //////////////////////////////////////////////////////////////////////////

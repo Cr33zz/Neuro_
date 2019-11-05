@@ -807,14 +807,14 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::BatchNormalization(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor* runningMean, const Tensor* runningVar, Tensor& output) const
     {
-        input.CopyToHost();
-        gamma.CopyToHost();
-        beta.CopyToHost();
-        if (runningMean)
-            runningMean->CopyToHost();
-        if (runningVar)
-            runningVar->CopyToHost();
-        output.OverrideHost();
+        //input.CopyToHost();
+        //gamma.CopyToHost();
+        //beta.CopyToHost();
+        //if (runningMean)
+        //    runningMean->CopyToHost();
+        //if (runningVar)
+        //    runningVar->CopyToHost();
+        //output.OverrideHost();
 
         Tensor xNorm;
 
@@ -837,16 +837,16 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::BatchNormalizationTrain(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor* runningMean, Tensor* runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& output) const
     {
-        input.CopyToHost();
-        gamma.CopyToHost();
-        beta.CopyToHost();
-        if (runningMean)
-            runningMean->CopyToHost();
-        if (runningVar)
-            runningVar->CopyToHost();
-        saveMean.OverrideHost();
-        saveInvVariance.OverrideHost();
-        output.OverrideHost();
+        //input.CopyToHost();
+        //gamma.CopyToHost();
+        //beta.CopyToHost();
+        //if (runningMean)
+        //    runningMean->CopyToHost();
+        //if (runningVar)
+        //    runningVar->CopyToHost();
+        //saveMean.OverrideHost();
+        //saveInvVariance.OverrideHost();
+        //output.OverrideHost();
 
         EAxis axis;
         float m;
@@ -888,16 +888,16 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::BatchNormalizationGradient(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, float epsilon, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const
     {
-        input.CopyToHost();
-        gamma.CopyToHost();
-        outputGradient.CopyToHost();
-        savedMean.CopyToHost();
-        savedInvVariance.CopyToHost();
-        gammaGradient.OverrideHost();
+        //input.CopyToHost();
+        //gamma.CopyToHost();
+        //outputGradient.CopyToHost();
+        //savedMean.CopyToHost();
+        //savedInvVariance.CopyToHost();
+        //gammaGradient.OverrideHost();
         gammaGradient.Zero();
-        betaGradient.OverrideHost();
+        //betaGradient.OverrideHost();
         betaGradient.Zero();
-        inputGradient.OverrideHost();
+        //inputGradient.OverrideHost();
         inputGradient.Zero();
 
         EAxis axis;
