@@ -155,6 +155,17 @@ __global__ void negate(int inputLen, const float* __restrict input, float* __res
         output[n] = -input[n];
 }
 
+__global__ void inverse(int inputLen, const float* __restrict input, float* __restrict output, int subLen)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+
+    int maxN = i * subLen + subLen;
+    if (maxN > inputLen)
+        maxN = inputLen;
+    for (int n = i * subLen; n < maxN; ++n)
+        output[n] = 1.f / input[n];
+}
+
 __global__ void add(int inputLen, const float* __restrict input, float v, float* __restrict output, int subLen)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -555,6 +566,12 @@ namespace Neuro
     void CudaKernels::Negate(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float* outputDev, int subLen)
     {
         negate<<<blocks, threads>>>(inputLen, inputDev, outputDev, subLen);
+        cudaStreamSynchronize(0);
+    }
+
+    void CudaKernels::Inverse(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float* outputDev, int subLen)
+    {
+        inverse<<<blocks, threads>>>(inputLen, inputDev, outputDev, subLen);
         cudaStreamSynchronize(0);
     }
 

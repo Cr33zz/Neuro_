@@ -100,6 +100,8 @@ namespace Neuro
         Tensor Sub(float v) const;
         void Negated(Tensor& result) const;
         Tensor Negated() const;
+        void Inversed(Tensor& result) const;
+        Tensor Inversed() const;
         void Clipped(float min, float max, Tensor& result) const;
         Tensor Clipped(float min, float max) const;
         Tensor DiagFlat() const;

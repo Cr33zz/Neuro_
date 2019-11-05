@@ -505,6 +505,20 @@ namespace Neuro
 		return result;
 	}
 
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Inversed(Tensor& result) const
+    {
+        Op()->Inverse(*this, result);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::Inversed() const
+    {
+        Tensor result(m_Shape);
+        Inversed(result);
+        return result;
+    }
+
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Clipped(float min, float max, Tensor& result) const
 	{
