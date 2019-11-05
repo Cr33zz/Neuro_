@@ -73,6 +73,7 @@ namespace Neuro
         Tqdm(size_t maxIterations, size_t barLen = 30);
         Tqdm& ShowElapsed(bool show) { m_ShowElapsed = show; return *this; }
         Tqdm& ShowEta(bool show) { m_ShowEta = show; return *this; }
+        Tqdm& ShowIterTime(bool show) { m_ShowIterTime = show; return *this; }
         Tqdm& ShowStep(bool show) { m_ShowStep = show; return *this; }
         Tqdm& ShowPercent(bool show) { m_ShowPercent = show; return *this; }
         Tqdm& EnableSeparateLines(bool enable) { m_SeparateLinesEnabled = enable; return *this; }
@@ -90,6 +91,7 @@ namespace Neuro
         stringstream m_Stream;
         bool m_ShowElapsed = true;
         bool m_ShowEta = true;
+        bool m_ShowIterTime = false;
         bool m_ShowPercent = true;
         bool m_ShowStep = true;
         bool m_SeparateLinesEnabled = false;

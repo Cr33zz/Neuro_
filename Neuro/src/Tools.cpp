@@ -642,14 +642,16 @@ namespace Neuro
 
         if (m_Iteration > 0)
         {
+            float averageTimePerStep = m_Timer.ElapsedMilliseconds() / (float)m_Iteration;
+
             if (m_ShowEta && m_Iteration < (int)m_MaxIterations)
-            {
-                float averageTimePerStep = m_Timer.ElapsedMilliseconds() / (float)m_Iteration;
                 m_Stream << " - eta: " << fixed << setprecision(2) << averageTimePerStep * (m_MaxIterations - m_Iteration) * 0.001f << "s";
-            }
 
             if (m_ShowElapsed)
                 m_Stream << " - elap: " << m_Timer.ElapsedMilliseconds() * 0.001f << "s";
+
+            if (m_ShowIterTime)
+                m_Stream << " - iter: " << (int)averageTimePerStep << "ms";
 
             m_Stream << m_ExtraString;
         }
