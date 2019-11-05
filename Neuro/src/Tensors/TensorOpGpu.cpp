@@ -74,7 +74,7 @@ namespace Neuro
         if (!t1.SameDimensionsExceptBatches(t2))
         {
             dim3 blocks, threads;
-            GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock / 2);
+            GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
 
             if (t2.SameDimensionsExceptBatches(output))
             {
@@ -191,27 +191,46 @@ namespace Neuro
         }
         else
         {
-            GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock / 2);
+            dim3 blocks, threads;
+            GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
 
-            return CudaKernels::MulElemBroadcast(
-                blocks,
-                threads,
-                t1.GetDevicePtr(),
-                t1.Width(),
-                t1.Height(),
-                t1.Depth(),
-                t1.Batch(),
-                t2.GetDevicePtr(),
-                t2.Width(),
-                t2.Height(),
-                t2.Depth(),
-                t2.Batch(),
-                output.GetDevicePtr(),
-                output.Width(),
-                output.Height(),
-                output.Depth(),
-                output.Batch());
-        }
+            if (t2.SameDimensionsExceptBatches(output))
+            {
+                return CudaKernels::MulElemBroadcast(
+                    blocks,
+                    threads,
+                    t2.GetDevicePtr(),
+                    t1.GetDevicePtr(),
+                    t1.Width(),
+                    t1.Height(),
+                    t1.Depth(),
+                    t1.Batch(),
+                    output.GetDevicePtr(),
+                    output.Width(),
+                    output.Height(),
+                    output.Depth(),
+                    output.Batch());
+            }
+            else if (t1.SameDimensionsExceptBatches(output))
+            {
+                return CudaKernels::MulElemBroadcast(
+                    blocks,
+                    threads,
+                    t1.GetDevicePtr(),
+                    t2.GetDevicePtr(),
+                    t2.Width(),
+                    t2.Height(),
+                    t2.Depth(),
+                    t2.Batch(),
+                    output.GetDevicePtr(),
+                    output.Width(),
+                    output.Height(),
+                    output.Depth(),
+                    output.Batch());
+            }
+            else
+                __super::MulElem(t1, t2, output);
+        }        
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -964,7 +983,7 @@ namespace Neuro
         input.CopyToDevice();
         output.OverrideDevice();
             
-        const int THREADS_PER_BLOCK = 512;
+        const int THREADS_PER_BLOCK = 1024;
 
         auto globalSumKernelCall = [&](uint32_t n, const float* inputDevPtr, float* outputDevPtr)
         {

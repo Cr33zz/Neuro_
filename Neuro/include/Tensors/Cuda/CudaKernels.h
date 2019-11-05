@@ -20,7 +20,8 @@ namespace Neuro
         // Assuming t1 has the same dimensions as output
         static void AddBroadcast(const dim3& blocks, const dim3& threads, float alpha, const float* t1Dev, float beta, const float* t2Dev, int t2Width, int t2Height, int t2Depth, int t2Batch, float* outputDev, int outputWidth, int outputHeight, int outputDepth, int outputBatch);
         static void MulElem(const dim3& blocks, const dim3& threads, int len, const float* t1, const float* t2, float* outputDev, int subLen);
-        static void MulElemBroadcast(const dim3& blocks, const dim3& threads, const float* t1Dev, int t1Width, int t1Height, int t1Depth, int t1Batch, const float* t2Dev, int t2Width, int t2Height, int t2Depth, int t2Batch, float* outputDev, int outputWidth, int outputHeight, int outputDepth, int outputBatch);
+        // Assuming t1 has the same dimensions as output
+        static void MulElemBroadcast(const dim3& blocks, const dim3& threads, const float* t1Dev, const float* t2Dev, int t2Width, int t2Height, int t2Depth, int t2Batch, float* outputDev, int outputWidth, int outputHeight, int outputDepth, int outputBatch);
         static void Div(const dim3& blocks, const dim3& threads, int len, const float* t1, const float* t2, float* outputDev, int subLen);
         static void DivBroadcast(const dim3& blocks, const dim3& threads, const float* t1Dev, int t1Width, int t1Height, int t1Depth, int t1Batch, const float* t2Dev, int t2Width, int t2Height, int t2Depth, int t2Batch, float* outputDev, int outputWidth, int outputHeight, int outputDepth, int outputBatch);
         static void Sum(const dim3& blocks, const dim3& threads, const float* inputDev, int inputWidth, int inputHeight, int inputDepth, int inputBatch, int axis, float* outputDev);
