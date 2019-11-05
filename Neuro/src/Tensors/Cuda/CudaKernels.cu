@@ -288,14 +288,15 @@ __global__ void divBroadcast(const float* __restrict t1, int t1Width, int t1Heig
 
 template<int W, int H, int D, int N>
 __global__ void sumTemplate(const float* __restrict input, int width, int height, int depth, int batch, float* __restrict output)
-{
+{        
+    const size_t THREADS_PER_BLOCK = 512;
+
     if (W && H && D && N)
     {
-        const size_t THREADS_PER_BLOCK = 512;
         __shared__ float sdata[THREADS_PER_BLOCK];
 
         unsigned int tid = threadIdx.x;
-        unsigned int i = blockIdx.x*(blockDim.x * 2) + threadIdx.x;
+        unsigned int i = blockIdx.x * (blockDim.x * 2) + threadIdx.x;
 
         float mySum = (i < width) ? input[i] : 0;
 
@@ -321,17 +322,33 @@ __global__ void sumTemplate(const float* __restrict input, int width, int height
     }
     else if (W && !H && !D && !N)
     {
-        size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
-        if (idx < height * depth * batch)
+        __shared__ float sdata[THREADS_PER_BLOCK];
+
+        unsigned int tid = threadIdx.x;
+        unsigned int i = blockIdx.y * (blockDim.x * 2) + threadIdx.x;
+        unsigned int offset = blockIdx.x * width;
+
+        float mySum = (i < width) ? input[offset + i] : 0;
+
+        if (i + blockDim.x < width)
+            mySum += input[offset + i + blockDim.x];
+
+        sdata[tid] = mySum;
+        __syncthreads();
+
+        // do reduction in shared mem
+        for (unsigned int s = blockDim.x / 2; s>0; s >>= 1)
         {
-            size_t tidx = idx * width;
-            float tsum = 0;
-            for (size_t i = 0; i < width; ++i)
+            if (tid < s)
             {
-                tsum += input[tidx + i];
+                sdata[tid] = mySum = mySum + sdata[tid + s];
             }
-            output[idx] = tsum;
+
+            __syncthreads();
         }
+
+        // write result for this block to global mem
+        if (tid == 0) output[blockIdx.x * gridDim.y + blockIdx.y] = mySum;
     }
     else if (!W && H && !D && !N)
     {

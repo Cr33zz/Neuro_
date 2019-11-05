@@ -304,9 +304,9 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
-        TEST_METHOD(Sum_WidthAxis_CompareWithCpuResult)
+        TEST_METHOD(Sum_WidthAxis_1_CompareWithCpuResult)
         {
-            Tensor t(Shape(20, 30, 40, 50)); t.FillWithRand();
+            Tensor t(Shape(27, 10, 20, 30)); t.FillWithRand();
 
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t.Sum(WidthAxis);)
@@ -314,12 +314,40 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(GPU);
             NEURO_PROFILE("GPU", Tensor r2 = t.Sum(WidthAxis);)
 
-            Assert::IsTrue(r.Equals(r2));
+            for (uint32_t i = 0; i < r.Length(); ++i)
+                Assert::AreEqual(r.Values()[i], r2.Values()[i], 0.0001f);
         }
 
-        TEST_METHOD(Sum_HeightAxis_CompareWithCpuResult)
+        TEST_METHOD(Sum_WidthAxis_2_CompareWithCpuResult)
         {
-            Tensor t(Shape(20, 30, 40, 50)); t.FillWithRand();
+            Tensor t(Shape(2871, 2, 3, 4)); t.FillWithRand(10);
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r = t.Sum(WidthAxis);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = t.Sum(WidthAxis);)
+
+            for (uint32_t i = 0; i < r.Length(); ++i)
+                Assert::AreEqual(r.Values()[i], r2.Values()[i], 0.001f);
+        }
+
+        TEST_METHOD(Sum_WidthAxis_3_CompareWithCpuResult)
+        {
+            Tensor t(Shape(2945726, 1, 2, 3)); t.FillWithRand();
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r = t.Sum(WidthAxis);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = t.Sum(WidthAxis);)
+
+            Assert::IsTrue(r.Equals(r2, 0.1f));
+        }
+
+        TEST_METHOD(Sum_HeightAxis_1_CompareWithCpuResult)
+        {
+            Tensor t(Shape(10, 27, 20, 30)); t.FillWithRand();
 
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t.Sum(HeightAxis);)
@@ -327,8 +355,34 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(GPU);
             NEURO_PROFILE("GPU", Tensor r2 = t.Sum(HeightAxis);)
 
-            Assert::IsTrue(r.Equals(r2));
+            Assert::IsTrue(r.Equals(r2, 0.0001f));
         }
+
+        TEST_METHOD(Sum_HeightAxis_2_CompareWithCpuResult)
+        {
+            Tensor t(Shape(2, 2871, 3, 4)); t.FillWithRand();
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r = t.Sum(HeightAxis);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = t.Sum(HeightAxis);)
+
+            Assert::IsTrue(r.Equals(r2, 0.0001f));
+        }
+
+        /*TEST_METHOD(Sum_HeightAxis_3_CompareWithCpuResult)
+        {
+            Tensor t(Shape(1, 2945726, 2, 3)); t.FillWithRand();
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r = t.Sum(HeightAxis);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = t.Sum(HeightAxis);)
+
+            Assert::IsTrue(r.Equals(r2, 0.1f));
+        }*/
 
         TEST_METHOD(Sum_DepthAxis_CompareWithCpuResult)
         {
@@ -384,7 +438,7 @@ namespace NeuroTests
 
         TEST_METHOD(Sum_013Axes_CompareWithCpuResult)
         {
-            Tensor t(Shape(20, 30, 40, 50)); t.FillWithRand(10);
+            Tensor t(Shape(120, 120, 70, 5)); t.FillWithRand(10);
 
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t.Sum(_013Axes);)
@@ -392,7 +446,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(GPU);
             NEURO_PROFILE("GPU", Tensor r2 = t.Sum(_013Axes);)
 
-            Assert::IsTrue(r.Equals(r2, 0.001f));
+            for (uint32_t i = 0; i < r.Length(); ++i)
+                Assert::AreEqual(r.Values()[i], r2.Values()[i], 0.01f);
         }
 
         TEST_METHOD(Sum_123Axes_CompareWithCpuResult)
