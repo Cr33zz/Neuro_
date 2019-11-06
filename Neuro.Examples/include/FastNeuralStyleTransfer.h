@@ -15,7 +15,7 @@
 #include "Neuro.h"
 #include "VGG19.h"
 
-#define STYLE "starry_night"
+#define STYLE "rain_princess"
 
 //#define SLOW
 //#define FAST_SINGLE_CONTENT
@@ -246,7 +246,7 @@ public:
 
                     float loss = (*results[1])(0);
                     auto genImage = *results[0];
-                    VGG16::UnprocessImage(genImage, NCHW);
+                    VGG16::DeprocessImage(genImage, NCHW);
                     genImage.SaveAsImage(string(STYLE) + "_" + to_string(e) + "_" + to_string(i) + "_output.png", false);
                     if (minLoss <= 0 || loss < minLoss)
                     {
@@ -319,7 +319,7 @@ public:
 
         auto results = Session::Default()->Run({ stylizedContentPre }, { { input, &testImage } });
         auto genImage = *results[0];
-        VGG16::UnprocessImage(genImage, NCHW);
+        VGG16::DeprocessImage(genImage, NCHW);
         genImage.SaveAsImage(string(STYLE) + "_test_output.png", false);
     }
 

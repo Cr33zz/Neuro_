@@ -111,14 +111,14 @@ public:
             if (e % 20 == 0)
             {
                 auto genImage = *results[0];
-                VGG16::UnprocessImage(genImage, NCHW);
+                VGG16::DeprocessImage(genImage, NCHW);
                 genImage.SaveAsImage("nst_" + to_string(e) + ".png", false);
             }
         }
 
         auto results = Session::Default()->Run({ outputImg }, {});
         auto genImage = *results[0];
-        VGG16::UnprocessImage(genImage, NCHW);
+        VGG16::DeprocessImage(genImage, NCHW);
         genImage.SaveAsImage("_neural_transfer.jpg", false);
     }
 

@@ -33,7 +33,8 @@ public:
 
     static ModelBase* CreateModel(EDataFormat dataFormat, Shape inputShape = Shape(), bool includeTop = true, EPoolingMode poolMode = MaxPool);
     static TensorLike* Preprocess(TensorLike* image, EDataFormat dataFormat);
+    static TensorLike* Deprocess(TensorLike* image, EDataFormat dataFormat);
 
     static void PreprocessImage(Tensor& image, EDataFormat dataFormat);
-    static void UnprocessImage(Tensor& image, EDataFormat dataFormat);
+    static void DeprocessImage(Tensor& image, EDataFormat dataFormat);
 };

@@ -14,7 +14,7 @@ void VGG16::PreprocessImage(Tensor& image, EDataFormat dataFormat)
 }
 
 //////////////////////////////////////////////////////////////////////////
-void VGG16::UnprocessImage(Tensor& image, EDataFormat dataFormat)
+void VGG16::DeprocessImage(Tensor& image, EDataFormat dataFormat)
 {
     image.Add(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), image);
     Tensor temp(image);
@@ -77,4 +77,13 @@ TensorLike* VGG16::Preprocess(TensorLike* image, EDataFormat dataFormat)
     NameScope scope("vgg_preprocess");
     image = swap_red_blue_channels(image);
     return sub(image, new Constant(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), "mean_RGB"));
+}
+
+//////////////////////////////////////////////////////////////////////////
+TensorLike* VGG16::Deprocess(TensorLike* image, EDataFormat dataFormat)
+{
+    NameScope scope("vgg_deprocess");
+    image = add(image, new Constant(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), "mean_RGB"));
+    image = swap_red_blue_channels(image);
+    return clip(image, 0, 255);
 }
