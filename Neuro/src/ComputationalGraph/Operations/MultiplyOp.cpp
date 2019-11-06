@@ -26,7 +26,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void MultiplyOp::ComputeInternal()
     {
-        if (m_Val)
+        if (m_Inputs.size() == 1)
         {
             m_Output.ResizeBatch(m_Inputs[0]->Batch());
             m_Inputs[0]->Mul(m_Val, m_Output);
