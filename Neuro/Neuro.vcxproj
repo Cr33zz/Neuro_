@@ -201,6 +201,7 @@
     <ClInclude Include="include\ComputationalGraph\Operations\SwapRedBlueChannelsOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\TransposeOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\UpSample2dOp.h" />
+    <ClInclude Include="include\ComputationalGraph\Operations\VarianceOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\VariationOp.h" />
     <ClInclude Include="include\ComputationalGraph\TensorLike.h" />
     <ClInclude Include="include\ComputationalGraph\Operation.h" />
