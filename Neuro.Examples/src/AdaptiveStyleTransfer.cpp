@@ -10,12 +10,12 @@ ModelBase* AdaptiveStyleTransfer::CreateGeneratorModel(TensorLike* contentPre, T
 
     // encoder
 
-    auto contentFeat = vggEncoder(inputContent->Outputs()).back();
-    auto styleFeat = vggEncoder(inputStyle->Outputs()).back();
+    auto contentFeat = vggEncoder(inputContent->Outputs(), nullptr, "content_features").back();
+    auto styleFeat = vggEncoder(inputStyle->Outputs(), nullptr, "style_features").back();
 
     // adaptive instance normalization
 
-    auto stylizedContentFeat = (new AdaIN(alpha))->Call({ styleFeat, contentFeat }, training, "ada_in")[0];
+    auto stylizedContentFeat = (new AdaIN(alpha))->Call({ contentFeat, styleFeat }, training, "ada_in")[0];
 
     // decoder
 

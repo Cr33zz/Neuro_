@@ -183,7 +183,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<Variable*> Graph::ComputeGradientsInOrder(const vector<TensorLike*>& order, const vector<TensorLike*>& losses, const unordered_set<TensorLike*> nodesAffectingLosses, const vector<Variable*>& params)
     {
-        const size_t PREFETCH_STEPS = 8;
+        const size_t PREFETCH_STEPS = 12;
         vector<Variable*> variables;
 
         /// remove all node which don't care about gradient. it has to be done at runtime since variables can be switched between trainable and non-trainable state

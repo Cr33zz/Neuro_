@@ -16,7 +16,7 @@
 #include "VGG19.h"
 
 //#define SLOW
-//#define FAST_SINGLE_CONTENT
+#define FAST_SINGLE_CONTENT
 
 namespace fs = std::experimental::filesystem;
 using namespace Neuro;
@@ -30,17 +30,18 @@ public:
         const uint32_t IMAGE_HEIGHT = 256;
         const float CONTENT_WEIGHT = 1.f;
         const float STYLE_WEIGHT = 2.f;
-        const float LEARNING_RATE = 0.001f;
-        const uint32_t BATCH_SIZE = 4;
+        const float LEARNING_RATE = 0.0001f;        
 
         const string TEST_FILE = "data/test.jpg";
         const string TEST_STYLE_FILE = "data/styles/great_wave.jpg";
 #ifdef FAST_SINGLE_CONTENT
         const string CONTENT_FILES_DIR = "e:/Downloads/fake_coco";
         const string STYLE_FILES_DIR = "e:/Downloads/fake_wikiart";
+        const uint32_t BATCH_SIZE = 1;
 #else
         const string CONTENT_FILES_DIR = "e:/Downloads/coco14";
         const string STYLE_FILES_DIR = "e:/Downloads/wikiart";
+        const uint32_t BATCH_SIZE = 4;
 #endif
 
         Tensor::SetForcedOpMode(GPU);
@@ -67,7 +68,7 @@ public:
         vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv1")->Outputs()[0],
                                              vggModel->Layer("block2_conv1")->Outputs()[0],
                                              vggModel->Layer("block3_conv1")->Outputs()[0],
-                                             vggModel->Layer("block4_conv1")->Outputs()[0] };
+                                             vggModel->Layer("block4_conv1")->Outputs()[0] }; // last output is used for content loss
 
         auto vggEncoder = Flow(vggModel->InputsAt(-1), styleOutputs, "vgg_features");
 
@@ -81,27 +82,28 @@ public:
         auto stylePre = VGG16::Preprocess(style, NCHW);
 
         auto generator = CreateGeneratorModel(content, style, 1.f, vggEncoder, training);
-        generator->LoadWeights("adaptive_weights.h5", false, true);
+        //generator->LoadWeights("adaptive_weights.h5", false, true);
         auto stylized = VGG16::Deprocess(generator->Outputs()[0], NCHW);
         auto adaptiveFeat = generator->Outputs()[1];
 
         auto stylizedPre = VGG16::Preprocess(stylized, NCHW);
         auto stylizedFeat = vggEncoder(stylizedPre, nullptr, "stylized_features");
-        auto styleFeat = vggEncoder(stylePre, nullptr, "style_features");
 
         // compute content loss
         auto contentLoss = sum(mean(square(sub(adaptiveFeat, stylizedFeat.back())), _01Axes));
         auto weightedContentLoss = multiply(contentLoss, CONTENT_WEIGHT);
         
+        auto styleFeat = vggEncoder(stylePre, nullptr, "style_features"); // actually it was already computed inside generator... could resuse that
+
         vector<TensorLike*> styleLosses;
         //compute style losses
         for (size_t i = 0; i < styleFeat.size(); ++i)
         {
-            auto meanS = mean(stylizedFeat[i], _01Axes);
-            auto varS = variance(stylizedFeat[i], meanS, _01Axes);
+            auto meanS = mean(styleFeat[i], _01Axes);
+            auto varS = variance(styleFeat[i], meanS, _01Axes);
 
-            auto meanG = mean(styleFeat[i], _01Axes);
-            auto varG = variance(styleFeat[i], meanG, _01Axes);
+            auto meanG = mean(stylizedFeat[i], _01Axes);
+            auto varG = variance(stylizedFeat[i], meanG, _01Axes);
             
             auto sigmaS = sqrt(add(varS, 0.001f));
             auto sigmaG = sqrt(add(varG, 0.001f));
@@ -113,9 +115,9 @@ public:
         }
         auto weightedStyleLoss = multiply(merge_sum(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "style_loss");
 
-        ///auto totalLoss = weightedContentLoss;
+        auto totalLoss = weightedContentLoss;
         ///auto totalLoss = weightedStyleLoss;
-        auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
+        ///auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
         ///auto totalLoss = mean(square(sub(stylizedContentPre, contentPre)), GlobalAxis, "total");
 
         auto optimizer = Adam(LEARNING_RATE);
@@ -152,8 +154,8 @@ public:
             /*contentBatch.SaveAsImage("___cB.jpg", false);
             styleBatch.SaveAsImage("___sB.jpg", false);*/
 
-            auto results = Session::Default()->Run(MergeVectors({ vector<TensorLike*>{ totalLoss, weightedContentLoss, weightedStyleLoss, minimize }, styleLosses }),
-                                                                { { content, &contentBatch }, { style, &styleBatch }, { training, &trainingOn } });
+            auto results = Session::Default()->Run({ totalLoss, weightedContentLoss, weightedStyleLoss, minimize },
+                                                   { { content, &contentBatch }, { style, &styleBatch }, { training, &trainingOn } });
 
             if (i % DETAILS_ITER == 0)
             {
@@ -169,8 +171,6 @@ public:
                     generator->SaveWeights("adaptive_weights.h5");
                     minLoss = loss;
                 }
-
-                const float SINGLE_STYLE_WEIGHT = STYLE_WEIGHT / styleLosses.size();
 
                 float change = 0;
                 if (lastLoss > 0)
@@ -211,13 +211,13 @@ public:
     protected:
         virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override
         { 
-            auto styleFeat = inputNodes[0];
-            auto contentFeat = inputNodes[1];
+            auto contentFeat = inputNodes[0];
+            auto styleFeat = inputNodes[1];
 
             auto styleMean = mean(styleFeat, _01Axes);
-            auto styleVar = variance(styleFeat, styleMean, _01Axes);
+            auto styleStd = std_deviation(styleFeat, styleMean, _01Axes);
 
-            auto normContentFeat = instance_norm(contentFeat, styleVar, styleMean, 0.00001f, training);
+            auto normContentFeat = instance_norm(contentFeat, styleStd, styleMean, 0.00001f, training);
             return { add(multiply(normContentFeat, m_Alpha), multiply(contentFeat, 1 - m_Alpha)) };
         }
 
