@@ -205,6 +205,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\AdaptiveStyleTransfer.cpp" />
     <ClCompile Include="src\CifarGAN.cpp" />
     <ClCompile Include="src\DeepConvGAN.cpp" />
     <ClCompile Include="src\FastNeuralStyleTransfer.cpp" />
@@ -215,6 +216,7 @@
     <ClCompile Include="src\VGG19.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\AdaptiveStyleTransfer.h" />
     <ClInclude Include="include\AutoencoderNetwork.h" />
     <ClInclude Include="include\CifarGAN.h" />
     <ClInclude Include="include\CifarResNet.h" />

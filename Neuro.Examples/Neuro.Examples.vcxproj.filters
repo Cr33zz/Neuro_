@@ -33,6 +33,9 @@
     <ClCompile Include="src\FastNeuralStyleTransfer.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\AdaptiveStyleTransfer.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\IrisNetwork.h">
@@ -81,6 +84,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\FastNeuralStyleTransfer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AdaptiveStyleTransfer.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
