@@ -198,6 +198,7 @@
     <ClInclude Include="include\ComputationalGraph\Operations\MergeOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\Pool2dOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\ReshapeOp.h" />
+    <ClInclude Include="include\ComputationalGraph\Operations\StandardDeviationOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\SwapRedBlueChannelsOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\TransposeOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\UpSample2dOp.h" />

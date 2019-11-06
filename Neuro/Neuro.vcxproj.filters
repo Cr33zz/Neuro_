@@ -387,6 +387,9 @@
     <ClInclude Include="include\ComputationalGraph\Operations\VarianceOp.h">
       <Filter>include\ComputationalGraph\Operations</Filter>
     </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\StandardDeviationOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">

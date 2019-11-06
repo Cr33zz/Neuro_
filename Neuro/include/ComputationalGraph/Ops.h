@@ -34,6 +34,7 @@
 #include "ComputationalGraph/Operations/SigmoidOp.h"
 #include "ComputationalGraph/Operations/SoftmaxOp.h"
 #include "ComputationalGraph/Operations/SqrtOp.h"
+#include "ComputationalGraph/Operations/StandardDeviationOp.h"
 #include "ComputationalGraph/Operations/SubtractOp.h"
 #include "ComputationalGraph/Operations/SumOp.h"
 #include "ComputationalGraph/Operations/SwapRedBlueChannelsOp.h"
