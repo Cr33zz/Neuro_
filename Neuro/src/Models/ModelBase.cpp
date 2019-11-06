@@ -567,7 +567,7 @@ namespace Neuro
             else
             {
                 for (hsize_t i = 0; i < params.size(); ++i)
-                    weightsDatasets.push_back(g.openDataSet(g.getObjnameByIdx(i)));
+                    weightsDatasets.push_back(g.openDataSet("param_" + to_string(i)));
             }
 
             for (hsize_t i = 0; i < params.size(); ++i)
