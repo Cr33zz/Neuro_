@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class Placeholder;
+    class TensorLike;
 
     // This layer should only be used when we want to combine raw input with output of another layer
     // somewhere inside a network
@@ -12,19 +12,18 @@ namespace Neuro
     {
 	public:
         Input(const Shape& inputShape, const string& name = "");
-        Input(Placeholder* placeholder, const string& name = "");
+        Input(TensorLike* input, const string& name = "");
 
 	protected:
         Input();
 
 		virtual LayerBase* GetCloneInstance() const override;
 
-        //virtual void Build(const vector<Shape>& inputShapes) override;
         virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override;
 
     private:
-        void InitPlaceholder(Placeholder* placeholder);
+        void InitInput(TensorLike* input);
 
-        Placeholder* m_Placeholder = nullptr;
+        TensorLike* m_Input = nullptr;
 	};
 }
