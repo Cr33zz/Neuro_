@@ -26,7 +26,7 @@ namespace NeuroTests
             auto gamma = Variable(Shape(1, 1, 5, 2));
             auto beta = Variable(gamma.GetShape());
             auto training = Constant(1.f);
-            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new InstanceNormalizeOp(&x, &gamma, &beta, 0.9f, 0.001f, &training)).get()));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new InstanceNormalizeOp(&x, &gamma, &beta, 0.001f, &training)).get()));
         }
 
         TEST_METHOD(BatchNormalize_Spatial)
