@@ -468,7 +468,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    FIBITMAP* LoadResizedImage(const string& filename, uint32_t targetSizeX, uint32_t targetSizeY, uint32_t& sizeX, uint32_t& sizeY)
+    FIBITMAP* LoadResizedImage(const string& filename, uint32_t targetSizeX, uint32_t targetSizeY, bool crop, uint32_t& sizeX, uint32_t& sizeY)
     {
         ImageLibInit();
 
@@ -478,18 +478,35 @@ namespace Neuro
         FIBITMAP* image = FreeImage_Load(format, filename.c_str());
         assert(image);
 
-        const uint32_t WIDTH = targetSizeX > 0 ? targetSizeX : FreeImage_GetWidth(image);
-        const uint32_t HEIGHT = targetSizeY > 0 ? targetSizeY : FreeImage_GetHeight(image);
+        uint32_t targetWidth = targetSizeX > 0 ? targetSizeX : FreeImage_GetWidth(image);
+        uint32_t targetHeight = targetSizeY > 0 ? targetSizeY : FreeImage_GetHeight(image);
 
         if (targetSizeX > 0 || targetSizeY > 0)
         {
-            auto resizedImage = FreeImage_Rescale(image, WIDTH, HEIGHT);
+            float maxDim = (float)max(targetWidth, targetHeight);
+            auto styleDims = GetImageDims(filename);
+            float longDim = (float)max(styleDims.Width(), styleDims.Height());
+            float scale = maxDim / longDim;
+
+            targetWidth = (uint32_t)round(styleDims.Width() * scale);
+            targetHeight = (uint32_t)round(styleDims.Height() * scale);
+
+            auto resizedImage = FreeImage_Rescale(image, targetWidth, targetHeight);
             FreeImage_Unload(image);
             image = resizedImage;
+
+            if (crop && (targetWidth > targetSizeX || targetHeight > targetSizeY))
+            {
+                targetWidth = targetSizeX;
+                targetHeight = targetSizeY;
+                auto croppedImage = FreeImage_Copy(resizedImage, 0, 0, targetWidth, targetHeight);
+                FreeImage_Unload(resizedImage);
+                image = croppedImage;                
+            }
         }
 
-        sizeX = WIDTH;
-        sizeY = HEIGHT;
+        sizeX = targetWidth;
+        sizeY = targetHeight;
         return image;
     }
 
@@ -521,20 +538,20 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void LoadImage(const string& filename, float* buffer, uint32_t targetSizeX, uint32_t targetSizeY, EDataFormat targetFormat)
+    void LoadImage(const string& filename, float* buffer, uint32_t targetSizeX, uint32_t targetSizeY, bool crop, EDataFormat targetFormat)
     {
         uint32_t sizeX, sizeY;
-        FIBITMAP* image = LoadResizedImage(filename, targetSizeX, targetSizeY, sizeX, sizeY);
+        FIBITMAP* image = LoadResizedImage(filename, targetSizeX, targetSizeY, crop, sizeX, sizeY);
         Shape imageShape = targetFormat == NCHW ? Shape(sizeX, sizeY, 3) : Shape(3, sizeX, sizeY);
         LoadImageInternal(image, imageShape, targetFormat, buffer);
         FreeImage_Unload(image);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor LoadImage(const string& filename, uint32_t targetSizeX, uint32_t targetSizeY, EDataFormat targetFormat)
+    Tensor LoadImage(const string& filename, uint32_t targetSizeX, uint32_t targetSizeY, bool crop, EDataFormat targetFormat)
     {
         uint32_t sizeX, sizeY;
-        FIBITMAP* image = LoadResizedImage(filename, targetSizeX, targetSizeY, sizeX, sizeY);
+        FIBITMAP* image = LoadResizedImage(filename, targetSizeX, targetSizeY, crop, sizeX, sizeY);
         Shape imageShape = targetFormat == NCHW ? Shape(sizeX, sizeY, 3) : Shape(3, sizeX, sizeY);
         Tensor result(imageShape);
         LoadImageInternal(image, imageShape, targetFormat, &result.Values()[0]);
