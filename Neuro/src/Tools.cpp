@@ -478,18 +478,23 @@ namespace Neuro
         FIBITMAP* image = FreeImage_Load(format, filename.c_str());
         assert(image);
 
-        uint32_t targetWidth = targetSizeX > 0 ? targetSizeX : FreeImage_GetWidth(image);
-        uint32_t targetHeight = targetSizeY > 0 ? targetSizeY : FreeImage_GetHeight(image);
+        uint32_t imgWidth = FreeImage_GetWidth(image);
+        uint32_t imgHeight = FreeImage_GetHeight(image);
+
+        uint32_t targetWidth = targetSizeX > 0 ? targetSizeX : imgWidth;
+        uint32_t targetHeight = targetSizeY > 0 ? targetSizeY : imgHeight;
 
         if (targetSizeX > 0 || targetSizeY > 0)
         {
-            float maxDim = (float)max(targetWidth, targetHeight);
-            auto styleDims = GetImageDims(filename);
-            float longDim = (float)max(styleDims.Width(), styleDims.Height());
-            float scale = maxDim / longDim;
+            if (crop)
+            {
+                float xScale = (float)targetSizeX / imgWidth;
+                float yScale = (float)targetSizeY / imgHeight;
+                float scale = max(xScale, yScale);
 
-            targetWidth = (uint32_t)round(styleDims.Width() * scale);
-            targetHeight = (uint32_t)round(styleDims.Height() * scale);
+                targetWidth = (uint32_t)round(imgWidth * scale);
+                targetHeight = (uint32_t)round(imgHeight * scale);
+            }
 
             auto resizedImage = FreeImage_Rescale(image, targetWidth, targetHeight);
             FreeImage_Unload(image);
@@ -497,11 +502,14 @@ namespace Neuro
 
             if (crop && (targetWidth > targetSizeX || targetHeight > targetSizeY))
             {
+                // copy center-part
+                auto left = (targetWidth - targetSizeX) >> 1;
+                auto top = (targetHeight - targetSizeY) >> 1;
+                auto croppedImage = FreeImage_Copy(resizedImage, left, top, left + targetSizeX, top + targetSizeY);
+                FreeImage_Unload(resizedImage);
+                image = croppedImage;
                 targetWidth = targetSizeX;
                 targetHeight = targetSizeY;
-                auto croppedImage = FreeImage_Copy(resizedImage, 0, 0, targetWidth, targetHeight);
-                FreeImage_Unload(resizedImage);
-                image = croppedImage;                
             }
         }
 
