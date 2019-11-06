@@ -9,7 +9,7 @@
 
 namespace Neuro
 {
-    static Operation* variance(TensorLike* input, TensorLike* inputMean, float epsilon, EAxis axis = GlobalAxis, const string& name = "")
+    static Operation* variance(TensorLike* input, TensorLike* inputMean, EAxis axis = GlobalAxis, const string& name = "")
     {
         NameScope scope("variance");
         if (!inputMean)
