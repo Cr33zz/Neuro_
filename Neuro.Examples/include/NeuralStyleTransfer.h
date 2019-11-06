@@ -27,10 +27,10 @@ public:
     {
         Tensor::SetForcedOpMode(GPU);
         
-        Tensor contentImage = LoadImage("data/" + CONTENT_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
+        Tensor contentImage = LoadImage("data/" + CONTENT_FILE, IMAGE_WIDTH, IMAGE_HEIGHT);
         contentImage.SaveAsImage(CONTENT_FILE, false);
         VGG16::PreprocessImage(contentImage, NCHW);
-        Tensor styleImage = LoadImage("data/" + STYLE_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
+        Tensor styleImage = LoadImage("data/" + STYLE_FILE, IMAGE_WIDTH, IMAGE_HEIGHT);
         styleImage.SaveAsImage(STYLE_FILE, false);
         VGG16::PreprocessImage(styleImage, NCHW);
 
@@ -111,14 +111,14 @@ public:
             if (e % 20 == 0)
             {
                 auto genImage = *results[0];
-                VGG16::UnprocessImage(genImage, NCHW);
+                VGG16::DeprocessImage(genImage, NCHW);
                 genImage.SaveAsImage("nst_" + to_string(e) + ".png", false);
             }
         }
 
         auto results = Session::Default()->Run({ outputImg }, {});
         auto genImage = *results[0];
-        VGG16::UnprocessImage(genImage, NCHW);
+        VGG16::DeprocessImage(genImage, NCHW);
         genImage.SaveAsImage("_neural_transfer.jpg", false);
     }
 

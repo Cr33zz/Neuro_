@@ -40,4 +40,5 @@
 #include "ComputationalGraph/Operations/TanHOp.h"
 #include "ComputationalGraph/Operations/TransposeOp.h"
 #include "ComputationalGraph/Operations/UpSample2dOp.h"
+#include "ComputationalGraph/Operations/VarianceOp.h"
 #include "ComputationalGraph/Operations/VariationOp.h"

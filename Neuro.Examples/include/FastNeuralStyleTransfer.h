@@ -15,7 +15,7 @@
 #include "Neuro.h"
 #include "VGG19.h"
 
-#define STYLE "starry_night"
+#define STYLE "rain_princess"
 
 //#define SLOW
 //#define FAST_SINGLE_CONTENT
@@ -70,7 +70,7 @@ public:
         auto trainingOn = Tensor({ 1 }, Shape(1), "training_on");
         auto trainingOff = Tensor({ 0 }, Shape(1), "training_off");
 
-        Tensor testImage = LoadImage(TEST_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, NCHW);
+        Tensor testImage = LoadImage(TEST_FILE, IMAGE_WIDTH, IMAGE_HEIGHT);
         testImage.SaveAsImage("_test.png", false);
 
         cout << "Collecting dataset files list...\n";
@@ -231,7 +231,7 @@ public:
                 testImage.CopyTo(contentBatch);
 #else
                 for (int j = 0; j < BATCH_SIZE; ++j)
-                    LoadImage(contentFiles[(i * BATCH_SIZE + j)%contentFiles.size()], contentBatch.Values() + j * contentBatch.BatchLength(), input->GetShape().Width(), input->GetShape().Height(), NCHW);
+                    LoadImage(contentFiles[(i * BATCH_SIZE + j)%contentFiles.size()], contentBatch.Values() + j * contentBatch.BatchLength(), input->GetShape().Width(), input->GetShape().Height());
 #endif
                 
                 auto results = Session::Default()->Run(MergeVectors({ vector<TensorLike*>{ stylizedContentPre, totalLoss, weightedContentLoss, weightedStyleLoss, minimize }, styleLosses }),
@@ -246,7 +246,7 @@ public:
 
                     float loss = (*results[1])(0);
                     auto genImage = *results[0];
-                    VGG16::UnprocessImage(genImage, NCHW);
+                    VGG16::DeprocessImage(genImage, NCHW);
                     genImage.SaveAsImage(string(STYLE) + "_" + to_string(e) + "_" + to_string(i) + "_output.png", false);
                     if (minLoss <= 0 || loss < minLoss)
                     {
@@ -319,7 +319,7 @@ public:
 
         auto results = Session::Default()->Run({ stylizedContentPre }, { { input, &testImage } });
         auto genImage = *results[0];
-        VGG16::UnprocessImage(genImage, NCHW);
+        VGG16::DeprocessImage(genImage, NCHW);
         genImage.SaveAsImage(string(STYLE) + "_test_output.png", false);
     }
 

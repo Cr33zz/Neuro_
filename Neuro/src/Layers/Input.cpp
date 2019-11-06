@@ -11,14 +11,14 @@ namespace Neuro
 		: LayerBase(__FUNCTION__, inputShape, name)
 	{
         NameScope scope(Name());
-        InitPlaceholder(new Placeholder(inputShape, "placeholder"));
+        InitInput(new Placeholder(inputShape, "placeholder"));
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    Input::Input(Placeholder* placeholder, const string& name)
-        : LayerBase(__FUNCTION__, placeholder->GetShape(), name)
+    Input::Input(TensorLike* input, const string& name)
+        : LayerBase(__FUNCTION__, input->GetShape(), name)
     {
-        InitPlaceholder(placeholder);
+        InitInput(input);
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -33,13 +33,6 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    /*void Input::Build(const vector<Shape>& inputShapes)
-    {
-        m_Placeholder = new Placeholder(inputShapes[0], "input_placeholder");
-        m_Built = true;
-    }*/
-
-    //////////////////////////////////////////////////////////////////////////
     vector<TensorLike*> Input::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
     {
         NEURO_ASSERT(inputs.size() == 1, "Input layer accepts single input.");
@@ -47,12 +40,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Input::InitPlaceholder(Placeholder* placeholder)
+    void Input::InitInput(TensorLike* input)
     {
-        m_Placeholder = placeholder;
+        m_Input = input;
         m_Built = true;
 
-        placeholder->m_Metadata = new TensorLike::metadata{ this, 0, 0 };
-        new node(this, {}, {}, {}, { placeholder }, { placeholder }, { m_ExpectedInputShape }, { m_ExpectedInputShape });
+        input->m_Metadata = new TensorLike::metadata{ this, 0, 0 };
+        new node(this, {}, {}, {}, { input }, { input }, { m_ExpectedInputShape }, { m_ExpectedInputShape });
     }
 }

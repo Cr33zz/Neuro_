@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    InstanceNormalizeOp::InstanceNormalizeOp(TensorLike* x, TensorLike* gamma, TensorLike* beta, float momentum, float epsilon, TensorLike* training, const string& name)
-        : Operation({ x, gamma, beta, training }, name.empty() ? "instance_normalize" : name), m_Epsilon(epsilon), m_Momentum(momentum)
+    InstanceNormalizeOp::InstanceNormalizeOp(TensorLike* x, TensorLike* gamma, TensorLike* beta, float epsilon, TensorLike* training, const string& name)
+        : Operation({ x, gamma, beta, training }, name.empty() ? "instance_normalize" : name), m_Epsilon(epsilon)
     {
         m_Output.Resize(x->GetShape());
     }
@@ -22,7 +22,7 @@ namespace Neuro
         m_SaveInvVar.Resize(m_SaveMean.GetShape());
 
         if (training)
-            m_Inputs[0]->InstanceNormTrain(gamma, beta, m_Momentum, m_Epsilon, m_SaveMean, m_SaveInvVar, m_Output);
+            m_Inputs[0]->InstanceNormTrain(gamma, beta, m_Epsilon, m_SaveMean, m_SaveInvVar, m_Output);
         else
             m_Inputs[0]->InstanceNorm(gamma, beta, m_Epsilon, m_Output);
     }

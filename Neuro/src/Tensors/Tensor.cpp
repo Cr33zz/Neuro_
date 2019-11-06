@@ -1451,9 +1451,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::InstanceNormTrain(const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const
+    void Tensor::InstanceNormTrain(const Tensor& gamma, const Tensor& beta, float epsilon, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const
     {
-        Op()->BatchNormalizationTrain(*this, Instance, gamma, beta, momentum, epsilon, nullptr, nullptr, saveMean, saveInvVariance, result);
+        Op()->BatchNormalizationTrain(*this, Instance, gamma, beta, 1.f, epsilon, nullptr, nullptr, saveMean, saveInvVariance, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
