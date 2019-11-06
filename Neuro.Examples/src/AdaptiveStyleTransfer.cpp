@@ -10,16 +10,12 @@ ModelBase* AdaptiveStyleTransfer::CreateGeneratorModel(TensorLike* contentPre, T
 
     // encoder
 
-    auto contentFeat = vggEncoder(contentPre)[0];
-    auto styleFeat = vggEncoder(stylePre)[0];
+    auto contentFeat = vggEncoder(inputContent->Outputs()).back();
+    auto styleFeat = vggEncoder(inputStyle->Outputs()).back();
 
     // adaptive instance normalization
 
-    auto styleMean = mean(styleFeat, _01Axes);
-    auto styleVar = variance(styleFeat, styleMean, 0.001f, _01Axes);
-        
-    auto normContentFeat = instance_norm(contentFeat, styleVar, styleMean, 0.001f, training, "ada_in");
-    auto stylizedContentFeat = add(multiply(normContentFeat, alpha), multiply(contentFeat, 1 - alpha));
+    auto stylizedContentFeat = (new AdaIN(alpha))->Call({ styleFeat, contentFeat }, training, "ada_in")[0];
 
     // decoder
 
@@ -38,8 +34,6 @@ ModelBase* AdaptiveStyleTransfer::CreateGeneratorModel(TensorLike* contentPre, T
 
     d = (new Conv2D(64, 3, 1, Tensor::GetPadding(Same, 3), new ReLU(), NCHW, "decode_block1_conv2"))->Call(d)[0];
     d = (new Conv2D(3, 3, 1, Tensor::GetPadding(Same, 3), nullptr, NCHW, "decode_block1_conv1"))->Call(d)[0];
-
-    d = VGG16::Deprocess(d, NCHW);
 
     return new Flow({ inputContent->Outputs()[0], inputStyle->Outputs()[0] }, { d, stylizedContentFeat }, "generator_model");
 }
