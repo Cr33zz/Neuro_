@@ -64,6 +64,21 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     EMemStatus MemoryManagerBase::Allocate(void** ptr, size_t size, const string& annotation)
     {
+        {
+            unique_lock<mutex> mtx(m_ScheduledFreeMtx);
+#ifdef ENABLE_MEMORY_LOGS
+            if (!m_ScheduledDeallocations.empty())
+            {
+                stringstream ss;
+                ss << InternalName() << " releasing scheduled pointers..." << endl;
+                OutputDebugString(ss.str().c_str());
+            }
+#endif
+            for (auto p : m_ScheduledDeallocations)
+                Free(p);
+            m_ScheduledDeallocations.clear();
+        }
+
         unique_lock<mutex> mtx(m_AllocFreeMtx);
 
         size = ceilInt(size, m_AllocGranularity);
@@ -106,6 +121,22 @@ namespace Neuro
 
 #ifdef MEMSET_ALLOCATED_MEMORY
         InternalMemset(m_UsedBlocks->GetData(), 0xFF, m_UsedBlocks->GetSize());
+#endif
+        return MEM_STATUS_SUCCESS;
+    }
+
+    EMemStatus MemoryManagerBase::ScheduleFree(void* ptr)
+    {
+        if (!ptr)
+            return MEM_STATUS_SUCCESS;
+
+        unique_lock<mutex> mtx(m_ScheduledFreeMtx);
+        m_ScheduledDeallocations.push_back(ptr);
+
+#ifdef ENABLE_MEMORY_LOGS
+        stringstream ss;
+        ss << InternalName() << " scheduled release 0x" << hex << (__int64)ptr << endl;
+        OutputDebugString(ss.str().c_str());
 #endif
         return MEM_STATUS_SUCCESS;
     }

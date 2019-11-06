@@ -71,6 +71,7 @@ namespace Neuro
         MemoryManagerBase(size_t allocGranularity, size_t nativeAllocGranularity);
 
         EMemStatus Allocate(void** ptr, size_t size, const string& annotation = "");
+        EMemStatus ScheduleFree(void* ptr);
         EMemStatus Free(void* ptr);
 
         EMemStatus DumpMemoryState(const string& filename) const;
@@ -108,8 +109,10 @@ namespace Neuro
         const size_t m_NativeAllocGranularity;
         size_t m_AllocatedMemSize = 0;
         size_t m_AllocatedMemPeakSize = 0;
+        vector<void*> m_ScheduledDeallocations;
 
         mutex m_AllocFreeMtx;
+        mutex m_ScheduledFreeMtx;
     };
 
     // Memory manager for GPU memory

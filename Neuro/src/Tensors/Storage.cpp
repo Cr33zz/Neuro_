@@ -336,7 +336,7 @@ namespace Neuro
         if (storage->m_FreeDeviceMemOnOffloadDone)
         {
             STORAGE_DEBUG_INFO("Offload done '%s'[%d]\n", storage->m_Name.c_str(), storage->m_Type);
-            CUDA_CHECK(DeviceMemoryManager::Default().Free((void*)storage->m_DeviceDataPtr));
+            CUDA_CHECK(DeviceMemoryManager::Default().ScheduleFree((void*)storage->m_DeviceDataPtr));
             storage->m_DeviceDataPtr = nullptr;
 
             if (storage->m_DataPtr)
