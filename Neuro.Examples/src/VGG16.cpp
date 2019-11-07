@@ -1,30 +1,42 @@
 #include "VGG16.h"
 
 //////////////////////////////////////////////////////////////////////////
-void VGG16::PreprocessImage(Tensor& image, EDataFormat dataFormat)
+void VGG16::PreprocessImage(Tensor& image, EDataFormat dataFormat, bool swapChannels)
 {
-    Tensor temp(image);
-    //convert RGB to BGR
-    for (uint32_t n = 0; n < image.Batch(); ++n)
+    if (swapChannels)
     {
-        temp.CopyDepthTo(0, n, 2, n, image);
-        temp.CopyDepthTo(2, n, 0, n, image);
+        Tensor temp(image);
+        //convert RGB to BGR
+        for (uint32_t n = 0; n < image.Batch(); ++n)
+        {
+            temp.CopyDepthTo(0, n, 2, n, image);
+            temp.CopyDepthTo(2, n, 0, n, image);
+        }
+        image.Sub(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), image);
     }
-    image.Sub(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), image);
+    else
+        image.Sub(Tensor({ 123.68f, 116.779f, 103.939f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), image);
 }
 
 //////////////////////////////////////////////////////////////////////////
-void VGG16::DeprocessImage(Tensor& image, EDataFormat dataFormat)
+void VGG16::DeprocessImage(Tensor& image, EDataFormat dataFormat, bool swapChannels, bool clipValues)
 {
-    image.Add(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), image);
-    Tensor temp(image);
-    //convert BGR to RGB
-    for (uint32_t n = 0; n < image.Batch(); ++n)
+    if (swapChannels)
     {
-        temp.CopyDepthTo(0, n, 2, n, image);
-        temp.CopyDepthTo(2, n, 0, n, image);
+        image.Add(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), image);
+        Tensor temp(image);
+        //convert BGR to RGB
+        for (uint32_t n = 0; n < image.Batch(); ++n)
+        {
+            temp.CopyDepthTo(0, n, 2, n, image);
+            temp.CopyDepthTo(2, n, 0, n, image);
+        }
     }
-    image.Clipped(0, 255, image);
+    else
+        image.Add(Tensor({ 123.68f, 116.779f, 103.939f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), image);
+
+    if (clipValues)
+        image.Clipped(0, 255, image);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -72,18 +84,30 @@ Neuro::ModelBase* VGG16::CreateModel(EDataFormat dataFormat, Shape inputShape, b
 }
 
 //////////////////////////////////////////////////////////////////////////
-TensorLike* VGG16::Preprocess(TensorLike* image, EDataFormat dataFormat)
+TensorLike* VGG16::Preprocess(TensorLike* image, EDataFormat dataFormat, bool swapChannels)
 {
     NameScope scope("vgg_preprocess");
-    image = swap_red_blue_channels(image);
-    return sub(image, new Constant(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), "mean_RGB"));
+    if (swapChannels)
+    {
+        image = swap_red_blue_channels(image);
+        return sub(image, new Constant(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), "mean_RGB"));
+    }
+    
+    return sub(image, new Constant(Tensor({ 123.68f, 116.779f, 103.939f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), "mean_RGB"));
 }
 
 //////////////////////////////////////////////////////////////////////////
-TensorLike* VGG16::Deprocess(TensorLike* image, EDataFormat dataFormat)
+TensorLike* VGG16::Deprocess(TensorLike* image, EDataFormat dataFormat, bool swapChannels, bool clipValues)
 {
     NameScope scope("vgg_deprocess");
-    image = add(image, new Constant(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), "mean_RGB"));
-    image = swap_red_blue_channels(image);
-    return clip(image, 0, 255);
+    if (swapChannels)
+    {
+        image = add(image, new Constant(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), "mean_RGB"));
+        image = swap_red_blue_channels(image);
+    }
+    else
+    {
+        image = add(image, new Constant(Tensor({ 123.68f, 116.779f, 103.939f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), "mean_RGB"));
+    }
+    return clipValues ? clip(image, 0, 255) : image;
 }

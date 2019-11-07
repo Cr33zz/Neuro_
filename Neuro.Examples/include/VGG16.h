@@ -32,9 +32,9 @@ public:
     }
 
     static ModelBase* CreateModel(EDataFormat dataFormat, Shape inputShape = Shape(), bool includeTop = true, EPoolingMode poolMode = MaxPool);
-    static TensorLike* Preprocess(TensorLike* image, EDataFormat dataFormat);
-    static TensorLike* Deprocess(TensorLike* image, EDataFormat dataFormat);
+    static TensorLike* Preprocess(TensorLike* image, EDataFormat dataFormat, bool swapChannels = true);
+    static TensorLike* Deprocess(TensorLike* image, EDataFormat dataFormat, bool swapChannels = true, bool clipValues = true);
 
-    static void PreprocessImage(Tensor& image, EDataFormat dataFormat);
-    static void DeprocessImage(Tensor& image, EDataFormat dataFormat);
+    static void PreprocessImage(Tensor& image, EDataFormat dataFormat, bool swapChannels = true);
+    static void DeprocessImage(Tensor& image, EDataFormat dataFormat, bool swapChannels = true, bool clipValues = true);
 };

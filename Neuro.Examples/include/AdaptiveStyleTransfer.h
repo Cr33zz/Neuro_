@@ -29,8 +29,9 @@ public:
         const uint32_t IMAGE_WIDTH = 256;
         const uint32_t IMAGE_HEIGHT = 256;
         const float CONTENT_WEIGHT = 1.f;
-        const float STYLE_WEIGHT = 2.f;
-        const float LEARNING_RATE = 0.0001f;        
+        const float STYLE_WEIGHT = 0.f;
+        const float ALPHA = 0.f;
+        const float LEARNING_RATE = 0.0001f;
 
         const string TEST_FILE = "data/test.jpg";
         const string TEST_STYLE_FILE = "data/styles/great_wave.jpg";
@@ -77,21 +78,22 @@ public:
         auto training = new Placeholder(Shape(1), "training");
         auto content = new Placeholder(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), "input_content");
         auto style = new Placeholder(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), "input_style");
-        auto alpha = new Placeholder(Tensor({ 0.f }, Shape(1)), "alpha");
+        auto alpha = new Placeholder(Tensor({ ALPHA }, Shape(1)), "alpha");
 
-        auto contentPre = VGG16::Preprocess(content, NCHW);
-        auto stylePre = VGG16::Preprocess(style, NCHW);
+        auto contentPre = VGG16::Preprocess(content, NCHW, false);
+        auto stylePre = VGG16::Preprocess(style, NCHW, false);
 
         auto generator = CreateGeneratorModel(contentPre, stylePre, alpha, vggEncoder, training);
-        generator->LoadWeights("adaptive_weights.h5", false, true);
-        auto stylized = VGG16::Deprocess(generator->Outputs()[0], NCHW);
+        //generator->LoadWeights("adaptive_weights.h5", false, true);
+        //auto stylized = VGG16::Deprocess(generator->Outputs()[0], NCHW);
+        auto stylized = generator->Outputs()[0];
         auto adaptiveFeat = generator->Outputs()[1];
 
-        auto stylizedPre = VGG16::Preprocess(stylized, NCHW);
+        auto stylizedPre = VGG16::Preprocess(stylized, NCHW, false);
         auto stylizedFeat = vggEncoder(stylizedPre, nullptr, "stylized_features");
 
         // compute content loss
-        auto contentLoss = sum(mean(square(sub(adaptiveFeat, stylizedFeat.back())), _01Axes));
+        auto contentLoss = mean(square(sub(adaptiveFeat, stylizedFeat.back())));
         auto weightedContentLoss = multiply(contentLoss, CONTENT_WEIGHT);
         
         auto styleFeat = vggEncoder(stylePre, nullptr, "style_features"); // actually it was already computed inside generator... could resuse that
@@ -118,7 +120,7 @@ public:
 
         auto totalLoss = weightedContentLoss;
         ///auto totalLoss = weightedStyleLoss;
-        //auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
+        ///auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
         ///auto totalLoss = mean(square(sub(stylizedContentPre, contentPre)), GlobalAxis, "total");
 
         auto optimizer = Adam(LEARNING_RATE);
@@ -129,10 +131,13 @@ public:
 
         size_t steps = 160000;
 
-        Debug::LogAllOutputs(true);
-        Debug::LogAllGrads(true);
+        ///Debug::LogAllOutputs(true);
+        //Debug::LogAllGrads(true);
         ///Debug::LogOutput("generator_model/output", true);
-        ///Debug::LogGrad("generator/", true);
+        //Debug::LogOutput("generator/content_features/block4_conv1", true);
+        //Debug::LogGrad("generator/", true);
+        //Debug::LogOutput("adain/", true);
+        //Debug::LogGrad("adain/", true);
         ///Debug::LogOutput("vgg_preprocess", true);
         ///Debug::LogOutput("output_image", true);
         ///Debug::LogGrad("vgg_preprocess", true);
@@ -157,17 +162,22 @@ public:
             styleBatch.SaveAsImage("___sB.jpg", false);*/
 
             auto results = Session::Default()->Run({ totalLoss, weightedContentLoss, weightedStyleLoss, minimize },
-                { { content, &contentBatch }, { style, &styleBatch }, { training, &trainingOn } });
+                                                   { { content, &contentBatch }, { style, &styleBatch }, { training, &trainingOn } });
+
+            stringstream extString;
+            extString << setprecision(4) << " - total_loss: " << (*results[0])(0);
+            progress.SetExtraString(extString.str());
 
             if (i % DETAILS_ITER == 0)
             {
                 auto results = Session::Default()->Run({ stylized, totalLoss, weightedContentLoss, weightedStyleLoss },
                                                        { { content, &testImage }, { style, &testStyleImage }, { training, &trainingOff } });
 
-                float loss = (*results[1])(0);
                 auto genImage = *results[0];
-                VGG16::DeprocessImage(genImage, NCHW);
-                genImage.SaveAsImage("adaptive_" + to_string(i) + "_output.png", false);
+                //VGG16::DeprocessImage(genImage, NCHW);
+                genImage.Clipped(0, 255).SaveAsImage("adaptive_" + to_string(i) + "_output.png", false);
+
+                float loss = (*results[1])(0);
                 if (minLoss <= 0 || loss < minLoss)
                 {
                     generator->SaveWeights("adaptive_weights.h5");
