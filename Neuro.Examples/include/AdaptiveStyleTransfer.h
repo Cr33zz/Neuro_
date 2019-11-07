@@ -16,7 +16,7 @@
 #include "VGG19.h"
 
 //#define SLOW
-//#define FAST_SINGLE_CONTENT
+#define FAST_SINGLE_CONTENT
 
 namespace fs = std::experimental::filesystem;
 using namespace Neuro;
@@ -50,7 +50,7 @@ public:
         auto trainingOn = Tensor({ 1 }, Shape(1), "training_on");
         auto trainingOff = Tensor({ 0 }, Shape(1), "training_off");
 
-        Tensor testImage = LoadImage(TEST_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, true);
+        Tensor testImage = LoadImage(TEST_FILE, IMAGE_WIDTH, IMAGE_HEIGHT);
         testImage.SaveAsImage("_test.png", false);
         Tensor testStyleImage = LoadImage(TEST_STYLE_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, true);
         testStyleImage.SaveAsImage("_test_style.png", false);        
@@ -77,11 +77,12 @@ public:
         auto training = new Placeholder(Shape(1), "training");
         auto content = new Placeholder(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), "input_content");
         auto style = new Placeholder(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), "input_style");
+        auto alpha = new Placeholder(Tensor({ 0.f }, Shape(1)), "alpha");
 
         auto contentPre = VGG16::Preprocess(content, NCHW);
         auto stylePre = VGG16::Preprocess(style, NCHW);
 
-        auto generator = CreateGeneratorModel(contentPre, stylePre, 1.f, vggEncoder, training);
+        auto generator = CreateGeneratorModel(contentPre, stylePre, alpha, vggEncoder, training);
         generator->LoadWeights("adaptive_weights.h5", false, true);
         auto stylized = VGG16::Deprocess(generator->Outputs()[0], NCHW);
         auto adaptiveFeat = generator->Outputs()[1];
@@ -105,8 +106,8 @@ public:
             auto meanG = mean(stylizedFeat[i], _01Axes);
             auto varG = variance(stylizedFeat[i], meanG, _01Axes);
             
-            auto sigmaS = sqrt(add(varS, 0.001f));
-            auto sigmaG = sqrt(add(varG, 0.001f));
+            auto sigmaS = sqrt(add(varS, 0.00001f));
+            auto sigmaG = sqrt(add(varG, 0.00001f));
 
             auto l2_mean = sum(square(sub(meanG, meanS)));
             auto l2_sigma = sum(square(sub(sigmaG, sigmaS)));
@@ -115,9 +116,9 @@ public:
         }
         auto weightedStyleLoss = multiply(merge_sum(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "style_loss");
 
-        ///auto totalLoss = weightedContentLoss;
+        auto totalLoss = weightedContentLoss;
         ///auto totalLoss = weightedStyleLoss;
-        auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
+        //auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
         ///auto totalLoss = mean(square(sub(stylizedContentPre, contentPre)), GlobalAxis, "total");
 
         auto optimizer = Adam(LEARNING_RATE);
@@ -128,10 +129,10 @@ public:
 
         size_t steps = 160000;
 
-        ///Debug::LogAllOutputs(true);
-        ///Debug::LogAllGrads(true);
+        Debug::LogAllOutputs(true);
+        Debug::LogAllGrads(true);
         ///Debug::LogOutput("generator_model/output", true);
-        Debug::LogGrad("generator/", true);
+        ///Debug::LogGrad("generator/", true);
         ///Debug::LogOutput("vgg_preprocess", true);
         ///Debug::LogOutput("output_image", true);
         ///Debug::LogGrad("vgg_preprocess", true);
@@ -156,7 +157,7 @@ public:
             styleBatch.SaveAsImage("___sB.jpg", false);*/
 
             auto results = Session::Default()->Run({ totalLoss, weightedContentLoss, weightedStyleLoss, minimize },
-                                                   { { content, &contentBatch }, { style, &styleBatch }, { training, &trainingOn } });
+                { { content, &contentBatch }, { style, &styleBatch }, { training, &trainingOn } });
 
             if (i % DETAILS_ITER == 0)
             {
@@ -208,7 +209,7 @@ public:
     class AdaIN : public LayerBase
     {
     public:
-        AdaIN(float alpha, const string& name = "") : LayerBase(__FUNCTION__, Shape(), name), m_Alpha(alpha) {}
+        AdaIN(TensorLike* alpha, const string& name = "") : LayerBase(__FUNCTION__, Shape(), name), m_Alpha(alpha) {}
     protected:
         virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override
         { 
@@ -219,13 +220,13 @@ public:
             auto styleStd = std_deviation(styleFeat, styleMean, _01Axes);
 
             auto normContentFeat = instance_norm(contentFeat, styleStd, styleMean, 0.00001f, training);
-            return { add(multiply(normContentFeat, m_Alpha), multiply(contentFeat, 1 - m_Alpha)) };
+            return { add(multiply(normContentFeat, m_Alpha), multiply(contentFeat, add(negative(m_Alpha), 1))) };
         }
 
-        float m_Alpha;
+        TensorLike* m_Alpha;
     };
 
-    ModelBase* CreateGeneratorModel(TensorLike* contentPre, TensorLike* stylePre, float alpha, Flow& vggEncoder, TensorLike* training);
+    ModelBase* CreateGeneratorModel(TensorLike* contentPre, TensorLike* stylePre, TensorLike* alpha, Flow& vggEncoder, TensorLike* training);
 
     vector<string> LoadFilesList(const string& dir, bool shuffle);
 

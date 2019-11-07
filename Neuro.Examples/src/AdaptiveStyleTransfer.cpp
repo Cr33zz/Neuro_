@@ -1,7 +1,7 @@
 #include "AdaptiveStyleTransfer.h"
 
 //////////////////////////////////////////////////////////////////////////
-ModelBase* AdaptiveStyleTransfer::CreateGeneratorModel(TensorLike* contentPre, TensorLike* stylePre, float alpha, Flow& vggEncoder, TensorLike* training)
+ModelBase* AdaptiveStyleTransfer::CreateGeneratorModel(TensorLike* contentPre, TensorLike* stylePre, TensorLike* alpha, Flow& vggEncoder, TensorLike* training)
 {
     NameScope scope("generator");
 

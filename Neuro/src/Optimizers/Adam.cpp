@@ -74,6 +74,7 @@ namespace Neuro
         {
             auto& value = vars[i]->Output();
             auto& gradient = vars[i]->OutputGrad();
+            //gradient.SyncToHost();
             auto& mGrad = m_MGradients[i];
             auto& vGrad = m_VGradients[i];
 

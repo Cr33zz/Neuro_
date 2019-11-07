@@ -9,6 +9,7 @@ namespace Neuro
     {
     public:
         explicit Placeholder(const Shape& shape, const string& name = "");
+        explicit Placeholder(const Tensor& defaultVal, const string& name = "");
 
         virtual bool IsPlaceholder() const override { return true; }
     };

@@ -46,6 +46,7 @@ namespace Neuro
     {
         m_InputsManuallyConsumed = true; // loss outputs will be completely obliterated after gradients computation
         auto vars = Graph::Default()->ComputeGradientsInOrder(m_Order, m_InputNodes, m_NodesAffectingLosses, m_Vars);
+
         float batchSize = (float)m_Inputs[0]->Batch(); // assuming all inputs have the same batch size
 
         for (auto v : vars)
