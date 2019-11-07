@@ -16,7 +16,7 @@
 #include "VGG19.h"
 
 //#define SLOW
-#define FAST_SINGLE_CONTENT
+//#define FAST_SINGLE_CONTENT
 
 namespace fs = std::experimental::filesystem;
 using namespace Neuro;
@@ -45,7 +45,7 @@ public:
 #endif
 
         Tensor::SetForcedOpMode(GPU);
-        ///GlobalRngSeed(1337);
+        //GlobalRngSeed(1337);
 
         auto trainingOn = Tensor({ 1 }, Shape(1), "training_on");
         auto trainingOff = Tensor({ 0 }, Shape(1), "training_off");
@@ -81,8 +81,8 @@ public:
         auto contentPre = VGG16::Preprocess(content, NCHW);
         auto stylePre = VGG16::Preprocess(style, NCHW);
 
-        auto generator = CreateGeneratorModel(content, style, 1.f, vggEncoder, training);
-        //generator->LoadWeights("adaptive_weights.h5", false, true);
+        auto generator = CreateGeneratorModel(contentPre, stylePre, 1.f, vggEncoder, training);
+        generator->LoadWeights("adaptive_weights.h5", false, true);
         auto stylized = VGG16::Deprocess(generator->Outputs()[0], NCHW);
         auto adaptiveFeat = generator->Outputs()[1];
 
@@ -115,9 +115,9 @@ public:
         }
         auto weightedStyleLoss = multiply(merge_sum(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "style_loss");
 
-        auto totalLoss = weightedContentLoss;
+        ///auto totalLoss = weightedContentLoss;
         ///auto totalLoss = weightedStyleLoss;
-        ///auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
+        auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
         ///auto totalLoss = mean(square(sub(stylizedContentPre, contentPre)), GlobalAxis, "total");
 
         auto optimizer = Adam(LEARNING_RATE);
@@ -131,6 +131,7 @@ public:
         ///Debug::LogAllOutputs(true);
         ///Debug::LogAllGrads(true);
         ///Debug::LogOutput("generator_model/output", true);
+        Debug::LogGrad("generator/", true);
         ///Debug::LogOutput("vgg_preprocess", true);
         ///Debug::LogOutput("output_image", true);
         ///Debug::LogGrad("vgg_preprocess", true);
@@ -231,7 +232,7 @@ public:
     static void SampleImagesBatch(const vector<string>& files, Tensor& output)
     {
         output.OverrideHost();
-        for (uint32_t j = 0; j < output.Batch(); ++j)
-            LoadImage(files[GlobalRng().Next(files.size())], output.Values() + j * output.BatchLength(), output.Width(), output.Height(), true);
+        for (size_t j = 0; j < (size_t)output.Batch(); ++j)
+            LoadImage(files[GlobalRng().Next((int)files.size())], output.Values() + j * output.BatchLength(), output.Width(), output.Height(), true);
     }
 };

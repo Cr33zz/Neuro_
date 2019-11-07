@@ -473,10 +473,10 @@ namespace Neuro
         ImageLibInit();
 
         auto format = FreeImage_GetFileType(filename.c_str());
-        assert(format != FIF_UNKNOWN);
+        NEURO_ASSERT(format != FIF_UNKNOWN, "Unrecognized format while opening '" << filename << "'");
 
         FIBITMAP* image = FreeImage_Load(format, filename.c_str());
-        assert(image);
+        NEURO_ASSERT(image, "Failed to open '" << filename << "'");
 
         uint32_t imgWidth = FreeImage_GetWidth(image);
         uint32_t imgHeight = FreeImage_GetHeight(image);

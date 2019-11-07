@@ -43,7 +43,7 @@ namespace Neuro
             else if (m_Axis != GlobalAxis)
                 n = (float)m_Inputs[0]->Len(m_Axis);
 
-            m_InputsGrads[0].FillWithValue(1);
+            m_InputsGrads[0].One();
             m_InputsGrads[0].MulElem(grad.Div(n), m_InputsGrads[0]);
         }
     }
