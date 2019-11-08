@@ -503,8 +503,8 @@ namespace Neuro
             if (crop && (targetWidth > targetSizeX || targetHeight > targetSizeY))
             {
                 // copy center-part
-                auto left = (targetWidth - targetSizeX) >> 1;
-                auto top = (targetHeight - targetSizeY) >> 1;
+                auto left = GlobalRng().Next(targetWidth - targetSizeX);
+                auto top = GlobalRng().Next(targetHeight - targetSizeY);
                 auto croppedImage = FreeImage_Copy(resizedImage, left, top, left + targetSizeX, top + targetSizeY);
                 FreeImage_Unload(resizedImage);
                 image = croppedImage;
