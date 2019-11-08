@@ -16,7 +16,7 @@
 #include "VGG19.h"
 
 //#define SLOW
-#define FAST_SINGLE_CONTENT
+//#define FAST_SINGLE_CONTENT
 
 namespace fs = std::experimental::filesystem;
 using namespace Neuro;
@@ -29,12 +29,12 @@ public:
         const uint32_t IMAGE_WIDTH = 256;
         const uint32_t IMAGE_HEIGHT = 256;
         const float CONTENT_WEIGHT = 1.f;
-        const float STYLE_WEIGHT = 0.f;
-        const float ALPHA = 0.f;
+        const float STYLE_WEIGHT = 0.01f;
+        const float ALPHA = 1.f;
         const float LEARNING_RATE = 0.0001f;
 
-        const string TEST_FILE = "data/test.jpg";
-        const string TEST_STYLE_FILE = "data/styles/great_wave.jpg";
+        const string TEST_FILE = "e:/Downloads/fake_coco/content.jpg";
+        const string TEST_STYLE_FILE = "e:/Downloads/fake_wikiart/mosaic.jpg";
 #ifdef FAST_SINGLE_CONTENT
         const string CONTENT_FILES_DIR = "e:/Downloads/fake_coco";
         const string STYLE_FILES_DIR = "e:/Downloads/fake_wikiart";
@@ -51,7 +51,7 @@ public:
         auto trainingOn = Tensor({ 1 }, Shape(1), "training_on");
         auto trainingOff = Tensor({ 0 }, Shape(1), "training_off");
 
-        Tensor testImage = LoadImage(TEST_FILE, IMAGE_WIDTH, IMAGE_HEIGHT);
+        Tensor testImage = LoadImage(TEST_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, true);
         testImage.SaveAsImage("_test.png", false);
         Tensor testStyleImage = LoadImage(TEST_STYLE_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, true);
         testStyleImage.SaveAsImage("_test_style.png", false);        
@@ -84,7 +84,7 @@ public:
         auto stylePre = VGG16::Preprocess(style, NCHW, false);
 
         auto generator = CreateGeneratorModel(contentPre, stylePre, alpha, vggEncoder, training);
-        //generator->LoadWeights("adaptive_weights.h5", false, true);
+        generator->LoadWeights("adaptive_weights.h5", false, true);
         //auto stylized = VGG16::Deprocess(generator->Outputs()[0], NCHW);
         auto stylized = generator->Outputs()[0];
         auto adaptiveFeat = generator->Outputs()[1];
@@ -108,8 +108,8 @@ public:
             auto meanG = mean(stylizedFeat[i], _01Axes);
             auto varG = variance(stylizedFeat[i], meanG, _01Axes);
             
-            auto sigmaS = sqrt(add(varS, 0.00001f));
-            auto sigmaG = sqrt(add(varG, 0.00001f));
+            auto sigmaS = sqrt(varS);
+            auto sigmaG = sqrt(varG);
 
             auto l2_mean = sum(square(sub(meanG, meanS)));
             auto l2_sigma = sum(square(sub(sigmaG, sigmaS)));
@@ -118,12 +118,12 @@ public:
         }
         auto weightedStyleLoss = multiply(merge_sum(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "style_loss");
 
-        auto totalLoss = weightedContentLoss;
+        ///auto totalLoss = weightedContentLoss;
         ///auto totalLoss = weightedStyleLoss;
-        ///auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
+        auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
         ///auto totalLoss = mean(square(sub(stylizedContentPre, contentPre)), GlobalAxis, "total");
 
-        auto optimizer = Adam(LEARNING_RATE);
+        auto optimizer = Adam(LEARNING_RATE, 0.9f, 0.9f);
         auto minimize = optimizer.Minimize({ totalLoss });
 
         Tensor contentBatch(Shape::From(content->GetShape(), BATCH_SIZE));
