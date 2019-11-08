@@ -48,6 +48,8 @@ public:
         Tensor::SetForcedOpMode(GPU);
         //GlobalRngSeed(1337);
 
+        auto trainAlpha = Tensor({ 1 }, Shape(1), "training_alpha");
+        auto testAlpha = Tensor({ 0.5f }, Shape(1), "testing_alpha");
         auto trainingOn = Tensor({ 1 }, Shape(1), "training_on");
         auto trainingOff = Tensor({ 0 }, Shape(1), "training_off");
 
@@ -162,7 +164,7 @@ public:
             styleBatch.SaveAsImage("___sB.jpg", false);*/
 
             auto results = Session::Default()->Run({ totalLoss, weightedContentLoss, weightedStyleLoss, minimize },
-                                                   { { content, &contentBatch }, { style, &styleBatch }, { training, &trainingOn } });
+                { { content, &contentBatch }, { style, &styleBatch }, { alpha, &trainAlpha }, { training, &trainingOn } });
 
             stringstream extString;
             extString << setprecision(4) << " - total_loss: " << (*results[0])(0);
@@ -171,7 +173,7 @@ public:
             if (i % DETAILS_ITER == 0)
             {
                 auto results = Session::Default()->Run({ stylized, totalLoss, weightedContentLoss, weightedStyleLoss },
-                                                       { { content, &testImage }, { style, &testStyleImage }, { training, &trainingOff } });
+                                                       { { content, &testImage }, { style, &testStyleImage }, { alpha, &testAlpha }, { training, &trainingOff } });
 
                 auto genImage = *results[0];
                 //VGG16::DeprocessImage(genImage, NCHW);
