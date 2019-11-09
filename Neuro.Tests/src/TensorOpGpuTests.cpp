@@ -1032,9 +1032,9 @@ namespace NeuroTests
             Tensor saveMean(runningMean.GetShape());
             Tensor saveInvVariance(runningVariance.GetShape());
             input.BatchNormTrain(gamma, beta, momentum, epsilon, &runningMean, &runningVariance, saveMean, saveInvVariance, result);
-            Tensor gammaGradient(gamma.GetShape());
-            Tensor betaGradient(beta.GetShape());
-            Tensor inputGradient(input.GetShape());
+            Tensor gammaGradient(zeros(gamma.GetShape()));
+            Tensor betaGradient(zeros(beta.GetShape()));
+            Tensor inputGradient(zeros(input.GetShape()));
             NEURO_PROFILE("CPU", input.BatchNormGradient(input, gamma, epsilon, outputGradient, saveMean, saveInvVariance, gammaGradient, betaGradient, true, inputGradient);)
 
             Tensor::SetForcedOpMode(GPU);
@@ -1044,9 +1044,9 @@ namespace NeuroTests
             Tensor saveMean2(runningMean.GetShape());
             Tensor saveInvVariance2(runningVariance.GetShape());
             input.BatchNormTrain(gamma, beta, momentum, epsilon, &runningMean2, &runningVariance2, saveMean2, saveInvVariance2, result2);
-            Tensor gammaGradient2(gamma.GetShape());
-            Tensor betaGradient2(beta.GetShape());
-            Tensor inputGradient2(input.GetShape());
+            Tensor gammaGradient2(zeros(gamma.GetShape()));
+            Tensor betaGradient2(zeros(beta.GetShape()));
+            Tensor inputGradient2(zeros(input.GetShape()));
             NEURO_PROFILE("GPU", input.BatchNormGradient(input, gamma, epsilon, outputGradient, saveMean2, saveInvVariance2, gammaGradient2, betaGradient2, true, inputGradient2);)
 
             // sanity check
@@ -1084,9 +1084,9 @@ namespace NeuroTests
             Tensor saveMean(runningMean.GetShape());
             Tensor saveInvVariance(runningVariance.GetShape());
             input.BatchNormTrain(gamma, beta, momentum, epsilon, &runningMean, &runningVariance, saveMean, saveInvVariance, result);
-            Tensor gammaGradient(gamma.GetShape());
-            Tensor betaGradient(beta.GetShape());
-            Tensor inputGradient(input.GetShape());
+            Tensor gammaGradient(zeros(gamma.GetShape()));
+            Tensor betaGradient(zeros(beta.GetShape()));
+            Tensor inputGradient(zeros(input.GetShape()));
             NEURO_PROFILE("CPU", input.BatchNormGradient(input, gamma, epsilon, outputGradient, saveMean, saveInvVariance, gammaGradient, betaGradient, true, inputGradient);)
 
             Tensor::SetForcedOpMode(GPU);
@@ -1096,9 +1096,9 @@ namespace NeuroTests
             Tensor saveMean2(runningMean.GetShape());
             Tensor saveInvVariance2(runningVariance.GetShape());
             input.BatchNormTrain(gamma, beta, momentum, epsilon, &runningMean2, &runningVariance2, saveMean2, saveInvVariance2, result2);
-            Tensor gammaGradient2(gamma.GetShape());
-            Tensor betaGradient2(beta.GetShape());
-            Tensor inputGradient2(input.GetShape());
+            Tensor gammaGradient2(zeros(gamma.GetShape()));
+            Tensor betaGradient2(zeros(beta.GetShape()));
+            Tensor inputGradient2(zeros(input.GetShape()));
             NEURO_PROFILE("GPU", input.BatchNormGradient(input, gamma, epsilon, outputGradient, saveMean2, saveInvVariance2, gammaGradient2, betaGradient2, true, inputGradient2);)
 
             // sanity check
@@ -1133,9 +1133,9 @@ namespace NeuroTests
             Tensor saveMean(gamma.GetShape());
             Tensor saveInvVariance(gamma.GetShape());
             input.InstanceNormTrain(gamma, beta, epsilon, saveMean, saveInvVariance, result);
-            Tensor gammaGradient(gamma.GetShape());
-            Tensor betaGradient(beta.GetShape());
-            Tensor inputGradient(input.GetShape());
+            Tensor gammaGradient(zeros(gamma.GetShape()));
+            Tensor betaGradient(zeros(beta.GetShape()));
+            Tensor inputGradient(zeros(input.GetShape()));
             NEURO_PROFILE("CPU", input.InstanceNormGradient(input, gamma, epsilon, outputGradient, saveMean, saveInvVariance, gammaGradient, betaGradient, true, inputGradient);)
 
             Tensor::SetForcedOpMode(GPU);
@@ -1143,9 +1143,9 @@ namespace NeuroTests
             Tensor saveMean2(gamma.GetShape());
             Tensor saveInvVariance2(gamma.GetShape());
             input.InstanceNormTrain(gamma, beta, epsilon, saveMean2, saveInvVariance2, result2);
-            Tensor gammaGradient2(gamma.GetShape());
-            Tensor betaGradient2(beta.GetShape());
-            Tensor inputGradient2(input.GetShape());
+            Tensor gammaGradient2(zeros(gamma.GetShape()));
+            Tensor betaGradient2(zeros(beta.GetShape()));
+            Tensor inputGradient2(zeros(input.GetShape()));
             NEURO_PROFILE("GPU", input.InstanceNormGradient(input, gamma, epsilon, outputGradient, saveMean2, saveInvVariance2, gammaGradient2, betaGradient2, true, inputGradient2);)
 
             // sanity check
