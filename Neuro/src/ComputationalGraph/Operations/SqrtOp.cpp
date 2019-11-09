@@ -21,6 +21,6 @@ namespace Neuro
     {
         //in_grad = grad / (2 * sqrt(x))
         if (m_InputNodes[0]->CareAboutGradient())
-            grad.Map([](float g, float x) {return g / 2 * x; }, m_Output, m_InputsGrads[0]);
+            grad.Map([](float g, float x) {return g / (2 * x); }, m_Output, m_InputsGrads[0]);
     }
 }
