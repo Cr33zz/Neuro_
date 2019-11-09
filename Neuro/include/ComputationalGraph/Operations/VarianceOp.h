@@ -9,12 +9,11 @@
 
 namespace Neuro
 {
-    static Operation* variance(TensorLike* input, TensorLike* inputMean, EAxis axis = GlobalAxis, const string& name = "")
+    static Operation* variance(TensorLike* input, TensorLike* inputMean = nullptr, EAxis axis = GlobalAxis, const string& name = "")
     {
-        NameScope scope("variance");
+        NameScope scope(name.empty() ? "variance" : name);
         if (!inputMean)
-            inputMean = mean(input, axis);
-        auto xMu = sub(input, inputMean);
-        return mean(square(xMu), axis);
+            inputMean = mean(input, axis, "input_mean");
+        return mean(square(sub(input, inputMean)), axis);
     }
 }
