@@ -74,11 +74,17 @@ namespace Neuro
         {
             auto& value = vars[i]->Output();
             auto& gradient = vars[i]->OutputGrad();
-            //gradient.SyncToHost();
+            /*value.SyncToHost();
+            gradient.SyncToHost();*/
             auto& mGrad = m_MGradients[i];
+            //mGrad.SyncToHost();
             auto& vGrad = m_VGradients[i];
+            //vGrad.SyncToHost();
 
             Tensor::ActiveOp()->AdamStep(value, gradient, mGrad, vGrad, batchSize, learningRate, m_Beta1, m_Beta2, m_Epsilon);
+
+            //value.SyncToHost();
+            //gradient.SyncToHost();
         }
     }
 }
