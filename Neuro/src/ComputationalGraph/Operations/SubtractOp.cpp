@@ -26,28 +26,36 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void SubtractOp::ComputeGradientInternal(const Tensor& grad)
     {
-        if (m_InputNodes[0]->CareAboutGradient())
+        auto progressGrad = [](Tensor& inputGrad, const Tensor& grad)
         {
-            auto& a = *m_Inputs[0];
-            auto gradWrtA = grad;
-            for (int i = WidthAxis; i <= BatchAxis; ++i)
+            auto& gShape = grad.GetShape();
+            auto& iShape = inputGrad.GetShape();
+
+            if (gShape == iShape)
+                grad.CopyTo(inputGrad);
+            // check common cases to utilize optimized sum for combinations of axes
+            else if (gShape.Width() == iShape.Width() && gShape.Height() == iShape.Height() && gShape.Depth() == iShape.Depth() && iShape.Batch() == 1)
+                grad.Sum(BatchAxis, inputGrad); // used in case of biases in dense layers
+            else if (iShape.Width() == 1 && iShape.Height() == 1 && gShape.Depth() == iShape.Depth() && iShape.Batch() == 1)
+                grad.Sum(_013Axes, inputGrad); // used in case of biases in convolutional layers
+            else if (iShape.Width() == 1 && iShape.Height() == 1 && gShape.Depth() == iShape.Depth() && gShape.Batch() == iShape.Batch())
+                grad.Sum(_01Axes, inputGrad);
+            else
             {
-                if (gradWrtA.Len(i) != 1 && a.Len(i) == 1)
-                    gradWrtA = sum(gradWrtA, (EAxis)i);
+                auto gradTemp = grad;
+                for (int i = WidthAxis; i <= BatchAxis; ++i)
+                {
+                    if (gradTemp.Len(i) != 1 && inputGrad.Len(i) == 1)
+                        gradTemp = sum(gradTemp, (EAxis)i);
+                }
+                gradTemp.CopyTo(inputGrad);
             }
-            gradWrtA.CopyTo(m_InputsGrads[0]);
-        }
+        };
+
+        if (m_InputNodes[0]->CareAboutGradient())
+            progressGrad(m_InputsGrads[0], grad);
 
         if (m_InputNodes[1]->CareAboutGradient())
-        {
-            auto& b = *m_Inputs[1];
-            auto gradWrtB = grad.Negated();
-            for (int i = WidthAxis; i <= BatchAxis; ++i)
-            {
-                if (gradWrtB.Len(i) != 1 && b.Len(i) == 1)
-                    gradWrtB = sum(gradWrtB, (EAxis)i);
-            }
-            gradWrtB.CopyTo(m_InputsGrads[1]);
-        }
+            progressGrad(m_InputsGrads[1], grad.Negated());
     }
 }
