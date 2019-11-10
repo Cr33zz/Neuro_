@@ -91,6 +91,7 @@ public:
         auto stylePre = VGG16::Preprocess(style, NCHW, false);
 
         auto generator = CreateGeneratorModel(contentPre, stylePre, alpha, vggEncoder, training);
+        //generator->LoadWeights("decoder.h5", false, true);
         generator->LoadWeights("adaptive_weights.h5", false, true);
 
         auto stylized = generator->Outputs()[0];
@@ -119,12 +120,12 @@ public:
             Operation* meanLoss;
             {
                 NameScope scope("m_loss");
-                meanLoss = sum(square(sub(meanG, meanS)), GlobalAxis, "mean_loss");
+                meanLoss = div(sum(square(sub(meanG, meanS)), GlobalAxis, "mean_loss"), BATCH_SIZE);
             }
             Operation* sigmaLoss;
             {
                 NameScope scope("s_loss");
-                sigmaLoss = sum(square(sub(sqrt(varG, "sigma_g"), sqrt(varS, "sigma_s"))), GlobalAxis, "sigma_loss");
+                sigmaLoss = div(sum(square(sub(sqrt(varG, "sigma_g"), sqrt(varS, "sigma_s"))), GlobalAxis, "sigma_loss"), BATCH_SIZE);
             }
 
             styleLosses.push_back(add(meanLoss, sigmaLoss, "mean_std_loss"));
@@ -146,6 +147,11 @@ public:
         Tensor contentBatch(Shape::From(content->GetShape(), BATCH_SIZE));
         Tensor styleBatch(Shape::From(style->GetShape(), BATCH_SIZE));
 
+        ///contentBatch.DebugRecoverValues("e:/Downloads/fake_coco/content.jpg_raw");
+        ///styleBatch.DebugRecoverValues("e:/Downloads/fake_wikiart/style.jpg_raw");
+        ///contentBatch.DebugRecoverValues("content_batch_raw");
+        ///styleBatch.DebugRecoverValues("style_batch_raw");
+
         size_t steps = 160000;
 
         ///Debug::LogAllOutputs(true);
@@ -155,6 +161,7 @@ public:
         //Debug::LogOutput("generator/style_features/block4_conv1", true);
         //Debug::LogGrad("generator/decode_block1_conv1", true);
         //Debug::LogOutput("generator/decode_", true);
+        //Debug::LogGrad("generator/decode_", true);
         //Debug::LogOutput("generator/ada_in/", true);
         //Debug::LogOutput("stylized_features/block4_conv1", true);
         //Debug::LogOutput("style_loss_0", true);

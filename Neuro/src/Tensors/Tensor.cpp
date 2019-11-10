@@ -2104,11 +2104,11 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::DebugRecoverValues(const string& inFile)
     {
-        ifstream stream(Replace(inFile, "/", "-"));
+        ifstream stream(inFile);
 
         if (!stream)
         {
-            NEURO_ASSERT(false, "File '" << Replace(inFile, "/", "-") << "' not found.");
+            NEURO_ASSERT(false, "File '" << inFile << "' not found.");
             return;
         }
 

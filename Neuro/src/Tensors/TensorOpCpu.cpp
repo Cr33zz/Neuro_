@@ -450,14 +450,14 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::AdamStep(Tensor& parameter, const Tensor& gradient, Tensor& mGrad, Tensor& vGrad, float batchSize, float lr, float beta1, float beta2, float epsilon) const
+    void TensorOpCpu::AdamStep(Tensor& parameter, const Tensor& gradient, Tensor& mGrad, Tensor& vGrad, /*float batchSize, */float lr, float beta1, float beta2, float epsilon) const
     {
         parameter.CopyToHost();
         gradient.CopyToHost();
         mGrad.CopyToHost();
         vGrad.CopyToHost();
 
-        float gradScale = 1.f / batchSize;
+        float gradScale = 1.f/* / batchSize*/;
         float gradScale2 = gradScale * gradScale;
         
         // mGrad = beta1 * mGrad + (1 - beta1) * gradient

@@ -57,8 +57,6 @@ namespace Neuro
         auto vars = Graph::Default()->ComputeGradientsInOrder(m_Order, m_InputNodes, m_NodesAffectingLosses, m_Vars);
         ++m_Iteration;
 
-        float batchSize = (float)m_Inputs[0]->Batch(); // assuming all inputs have the same batch size
-
         if (m_MGradients.size() != vars.size())
         {
             assert(m_MGradients.empty() && m_VGradients.empty());
@@ -88,7 +86,7 @@ namespace Neuro
             auto& vGrad = m_VGradients[i];
             //vGrad.SyncToHost();
 
-            Tensor::ActiveOp()->AdamStep(value, gradient, mGrad, vGrad, batchSize, learningRate, m_Beta1, m_Beta2, m_Epsilon);
+            Tensor::ActiveOp()->AdamStep(value, gradient, mGrad, vGrad, learningRate, m_Beta1, m_Beta2, m_Epsilon);
 
             //value.SyncToHost();
             //gradient.SyncToHost();
