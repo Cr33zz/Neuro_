@@ -1159,7 +1159,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::SgdStep(Tensor& parameter, const Tensor& gradient, float batchSize, float lr) const
+    void TensorOpGpu::SgdStep(Tensor& parameter, const Tensor& gradient, /*float batchSize, */float lr) const
     {
         parameter.CopyToDevice();
         gradient.CopyToDevice();
@@ -1167,7 +1167,7 @@ namespace Neuro
         dim3 blocks, threads;
         GetKernelRunParams(parameter.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
 
-        CudaKernels::SgdStep(blocks, threads, parameter.Length(), parameter.GetDevicePtr(), gradient.GetDevicePtr(), batchSize, lr);
+        CudaKernels::SgdStep(blocks, threads, parameter.Length(), parameter.GetDevicePtr(), gradient.GetDevicePtr(), /*batchSize, */lr);
     }
 
     //////////////////////////////////////////////////////////////////////////

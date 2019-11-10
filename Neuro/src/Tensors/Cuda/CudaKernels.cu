@@ -484,12 +484,12 @@ __global__ void adamStep(int inputLen, float* __restrict parameterDev, const flo
     }
 }
 
-__global__ void sgdStep(int inputLen, float* __restrict parameterDev, const float* __restrict gradientDev, float batchSize, float lr)
+__global__ void sgdStep(int inputLen, float* __restrict parameterDev, const float* __restrict gradientDev, /*float batchSize, */float lr)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < inputLen)
     {
-        parameterDev[i] -= gradientDev[i] / batchSize * lr;
+        parameterDev[i] -= gradientDev[i]/* / batchSize*/ * lr;
     }
 }
 
@@ -634,9 +634,9 @@ namespace Neuro
         cudaStreamSynchronize(0);
     }
 
-    void CudaKernels::SgdStep(const dim3& blocks, const dim3& threads, int inputLen, float* parameterDev, const float* gradientDev, float batchSize, float lr)
+    void CudaKernels::SgdStep(const dim3& blocks, const dim3& threads, int inputLen, float* parameterDev, const float* gradientDev, /*float batchSize, */float lr)
     {
-        sgdStep<<<blocks, threads>>>(inputLen, parameterDev, gradientDev, batchSize, lr);
+        sgdStep<<<blocks, threads>>>(inputLen, parameterDev, gradientDev, /*batchSize, */lr);
         cudaStreamSynchronize(0);
     }
 }

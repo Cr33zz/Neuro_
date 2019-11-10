@@ -469,9 +469,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::SgdStep(Tensor& parameter, const Tensor& gradient, float batchSize, float lr) const
+    void TensorOpCpu::SgdStep(Tensor& parameter, const Tensor& gradient, /*float batchSize, */float lr) const
     {
-        parameter.Add(1, -lr / batchSize, gradient, parameter);
+        parameter.Add(1, -lr/* / batchSize*/, gradient, parameter);
     }
 
     //////////////////////////////////////////////////////////////////////////

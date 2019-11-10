@@ -189,7 +189,7 @@ public:
 
         ///auto totalLoss = weightedContentLoss;
         ///auto totalLoss = weightedStyleLoss;
-        auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
+        auto totalLoss = div(add(weightedContentLoss, weightedStyleLoss), BATCH_SIZE, "total_loss");
         ///auto totalLoss = mean(square(sub(stylizedContentPre, contentPre)), GlobalAxis, "total");
 
         auto optimizer = Adam(LEARNING_RATE);

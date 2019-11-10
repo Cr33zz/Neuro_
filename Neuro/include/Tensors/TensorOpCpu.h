@@ -53,6 +53,6 @@ namespace Neuro
         virtual void SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const;
 
         virtual void AdamStep(Tensor& parameter, const Tensor& gradient, Tensor& mGrad, Tensor& vGrad, /*float batchSize, */float lr, float beta1, float beta2, float epsilon) const;
-        virtual void SgdStep(Tensor& parameter, const Tensor& gradient, float batchSize, float lr) const;
+        virtual void SgdStep(Tensor& parameter, const Tensor& gradient, /*float batchSize, */float lr) const;
 	};
 }
