@@ -7,7 +7,6 @@
 #include <numeric>
 #include <iomanip>
 #include <limits>
-#include <experimental/filesystem>
 
 #undef LoadImage
 #include "NeuralStyleTransfer.h"
@@ -18,7 +17,6 @@
 //#define SLOW
 //#define FAST_SINGLE_CONTENT
 
-namespace fs = std::experimental::filesystem;
 using namespace Neuro;
 
 class AdaptiveStyleTransfer
@@ -31,10 +29,11 @@ public:
         const float CONTENT_WEIGHT = 1.f;
         const float STYLE_WEIGHT = 0.01f;
         const float ALPHA = 1.f;
+        const float TEST_ALPHA = 0.5f;
         const float LEARNING_RATE = 0.0001f;
 
-        const string TEST_FILE = "e:/Downloads/fake_coco/content.jpg";
-        const string TEST_STYLE_FILE = "e:/Downloads/fake_wikiart/mosaic.jpg";
+        const string TEST_CONTENT_FILES_DIR = "e:/Downloads/test_content";
+        const string TEST_STYLES_FILES_DIR = "e:/Downloads/test_style";
 #ifdef FAST_SINGLE_CONTENT
         const string CONTENT_FILES_DIR = "e:/Downloads/fake_coco";
         const string STYLE_FILES_DIR = "e:/Downloads/fake_wikiart";
@@ -48,20 +47,25 @@ public:
         Tensor::SetForcedOpMode(GPU);
         //GlobalRngSeed(1337);
 
-        auto trainAlpha = Tensor({ 1 }, Shape(1), "training_alpha");
-        auto testAlpha = Tensor({ 0.5f }, Shape(1), "testing_alpha");
+        auto trainAlpha = Tensor({ ALPHA }, Shape(1), "training_alpha");
+        auto testAlpha = Tensor({ TEST_ALPHA }, Shape(1), "testing_alpha");
         auto trainingOn = Tensor({ 1 }, Shape(1), "training_on");
         auto trainingOff = Tensor({ 0 }, Shape(1), "training_off");
 
-        Tensor testImage = LoadImage(TEST_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, true);
-        testImage.SaveAsImage("_test.png", false);
-        Tensor testStyleImage = LoadImage(TEST_STYLE_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, true);
-        testStyleImage.SaveAsImage("_test_style.png", false);        
+        Tensor testContent(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3));
+        SampleImagesBatch(LoadFilesList(TEST_CONTENT_FILES_DIR, false), testContent, true);
+        testContent.SaveAsImage("_test_content.png", false);
+        Tensor testStyle(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3));
+        SampleImagesBatch(LoadFilesList(TEST_STYLES_FILES_DIR, false), testStyle, true);
+        testStyle.SaveAsImage("_test_style.png", false);
+
+        NEURO_ASSERT(testStyle.Batch() == testContent.Batch(), "Mismatched number or content and style test images.");
 
         cout << "Collecting dataset files list...\n";
 
         vector<string> contentFiles = LoadFilesList(CONTENT_FILES_DIR, true);        
         vector<string> styleFiles = LoadFilesList(STYLE_FILES_DIR, true);
+        cout << "Found " << contentFiles.size() << " content files and " << styleFiles.size() << " style files." << endl;
 
         cout << "Creating VGG model...\n";
 
@@ -87,7 +91,7 @@ public:
 
         auto generator = CreateGeneratorModel(contentPre, stylePre, alpha, vggEncoder, training);
         generator->LoadWeights("adaptive_weights.h5", false, true);
-        //auto stylized = VGG16::Deprocess(generator->Outputs()[0], NCHW);
+
         auto stylized = generator->Outputs()[0];
         auto adaptiveFeat = generator->Outputs()[1];
 
@@ -96,29 +100,35 @@ public:
 
         // compute content loss
         auto contentLoss = mean(square(sub(adaptiveFeat, stylizedFeat.back())));
-        auto weightedContentLoss = multiply(contentLoss, CONTENT_WEIGHT);
+        auto weightedContentLoss = multiply(contentLoss, CONTENT_WEIGHT, "weighted_content_loss");
         
-        auto styleFeat = vggEncoder(stylePre, nullptr, "style_features"); // actually it was already computed inside generator... could resuse that
+        auto styleFeat = vggEncoder(stylePre, nullptr, "style_features"); // actually it was already computed inside generator... could reuse that
 
         vector<TensorLike*> styleLosses;
         //compute style losses
         for (size_t i = 0; i < styleFeat.size(); ++i)
         {
-            auto meanS = mean(styleFeat[i], _01Axes);
-            auto varS = variance(styleFeat[i], meanS, _01Axes);
+            NameScope scope("style_loss_" + to_string(i));
+            auto meanS = mean(styleFeat[i], _01Axes, "mean_s");
+            auto varS = variance(styleFeat[i], meanS, _01Axes, "var_s");
 
-            auto meanG = mean(stylizedFeat[i], _01Axes);
-            auto varG = variance(stylizedFeat[i], meanG, _01Axes);
+            auto meanG = mean(stylizedFeat[i], _01Axes, "mean_g");
+            auto varG = variance(stylizedFeat[i], meanG, _01Axes, "var_g");
             
-            auto sigmaS = sqrt(varS);
-            auto sigmaG = sqrt(varG);
+            Operation* meanLoss;
+            {
+                NameScope scope("m_loss");
+                meanLoss = sum(square(sub(meanG, meanS)), GlobalAxis, "mean_loss");
+            }
+            Operation* sigmaLoss;
+            {
+                NameScope scope("s_loss");
+                sigmaLoss = sum(square(sub(sqrt(varG, "sigma_g"), sqrt(varS, "sigma_s"))), GlobalAxis, "sigma_loss");
+            }
 
-            auto l2_mean = sum(square(sub(meanG, meanS)));
-            auto l2_sigma = sum(square(sub(sigmaG, sigmaS)));
-
-            styleLosses.push_back(add(l2_mean, l2_sigma));
+            styleLosses.push_back(add(meanLoss, sigmaLoss, "mean_std_loss"));
         }
-        auto weightedStyleLoss = multiply(merge_sum(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "style_loss");
+        auto weightedStyleLoss = multiply(merge_sum(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "weighted_style_loss");
 
         ///auto totalLoss = weightedContentLoss;
         ///auto totalLoss = weightedStyleLoss;
@@ -137,9 +147,13 @@ public:
         //Debug::LogAllGrads(true);
         ///Debug::LogOutput("generator_model/output", true);
         //Debug::LogOutput("generator/content_features/block4_conv1", true);
-        //Debug::LogGrad("generator/", true);
-        //Debug::LogOutput("adain/", true);
-        //Debug::LogGrad("adain/", true);
+        //Debug::LogOutput("generator/style_features/block4_conv1", true);
+        //Debug::LogGrad("generator/decode_block1_conv1", true);
+        //Debug::LogOutput("generator/decode_", true);
+        //Debug::LogOutput("generator/ada_in/", true);
+        //Debug::LogOutput("stylized_features/block4_conv1", true);
+        //Debug::LogOutput("style_loss_0", true);
+        //Debug::LogGrad("style_loss_0", true);
         ///Debug::LogOutput("vgg_preprocess", true);
         ///Debug::LogOutput("output_image", true);
         ///Debug::LogGrad("vgg_preprocess", true);
@@ -155,28 +169,28 @@ public:
         {
             contentBatch.OverrideHost();
             for (int j = 0; j < BATCH_SIZE; ++j)
-                LoadImage(contentFiles[(i * BATCH_SIZE + j) % contentFiles.size()], contentBatch.Values() + j * contentBatch.BatchLength(), contentBatch.Width(), contentBatch.Height(), true);
+                LoadImage(contentFiles[(i * BATCH_SIZE + j) % contentFiles.size()], contentBatch.Values() + j * contentBatch.BatchLength(), IMAGE_WIDTH * 2, IMAGE_HEIGHT * 2, IMAGE_WIDTH);
             styleBatch.OverrideHost();
             for (int j = 0; j < BATCH_SIZE; ++j)
-                LoadImage(styleFiles[(i * BATCH_SIZE + j) % styleFiles.size()], styleBatch.Values() + j * styleBatch.BatchLength(), styleBatch.Width(), styleBatch.Height(), true);
+                LoadImage(styleFiles[(i * BATCH_SIZE + j) % styleFiles.size()], styleBatch.Values() + j * styleBatch.BatchLength(), IMAGE_WIDTH * 2, IMAGE_HEIGHT * 2, IMAGE_WIDTH);
 
             /*contentBatch.SaveAsImage("___cB.jpg", false);
             styleBatch.SaveAsImage("___sB.jpg", false);*/
 
-            auto results = Session::Default()->Run({ totalLoss, weightedContentLoss, weightedStyleLoss, minimize },
+            auto results = Session::Default()->Run({ stylized, totalLoss, weightedContentLoss, weightedStyleLoss, minimize },
                 { { content, &contentBatch }, { style, &styleBatch }, { alpha, &trainAlpha }, { training, &trainingOn } });
 
             stringstream extString;
-            extString << setprecision(4) << " - total_loss: " << (*results[0])(0);
+            extString << setprecision(4) << " - total_loss: " << (*results[1])(0);
             progress.SetExtraString(extString.str());
 
             if (i % DETAILS_ITER == 0)
             {
+#if !defined(FAST_SINGLE_CONTENT)
                 auto results = Session::Default()->Run({ stylized, totalLoss, weightedContentLoss, weightedStyleLoss },
-                                                       { { content, &testImage }, { style, &testStyleImage }, { alpha, &testAlpha }, { training, &trainingOff } });
-
+                    { { content, &testContent }, { style, &testStyle }, { alpha, &testAlpha }, { training, &trainingOff } });
+#endif
                 auto genImage = *results[0];
-                //VGG16::DeprocessImage(genImage, NCHW);
                 genImage.Clipped(0, 255).SaveAsImage("adaptive_" + to_string(i) + "_output.png", false);
 
                 float loss = (*results[1])(0);
@@ -239,13 +253,4 @@ public:
     };
 
     ModelBase* CreateGeneratorModel(TensorLike* contentPre, TensorLike* stylePre, TensorLike* alpha, Flow& vggEncoder, TensorLike* training);
-
-    vector<string> LoadFilesList(const string& dir, bool shuffle);
-
-    static void SampleImagesBatch(const vector<string>& files, Tensor& output)
-    {
-        output.OverrideHost();
-        for (size_t j = 0; j < (size_t)output.Batch(); ++j)
-            LoadImage(files[GlobalRng().Next((int)files.size())], output.Values() + j * output.BatchLength(), output.Width(), output.Height(), true);
-    }
 };
