@@ -5,6 +5,7 @@
 #include "Tensors/Tensor.h"
 #include "Tensors/TensorOpCpu.h"
 #include "ComputationalGraph/Variable.h"
+#include "ComputationalGraph/Constant.h"
 #include "ComputationalGraph/Graph.h"
 #include "Tools.h"
 
@@ -12,9 +13,15 @@ namespace Neuro
 {    
 	//////////////////////////////////////////////////////////////////////////
     Adam::Adam(float lr, float beta1, float beta2, float epsilon)
-        : m_LearningRate(lr), m_Beta1(beta1), m_Beta2(beta2), m_Epsilon(epsilon)
+        :Adam(new Constant(lr), beta1, beta2, epsilon)
 	{
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    Adam::Adam(TensorLike* lr, float beta1, float beta2, float epsilon)
+        : m_LearningRate(lr), m_Beta1(beta1), m_Beta2(beta2), m_Epsilon(epsilon)
+    {
+    }
 
     //////////////////////////////////////////////////////////////////////////
     OptimizerBase* Adam::Clone() const
@@ -37,8 +44,8 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    Adam::MinimizationOperation::MinimizationOperation(const vector<TensorLike*>& losses, const vector<Variable*>& vars, float lr, float beta1, float beta2, float epsilon)
-        : Operation(losses, "adam_minimize"), m_Vars(vars), m_LearningRate(lr), m_Beta1(beta1), m_Beta2(beta2), m_Epsilon(epsilon)
+    Adam::MinimizationOperation::MinimizationOperation(const vector<TensorLike*>& losses, const vector<Variable*>& vars, Variable* globalStep, TensorLike* lr, float beta1, float beta2, float epsilon)
+        : Operation(MergeVectors({ losses, vector<TensorLike*>{ lr } }), "adam_minimize"), m_Vars(vars), m_GlobalStep(globalStep), m_LearningRate(lr), m_Beta1(beta1), m_Beta2(beta2), m_Epsilon(epsilon)
     {
         m_Order = Graph::Default()->BuildBackwardOrder(losses, m_NodesAffectingLosses, vars);
     }
@@ -68,7 +75,7 @@ namespace Neuro
             }
         }
 
-        float learningRate = m_LearningRate * (float)::sqrt(1.0 - ::pow(m_Beta2, m_Iteration)) / (1.0f - (float)::pow(m_Beta1, m_Iteration));
+        float learningRate = m_LearningRate->Output()(0) * (float)::sqrt(1.0 - ::pow(m_Beta2, m_Iteration)) / (1.0f - (float)::pow(m_Beta1, m_Iteration));
 
         for (auto i = 0; i < vars.size(); ++i)
         {
@@ -86,5 +93,8 @@ namespace Neuro
             //value.SyncToHost();
             //gradient.SyncToHost();
         }
+
+        if (m_GlobalStep)
+            m_GlobalStep->Output()(0) += 1;
     }
 }
