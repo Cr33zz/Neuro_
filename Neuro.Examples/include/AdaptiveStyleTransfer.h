@@ -211,6 +211,7 @@ public:
                 lastLoss = loss;
 
                 cout << endl;
+                cout << "----------------------------------------------------" << endl;
                 cout << setprecision(4) << "iter: " << i << " - total loss: " << loss << "(min: " << minLoss << ") - change: " << change << "%" << endl;
                 cout << "----------------------------------------------------" << endl;
                 cout << "content loss: " << (*results[2])(0) << " - style loss: " << (*results[3])(0) << endl;

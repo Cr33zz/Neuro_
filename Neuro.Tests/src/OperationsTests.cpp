@@ -26,7 +26,7 @@ namespace NeuroTests
             auto gamma = Variable(Shape(1, 1, 5, 2));
             auto beta = Variable(gamma.GetShape());
             auto training = Constant(1.f);
-            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new InstanceNormalizeOp(&x, &gamma, &beta, 0.00001f, &training)).get()));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new InstanceNormalizeOp(&x, &gamma, &beta, 0.00001f, &training)).get(), false, { 0,0,0,1 }));
         }
 
         TEST_METHOD(BatchNormalize_Spatial)
@@ -42,6 +42,7 @@ namespace NeuroTests
 
         TEST_METHOD(Conv2d)
         {
+            Tensor::SetForcedOpMode(GPU);
             auto x = Variable(Shape(9, 9, 3, 2));
             auto kernels = Variable(Shape(3, 3, 3, 5));
             Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new Conv2dOp(&x, &kernels, 1, 1, NCHW)).get()));
@@ -297,7 +298,6 @@ namespace NeuroTests
         static bool ValidateOperation(Operation* op, bool onlyPositiveInputs = false, const vector<bool>& ignoreInput = {})
         {
             float DERIVATIVE_EPSILON = 1e-4f;
-            float LOSS_DERIVATIVE_EPSILON = 1e-5f;
 
             GlobalRngSeed(101);
 
@@ -323,6 +323,8 @@ namespace NeuroTests
             op->ComputeGradient(outputGrad);
 
             auto result = Tensor(zeros(output.GetShape()));
+
+            bool fail = false;
 
             for (uint32_t n = 0; n < (int)inputs.size(); ++n)
             {
@@ -362,15 +364,16 @@ namespace NeuroTests
                     }
 
                     // tolerance is 2%
-                    if (abs(approxGradient - op->InputsGrads()[n].GetFlat(i)) / abs(approxGradient) > 0.02f)
+                    float errorPct = abs(approxGradient - op->InputsGrads()[n].GetFlat(i)) / abs(approxGradient);
+                    if (errorPct > 0.02f)
                     {
-                        Logger::WriteMessage((string("Input gradient validation failed at element ") + to_string(i) + " of input " + to_string(n) + ", expected " + to_string(approxGradient) + " actual " + to_string(op->InputsGrads()[n].GetFlat(i)) + "!").c_str());
-                        return false;
+                        Logger::WriteMessage((string("Input gradient validation failed at element ") + to_string(i) + " of input " + to_string(n) + ", expected " + to_string(approxGradient) + " actual " + to_string(op->InputsGrads()[n].GetFlat(i)) + " (error " + to_string(errorPct * 100.f) + "%)!").c_str());
+                        fail = true;
                     }
                 }
             }
 
-            return true;
+            return !fail;
         }
     };
 }
