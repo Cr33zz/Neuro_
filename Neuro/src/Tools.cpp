@@ -471,7 +471,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    FIBITMAP* LoadResizedImage(const string& filename, uint32_t targetSizeX, uint32_t targetSizeY, uint32_t cropSize, uint32_t& sizeX, uint32_t& sizeY)
+    FIBITMAP* LoadResizedImage(const string& filename, uint32_t targetSizeX, uint32_t targetSizeY, uint32_t cropSizeX, uint32_t cropSizeY, uint32_t& sizeX, uint32_t& sizeY)
     {
         ImageLibInit();
 
@@ -489,7 +489,7 @@ namespace Neuro
 
         if (targetSizeX > 0 || targetSizeY > 0)
         {
-            if (cropSize)
+            if (cropSizeX || cropSizeY)
             {
                 float xScale = (float)targetSizeX / imgWidth;
                 float yScale = (float)targetSizeY / imgHeight;
@@ -503,16 +503,16 @@ namespace Neuro
             FreeImage_Unload(image);
             image = resizedImage;
 
-            if (cropSize > 0 && (targetWidth > cropSize || targetHeight > cropSize))
+            if ((cropSizeX || cropSizeY) && (targetWidth > cropSizeX || targetHeight > cropSizeY))
             {
                 // copy random-part
-                auto left = GlobalRng().Next(targetWidth - cropSize);
-                auto top = GlobalRng().Next(targetHeight - cropSize);
-                auto croppedImage = FreeImage_Copy(resizedImage, left, top, left + cropSize, top + cropSize);
+                auto left = GlobalRng().Next(targetWidth - cropSizeX);
+                auto top = GlobalRng().Next(targetHeight - cropSizeY);
+                auto croppedImage = FreeImage_Copy(resizedImage, left, top, left + cropSizeX, top + cropSizeY);
                 FreeImage_Unload(resizedImage);
                 image = croppedImage;
-                targetWidth = cropSize;
-                targetHeight = cropSize;
+                targetWidth = cropSizeX;
+                targetHeight = cropSizeY;
             }
         }
 
@@ -549,20 +549,20 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void LoadImage(const string& filename, float* buffer, uint32_t targetSizeX, uint32_t targetSizeY, uint32_t cropSize, EDataFormat targetFormat)
+    void LoadImage(const string& filename, float* buffer, uint32_t targetSizeX, uint32_t targetSizeY, uint32_t cropSizeX, uint32_t cropSizeY, EDataFormat targetFormat)
     {
         uint32_t sizeX, sizeY;
-        FIBITMAP* image = LoadResizedImage(filename, targetSizeX, targetSizeY, cropSize, sizeX, sizeY);
+        FIBITMAP* image = LoadResizedImage(filename, targetSizeX, targetSizeY, cropSizeX, cropSizeY, sizeX, sizeY);
         Shape imageShape = targetFormat == NCHW ? Shape(sizeX, sizeY, 3) : Shape(3, sizeX, sizeY);
         LoadImageInternal(image, imageShape, targetFormat, buffer);
         FreeImage_Unload(image);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor LoadImage(const string& filename, uint32_t targetSizeX, uint32_t targetSizeY, uint32_t cropSize, EDataFormat targetFormat)
+    Tensor LoadImage(const string& filename, uint32_t targetSizeX, uint32_t targetSizeY, uint32_t cropSizeX, uint32_t cropSizeY, EDataFormat targetFormat)
     {
         uint32_t sizeX, sizeY;
-        FIBITMAP* image = LoadResizedImage(filename, targetSizeX, targetSizeY, cropSize, sizeX, sizeY);
+        FIBITMAP* image = LoadResizedImage(filename, targetSizeX, targetSizeY, cropSizeX, cropSizeY, sizeX, sizeY);
         Shape imageShape = targetFormat == NCHW ? Shape(sizeX, sizeY, 3) : Shape(3, sizeX, sizeY);
         Tensor result(imageShape);
         LoadImageInternal(image, imageShape, targetFormat, &result.Values()[0]);
@@ -679,7 +679,7 @@ namespace Neuro
             output.ResizeBatch((uint32_t)files.size());
 
         for (size_t j = 0; j < (size_t)output.Batch(); ++j)
-            LoadImage(files[loadAll ? j : GlobalRng().Next((int)files.size())], output.Values() + j * output.BatchLength(), output.Width(), output.Height(), output.Width());
+            LoadImage(files[loadAll ? j : GlobalRng().Next((int)files.size())], output.Values() + j * output.BatchLength(), output.Width(), output.Height(), output.Width(), output.Height());
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -15,7 +15,7 @@
 #include "Neuro.h"
 #include "VGG19.h"
 
-#define STYLE "mosaic"
+#define STYLE "rain_princess"
 
 //#define SLOW
 //#define FAST_SINGLE_CONTENT
@@ -308,16 +308,19 @@ public:
     void Test()
     {
         Tensor::SetForcedOpMode(GPU);
-        const string TEST_FILE = "data/contents/content.jpg";
+        Tensor testContent(Shape(320, 320, 3));
+        SampleImagesBatch(LoadFilesList("e:/Downloads/test_content", false), testContent, true);
+        testContent.SaveAsImage("_test_content.png", false);
 
-        Tensor testImage = LoadImage(TEST_FILE);
-        auto input = new Placeholder(testImage.GetShape(), "input");
+        /*const string TEST_FILE = "data/contents/content.jpg";
+        Tensor testImage = LoadImage(TEST_FILE);*/
+        auto input = new Placeholder(testContent.GetShape(), "input");
         auto inputPre = VGG16::Preprocess(input, NCHW);
-        auto generator = CreateGeneratorModel(testImage.GetShape().Width(), testImage.GetShape().Height(), new Constant(0));
+        auto generator = CreateGeneratorModel(testContent.GetShape().Width(), testContent.GetShape().Height(), new Constant(0));
         generator->LoadWeights(string("data/") + STYLE + "_weights.h5", false, true);
         auto stylizedContentPre = (*generator)(inputPre, new Constant(0))[0];
 
-        auto results = Session::Default()->Run({ stylizedContentPre }, { { input, &testImage } });
+        auto results = Session::Default()->Run({ stylizedContentPre }, { { input, &testContent } });
         auto genImage = *results[0];
         VGG16::DeprocessImage(genImage, NCHW);
         genImage.SaveAsImage(string(STYLE) + "_test_output.png", false);
