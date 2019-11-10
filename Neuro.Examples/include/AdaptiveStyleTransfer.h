@@ -30,7 +30,8 @@ public:
         const float STYLE_WEIGHT = 0.01f;
         const float ALPHA = 1.f;
         const float TEST_ALPHA = 0.5f;
-        const float LEARNING_RATE = 0.0001f;
+        const float LEARNING_RATE = 1e-4f;
+        const float DECAY_RATE = 5e-5f;
 
         const string TEST_CONTENT_FILES_DIR = "e:/Downloads/test_content";
         const string TEST_STYLES_FILES_DIR = "e:/Downloads/test_style";
@@ -135,8 +136,12 @@ public:
         auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
         ///auto totalLoss = mean(square(sub(stylizedContentPre, contentPre)), GlobalAxis, "total");
 
-        auto optimizer = Adam(LEARNING_RATE, 0.9f, 0.9f);
-        auto minimize = optimizer.Minimize({ totalLoss });
+        auto globalStep = new Variable(0, "global_step");
+        globalStep->SetTrainable(false);
+        auto learningRate = div(new Constant(LEARNING_RATE), add(multiply(globalStep, DECAY_RATE), 1));
+        
+        auto optimizer = Adam(learningRate, 0.9f, 0.9f);
+        auto minimize = optimizer.Minimize({ totalLoss }, {}, globalStep);
 
         Tensor contentBatch(Shape::From(content->GetShape(), BATCH_SIZE));
         Tensor styleBatch(Shape::From(style->GetShape(), BATCH_SIZE));
@@ -177,11 +182,11 @@ public:
             /*contentBatch.SaveAsImage("___cB.jpg", false);
             styleBatch.SaveAsImage("___sB.jpg", false);*/
 
-            auto results = Session::Default()->Run({ stylized, totalLoss, weightedContentLoss, weightedStyleLoss, minimize },
+            auto results = Session::Default()->Run({ stylized, totalLoss, weightedContentLoss, weightedStyleLoss, learningRate, minimize },
                 { { content, &contentBatch }, { style, &styleBatch }, { alpha, &trainAlpha }, { training, &trainingOn } });
 
             stringstream extString;
-            extString << setprecision(4) << " - total_loss: " << (*results[1])(0);
+            extString << setprecision(4) << " - lr: " << (*results[4])(0) << " - total_loss: " << (*results[1])(0);
             progress.SetExtraString(extString.str());
 
             if (i % DETAILS_ITER == 0)
