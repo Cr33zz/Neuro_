@@ -333,7 +333,7 @@ namespace NeuroTests
         TEST_METHOD(Add_Broadcast_Bias_CompareWithCpuResult)
         {
             Tensor t1(Shape(20, 30, 40, 50)); t1.FillWithRand();
-            Tensor bias(Shape(1, 30, 40, 1)); bias.FillWithRand();
+            Tensor bias(Shape(20, 1, 1, 1)); bias.FillWithRand();
 
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t1.Add(bias);)

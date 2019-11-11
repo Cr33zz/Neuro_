@@ -37,12 +37,8 @@ namespace Neuro
                 size_t freeBytes, totalBytes;
                 cudaMemGetInfo(&freeBytes, &totalBytes);
 
-                //size_t reservedBytes = (size_t)(freeBytes * 0.85);
-                //CUDA_CHECK(MemoryManager::Default().Reserve(reservedBytes));
-
                 stringstream ss;
                 ss << "GPU >> " << s_CudaDevProp.name << " threads_per_block=" << s_CudaDevProp.maxThreadsPerBlock << " available/total_memory=" << freeBytes/(1024*1024) << "/" << totalBytes/(1024*1024) << "MB\n";
-                //ss << "Reserved memory: " << reservedBytes/(1024*1024) << "MB\n";
                 OutputDebugString(ss.str().c_str());
             }
         }
@@ -76,52 +72,23 @@ namespace Neuro
             dim3 blocks, threads;
             GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
 
-            if (t2.SameDimensionsExceptBatches(output))
-            {
-                if (t1.SameDimensionsOrOne(output))
-                {
-                    if (t2.GetDevicePtr() != output.GetDevicePtr())
-                        t2.CopyTo(output);
-
-                    cudnnTensorDescriptor_t biasDesc; cudnnCreateTensorDescriptor(&biasDesc);
-                    cudnnTensorDescriptor_t outputDesc; cudnnCreateTensorDescriptor(&outputDesc);
-                    cudnnSetTensor4dDescriptor(biasDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, t1.GetShape().Dimensions[3], t1.GetShape().Dimensions[2], t1.GetShape().Dimensions[1], t1.GetShape().Dimensions[0]);
-                    cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, output.GetShape().Dimensions[3], output.GetShape().Dimensions[2], output.GetShape().Dimensions[1], output.GetShape().Dimensions[0]);
-
-                    CUDA_CHECK(cudnnAddTensor(s_CudnnHandle, &beta, biasDesc, t1.GetDevicePtr(), &alpha, outputDesc, output.GetDevicePtr()));
-                    return;
-                }
-
-                return CudaKernels::AddBroadcast(
-                    blocks,
-                    threads,
-                    beta,
-                    t2.GetDevicePtr(),
-                    alpha,
-                    t1.GetDevicePtr(),
-                    t1.Width(),
-                    t1.Height(),
-                    t1.Depth(),
-                    t1.Batch(),
-                    output.GetDevicePtr(),
-                    output.Width(),
-                    output.Height(),
-                    output.Depth(),
-                    output.Batch());
-            }
-            else if (t1.SameDimensionsExceptBatches(output))
+            
+            if (t1.SameDimensionsExceptBatches(output))
             {
                 if (t2.SameDimensionsOrOne(output))
                 {
-                    if (t1.GetDevicePtr() != output.GetDevicePtr())
-                        t1.CopyTo(output);
-
-                    cudnnTensorDescriptor_t biasDesc; cudnnCreateTensorDescriptor(&biasDesc);
+                    cudnnOpTensorDescriptor_t addDesc; cudnnCreateOpTensorDescriptor(&addDesc);
+                    cudnnTensorDescriptor_t t1Desc; cudnnCreateTensorDescriptor(&t1Desc);
+                    cudnnTensorDescriptor_t t2Desc; cudnnCreateTensorDescriptor(&t2Desc);
                     cudnnTensorDescriptor_t outputDesc; cudnnCreateTensorDescriptor(&outputDesc);
-                    cudnnSetTensor4dDescriptor(biasDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, t2.GetShape().Dimensions[3], t2.GetShape().Dimensions[2], t2.GetShape().Dimensions[1], t2.GetShape().Dimensions[0]);
+
+                    cudnnSetOpTensorDescriptor(addDesc, CUDNN_OP_TENSOR_ADD, CUDNN_DATA_FLOAT, CUDNN_PROPAGATE_NAN);
+                    cudnnSetTensor4dDescriptor(t1Desc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, t1.GetShape().Dimensions[3], t1.GetShape().Dimensions[2], t1.GetShape().Dimensions[1], t1.GetShape().Dimensions[0]);
+                    cudnnSetTensor4dDescriptor(t2Desc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, t2.GetShape().Dimensions[3], t2.GetShape().Dimensions[2], t2.GetShape().Dimensions[1], t2.GetShape().Dimensions[0]);
                     cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, output.GetShape().Dimensions[3], output.GetShape().Dimensions[2], output.GetShape().Dimensions[1], output.GetShape().Dimensions[0]);
 
-                    CUDA_CHECK(cudnnAddTensor(s_CudnnHandle, &beta, biasDesc, t2.GetDevicePtr(), &alpha, outputDesc, output.GetDevicePtr()));
+                    float beta2 = 0.f;
+                    CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, addDesc, &alpha, t1Desc, t1.GetDevicePtr(), &beta, t2Desc, t2.GetDevicePtr(), &beta2, outputDesc, output.GetDevicePtr()));
                     return;
                 }
 
@@ -136,6 +103,42 @@ namespace Neuro
                     t2.Height(),
                     t2.Depth(),
                     t2.Batch(),
+                    output.GetDevicePtr(),
+                    output.Width(),
+                    output.Height(),
+                    output.Depth(),
+                    output.Batch());
+            }
+            else if (t2.SameDimensionsExceptBatches(output))
+            {
+                if (t1.SameDimensionsOrOne(output))
+                {
+                    cudnnOpTensorDescriptor_t addDesc; cudnnCreateOpTensorDescriptor(&addDesc);
+                    cudnnTensorDescriptor_t t1Desc; cudnnCreateTensorDescriptor(&t1Desc);
+                    cudnnTensorDescriptor_t t2Desc; cudnnCreateTensorDescriptor(&t2Desc);
+                    cudnnTensorDescriptor_t outputDesc; cudnnCreateTensorDescriptor(&outputDesc);
+
+                    cudnnSetOpTensorDescriptor(addDesc, CUDNN_OP_TENSOR_ADD, CUDNN_DATA_FLOAT, CUDNN_PROPAGATE_NAN);
+                    cudnnSetTensor4dDescriptor(t1Desc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, t1.GetShape().Dimensions[3], t1.GetShape().Dimensions[2], t1.GetShape().Dimensions[1], t1.GetShape().Dimensions[0]);
+                    cudnnSetTensor4dDescriptor(t2Desc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, t2.GetShape().Dimensions[3], t2.GetShape().Dimensions[2], t2.GetShape().Dimensions[1], t2.GetShape().Dimensions[0]);
+                    cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, output.GetShape().Dimensions[3], output.GetShape().Dimensions[2], output.GetShape().Dimensions[1], output.GetShape().Dimensions[0]);
+
+                    float beta2 = 0.f;
+                    CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, addDesc, &beta, t2Desc, t2.GetDevicePtr(), &alpha, t1Desc, t1.GetDevicePtr(), &beta2, outputDesc, output.GetDevicePtr()));
+                    return;
+                }
+
+                return CudaKernels::AddBroadcast(
+                    blocks,
+                    threads,
+                    beta,
+                    t2.GetDevicePtr(),
+                    alpha,
+                    t1.GetDevicePtr(),
+                    t1.Width(),
+                    t1.Height(),
+                    t1.Depth(),
+                    t1.Batch(),
                     output.GetDevicePtr(),
                     output.Width(),
                     output.Height(),
