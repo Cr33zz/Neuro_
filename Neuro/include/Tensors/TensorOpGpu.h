@@ -20,6 +20,7 @@ namespace Neuro
         virtual void Mul(const Tensor& t1, const Tensor& t2, Tensor& output) const override;
         virtual void Div(const Tensor& t1, const Tensor& t2, Tensor& output) const override;
         virtual void Mul(const Tensor& input, float v, Tensor& output) const override;
+        virtual void Scale(Tensor& input, float v) const override;
         virtual void Div(const Tensor& input, float v, Tensor& output) const override;
         virtual void Add(const Tensor& input, float v, Tensor& output) const override;
         virtual void Pow(const Tensor& input, float power, Tensor& output) const override;

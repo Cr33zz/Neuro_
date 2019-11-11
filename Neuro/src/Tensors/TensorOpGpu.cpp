@@ -275,6 +275,17 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::Scale(Tensor& input, float v) const
+    {
+        input.CopyToDevice();
+
+        cudnnTensorDescriptor_t inputDesc; cudnnCreateTensorDescriptor(&inputDesc);
+        cudnnSetTensor4dDescriptor(inputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
+
+        CUDA_CHECK(cudnnScaleTensor(s_CudnnHandle, inputDesc, input.GetDevicePtr(), &v));
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Div(const Tensor& t1, const Tensor& t2, Tensor& output) const
     {
         t1.CopyToDevice();
@@ -792,24 +803,29 @@ namespace Neuro
     ////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::UpSample2D(const Tensor& input, uint32_t scaleFactor, Tensor& output) const
     {
-        dim3 blocks, threads;
+        /*dim3 blocks, threads;
         GetKernelRunParams(input.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
         input.CopyToDevice();
         output.OverrideDevice();
 
-        CudaKernels::UpSample2D(blocks, threads, input.GetDevicePtr(), input.Width(), input.Height(), input.Depth(), input.Batch(), scaleFactor, output.GetDevicePtr());
+        CudaKernels::UpSample2D(blocks, threads, input.GetDevicePtr(), input.Width(), input.Height(), input.Depth(), input.Batch(), scaleFactor, output.GetDevicePtr());*/
+        Tensor tmp(output.GetShape());
+        Pool2DGradient(tmp, tmp, input, scaleFactor, scaleFactor, AvgPool, 0, 0, NCHW, output);
+        Scale(output, (float)scaleFactor * scaleFactor);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::UpSample2DGradient(const Tensor& outputGradient, uint32_t scaleFactor, Tensor& inputGradient) const
     {
-        dim3 blocks, threads;
+        Pool2D(outputGradient, scaleFactor, scaleFactor, AvgPool, 0, 0, NCHW, inputGradient);
+        Scale(inputGradient, (float)scaleFactor * scaleFactor);
+        /*dim3 blocks, threads;
         GetKernelRunParams(inputGradient.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
         outputGradient.CopyToDevice();
         inputGradient.OverrideDevice();
         inputGradient.Zero();
         
-        CudaKernels::UpSample2DGradient(blocks, threads, outputGradient.GetDevicePtr(), scaleFactor, inputGradient.GetDevicePtr(), inputGradient.Width(), inputGradient.Height(), inputGradient.Depth(), inputGradient.Batch());
+        CudaKernels::UpSample2DGradient(blocks, threads, outputGradient.GetDevicePtr(), scaleFactor, inputGradient.GetDevicePtr(), inputGradient.Width(), inputGradient.Height(), inputGradient.Depth(), inputGradient.Batch());*/
     }
 
     //////////////////////////////////////////////////////////////////////////

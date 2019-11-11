@@ -93,7 +93,7 @@ public:
 
         auto input = Uniform::Random(-1, 1, x->GetShape());
         input.Name("input");
-        auto output = input.Mul(Tensor(Shape(2, 5)).FillWithRand());
+        auto output = input.MatMul(Tensor(Shape(2, 5)).FillWithRand());
         output.Name("output");
 
         Debug::LogAllOutputs(true);

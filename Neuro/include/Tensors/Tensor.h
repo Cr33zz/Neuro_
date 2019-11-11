@@ -74,16 +74,17 @@ namespace Neuro
         Tensor ToNHWC() const;
 	
 	private:
-        void Mul(bool transposeT, const Tensor& t, Tensor& result) const;
-        Tensor Mul(bool transposeT, const Tensor& t) const;
+        void MatMul(bool transposeT, const Tensor& t, Tensor& result) const;
+        Tensor MatMul(bool transposeT, const Tensor& t) const;
 
 	public:
-        void Mul(const Tensor& t, Tensor& result) const;
-        Tensor Mul(const Tensor& t) const;
+        void MatMul(const Tensor& t, Tensor& result) const;
+        Tensor MatMul(const Tensor& t) const;
         void MulElem(const Tensor& t, Tensor& result) const;
         Tensor MulElem(const Tensor& t) const;
         void Mul(float v, Tensor& result) const;
         Tensor Mul(float v) const;
+        void Scale(float v);
         void Div(const Tensor& t, Tensor& result) const;
         Tensor Div(const Tensor& t) const;
         void Div(float v, Tensor& result) const;

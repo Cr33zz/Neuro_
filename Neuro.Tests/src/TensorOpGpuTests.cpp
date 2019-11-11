@@ -170,7 +170,7 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
-        TEST_METHOD(MulElem_SameDims_CompareWithCpuResult)
+        TEST_METHOD(Mul_SameDims_CompareWithCpuResult)
         {
             Tensor t1(Shape(20, 30, 40, 50)); t1.FillWithRand();
             Tensor t2(Shape(20, 30, 40, 50)); t2.FillWithRand();
@@ -184,7 +184,7 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
-        TEST_METHOD(MulElem_Broadcast_1_CompareWithCpuResult)
+        TEST_METHOD(Mul_Broadcast_1_CompareWithCpuResult)
         {
             Tensor t1(Shape(20, 30, 40, 50)); t1.FillWithRand();
             Tensor t2(Shape(2, 3, 4, 2)); t2.FillWithRand();
@@ -198,7 +198,7 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
-        TEST_METHOD(MulElem_Broadcast_2_CompareWithCpuResult)
+        TEST_METHOD(Mul_Broadcast_2_CompareWithCpuResult)
         {
             Tensor t1(Shape(2, 3, 4, 2)); t1.FillWithRand();
             Tensor t2(Shape(20, 30, 40, 50)); t2.FillWithRand();
@@ -212,7 +212,7 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
-        TEST_METHOD(MulElem_Broadcast_3_CompareWithCpuResult)
+        TEST_METHOD(Mul_Broadcast_3_CompareWithCpuResult)
         {
             Tensor t1(Shape(2, 30, 4, 10)); t1.FillWithRand();
             Tensor t2(Shape(2, 3, 40, 2)); t2.FillWithRand();
@@ -226,7 +226,7 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
-        TEST_METHOD(MulElem_Broadcast_4_CompareWithCpuResult)
+        TEST_METHOD(Mul_Broadcast_4_CompareWithCpuResult)
         {
             Tensor t1(Shape(2, 30, 4, 10)); t1.FillWithRand();
             Tensor t2(Shape(2, 1, 4, 1)); t2.FillWithRand();
@@ -268,30 +268,30 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
-        TEST_METHOD(Mult_CompareWithCpuResult)
+        TEST_METHOD(MatMul_CompareWithCpuResult)
         {
             Tensor t1(Shape(82, 40, 3, 5)); t1.FillWithRand();
             Tensor t2(Shape(40, 82, 3)); t2.FillWithRand();
 
             Tensor::SetForcedOpMode(CPU);
-            NEURO_PROFILE("CPU", Tensor r = t1.Mul(t2);)
+            NEURO_PROFILE("CPU", Tensor r = t1.MatMul(t2);)
 
             Tensor::SetForcedOpMode(GPU);
-            NEURO_PROFILE("GPU", Tensor r2 = t1.Mul(t2);)
+            NEURO_PROFILE("GPU", Tensor r2 = t1.MatMul(t2);)
 
             Assert::IsTrue(r.Equals(r2, 0.0001f));
         }
 
-        TEST_METHOD(Mult_SameNC_CompareWithCpuResult)
+        TEST_METHOD(MatMul_SameNC_CompareWithCpuResult)
         {
             Tensor t1(Shape(82, 40, 3, 5)); t1.FillWithRand();
             Tensor t2(Shape(40, 82, 3, 5)); t2.FillWithRand();
 
             Tensor::SetForcedOpMode(CPU);
-            NEURO_PROFILE("CPU", Tensor r = t1.Mul(t2);)
+            NEURO_PROFILE("CPU", Tensor r = t1.MatMul(t2);)
 
             Tensor::SetForcedOpMode(GPU);
-            NEURO_PROFILE("GPU", Tensor r2 = t1.Mul(t2);)
+            NEURO_PROFILE("GPU", Tensor r2 = t1.MatMul(t2);)
 
             r.DebugDumpValues("r.log");
             r2.DebugDumpValues("r2.log");
@@ -299,16 +299,16 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2, 0.0001f));
         }
 
-        TEST_METHOD(Mult_BigNC_CompareWithCpuResult)
+        TEST_METHOD(MatMul_BigNC_CompareWithCpuResult)
         {
             Tensor t1(Shape(82, 40, 30, 5)); t1.FillWithRand();
             Tensor t2(Shape(40, 82, 30)); t2.FillWithRand();
 
             Tensor::SetForcedOpMode(CPU);
-            NEURO_PROFILE("CPU", Tensor r = t1.Mul(t2);)
+            NEURO_PROFILE("CPU", Tensor r = t1.MatMul(t2);)
 
             Tensor::SetForcedOpMode(GPU);
-            NEURO_PROFILE("GPU", Tensor r2 = t1.Mul(t2);)
+            NEURO_PROFILE("GPU", Tensor r2 = t1.MatMul(t2);)
 
             r.DebugDumpValues("r.log");
             r2.DebugDumpValues("r2.log");
@@ -749,6 +749,20 @@ namespace NeuroTests
             NEURO_PROFILE("GPU", r2.Mul(2.f, r2);)
 
             Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(Scale_CompareWithCpuResult)
+        {
+            Tensor t(Shape(10, 20, 30, 40)); t.FillWithRand();
+            Tensor t2(t);
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", t.Scale(2.f);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", t2.Scale(2.f);)
+
+            Assert::IsTrue(t.Equals(t2));
         }
 
         TEST_METHOD(Div_Value_CompareWithCpuResult)

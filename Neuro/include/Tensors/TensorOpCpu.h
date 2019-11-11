@@ -17,6 +17,7 @@ namespace Neuro
 		virtual void Mul(const Tensor& t1, const Tensor& t2, Tensor& output) const;
         virtual void Div(const Tensor& t1, const Tensor& t2, Tensor& output) const;
         virtual void Mul(const Tensor& input, float v, Tensor& output) const;
+        virtual void Scale(Tensor& input, float v) const;
         virtual void Div(const Tensor& input, float v, Tensor& output) const;
         virtual void Add(const Tensor& input, float v, Tensor& output) const;
         virtual void Sum(const Tensor& input, EAxis axis, Tensor& output) const;

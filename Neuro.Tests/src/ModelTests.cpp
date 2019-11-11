@@ -245,7 +245,7 @@ namespace NeuroTests
 
         static Tensor MatMult(const Tensor& input, const Tensor& expectedParams)
         {
-            return Tensor(expectedParams.Mul(input));
+            return Tensor(expectedParams.MatMul(input));
         }
 
         static Tensor ConvValidStride1(const Tensor& input, const Tensor& expectedParams)

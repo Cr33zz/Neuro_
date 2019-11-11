@@ -335,7 +335,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-	void Tensor::Mul(bool transposeT, const Tensor& t, Tensor& result) const
+	void Tensor::MatMul(bool transposeT, const Tensor& t, Tensor& result) const
 	{
         NEURO_ASSERT(!transposeT, "");
 		assert((!transposeT && Width() == t.Height()) || (transposeT && Width() == t.Width()));
@@ -346,23 +346,23 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::Mul(bool transposeT, const Tensor& t) const
+	Tensor Tensor::MatMul(bool transposeT, const Tensor& t) const
 	{
 		Tensor result(Shape(transposeT ? t.m_Shape.Height() : t.m_Shape.Width(), Height(), Depth(), max(Batch(), t.Batch())));
-		Mul(transposeT, t, result);
+		MatMul(transposeT, t, result);
 		return result;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Mul(const Tensor& t, Tensor& result) const
+	void Tensor::MatMul(const Tensor& t, Tensor& result) const
 	{
-		Mul(false, t, result);
+		MatMul(false, t, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::Mul(const Tensor& t) const
+	Tensor Tensor::MatMul(const Tensor& t) const
 	{
-		return Mul(false, t);
+		return MatMul(false, t);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -393,7 +393,13 @@ namespace Neuro
 		return result;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Scale(float v)
+    {
+        Op()->Scale(*this, v);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void Tensor::Div(const Tensor& t, Tensor& result) const
 	{
         Op()->Div(*this, t, result);

@@ -8,16 +8,16 @@ namespace NeuroTests
 {
     TEST_CLASS(TensorOpMultiCpuTests)
     {
-        TEST_METHOD(Mult_CompareWithCpuResult)
+        TEST_METHOD(MatMul_CompareWithCpuResult)
         {
             Tensor t1(Shape(82, 40, 3, 5)); t1.FillWithRand();
             Tensor t2(Shape(40, 82, 3)); t2.FillWithRand();
 
             Tensor::SetForcedOpMode(CPU);
-            NEURO_PROFILE("CPU", Tensor r = t1.Mul(t2);)
+            NEURO_PROFILE("CPU", Tensor r = t1.MatMul(t2);)
 
             Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t1.Mul(t2);)
+            NEURO_PROFILE("MultiCPU", Tensor r2 = t1.MatMul(t2);)
 
             Assert::IsTrue(r.Equals(r2));
         }

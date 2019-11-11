@@ -13,7 +13,7 @@ namespace Neuro
     void SqrtOp::ComputeInternal()
     {
         m_Output.ResizeBatch(m_Inputs[0]->Batch());
-        m_Inputs[0]->Map([](float x) {return ::sqrt(x); }, m_Output);
+        m_Inputs[0]->Sqrt(m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////

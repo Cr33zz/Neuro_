@@ -140,6 +140,17 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Scale(Tensor& input, float v) const
+    {
+        input.CopyToHost();
+
+        auto inputValues = input.Values();
+
+        for (uint32_t i = 0; i < input.Length(); ++i)
+            inputValues[i] *= v;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::Div(const Tensor& input, float v, Tensor& output) const
     {
         input.CopyToHost();
@@ -483,8 +494,8 @@ namespace Neuro
         inputGradient.Zero();
 
 		Tensor outputReshaped = output.Reshaped(Shape(1, Shape::Auto, 1, output.Batch()));
-		Tensor jacob = outputReshaped.DiagFlat().Sub(outputReshaped.Mul(outputReshaped.Transposed()));
-        outputGradient.Mul(jacob, inputGradient);
+		Tensor jacob = outputReshaped.DiagFlat().Sub(outputReshaped.MatMul(outputReshaped.Transposed()));
+        outputGradient.MatMul(jacob, inputGradient);
 	}
 
     //////////////////////////////////////////////////////////////////////////
