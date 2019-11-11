@@ -594,7 +594,7 @@ namespace NeuroTests
             NEURO_PROFILE("GPU", Tensor r2 = t.Sum(GlobalAxis);)
 
             for (uint32_t i = 0; i < r.Length(); ++i)
-                Assert::AreEqual(r.Values()[i], r2.Values()[i], 0.0001f);
+                Assert::AreEqual(r.Values()[i], r2.Values()[i], 0.0005f);
         }
 
         TEST_METHOD(Sum_GlobalAxis_3_CompareWithCpuResult)
@@ -608,7 +608,7 @@ namespace NeuroTests
             NEURO_PROFILE("GPU", Tensor r2 = t.Sum(GlobalAxis);)
 
             for (uint32_t i = 0; i < r.Length(); ++i)
-                Assert::AreEqual(r.Values()[i], r2.Values()[i], 0.0001f);
+                Assert::AreEqual(r.Values()[i], r2.Values()[i], 0.0005f);
         }
 
         TEST_METHOD(Mul_Value_CompareWithCpuResult)

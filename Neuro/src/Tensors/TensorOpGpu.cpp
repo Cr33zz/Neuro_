@@ -1147,7 +1147,40 @@ namespace Neuro
         
         if (axis == GlobalAxis)
         {
-            return sumGlobalInternal(input.Length(), input.GetDevicePtr(), output.GetDevicePtr());
+            cudnnReduceTensorDescriptor_t reduceDesc; cudnnCreateReduceTensorDescriptor(&reduceDesc);
+            
+            cudnnTensorDescriptor_t inputDesc; cudnnCreateTensorDescriptor(&inputDesc);
+            cudnnTensorDescriptor_t outputDesc; cudnnCreateTensorDescriptor(&outputDesc);
+
+            cudnnSetTensor4dDescriptor(inputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
+            cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, output.GetShape().Dimensions[3], output.GetShape().Dimensions[2], output.GetShape().Dimensions[1], output.GetShape().Dimensions[0]);
+
+            cudnnSetReduceTensorDescriptor(reduceDesc, CUDNN_REDUCE_TENSOR_ADD, CUDNN_DATA_FLOAT, CUDNN_PROPAGATE_NAN, CUDNN_REDUCE_TENSOR_NO_INDICES, CUDNN_32BIT_INDICES);
+
+            size_t workspaceSize;
+            CUDA_CHECK(cudnnGetReductionWorkspaceSize(s_CudnnHandle, reduceDesc, inputDesc, outputDesc, &workspaceSize));
+            void* workspacePtr;
+            DeviceMemoryManager::Default().Allocate(&workspacePtr, workspaceSize, "reduce_sum_workspace");
+
+            float alpha = 1, beta = 0;
+                CUDA_CHECK(cudnnReduceTensor(
+                    s_CudnnHandle,
+                    reduceDesc,
+                    nullptr,
+                    0,
+                    workspacePtr,
+                    workspaceSize,
+                    &alpha,
+                    inputDesc,
+                    input.GetDevicePtr(),
+                    &beta,
+                    outputDesc,
+                    output.GetDevicePtr()));
+
+            DeviceMemoryManager::Default().Free(workspacePtr);
+            return;
+
+            //return sumGlobalInternal(input.Length(), input.GetDevicePtr(), output.GetDevicePtr());
         }
 
         if (axis == WidthAxis || axis == _01Axes || axis == _012Axes)
