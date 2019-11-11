@@ -333,13 +333,13 @@ namespace NeuroTests
         TEST_METHOD(Add_Broadcast_Bias_CompareWithCpuResult)
         {
             Tensor t1(Shape(20, 30, 40, 50)); t1.FillWithRand();
-            Tensor t2(Shape(1, 1, 40, 1)); t2.FillWithRand();
+            Tensor bias(Shape(1, 30, 40, 1)); bias.FillWithRand();
 
             Tensor::SetForcedOpMode(CPU);
-            NEURO_PROFILE("CPU", Tensor r = t1.Add(t2);)
+            NEURO_PROFILE("CPU", Tensor r = t1.Add(bias);)
 
             Tensor::SetForcedOpMode(GPU);
-            NEURO_PROFILE("GPU", Tensor r2 = t1.Add(t2);)
+            NEURO_PROFILE("GPU", Tensor r2 = t1.Add(bias);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -360,8 +360,8 @@ namespace NeuroTests
 
         TEST_METHOD(Sub_Broadcast_Bias_CompareWithCpuResult)
         {
-            Tensor t1(Shape(20, 30, 40, 50)); t1.FillWithRand();
-            Tensor t2(Shape(1, 1, 40, 1)); t2.FillWithRand();
+            Tensor t1(Shape(20, 30, 40, 5)); t1.FillWithRand();
+            Tensor t2(Shape(1, 1, 40, 5)); t2.FillWithRand();
 
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t1.Sub(t2);)

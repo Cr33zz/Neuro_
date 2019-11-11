@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include "Types.h"
+
 namespace Neuro
 {
 	class TensorLike;
@@ -8,30 +10,29 @@ namespace Neuro
     {
 	public:
         virtual TensorLike* Build(TensorLike* input) = 0;
-	};
-
-    class Linear : public ActivationBase
-    {
-	public:
-        virtual TensorLike* Build(TensorLike* input) override;
+        virtual EActivation Type() const = 0;
+        virtual float Alpha() const { return 0.f; }
 	};
 
     class Sigmoid : public ActivationBase
     {
 	public:
         virtual TensorLike* Build(TensorLike* input) override;
+        virtual EActivation Type() const { return _Sigmoid; }
 	};
 
     class Tanh : public ActivationBase
     {
 	public:
         virtual TensorLike* Build(TensorLike* input) override;
+        virtual EActivation Type() const { return _TanH; }
 	};
 
     class ReLU : public ActivationBase
     {
 	public:
         virtual TensorLike* Build(TensorLike* input) override;
+        virtual EActivation Type() const { return _ReLU; }
 	};
 
     class ELU : public ActivationBase
@@ -40,6 +41,8 @@ namespace Neuro
 		ELU(float alpha);
 
         virtual TensorLike* Build(TensorLike* input) override;
+        virtual EActivation Type() const { return _ELU; }
+        virtual float Alpha() const { return m_Alpha; }
 
 	private:
         const float m_Alpha;
@@ -51,6 +54,8 @@ namespace Neuro
         LeakyReLU(float alpha);
 
         virtual TensorLike* Build(TensorLike* input) override;
+        virtual EActivation Type() const { return _LeakyReLU; }
+        virtual float Alpha() const { return m_Alpha; }
 
     private:
         const float m_Alpha;
@@ -60,5 +65,6 @@ namespace Neuro
     {
 	public:
         virtual TensorLike* Build(TensorLike* input) override;
+        virtual EActivation Type() const { return _Softmax; }
 	};
 }

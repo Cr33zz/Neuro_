@@ -26,7 +26,7 @@ namespace NeuroTests
         ModelBase* CreateFitTestNet()
         {
             auto model = new Sequential("fit_test", 7);
-            model->AddLayer((new Dense(3, 2, new Linear()))->WeightsInitializer(new Const(1))->UseBias(false));
+            model->AddLayer((new Dense(3, 2))->WeightsInitializer(new Const(1))->UseBias(false));
             model->Optimize(new SGD(0.07f), new MeanSquareError());
             return model;
         }
@@ -68,7 +68,7 @@ namespace NeuroTests
         void TestDenseLayer(int inputsNum, int outputsNum, int samples, int batchSize, int epochs)
         {
             auto model = new Sequential("dense_test", 7);
-            model->AddLayer((new Dense(inputsNum, outputsNum, new Linear()))->WeightsInitializer(new Const(1))->UseBias(false));
+            model->AddLayer((new Dense(inputsNum, outputsNum))->WeightsInitializer(new Const(1))->UseBias(false));
 
             auto expectedWeights = Tensor({ 1.1f, 0.1f, -1.3f, 0.2f, -0.9f, 0.7f }, Shape(3, 2));
 
@@ -88,9 +88,9 @@ namespace NeuroTests
         void TestDenseNetwork(int inputsNum, int samples, int batchSize, int epochs)
         {
             auto model = new Sequential("deep_dense_test", 7);
-            model->AddLayer(new Dense(inputsNum, 5, new Linear()));
-            model->AddLayer(new Dense(4, new Linear()));
-            model->AddLayer(new Dense(inputsNum, new Linear()));
+            model->AddLayer(new Dense(inputsNum, 5));
+            model->AddLayer(new Dense(4));
+            model->AddLayer(new Dense(inputsNum));
 
             Tensor inputs(Shape::From(model->Layer(0)->InputShapesAt(-1)[0], samples));
             inputs.FillWithRand(10, -2, 2);
