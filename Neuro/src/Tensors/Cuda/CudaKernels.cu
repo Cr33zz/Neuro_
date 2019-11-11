@@ -205,7 +205,7 @@ __global__ void addBroadcast(float alpha, const float* __restrict t1, float beta
     output[i] = alpha * t1[i] + beta * t2[getIndex(t2W, t2H, t2D, t2N, t2Dim0, t2Dim0Dim1, t2Dim0Dim1Dim2)];
 }
 
-__global__ void mulElem(int len, const float* __restrict t1, const float* __restrict t2, float* __restrict output, int subLen)
+__global__ void mul(int len, const float* __restrict t1, const float* __restrict t2, float* __restrict output, int subLen)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -216,7 +216,7 @@ __global__ void mulElem(int len, const float* __restrict t1, const float* __rest
         output[n] = t1[n] * t2[n];
 }
 
-__global__ void mulElemBroadcast(const float* __restrict t1, const float* __restrict t2, int t2Width, int t2Height, int t2Depth, int t2Batch, float* __restrict output, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
+__global__ void mulBroadcast(const float* __restrict t1, const float* __restrict t2, int t2Width, int t2Height, int t2Depth, int t2Batch, float* __restrict output, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -604,15 +604,15 @@ namespace Neuro
         cudaStreamSynchronize(0);
     }
 
-    void CudaKernels::MulElem(const dim3& blocks, const dim3& threads, int len, const float* t1, const float* t2, float* outputDev, int subLen)
+    void CudaKernels::Mul(const dim3& blocks, const dim3& threads, int len, const float* t1, const float* t2, float* outputDev, int subLen)
     {
-        mulElem<<<blocks, threads>>>(len, t1, t2, outputDev, subLen);
+        mul<<<blocks, threads>>>(len, t1, t2, outputDev, subLen);
         cudaStreamSynchronize(0);
     }
 
-    void CudaKernels::MulElemBroadcast(const dim3& blocks, const dim3& threads, const float* t1Dev, const float* t2Dev, int t2Width, int t2Height, int t2Depth, int t2Batch, float* outputDev, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
+    void CudaKernels::MulBroadcast(const dim3& blocks, const dim3& threads, const float* t1Dev, const float* t2Dev, int t2Width, int t2Height, int t2Depth, int t2Batch, float* outputDev, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
     {
-        mulElemBroadcast<<<blocks, threads>>>(t1Dev, t2Dev, t2Width, t2Height, t2Depth, t2Batch, outputDev, outputWidth, outputHeight, outputDepth, outputBatch);
+        mulBroadcast<<<blocks, threads>>>(t1Dev, t2Dev, t2Width, t2Height, t2Depth, t2Batch, outputDev, outputWidth, outputHeight, outputDepth, outputBatch);
         cudaStreamSynchronize(0);
     }
 

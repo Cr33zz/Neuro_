@@ -207,61 +207,71 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::MulElem(const Tensor& t1, const Tensor& t2, Tensor& output) const
+    void TensorOpGpu::Mul(const Tensor& t1, const Tensor& t2, Tensor& output) const
     {
         t1.CopyToDevice();
         t2.CopyToDevice();
         output.OverrideDevice();
 
-        dim3 blocks, threads;
-
-        if (t1.GetShape() == t2.GetShape())
+        if (t1.SameDimensionsOrOne(t2) || t2.SameDimensionsOrOne(t1))
         {
-            GetKernelRunParams(max(t1.Length() / INNER_KERNEL_LOOP_LENGTH, 1), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
-            CudaKernels::MulElem(blocks, threads, t1.Length(), t1.GetDevicePtr(), t2.GetDevicePtr(), output.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);
+            cudnnOpTensorDescriptor_t mulDesc; cudnnCreateOpTensorDescriptor(&mulDesc);
+            cudnnTensorDescriptor_t t1Desc; cudnnCreateTensorDescriptor(&t1Desc);
+            cudnnTensorDescriptor_t t2Desc; cudnnCreateTensorDescriptor(&t2Desc);
+            cudnnTensorDescriptor_t outputDesc; cudnnCreateTensorDescriptor(&outputDesc);
+
+            cudnnSetOpTensorDescriptor(mulDesc, CUDNN_OP_TENSOR_MUL, CUDNN_DATA_FLOAT, CUDNN_PROPAGATE_NAN);
+            cudnnSetTensor4dDescriptor(t1Desc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, t1.GetShape().Dimensions[3], t1.GetShape().Dimensions[2], t1.GetShape().Dimensions[1], t1.GetShape().Dimensions[0]);
+            cudnnSetTensor4dDescriptor(t2Desc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, t2.GetShape().Dimensions[3], t2.GetShape().Dimensions[2], t2.GetShape().Dimensions[1], t2.GetShape().Dimensions[0]);
+            cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, output.GetShape().Dimensions[3], output.GetShape().Dimensions[2], output.GetShape().Dimensions[1], output.GetShape().Dimensions[0]);
+
+            float alpha1 = 1.f, alpha2 = 1.f, beta = 0.f;
+            if (t2.SameDimensionsOrOne(t1))
+                CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, mulDesc, &alpha1, t1Desc, t1.GetDevicePtr(), &alpha2, t2Desc, t2.GetDevicePtr(), &beta, outputDesc, output.GetDevicePtr()));
+            else
+                CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, mulDesc, &alpha2, t2Desc, t2.GetDevicePtr(), &alpha1, t1Desc, t1.GetDevicePtr(), &beta, outputDesc, output.GetDevicePtr()));
+            return;
+        }
+        
+        dim3 blocks, threads;
+        GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
+
+        if (t2.SameDimensionsExceptBatches(output))
+        {
+            return CudaKernels::MulBroadcast(
+                blocks,
+                threads,
+                t2.GetDevicePtr(),
+                t1.GetDevicePtr(),
+                t1.Width(),
+                t1.Height(),
+                t1.Depth(),
+                t1.Batch(),
+                output.GetDevicePtr(),
+                output.Width(),
+                output.Height(),
+                output.Depth(),
+                output.Batch());
+        }
+        else if (t1.SameDimensionsExceptBatches(output))
+        {
+            return CudaKernels::MulBroadcast(
+                blocks,
+                threads,
+                t1.GetDevicePtr(),
+                t2.GetDevicePtr(),
+                t2.Width(),
+                t2.Height(),
+                t2.Depth(),
+                t2.Batch(),
+                output.GetDevicePtr(),
+                output.Width(),
+                output.Height(),
+                output.Depth(),
+                output.Batch());
         }
         else
-        {
-            dim3 blocks, threads;
-            GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
-
-            if (t2.SameDimensionsExceptBatches(output))
-            {
-                return CudaKernels::MulElemBroadcast(
-                    blocks,
-                    threads,
-                    t2.GetDevicePtr(),
-                    t1.GetDevicePtr(),
-                    t1.Width(),
-                    t1.Height(),
-                    t1.Depth(),
-                    t1.Batch(),
-                    output.GetDevicePtr(),
-                    output.Width(),
-                    output.Height(),
-                    output.Depth(),
-                    output.Batch());
-            }
-            else if (t1.SameDimensionsExceptBatches(output))
-            {
-                return CudaKernels::MulElemBroadcast(
-                    blocks,
-                    threads,
-                    t1.GetDevicePtr(),
-                    t2.GetDevicePtr(),
-                    t2.Width(),
-                    t2.Height(),
-                    t2.Depth(),
-                    t2.Batch(),
-                    output.GetDevicePtr(),
-                    output.Width(),
-                    output.Height(),
-                    output.Depth(),
-                    output.Batch());
-            }
-            else
-                __super::MulElem(t1, t2, output);
-        }        
+            __super::Mul(t1, t2, output);
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -67,7 +67,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::MulElem(const Tensor& t1, const Tensor& t2, Tensor& output) const
+    void TensorOpMultiCpu::Mul(const Tensor& t1, const Tensor& t2, Tensor& output) const
     {
         t1.CopyToHost();
         t2.CopyToHost();

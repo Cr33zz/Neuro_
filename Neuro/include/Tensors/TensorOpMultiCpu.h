@@ -9,7 +9,7 @@ namespace Neuro
     public:
         virtual void Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const override;
         virtual void MatMul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const override;
-        virtual void MulElem(const Tensor& t1, const Tensor& t2, Tensor& output) const override;
+        virtual void Mul(const Tensor& t1, const Tensor& t2, Tensor& output) const override;
         virtual void Div(const Tensor& input, float v, Tensor& output) const override;
         virtual void Sum(const Tensor& input, EAxis axis, Tensor& output) const override;
         virtual void Transpose(const Tensor& input, Tensor& output) const override;
