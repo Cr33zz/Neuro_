@@ -120,12 +120,12 @@ public:
             Operation* meanLoss;
             {
                 NameScope scope("m_loss");
-                meanLoss = div(sum(square(sub(meanG, meanS)), GlobalAxis, "mean_loss"), BATCH_SIZE);
+                meanLoss = div(sum(square(sub(meanG, meanS)), GlobalAxis, "mean_loss"), (float)BATCH_SIZE);
             }
             Operation* sigmaLoss;
             {
                 NameScope scope("s_loss");
-                sigmaLoss = div(sum(square(sub(sqrt(varG, "sigma_g"), sqrt(varS, "sigma_s"))), GlobalAxis, "sigma_loss"), BATCH_SIZE);
+                sigmaLoss = div(sum(square(sub(sqrt(varG, "sigma_g"), sqrt(varS, "sigma_s"))), GlobalAxis, "sigma_loss"), (float)BATCH_SIZE);
             }
 
             styleLosses.push_back(add(meanLoss, sigmaLoss, "mean_std_loss"));
