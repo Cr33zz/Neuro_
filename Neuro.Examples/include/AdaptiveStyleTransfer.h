@@ -15,7 +15,7 @@
 #include "VGG19.h"
 
 //#define SLOW
-//#define FAST_SINGLE_CONTENT
+#define FAST_SINGLE_CONTENT
 
 using namespace Neuro;
 
@@ -159,7 +159,7 @@ public:
         ///Debug::LogOutput("generator_model/output", true);
         //Debug::LogOutput("generator/content_features/block4_conv1", true);
         //Debug::LogOutput("generator/style_features/block4_conv1", true);
-        //Debug::LogGrad("generator/decode_block1_conv1", true);
+        Debug::LogGrad("generator/decode_block4_conv1", true);
         //Debug::LogOutput("generator/decode_", true);
         //Debug::LogGrad("generator/decode_", true);
         //Debug::LogOutput("generator/ada_in/", true);

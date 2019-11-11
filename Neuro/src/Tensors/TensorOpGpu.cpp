@@ -399,21 +399,10 @@ namespace Neuro
         input.CopyToDevice();
         output.OverrideDevice();
 
-        cudnnOpTensorDescriptor_t sqrDesc; cudnnCreateOpTensorDescriptor(&sqrDesc);
-        cudnnTensorDescriptor_t inputDesc; cudnnCreateTensorDescriptor(&inputDesc);
-        cudnnTensorDescriptor_t outputDesc; cudnnCreateTensorDescriptor(&outputDesc);
-
-        cudnnSetOpTensorDescriptor(sqrDesc, CUDNN_OP_TENSOR_NOT, CUDNN_DATA_FLOAT, CUDNN_PROPAGATE_NAN);
-        cudnnSetTensor4dDescriptor(inputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
-        cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, output.GetShape().Dimensions[3], output.GetShape().Dimensions[2], output.GetShape().Dimensions[1], output.GetShape().Dimensions[0]);
-
-        float alpha1 = 1.f, alpha2 = 1.f, beta = 0.f;
-        CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, sqrDesc, &alpha1, inputDesc, input.GetDevicePtr(), &alpha2, inputDesc, input.GetDevicePtr(), &beta, outputDesc, output.GetDevicePtr()));
-
-        /*dim3 blocks, threads;
+        dim3 blocks, threads;
         GetKernelRunParams(max((int)input.Length() / INNER_KERNEL_LOOP_LENGTH, 1), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
 
-        CudaKernels::Negate(blocks, threads, input.Length(), input.GetDevicePtr(), output.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);*/
+        CudaKernels::Negate(blocks, threads, input.Length(), input.GetDevicePtr(), output.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);
     }
 
     //////////////////////////////////////////////////////////////////////////
