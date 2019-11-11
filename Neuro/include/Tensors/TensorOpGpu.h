@@ -23,10 +23,12 @@ namespace Neuro
         virtual void Div(const Tensor& input, float v, Tensor& output) const override;
         virtual void Add(const Tensor& input, float v, Tensor& output) const override;
         virtual void Pow(const Tensor& input, float power, Tensor& output) const override;
-        virtual void PowGradient(const Tensor& input, float power, const Tensor& outputGradient, Tensor& inputGradient) const;
+        virtual void PowGradient(const Tensor& input, float power, const Tensor& outputGradient, Tensor& inputGradient) const override;
+        virtual void Sqrt(const Tensor& input, Tensor& output) const override;
         virtual void Negate(const Tensor& input, Tensor& output) const override;
         virtual void Inverse(const Tensor& input, Tensor& output) const override;
         virtual void Sum(const Tensor& input, EAxis axis, Tensor& output) const override;
+        virtual void Mean(const Tensor& input, EAxis axis, Tensor& output) const override;
         virtual void Transpose(const Tensor& input, Tensor& output) const override;
         virtual void Conv2D(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& output) const override;
         virtual void Conv2DBiasActivation(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, const Tensor& bias, EActivation activation, float activationAlpha, Tensor& output) override;

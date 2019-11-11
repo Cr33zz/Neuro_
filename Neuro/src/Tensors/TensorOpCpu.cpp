@@ -243,6 +243,31 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Mean(const Tensor& input, EAxis axis, Tensor& output) const
+    {
+        input.Sum(axis, output);
+
+        if (axis == GlobalAxis)
+            output.Div((float)input.Length(), output);
+        else if (axis == WidthAxis)
+            output.Div((float)input.Width(), output);
+        else if (axis == HeightAxis)
+            output.Div((float)input.Height(), output);
+        else if (axis == DepthAxis)
+            output.Div((float)input.Depth(), output);
+        else if (axis == BatchAxis)
+            output.Div((float)input.Batch(), output);
+        else if (axis == _01Axes)
+            output.Div((float)(input.Len(0)*input.Len(1)), output);
+        else if (axis == _012Axes)
+            output.Div((float)(input.Len(0)*input.Len(1)*input.Len(2)), output);
+        else if (axis == _013Axes)
+            output.Div((float)(input.Len(0)*input.Len(1)*input.Len(3)), output);
+        else if (axis == _123Axes)
+            output.Div((float)(input.Len(1)*input.Len(2)*input.Len(3)), output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::Pow(const Tensor& input, float power, Tensor& output) const
     {
         input.CopyToHost();
@@ -253,6 +278,19 @@ namespace Neuro
 
         for (uint32_t i = 0; i < input.Length(); ++i)
             outputValues[i] = ::pow(inputValues[i], power);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Sqrt(const Tensor& input, Tensor& output) const
+    {
+        input.CopyToHost();
+        output.OverrideHost();
+
+        auto inputValues = input.Values();
+        auto outputValues = output.Values();
+
+        for (uint32_t i = 0; i < input.Length(); ++i)
+            outputValues[i] = ::sqrt(inputValues[i]);
     }
 
     //////////////////////////////////////////////////////////////////////////

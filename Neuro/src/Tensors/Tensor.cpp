@@ -569,6 +569,20 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::Sqrt() const
+    {
+        Tensor result(m_Shape);
+        Sqrt(result);
+        return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Sqrt(Tensor& result) const
+    {
+        Op()->Sqrt(*this, result);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void Tensor::Map(const function<float(float)>& func, Tensor& result) const
 	{
 		Op()->Map(func, *this, result);
@@ -639,62 +653,57 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     template <int W, int H, int D, int N>
-    Tensor MeanTemplate(const Tensor& input, EAxis axis)
+    Shape MeanShape(const Tensor& input, EAxis axis)
     {
-        Tensor mean(Shape(W ? 1 : input.Width(), H ? 1 : input.Height(), D ? 1 : input.Depth(), N ? 1 : input.Batch()));
-        input.Mean(axis, mean);
-        return mean;
+        return Shape(W ? 1 : input.Width(), H ? 1 : input.Height(), D ? 1 : input.Depth(), N ? 1 : input.Batch());
     }
 
     //////////////////////////////////////////////////////////////////////////
     Tensor Tensor::Mean(EAxis axis) const
 	{
-        if (axis == GlobalAxis)
-            return MeanTemplate<1, 1, 1, 1>(*this, axis);
-        if (axis == WidthAxis)
-            return MeanTemplate<1, 0, 0, 0>(*this, axis);
-        if (axis == HeightAxis)
-            return MeanTemplate<0, 1, 0, 0>(*this, axis);
-        if (axis == DepthAxis)
-            return MeanTemplate<0, 0, 1, 0>(*this, axis);
-        if (axis == BatchAxis)
-            return MeanTemplate<0, 0, 0, 1>(*this, axis);
-        if (axis == _01Axes)
-            return MeanTemplate<1, 1, 0, 0>(*this, axis);
-        if (axis == _012Axes)
-            return MeanTemplate<1, 1, 1, 0>(*this, axis);
-        if (axis == _013Axes)
-            return MeanTemplate<1, 1, 0, 1>(*this, axis);
-        if (axis == _123Axes)
-            return MeanTemplate<0, 1, 1, 1>(*this, axis);
-
-        assert(false);
-        return Tensor();
+        Shape outputShape;
+        switch (axis)
+        {
+        case Neuro::GlobalAxis:
+            outputShape = MeanShape<1, 1, 1, 1>(*this, axis);
+            break;
+        case Neuro::WidthAxis:
+            outputShape = MeanShape<1, 0, 0, 0>(*this, axis);
+            break;
+        case Neuro::HeightAxis:
+            outputShape = MeanShape<0, 1, 0, 0>(*this, axis);
+            break;
+        case Neuro::DepthAxis:
+            outputShape = MeanShape<0, 0, 1, 0>(*this, axis);
+            break;
+        case Neuro::BatchAxis:
+            outputShape = MeanShape<0, 0, 0, 1>(*this, axis);
+            break;
+        case Neuro::_01Axes:
+            outputShape = MeanShape<1, 1, 0, 0>(*this, axis);
+            break;
+        case Neuro::_012Axes:
+            outputShape = MeanShape<1, 1, 1, 0>(*this, axis);
+            break;
+        case Neuro::_013Axes:
+            outputShape = MeanShape<1, 1, 0, 1>(*this, axis);
+            break;
+        case Neuro::_123Axes:
+            outputShape = MeanShape<0, 1, 1, 1>(*this, axis);
+            break;
+        default:
+            NEURO_ASSERT(false, "Unsupported axis.");
+            break;
+        }
+        Tensor output(outputShape);
+        Mean(axis, output);
+        return output;
 	}
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Mean(EAxis axis, Tensor& output) const
     {
-        Sum(axis, output);
-
-        if (axis == GlobalAxis)
-            output.Div((float)Length(), output);
-        else if (axis == WidthAxis)
-            output.Div((float)Width(), output);
-        else if (axis == HeightAxis)
-            output.Div((float)Height(), output);
-        else if (axis == DepthAxis)
-            output.Div((float)Depth(), output);
-        else if (axis == BatchAxis)
-            output.Div((float)Batch(), output);
-        else if (axis == _01Axes)
-            output.Div((float)(Len(0)*Len(1)), output);
-        else if (axis == _012Axes)
-            output.Div((float)(Len(0)*Len(1)*Len(2)), output);
-        else if (axis == _013Axes)
-            output.Div((float)(Len(0)*Len(1)*Len(3)), output);
-        else if (axis == _123Axes)
-            output.Div((float)(Len(1)*Len(2)*Len(3)), output);
+        Op()->Mean(*this, axis, output);
     }
 
 	//////////////////////////////////////////////////////////////////////////
