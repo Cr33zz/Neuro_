@@ -211,6 +211,7 @@ namespace Neuro
 
         string ToString() const;
         bool SameDimensionsExceptBatches(const Tensor& t) const;
+        bool SameDimensionsOrOne(const Tensor& t) const;
 
         static pair<uint32_t, uint32_t> GetPadding(EPaddingMode paddingMode, uint32_t kernelWidth, uint32_t kernelHeight);
         static uint32_t GetPadding(EPaddingMode paddingMode, uint32_t kernelSize);

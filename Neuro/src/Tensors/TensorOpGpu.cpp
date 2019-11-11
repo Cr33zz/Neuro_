@@ -78,6 +78,20 @@ namespace Neuro
 
             if (t2.SameDimensionsExceptBatches(output))
             {
+                if (t1.SameDimensionsOrOne(output))
+                {
+                    if (t2.GetDevicePtr() != output.GetDevicePtr())
+                        t2.CopyTo(output);
+
+                    cudnnTensorDescriptor_t biasDesc; cudnnCreateTensorDescriptor(&biasDesc);
+                    cudnnTensorDescriptor_t outputDesc; cudnnCreateTensorDescriptor(&outputDesc);
+                    cudnnSetTensor4dDescriptor(biasDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, t1.GetShape().Dimensions[3], t1.GetShape().Dimensions[2], t1.GetShape().Dimensions[1], t1.GetShape().Dimensions[0]);
+                    cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, output.GetShape().Dimensions[3], output.GetShape().Dimensions[2], output.GetShape().Dimensions[1], output.GetShape().Dimensions[0]);
+
+                    CUDA_CHECK(cudnnAddTensor(s_CudnnHandle, &beta, biasDesc, t1.GetDevicePtr(), &alpha, outputDesc, output.GetDevicePtr()));
+                    return;
+                }
+
                 return CudaKernels::AddBroadcast(
                     blocks,
                     threads,
@@ -97,6 +111,20 @@ namespace Neuro
             }
             else if (t1.SameDimensionsExceptBatches(output))
             {
+                if (t2.SameDimensionsOrOne(output))
+                {
+                    if (t1.GetDevicePtr() != output.GetDevicePtr())
+                        t1.CopyTo(output);
+
+                    cudnnTensorDescriptor_t biasDesc; cudnnCreateTensorDescriptor(&biasDesc);
+                    cudnnTensorDescriptor_t outputDesc; cudnnCreateTensorDescriptor(&outputDesc);
+                    cudnnSetTensor4dDescriptor(biasDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, t2.GetShape().Dimensions[3], t2.GetShape().Dimensions[2], t2.GetShape().Dimensions[1], t2.GetShape().Dimensions[0]);
+                    cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, output.GetShape().Dimensions[3], output.GetShape().Dimensions[2], output.GetShape().Dimensions[1], output.GetShape().Dimensions[0]);
+
+                    CUDA_CHECK(cudnnAddTensor(s_CudnnHandle, &beta, biasDesc, t2.GetDevicePtr(), &alpha, outputDesc, output.GetDevicePtr()));
+                    return;
+                }
+
                 return CudaKernels::AddBroadcast(
                     blocks,
                     threads,

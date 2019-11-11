@@ -330,10 +330,38 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
+        TEST_METHOD(Add_Broadcast_Bias_CompareWithCpuResult)
+        {
+            Tensor t1(Shape(20, 30, 40, 50)); t1.FillWithRand();
+            Tensor t2(Shape(1, 1, 40, 1)); t2.FillWithRand();
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r = t1.Add(t2);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = t1.Add(t2);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
         TEST_METHOD(Sub_Broadcast_CompareWithCpuResult)
         {
             Tensor t1(Shape(20, 30, 40, 50)); t1.FillWithRand();
             Tensor t2(Shape(2, 3, 4, 2)); t2.FillWithRand();
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r = t1.Sub(t2);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = t1.Sub(t2);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(Sub_Broadcast_Bias_CompareWithCpuResult)
+        {
+            Tensor t1(Shape(20, 30, 40, 50)); t1.FillWithRand();
+            Tensor t2(Shape(1, 1, 40, 1)); t2.FillWithRand();
 
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t1.Sub(t2);)

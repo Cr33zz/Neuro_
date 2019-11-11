@@ -1507,6 +1507,15 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
+    bool Tensor::SameDimensionsOrOne(const Tensor& t) const
+    {
+        return (Width() == 1 || Width() == t.Width()) &&
+               (Height() == 1 || Height() == t.Height()) &&
+               (Depth() == 1 || Depth() == t.Depth()) &&
+               (Batch() == 1 || Batch() == t.Batch());
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     pair<uint32_t, uint32_t> Tensor::GetPadding(EPaddingMode paddingMode, uint32_t kernelWidth, uint32_t kernelHeight)
     {
         if (paddingMode == Valid)
