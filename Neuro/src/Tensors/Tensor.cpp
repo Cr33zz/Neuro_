@@ -1328,21 +1328,41 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& result) const
+    void Tensor::Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& output) const
 	{
         assert((dataFormat == NCHW ? Depth() : Len(0)) == kernels.Depth());
-		Op()->Conv2D(*this, kernels, stride, padding, padding, dataFormat, result);
+		Op()->Conv2D(*this, kernels, stride, padding, padding, dataFormat, output);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
     Tensor Tensor::Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat) const
 	{
-		Tensor result(GetConvOutputShape(GetShape(), kernels.Batch(), kernels.Width(), kernels.Height(), stride, padding, padding, dataFormat));
-		Conv2D(kernels, stride, padding, dataFormat, result);
-		return result;
+		Tensor output(GetConvOutputShape(GetShape(), kernels.Batch(), kernels.Width(), kernels.Height(), stride, padding, padding, dataFormat));
+		Conv2D(kernels, stride, padding, dataFormat, output);
+		return output;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Conv2DBiasActivation(const Tensor& kernels, uint32_t stride, uint32_t padding, const Tensor& bias, EActivation activation, float activationAlpha, Tensor& output) const
+    {
+        Op()->Conv2DBiasActivation(*this, kernels, stride, padding, padding, bias, activation, activationAlpha, output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::Conv2DBiasActivation(const Tensor& kernels, uint32_t stride, uint32_t padding, const Tensor& bias, EActivation activation, float activationAlpha) const
+    {
+        Tensor output(GetConvOutputShape(GetShape(), kernels.Batch(), kernels.Width(), kernels.Height(), stride, padding, padding, NCHW));
+        Conv2DBiasActivation(kernels, stride, padding, bias, activation, activationAlpha, output);
+        return output;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Conv2DBiasGradient(const Tensor& gradient, Tensor& inputsGradient) const
+    {
+        Op()->Conv2DBiasGradient(gradient, inputsGradient);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void Tensor::Conv2DInputsGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& inputsGradient) const
 	{
 		Op()->Conv2DInputGradient(gradient, kernels, stride, padding, padding, dataFormat, inputsGradient);
@@ -1874,15 +1894,57 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void Tensor::Activation(EActivation activation, float coeff, Tensor& output) const
+    {
+        switch (activation)
+        {
+        case _Sigmoid:
+            return Sigmoid(output);
+        case _ReLU:
+            return ReLU(output);
+        case _TanH:
+            return Tanh(output);
+        case _ELU:
+            return Elu(coeff, output);
+        case _LeakyReLU:
+            return LeakyReLU(coeff, output);
+        case _Softmax:
+            return Softmax(output);
+        }
+        NEURO_ASSERT(false, "Unsupported activation.");
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::ActivationGradient(EActivation activation, float coeff, const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const
+    {
+        switch (activation)
+        {
+        case _Sigmoid:
+            return SigmoidGradient(output, outputGradient, inputGradient);
+        case _ReLU:
+            return ReLUGradient(output, outputGradient, inputGradient);
+        case _TanH:
+            return TanhGradient(output, outputGradient, inputGradient);
+        case _ELU:
+            return EluGradient(output, outputGradient, coeff, inputGradient);
+        case _LeakyReLU:
+            return LeakyReLUGradient(output, outputGradient, coeff, inputGradient);
+        case _Softmax:
+            return SoftmaxGradient(output, outputGradient, inputGradient);
+        }
+        NEURO_ASSERT(false, "Unsupported activation.");
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void Tensor::Sigmoid(Tensor& result) const
     {
         Op()->Sigmoid(*this, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::SigmoidGradient(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
+    void Tensor::SigmoidGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const
     {
-        Op()->SigmoidGradient(output, outputGradient, result);
+        Op()->SigmoidGradient(output, outputGradient, inputGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1904,9 +1966,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::ReLUGradient(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
+    void Tensor::ReLUGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const
     {
-        Op()->ReLUGradient(output, outputGradient, result);
+        Op()->ReLUGradient(output, outputGradient, inputGradient);
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -1916,9 +1978,9 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& result) const
+	void Tensor::EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const
 	{
-		Op()->EluGradient(output, outputGradient, alpha, result);
+		Op()->EluGradient(output, outputGradient, alpha, inputGradient);
 	}
 
     //////////////////////////////////////////////////////////////////////////
@@ -1928,9 +1990,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::LeakyReLUGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& result) const
+    void Tensor::LeakyReLUGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const
     {
-        Op()->LeakyReLUGradient(output, outputGradient, alpha, result);
+        Op()->LeakyReLUGradient(output, outputGradient, alpha, inputGradient);
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -1940,9 +2002,9 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
+	void Tensor::SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const
 	{
-		Op()->SoftmaxGradient(output, outputGradient, result);
+		Op()->SoftmaxGradient(output, outputGradient, inputGradient);
 	}
 
 	//////////////////////////////////////////////////////////////////////////

@@ -517,6 +517,21 @@ namespace Neuro
         }
 	}
 
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Conv2DBiasActivation(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, const Tensor& bias, EActivation activation, float activationAlpha, Tensor& output)
+    {
+        NEURO_ASSERT(paddingX == paddingY, "");
+        input.Conv2D(kernels, stride, paddingX, NCHW, output);
+        output.Add(bias, output);
+        output.Activation(activation, activationAlpha, output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Conv2DBiasGradient(const Tensor& gradient, Tensor& biasGradient)
+    {
+        gradient.Sum(_013Axes, biasGradient); // used in case of biases in convolutional layers
+    }
+
 	//////////////////////////////////////////////////////////////////////////
 	void TensorOpCpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& inputGradient) const
 	{

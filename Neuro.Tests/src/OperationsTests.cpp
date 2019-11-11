@@ -48,6 +48,15 @@ namespace NeuroTests
             Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new Conv2dOp(&x, &kernels, 1, 1, NCHW)).get()));
         }
 
+        TEST_METHOD(Conv2dBiasActivation)
+        {
+            Tensor::SetForcedOpMode(GPU);
+            auto x = Variable(Shape(9, 9, 3, 2));
+            auto kernels = Variable(Shape(3, 3, 3, 5));
+            auto bias = Variable(Shape(1, 1, 5, 1));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new Conv2dBiasActivationOp(&x, &kernels, 1, 1, &bias, _ReLU, 1)).get()));
+        }
+
         TEST_METHOD(Pool2d_Max)
         {
             auto x = Variable(Shape(9, 9, 3, 2));

@@ -439,6 +439,86 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::Conv2DBiasActivation(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, const Tensor& bias, EActivation activation, float activationAlpha, Tensor& output)
+    {
+        input.CopyToDevice();
+        kernels.CopyToDevice();
+        bias.CopyToDevice();
+        output.OverrideDevice();
+        output.Zero();
+
+        cudnnConvolutionDescriptor_t convolutionDesc; cudnnCreateConvolutionDescriptor(&convolutionDesc);
+        cudnnActivationDescriptor_t activationDesc; cudnnCreateActivationDescriptor(&activationDesc);
+        cudnnTensorDescriptor_t inputDesc; cudnnCreateTensorDescriptor(&inputDesc);
+        cudnnFilterDescriptor_t kernelsDesc; cudnnCreateFilterDescriptor(&kernelsDesc);
+        cudnnTensorDescriptor_t biasDesc; cudnnCreateTensorDescriptor(&biasDesc);
+        cudnnTensorDescriptor_t outputDesc; cudnnCreateTensorDescriptor(&outputDesc);
+
+        cudnnSetConvolution2dDescriptor(convolutionDesc, paddingY, paddingX, stride, stride, 1, 1, CUDNN_CROSS_CORRELATION, CUDNN_DATA_FLOAT);
+        cudnnSetFilter4dDescriptor(kernelsDesc, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW, kernels.GetShape().Dimensions[3], kernels.GetShape().Dimensions[2], kernels.GetShape().Dimensions[1], kernels.GetShape().Dimensions[0]);
+        cudnnSetTensor4dDescriptor(biasDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, bias.GetShape().Dimensions[3], bias.GetShape().Dimensions[2], bias.GetShape().Dimensions[1], bias.GetShape().Dimensions[0]);
+        cudnnSetTensor4dDescriptor(inputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
+        cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, output.GetShape().Dimensions[3], output.GetShape().Dimensions[2], output.GetShape().Dimensions[1], output.GetShape().Dimensions[0]);
+
+        cudnnConvolutionFwdAlgo_t algo;
+        CUDA_CHECK(cudnnGetConvolutionForwardAlgorithm(s_CudnnHandle, inputDesc, kernelsDesc, convolutionDesc, outputDesc, CUDNN_CONVOLUTION_FWD_PREFER_FASTEST, 0, &algo));
+
+        cudnnSetActivationDescriptor(activationDesc, GetCudnnActivationMode(activation), CUDNN_NOT_PROPAGATE_NAN, activationAlpha);
+
+        size_t workspaceSize;
+        CUDA_CHECK(cudnnGetConvolutionForwardWorkspaceSize(s_CudnnHandle, inputDesc, kernelsDesc, convolutionDesc, outputDesc, algo, &workspaceSize));
+        void* workspacePtr;
+        DeviceMemoryManager::Default().Allocate(&workspacePtr, workspaceSize, "conv2d_workspace");
+
+        float alpha = 1, beta = 0;
+        CUDA_CHECK(cudnnConvolutionBiasActivationForward(
+            s_CudnnHandle,
+            &alpha,
+            inputDesc,
+            input.GetDevicePtr(),
+            kernelsDesc,
+            kernels.GetDevicePtr(),
+            convolutionDesc,
+            algo,
+            workspacePtr,
+            workspaceSize,
+            &beta,
+            outputDesc,
+            output.GetDevicePtr(),
+            biasDesc,
+            bias.GetDevicePtr(),
+            activationDesc,
+            outputDesc,
+            output.GetDevicePtr()));
+
+        DeviceMemoryManager::Default().Free(workspacePtr);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::Conv2DBiasGradient(const Tensor& gradient, Tensor& biasGradient)
+    {
+        gradient.CopyToDevice();
+        biasGradient.OverrideDevice();
+        biasGradient.Zero();
+
+        cudnnTensorDescriptor_t gradientDesc; cudnnCreateTensorDescriptor(&gradientDesc);
+        cudnnTensorDescriptor_t biasGradientDesc; cudnnCreateTensorDescriptor(&biasGradientDesc);
+
+        cudnnSetTensor4dDescriptor(gradientDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, gradient.GetShape().Dimensions[3], gradient.GetShape().Dimensions[2], gradient.GetShape().Dimensions[1], gradient.GetShape().Dimensions[0]);
+        cudnnSetTensor4dDescriptor(biasGradientDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, biasGradient.GetShape().Dimensions[3], biasGradient.GetShape().Dimensions[2], biasGradient.GetShape().Dimensions[1], biasGradient.GetShape().Dimensions[0]);
+
+        float alpha = 1, beta = 0;
+        CUDA_CHECK(cudnnConvolutionBackwardBias(
+            s_CudnnHandle,
+            &alpha,
+            gradientDesc,
+            gradient.GetDevicePtr(),
+            &beta,
+            biasGradientDesc,
+            biasGradient.GetDevicePtr()));
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& inputGradient) const
     {
         if (dataFormat == NHWC) // CuDNN doesn't support gradients for NHWC format
@@ -1371,6 +1451,24 @@ namespace Neuro
         if (mode == PerActivation)
             return CUDNN_BATCHNORM_PER_ACTIVATION;
         return CUDNN_BATCHNORM_SPATIAL;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    cudnnActivationMode_t TensorOpGpu::GetCudnnActivationMode(EActivation mode)
+    {
+        switch (mode)
+        {
+        case _Sigmoid:
+            return CUDNN_ACTIVATION_SIGMOID;
+        case _ReLU:
+            return CUDNN_ACTIVATION_RELU;
+        case _TanH:
+            return CUDNN_ACTIVATION_TANH;
+        case _ELU:
+            return CUDNN_ACTIVATION_ELU;
+        }
+        NEURO_ASSERT(false, "Unsupported activation mode.");
+        return CUDNN_ACTIVATION_IDENTITY;
     }
 
     //////////////////////////////////////////////////////////////////////////

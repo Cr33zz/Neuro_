@@ -9,6 +9,7 @@
 #include "ComputationalGraph/Operations/ClipOp.h"
 #include "ComputationalGraph/Operations/ConcatenateOp.h"
 #include "ComputationalGraph/Operations/Conv2dOp.h"
+#include "ComputationalGraph/Operations/Conv2dBiasActivationOp.h"
 #include "ComputationalGraph/Operations/Conv2dTransposeOp.h"
 #include "ComputationalGraph/Operations/DivideOp.h"
 #include "ComputationalGraph/Operations/DropoutOp.h"

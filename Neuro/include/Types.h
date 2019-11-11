@@ -77,6 +77,16 @@ namespace Neuro
         L2,
     };
 
+    enum EActivation
+    {
+        _Sigmoid,
+        _ReLU,
+        _TanH,
+        _ELU,
+        _LeakyReLU,
+        _Softmax
+    };
+
     enum EDataFormat
     {
         NCHW,

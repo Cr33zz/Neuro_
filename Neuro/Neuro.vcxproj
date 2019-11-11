@@ -184,6 +184,7 @@
     <ClInclude Include="include\ComputationalGraph\Operations\BatchNormalizeOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\BatchReshapeOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\ClipOp.h" />
+    <ClInclude Include="include\ComputationalGraph\Operations\Conv2dBiasActivationOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\Conv2dTransposeOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\DivideOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\DropoutOp.h" />
@@ -296,6 +297,7 @@
     <ClCompile Include="src\ComputationalGraph\Operations\BatchNormalizeOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\BatchReshapeOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\ClipOp.cpp" />
+    <ClCompile Include="src\ComputationalGraph\Operations\Conv2dBiasActivationOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\Conv2dTransposeOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\DivideOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\DropoutOp.cpp" />

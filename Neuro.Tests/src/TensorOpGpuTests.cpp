@@ -766,6 +766,37 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
+        TEST_METHOD(Conv2DBiasActivation_Valid_CompareWithCpuResult)
+        {
+            Tensor t(Shape(26, 26, 3, 3)); t.FillWithRand();
+            Tensor kernals(Shape(3, 3, 3, 2)); kernals.FillWithRand();
+            Tensor bias(Shape(1, 1, 2, 1)); bias.FillWithRand();
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r = t.Conv2DBiasActivation(kernals, 1, 0, bias, _ReLU, 1);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = t.Conv2DBiasActivation(kernals, 1, 0, bias, _ReLU, 1);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(Conv2DBiasGradient_CompareWithCpuResult)
+        {
+            uint32_t features = 5;
+            Tensor gradient(Shape(24, 24, features, 3)); gradient.FillWithRand();
+
+            Tensor::SetForcedOpMode(CPU);
+            Tensor biasGradient(Shape(1, 1, features, 1));
+            NEURO_PROFILE("CPU", gradient.Conv2DBiasGradient(gradient, biasGradient);)
+
+            Tensor::SetForcedOpMode(GPU);
+            Tensor biasGradient2(Shape(1, 1, features, 1));
+            NEURO_PROFILE("GPU", gradient.Conv2DBiasGradient(gradient, biasGradient2);)
+
+            Assert::IsTrue(biasGradient.Equals(biasGradient2, 0.0001f));
+        }
+
         TEST_METHOD(Conv2DInputGradient_CompareWithCpuResult)
         {
             Tensor output(Shape(24, 24, 2, 3)); output.FillWithRand();
