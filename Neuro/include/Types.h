@@ -93,6 +93,14 @@ namespace Neuro
         NHWC,
     };
 
+    enum EPixelFormat
+    {
+        RGB,
+        BGR,
+        RGBA,
+        YUV,
+    };
+
     enum EAxis
     {
         GlobalAxis = -1, // reduces width, height, depth and batch dimensions to size 1, equivalent to axis None

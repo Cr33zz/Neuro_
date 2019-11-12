@@ -570,6 +570,55 @@ namespace Neuro
         return result;
     }
 
+    struct PixelData
+    {
+        uint8_t r;
+        uint8_t g;
+        uint8_t b;
+        uint8_t a;
+    };
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor LoadImage(uint8_t* imageBuffer, uint32_t width, uint32_t height, EPixelFormat format)
+    {
+        Tensor output(Shape(width, height, 3));
+        output.OverrideHost();
+        
+        PixelData pixel;
+
+        for (uint32_t h = 0; h < height; ++h)
+        for (uint32_t w = 0; w < width; ++w)
+        {
+            if (format == RGB)
+            {
+                pixel.r = *(imageBuffer++);
+                pixel.g = *(imageBuffer++);
+                pixel.b = *(imageBuffer++);
+            }
+            else if (format == BGR)
+            {
+                pixel.b = *(imageBuffer++);
+                pixel.g = *(imageBuffer++);
+                pixel.r = *(imageBuffer++);
+            }
+            else if (format == RGBA)
+            {
+                pixel.r = *(imageBuffer++);
+                pixel.g = *(imageBuffer++);
+                pixel.b = *(imageBuffer++);
+                pixel.a = *(imageBuffer++);
+            }
+            else
+                NEURO_ASSERT(false, "Unsupported pixel format.");
+
+            output.Set((float)pixel.r, w, h, 0);
+            output.Set((float)pixel.g, w, h, 1);
+            output.Set((float)pixel.b, w, h, 2);
+        }
+
+        return output;
+    }
+
     //////////////////////////////////////////////////////////////////////////
     bool IsImageFileValid(const string& filename)
     {
