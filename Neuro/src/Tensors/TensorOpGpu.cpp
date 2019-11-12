@@ -430,12 +430,36 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Add(const Tensor& input, float v, Tensor& output) const
     {
-        dim3 blocks, threads;
-        GetKernelRunParams(max((int)input.Length() / INNER_KERNEL_LOOP_LENGTH, 1), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
-        input.CopyToDevice();
+        Tensor bias({ v }, Shape(1));
+        Add(1.f, input, 1.f, bias, output);
+
+        /*input.CopyToDevice();
         output.OverrideDevice();
 
-        CudaKernels::Add(blocks, threads, input.Length(), input.GetDevicePtr(), v, output.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);
+        if (input.GetDevicePtr() != output.GetDevicePtr())
+            input
+
+        void* biasPtr;
+        DeviceMemoryManager::Default().Allocate(&biasPtr, sizeof(float), "add_tmp_tensor");
+        cudaMemcpy(biasPtr, &v, sizeof(float), cudaMemcpyHostToDevice);
+
+        cudnnTensorDescriptor_t inputDesc; cudnnCreateTensorDescriptor(&inputDesc);
+        cudnnTensorDescriptor_t biasDesc; cudnnCreateTensorDescriptor(&biasDesc);
+        cudnnTensorDescriptor_t outputDesc; cudnnCreateTensorDescriptor(&outputDesc);
+
+        cudnnSetTensor4dDescriptor(inputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
+        cudnnSetTensor4dDescriptor(biasDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, 1, 1, 1, 1);
+        cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, output.GetShape().Dimensions[3], output.GetShape().Dimensions[2], output.GetShape().Dimensions[1], output.GetShape().Dimensions[0]);
+
+        float alpha = 1, beta = 1;
+        cudnnAddTensor(s_CudnnHandle, &alpha, biasDesc, biasPtr, &beta, )
+
+        DeviceMemoryManager::Default().Free(biasPtr);*/
+
+        /*dim3 blocks, threads;
+        GetKernelRunParams(max((int)input.Length() / INNER_KERNEL_LOOP_LENGTH, 1), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
+
+        CudaKernels::Add(blocks, threads, input.Length(), input.GetDevicePtr(), v, output.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);*/
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -810,6 +834,7 @@ namespace Neuro
 
         CudaKernels::UpSample2D(blocks, threads, input.GetDevicePtr(), input.Width(), input.Height(), input.Depth(), input.Batch(), scaleFactor, output.GetDevicePtr());*/
         Tensor tmp(output.GetShape());
+        tmp.TryDeviceAllocate();
         Pool2DGradient(tmp, tmp, input, scaleFactor, scaleFactor, AvgPool, 0, 0, NCHW, output);
         Scale(output, (float)scaleFactor * scaleFactor);
     }
