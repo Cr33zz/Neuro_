@@ -216,7 +216,7 @@ __global__ void mul(int len, const float* __restrict t1, const float* __restrict
         output[n] = t1[n] * t2[n];
 }
 
-__global__ void mulBroadcast(const float* __restrict t1, const float* __restrict t2, int t2Width, int t2Height, int t2Depth, int t2Batch, float* __restrict output, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
+__global__ void mulBroadcast(float alpha, const float* __restrict t1, float beta, const float* __restrict t2, int t2Width, int t2Height, int t2Depth, int t2Batch, float* __restrict output, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -241,7 +241,7 @@ __global__ void mulBroadcast(const float* __restrict t1, const float* __restrict
     int t2H = t2Height == 1 ? 0 : (h % t2Height);
     int t2W = t2Width == 1 ? 0 : (w % t2Width);
 
-    output[i] = t1[i] * t2[getIndex(t2W, t2H, t2D, t2N, t2Dim0, t2Dim0Dim1, t2Dim0Dim1Dim2)];
+    output[i] = alpha * t1[i] * beta * t2[getIndex(t2W, t2H, t2D, t2N, t2Dim0, t2Dim0Dim1, t2Dim0Dim1Dim2)];
 }
 
 __global__ void div(int len, const float* __restrict t1, const float* __restrict t2, float* __restrict output, int subLen)
@@ -610,9 +610,9 @@ namespace Neuro
         cudaStreamSynchronize(0);
     }
 
-    void CudaKernels::MulBroadcast(const dim3& blocks, const dim3& threads, const float* t1Dev, const float* t2Dev, int t2Width, int t2Height, int t2Depth, int t2Batch, float* outputDev, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
+    void CudaKernels::MulBroadcast(const dim3& blocks, const dim3& threads, float alpha, const float* t1Dev, float beta, const float* t2Dev, int t2Width, int t2Height, int t2Depth, int t2Batch, float* outputDev, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
     {
-        mulBroadcast<<<blocks, threads>>>(t1Dev, t2Dev, t2Width, t2Height, t2Depth, t2Batch, outputDev, outputWidth, outputHeight, outputDepth, outputBatch);
+        mulBroadcast<<<blocks, threads>>>(alpha, t1Dev, beta, t2Dev, t2Width, t2Height, t2Depth, t2Batch, outputDev, outputWidth, outputHeight, outputDepth, outputBatch);
         cudaStreamSynchronize(0);
     }
 

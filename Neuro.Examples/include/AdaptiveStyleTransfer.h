@@ -144,8 +144,8 @@ public:
         auto optimizer = Adam(learningRate, 0.9f, 0.9f);
         auto minimize = optimizer.Minimize({ totalLoss }, {}, globalStep);
 
-        Tensor contentBatch(Shape::From(content->GetShape(), BATCH_SIZE));
-        Tensor styleBatch(Shape::From(style->GetShape(), BATCH_SIZE));
+        Tensor contentBatch(Shape::From(content->GetShape(), BATCH_SIZE), "content_batch");
+        Tensor styleBatch(Shape::From(style->GetShape(), BATCH_SIZE), "style_batch");
 
         ///contentBatch.DebugRecoverValues("e:/Downloads/fake_coco/content.jpg_raw");
         ///styleBatch.DebugRecoverValues("e:/Downloads/fake_wikiart/style.jpg_raw");

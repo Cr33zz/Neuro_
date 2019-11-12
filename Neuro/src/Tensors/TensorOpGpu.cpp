@@ -199,15 +199,15 @@ namespace Neuro
         output.Zero();
 
         if (t1.Depth() == t2.Depth() && t1.Batch() == t2.Batch())
-            MulStridedBatched(transposeT1, transposeT2, t1, t2, output);
+            MatMulStridedBatched(transposeT1, transposeT2, t1, t2, output);
         else if (t1.Depth() * output.Batch() > 48)
-            MulBatched(transposeT1, transposeT2, t1, t2, output);
+            MatMulBatched(transposeT1, transposeT2, t1, t2, output);
         else
-            MulGeneric(transposeT1, transposeT2, t1, t2, output);
+            MatMulGeneric(transposeT1, transposeT2, t1, t2, output);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Mul(const Tensor& t1, const Tensor& t2, Tensor& output) const
+    void TensorOpGpu::Mul(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const
     {
         t1.CopyToDevice();
         t2.CopyToDevice();
@@ -225,14 +225,14 @@ namespace Neuro
             cudnnSetTensor4dDescriptor(t2Desc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, t2.GetShape().Dimensions[3], t2.GetShape().Dimensions[2], t2.GetShape().Dimensions[1], t2.GetShape().Dimensions[0]);
             cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, output.GetShape().Dimensions[3], output.GetShape().Dimensions[2], output.GetShape().Dimensions[1], output.GetShape().Dimensions[0]);
 
-            float alpha1 = 1.f, alpha2 = 1.f, beta = 0.f;
+            float beta2 = 0.f;
             if (t2.SameDimensionsOrOne(t1))
-                CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, mulDesc, &alpha1, t1Desc, t1.GetDevicePtr(), &alpha2, t2Desc, t2.GetDevicePtr(), &beta, outputDesc, output.GetDevicePtr()));
+                CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, mulDesc, &alpha, t1Desc, t1.GetDevicePtr(), &beta, t2Desc, t2.GetDevicePtr(), &beta2, outputDesc, output.GetDevicePtr()));
             else
-                CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, mulDesc, &alpha2, t2Desc, t2.GetDevicePtr(), &alpha1, t1Desc, t1.GetDevicePtr(), &beta, outputDesc, output.GetDevicePtr()));
+                CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, mulDesc, &beta, t2Desc, t2.GetDevicePtr(), &alpha, t1Desc, t1.GetDevicePtr(), &beta2, outputDesc, output.GetDevicePtr()));
             return;
         }
-        
+
         dim3 blocks, threads;
         GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
 
@@ -241,7 +241,9 @@ namespace Neuro
             return CudaKernels::MulBroadcast(
                 blocks,
                 threads,
+                beta,
                 t2.GetDevicePtr(),
+                alpha,
                 t1.GetDevicePtr(),
                 t1.Width(),
                 t1.Height(),
@@ -258,7 +260,9 @@ namespace Neuro
             return CudaKernels::MulBroadcast(
                 blocks,
                 threads,
+                alpha,
                 t1.GetDevicePtr(),
+                beta,
                 t2.GetDevicePtr(),
                 t2.Width(),
                 t2.Height(),
@@ -271,7 +275,7 @@ namespace Neuro
                 output.Batch());
         }
         else
-            __super::Mul(t1, t2, output);
+            __super::Mul(alpha, t1, beta, t2, output);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -377,11 +381,18 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::PowGradient(const Tensor& input, float power, const Tensor& outputGradient, Tensor& inputGradient) const
     {
-        dim3 blocks, threads;
-        GetKernelRunParams(max((int)input.Length() / INNER_KERNEL_LOOP_LENGTH, 1), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
         input.CopyToDevice();
         outputGradient.CopyToDevice();
         inputGradient.OverrideDevice();
+
+        if (power == 2)
+        {
+            Mul(2.f, outputGradient, 1.f, input, inputGradient);
+            return;
+        }
+
+        dim3 blocks, threads;
+        GetKernelRunParams(max((int)input.Length() / INNER_KERNEL_LOOP_LENGTH, 1), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
 
         CudaKernels::PowGradient(blocks, threads, input.Length(), input.GetDevicePtr(), power, outputGradient.GetDevicePtr(), inputGradient.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);
     }
@@ -827,14 +838,9 @@ namespace Neuro
     ////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::UpSample2D(const Tensor& input, uint32_t scaleFactor, Tensor& output) const
     {
-        /*dim3 blocks, threads;
-        GetKernelRunParams(input.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
-        input.CopyToDevice();
-        output.OverrideDevice();
-
-        CudaKernels::UpSample2D(blocks, threads, input.GetDevicePtr(), input.Width(), input.Height(), input.Depth(), input.Batch(), scaleFactor, output.GetDevicePtr());*/
         Tensor tmp(output.GetShape());
         tmp.TryDeviceAllocate();
+        tmp.OverrideDevice();
         Pool2DGradient(tmp, tmp, input, scaleFactor, scaleFactor, AvgPool, 0, 0, NCHW, output);
         Scale(output, (float)scaleFactor * scaleFactor);
     }
@@ -844,13 +850,6 @@ namespace Neuro
     {
         Pool2D(outputGradient, scaleFactor, scaleFactor, AvgPool, 0, 0, NCHW, inputGradient);
         Scale(inputGradient, (float)scaleFactor * scaleFactor);
-        /*dim3 blocks, threads;
-        GetKernelRunParams(inputGradient.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
-        outputGradient.CopyToDevice();
-        inputGradient.OverrideDevice();
-        inputGradient.Zero();
-        
-        CudaKernels::UpSample2DGradient(blocks, threads, outputGradient.GetDevicePtr(), scaleFactor, inputGradient.GetDevicePtr(), inputGradient.Width(), inputGradient.Height(), inputGradient.Depth(), inputGradient.Batch());*/
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1519,7 +1518,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::MulGeneric(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
+    void TensorOpGpu::MatMulGeneric(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
     {
         int m = t1.Height(), n = t2.Width(), k = t1.Width();
         float alpha = 1, beta = 0;
@@ -1551,7 +1550,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::MulBatched(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
+    void TensorOpGpu::MatMulBatched(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
     {
         int m = t1.Height(), n = t2.Width(), k = t1.Width();
 
@@ -1610,7 +1609,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::MulStridedBatched(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
+    void TensorOpGpu::MatMulStridedBatched(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
     {
         int m = t1.Height(), n = t2.Width(), k = t1.Width();
 
