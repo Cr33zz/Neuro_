@@ -164,7 +164,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::Div(const Tensor& t1, const Tensor& t2, Tensor& output) const
+    void TensorOpCpu::Div(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const
     {
         t1.CopyToHost();
         t2.CopyToHost();
@@ -190,7 +190,7 @@ namespace Neuro
                         uint32_t t1W = w % t1.Width();
                         uint32_t t2W = w % t2.Width();
 
-                        output(w, h, d, n) = t1(t1W, t1H, t1D, t1N) / t2(t2W, t2H, t2D, t2N);
+                        output(w, h, d, n) = (alpha * t1(t1W, t1H, t1D, t1N)) / (beta * t2(t2W, t2H, t2D, t2N));
                     }
                 }
             }

@@ -402,8 +402,14 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
 	void Tensor::Div(const Tensor& t, Tensor& result) const
 	{
-        Op()->Div(*this, t, result);
+        Op()->Div(1.f, *this, 1.f, t, result);
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Div(float alpha, float beta, const Tensor& t, Tensor& result) const
+    {
+        Op()->Div(alpha, *this, beta, t, result);
+    }
 
 	//////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::Div(const Tensor& t) const
@@ -867,40 +873,41 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::MergeMin(const const_tensor_ptr_vec_t& inputs, Tensor& result)
+	void Tensor::MergeMin(const const_tensor_ptr_vec_t& inputs, Tensor& output)
 	{
-        result.OverrideHost();
-		inputs[0]->CopyTo(result);
+        output.OverrideHost();
+		inputs[0]->CopyTo(output);
 		for (uint32_t i = 1; i < inputs.size(); ++i)
-		for (uint32_t j = 0; j < result.Length(); ++j)
-			result.m_Storage.Data()[j] = result.m_Storage.Data()[j] > inputs[i]->m_Storage.Data()[j] ? inputs[i]->m_Storage.Data()[j] : result.m_Storage.Data()[j];
+		for (uint32_t j = 0; j < output.Length(); ++j)
+			output.m_Storage.Data()[j] = output.m_Storage.Data()[j] > inputs[i]->m_Storage.Data()[j] ? inputs[i]->m_Storage.Data()[j] : output.m_Storage.Data()[j];
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::MergeMax(const const_tensor_ptr_vec_t& inputs, Tensor& result)
+	void Tensor::MergeMax(const const_tensor_ptr_vec_t& inputs, Tensor& output)
 	{
-        result.OverrideHost();
+        output.OverrideHost();
         inputs[0]->CopyToHost();
-		inputs[0]->CopyTo(result);
+		inputs[0]->CopyTo(output);
 
         for (uint32_t i = 1; i < inputs.size(); ++i)
         {
             inputs[i]->CopyToHost();
-            for (uint32_t j = 0; j < result.Length(); ++j)
-                result.m_Storage.Data()[j] = result.m_Storage.Data()[j] < inputs[i]->m_Storage.Data()[j] ? inputs[i]->m_Storage.Data()[j] : result.m_Storage.Data()[j];
+            for (uint32_t j = 0; j < output.Length(); ++j)
+                output.m_Storage.Data()[j] = output.m_Storage.Data()[j] < inputs[i]->m_Storage.Data()[j] ? inputs[i]->m_Storage.Data()[j] : output.m_Storage.Data()[j];
         }
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::MergeSum(const const_tensor_ptr_vec_t& inputs, Tensor& result)
+	void Tensor::MergeSum(const const_tensor_ptr_vec_t& inputs, Tensor& output)
 	{
-        result.OverrideHost();
-		result.Zero();
+        //output.OverrideHost();
+		output.Zero();
         for (uint32_t i = 0; i < inputs.size(); ++i)
         {
-            inputs[i]->CopyToHost();
+            inputs[i]->Add(1.f, 1.f, output, output);
+            /*inputs[i]->CopyToHost();
             for (uint32_t j = 0; j < result.Length(); ++j)
-                result.m_Storage.Data()[j] += inputs[i]->m_Storage.Data()[j];
+                result.m_Storage.Data()[j] += inputs[i]->m_Storage.Data()[j];*/
         }
 	}
 
@@ -2301,7 +2308,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     Tensor sqrt(const Tensor& t)
     {
-        return t.Map([](float x) { return ::sqrt(x); });
+        return t.Sqrt();
     }
 
     //////////////////////////////////////////////////////////////////////////

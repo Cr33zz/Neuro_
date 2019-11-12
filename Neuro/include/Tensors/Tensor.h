@@ -86,6 +86,7 @@ namespace Neuro
         Tensor Mul(float v) const;
         void Scale(float v);
         void Div(const Tensor& t, Tensor& result) const;
+        void Div(float alpha, float beta, const Tensor& t, Tensor& result) const;
         Tensor Div(const Tensor& t) const;
         void Div(float v, Tensor& result) const;
         Tensor Div(float v) const;
@@ -137,10 +138,10 @@ namespace Neuro
         // This is reverse Concat operation
         void Split(EAxis axis, tensor_ptr_vec_t& outputs) const;
 
-        static void MergeMin(const const_tensor_ptr_vec_t& inputs, Tensor& result);
-        static void MergeMax(const const_tensor_ptr_vec_t& inputs, Tensor& result);
-        static void MergeSum(const const_tensor_ptr_vec_t& inputs, Tensor& result);
-        static void MergeAvg(const const_tensor_ptr_vec_t& inputs, Tensor& result);
+        static void MergeMin(const const_tensor_ptr_vec_t& inputs, Tensor& output);
+        static void MergeMax(const const_tensor_ptr_vec_t& inputs, Tensor& output);
+        static void MergeSum(const const_tensor_ptr_vec_t& inputs, Tensor& output);
+        static void MergeAvg(const const_tensor_ptr_vec_t& inputs, Tensor& output);
         static void MergeMinMaxGradient(const Tensor& output, const const_tensor_ptr_vec_t& inputs, const Tensor& outputGradient, tensor_ptr_vec_t& results);
         static void MergeSumGradient(const Tensor& output, const const_tensor_ptr_vec_t& inputs, const Tensor& outputGradient, tensor_ptr_vec_t& results);
         static void MergeAvgGradient(const Tensor& output, const const_tensor_ptr_vec_t& inputs, const Tensor& outputGradient, tensor_ptr_vec_t& results);

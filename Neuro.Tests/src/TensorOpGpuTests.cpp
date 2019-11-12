@@ -1,5 +1,6 @@
 ﻿#include "CppUnitTest.h"
 #include "Neuro.h"
+#include "Tensors/TensorOpCpu.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace Neuro;
@@ -1517,6 +1518,34 @@ namespace NeuroTests
             Logger::WriteMessage("Save inversed variance passed.");
             Assert::IsTrue(result.Equals(result2));
             Logger::WriteMessage("Result passed.");
+        }
+
+        TEST_METHOD(AdamStep_CompareWithCpuResult)
+        {
+            Tensor parameter(Shape(3, 4, 2, 3)); parameter.FillWithRand(5);
+            Tensor parameter2(parameter);
+            Tensor gradient(parameter.GetShape()); gradient.FillWithRand(6);
+            Tensor vGrad(parameter.GetShape()); vGrad.FillWithRand(7);
+            Tensor vGrad2(vGrad);
+            Tensor mGrad(parameter.GetShape()); mGrad.FillWithRand(8);
+            Tensor mGrad2(mGrad);
+            float epsilon = 0.00001f;
+            float lr = 0.001f;
+            float beta1 = 0.9f;
+            float beta2 = 0.99f;
+            
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor::ActiveOp()->AdamStep(parameter, gradient, mGrad, vGrad, lr, beta1, beta2, epsilon);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor::ActiveOp()->AdamStep(parameter2, gradient, mGrad2, vGrad2, lr, beta1, beta2, epsilon);)
+
+            Assert::IsTrue(mGrad.Equals(mGrad2));
+            Logger::WriteMessage("MGrad passed.");
+            Assert::IsTrue(vGrad.Equals(vGrad2));
+            Logger::WriteMessage("VGrad passed.");
+            Assert::IsTrue(parameter.Equals(parameter2));
+            Logger::WriteMessage("Parameter passed.");
         }
     };
 }
