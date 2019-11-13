@@ -55,9 +55,15 @@ namespace Neuro
     void LoadCSVData(const string& filename, int outputsNum, Tensor& inputs, Tensor& outputs, bool outputsOneHotEncoded = false, int maxLines = -1);
 
     // Loaded tensor is flat and internal data layout is NHWC, it should be transposed and normalized before use
-    void LoadImage(const string& filename, float* buffer, uint32_t targetSizeX = 0, uint32_t targetSizeY = 0, bool crop = false, EDataFormat targetFormat = NCHW);
-    Tensor LoadImage(const string& filename, uint32_t targetSizeX = 0, uint32_t targetSizeY = 0, bool crop = false, EDataFormat targetFormat = NCHW);
+    void LoadImage(const string& filename, float* buffer, uint32_t targetSizeX = 0, uint32_t targetSizeY = 0, uint32_t cropSizeX = 0, uint32_t cropSizeY = 0, EDataFormat targetFormat = NCHW);
+    Tensor LoadImage(const string& filename, uint32_t targetSizeX = 0, uint32_t targetSizeY = 0, uint32_t cropSizeX = 0, uint32_t cropSizeY = 0, EDataFormat targetFormat = NCHW);
+    Tensor LoadImage(uint8_t* imageBuffer, uint32_t width, uint32_t height, EPixelFormat format = RGB);
+    bool IsImageFileValid(const string& filename);
     Shape GetImageDims(const string& filename);
+
+    vector<string> LoadFilesList(const string& dir, bool shuffle, bool useCache = true, bool validate = false);
+
+    void SampleImagesBatch(const vector<string>& files, Tensor& output, bool loadAll = false);
 
     template<typename T>
     vector<T> MergeVectors(initializer_list<vector<T>> vectors);

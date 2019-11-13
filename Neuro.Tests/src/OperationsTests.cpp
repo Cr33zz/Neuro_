@@ -17,7 +17,7 @@ namespace NeuroTests
             auto runningMean = Variable(zeros(gamma.GetShape()));
             auto runningVar = Variable(ones(gamma.GetShape()));
             auto training = Constant(1.f);
-            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new BatchNormalizeOp(&x, &gamma, &beta, &runningMean, &runningVar, 0.9f, 0.001f, &training)).get(), {0,0,0,1,1,1}));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new BatchNormalizeOp(&x, &gamma, &beta, &runningMean, &runningVar, 0.9f, 0.00001f, &training)).get(), false, {0,0,0,1,1,1}));
         }
 
         TEST_METHOD(InstanceNormalize)
@@ -26,7 +26,7 @@ namespace NeuroTests
             auto gamma = Variable(Shape(1, 1, 5, 2));
             auto beta = Variable(gamma.GetShape());
             auto training = Constant(1.f);
-            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new InstanceNormalizeOp(&x, &gamma, &beta, 0.001f, &training)).get()));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new InstanceNormalizeOp(&x, &gamma, &beta, 0.00001f, &training)).get(), false, { 0,0,0,1 }));
         }
 
         TEST_METHOD(BatchNormalize_Spatial)
@@ -37,14 +37,24 @@ namespace NeuroTests
             auto runningMean = Variable(zeros(gamma.GetShape()));
             auto runningVar = Variable(ones(gamma.GetShape()));
             auto training = Constant(1.f);
-            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new BatchNormalizeOp(&x, &gamma, &beta, &runningMean, &runningVar, 0.9f, 0.001f, &training)).get(), { 0,0,0,1,1,1 }));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new BatchNormalizeOp(&x, &gamma, &beta, &runningMean, &runningVar, 0.9f, 0.00001f, &training)).get(), false, { 0,0,0,1,1,1 }));
         }
 
         TEST_METHOD(Conv2d)
         {
+            Tensor::SetForcedOpMode(GPU);
             auto x = Variable(Shape(9, 9, 3, 2));
             auto kernels = Variable(Shape(3, 3, 3, 5));
             Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new Conv2dOp(&x, &kernels, 1, 1, NCHW)).get()));
+        }
+
+        TEST_METHOD(Conv2dBiasActivation)
+        {
+            Tensor::SetForcedOpMode(GPU);
+            auto x = Variable(Shape(9, 9, 3, 2));
+            auto kernels = Variable(Shape(3, 3, 3, 5));
+            auto bias = Variable(Shape(1, 1, 5, 1));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new Conv2dBiasActivationOp(&x, &kernels, 1, 1, &bias, _ReLU, 1)).get()));
         }
 
         TEST_METHOD(Pool2d_Max)
@@ -239,10 +249,16 @@ namespace NeuroTests
             Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new PowOp(&x, 3.f)).get()));
         }
 
+        TEST_METHOD(Sqr)
+        {
+            auto x = Variable(Shape(2, 3, 4, 2));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new PowOp(&x, 2.f)).get()));
+        }
+
         TEST_METHOD(Sqrt)
         {
             auto x = Variable(Shape(2, 3, 4, 2));
-            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new SqrtOp(&x)).get()));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new SqrtOp(&x)).get(), true));
         }
 
         TEST_METHOD(Transpose)
@@ -272,7 +288,7 @@ namespace NeuroTests
         TEST_METHOD(Log)
         {
             auto x = Variable(Shape(2, 3, 4, 2));
-            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new LogOp(&x)).get()));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new LogOp(&x)).get(), true));
         }
 
         TEST_METHOD(Negative)
@@ -288,10 +304,9 @@ namespace NeuroTests
         }
         
         //////////////////////////////////////////////////////////////////////////
-        static bool ValidateOperation(Operation* op, const vector<bool>& ignoreInput = {})
+        static bool ValidateOperation(Operation* op, bool onlyPositiveInputs = false, const vector<bool>& ignoreInput = {})
         {
             float DERIVATIVE_EPSILON = 1e-4f;
-            float LOSS_DERIVATIVE_EPSILON = 1e-5f;
 
             GlobalRngSeed(101);
 
@@ -301,7 +316,7 @@ namespace NeuroTests
             for (auto inputNode : op->InputNodes())
             {
                 inputs.push_back(Tensor(inputNode->GetShape()));
-                inputs.back().FillWithRand();
+                inputs.back().FillWithRand(-1, onlyPositiveInputs ? 0.f : -1.f, 1.f);
                 inputsPtrs.push_back(&inputs.back());
             }
 
@@ -312,11 +327,13 @@ namespace NeuroTests
             tensor_ptr_vec_t outputGradient = { &tmpOutputGrad[0] };
             outputGradient[0]->FillWithValue(GRAD_VALUE);*/
             Tensor outputGrad(output.GetShape());
-            outputGrad.FillWithRand();
+            outputGrad.FillWithRand(-1, -2, 2);
 
             op->ComputeGradient(outputGrad);
 
             auto result = Tensor(zeros(output.GetShape()));
+
+            bool fail = false;
 
             for (uint32_t n = 0; n < (int)inputs.size(); ++n)
             {
@@ -349,15 +366,23 @@ namespace NeuroTests
                         approxGradient += approxGrad[j] * outputGrad.GetFlat(j);
                     }
 
-                    if (abs(approxGradient - op->InputsGrads()[n].GetFlat(i)) > 0.02f)
+                    if (isnan(approxGradient) || isinf(approxGradient))
                     {
-                        Logger::WriteMessage((string("Input gradient validation failed at element ") + to_string(i) + " of input " + to_string(n) + ", expected " + to_string(approxGradient) + " actual " + to_string(op->InputsGrads()[n].GetFlat(i)) + "!").c_str());
+                        Logger::WriteMessage((string("Approximated gradient is nan/inf: ") + to_string(approxGradient)).c_str());
                         return false;
+                    }
+
+                    // tolerance is 2%
+                    float errorPct = abs(approxGradient - op->InputsGrads()[n].GetFlat(i)) / abs(approxGradient);
+                    if (errorPct > 0.02f)
+                    {
+                        Logger::WriteMessage((string("Input gradient validation failed at element ") + to_string(i) + " of input " + to_string(n) + ", expected " + to_string(approxGradient) + " actual " + to_string(op->InputsGrads()[n].GetFlat(i)) + " (error " + to_string(errorPct * 100.f) + "%)!").c_str());
+                        fail = true;
                     }
                 }
             }
 
-            return true;
+            return !fail;
         }
     };
 }

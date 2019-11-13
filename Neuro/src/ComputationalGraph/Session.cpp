@@ -101,12 +101,12 @@ namespace Neuro
                 if (Debug::ShouldLogOutput(node->Name()))
                 {
                     for (size_t i = 0; i < inputs.size(); ++i)
-                        inputs[i]->DebugDumpValues(Replace(node->Name() + "_input" + to_string(i) + "_step" + to_string(Debug::GetStep()) + ".log", "/", "_"));
+                        inputs[i]->DebugDumpValues(node->Name() + "_input" + to_string(i) + "_step" + to_string(Debug::GetStep()) + ".log");
                 }
             }
 
             if (Debug::ShouldLogOutput(node->Name()))
-                node->Output().DebugDumpValues(Replace(node->Name() + "_output0_step" + to_string(Debug::GetStep()) + ".log", "/", "_"));
+                node->Output().DebugDumpValues(node->Name() + "_output0_step" + to_string(Debug::GetStep()) + ".log");
         }
 
         Debug::Step();

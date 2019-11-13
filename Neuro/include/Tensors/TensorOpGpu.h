@@ -17,18 +17,23 @@ namespace Neuro
         virtual void One(Tensor& input) const override;
         virtual void Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const override;
         virtual void MatMul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const override;
-        virtual void MulElem(const Tensor& t1, const Tensor& t2, Tensor& output) const override;
-        virtual void Div(const Tensor& t1, const Tensor& t2, Tensor& output) const override;
+        virtual void Mul(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const override;
+        virtual void Div(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const override;
         virtual void Mul(const Tensor& input, float v, Tensor& output) const override;
+        virtual void Scale(Tensor& input, float v) const override;
         virtual void Div(const Tensor& input, float v, Tensor& output) const override;
         virtual void Add(const Tensor& input, float v, Tensor& output) const override;
         virtual void Pow(const Tensor& input, float power, Tensor& output) const override;
-        virtual void PowGradient(const Tensor& input, float power, const Tensor& outputGradient, Tensor& inputGradient) const;
+        virtual void PowGradient(const Tensor& input, float power, const Tensor& outputGradient, Tensor& inputGradient) const override;
+        virtual void Sqrt(const Tensor& input, Tensor& output) const override;
         virtual void Negate(const Tensor& input, Tensor& output) const override;
         virtual void Inverse(const Tensor& input, Tensor& output) const override;
         virtual void Sum(const Tensor& input, EAxis axis, Tensor& output) const override;
+        virtual void Mean(const Tensor& input, EAxis axis, Tensor& output) const override;
         virtual void Transpose(const Tensor& input, Tensor& output) const override;
         virtual void Conv2D(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& output) const override;
+        virtual void Conv2DBiasActivation(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, const Tensor& bias, EActivation activation, float activationAlpha, Tensor& output) override;
+        virtual void Conv2DBiasGradient(const Tensor& gradient, Tensor& inputsGradient) override;
         virtual void Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& inputGradient) const override;
         virtual void Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& kernelsGradient) const override;
         virtual void Pool2D(const Tensor& t, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& output) const override;
@@ -53,19 +58,20 @@ namespace Neuro
         virtual void Softmax(const Tensor& input, Tensor& output) const override;
         virtual void SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const override;
 
-        virtual void AdamStep(Tensor& parameter, const Tensor& gradient, Tensor& mGrad, Tensor& vGrad, float batchSize, float lr, float beta1, float beta2, float epsilon) const override;
-        virtual void SgdStep(Tensor& parameter, const Tensor& gradient, float batchSize, float lr) const override;
+        virtual void AdamStep(Tensor& parameter, const Tensor& gradient, Tensor& mGrad, Tensor& vGrad, /*float batchSize, */float lr, float beta1, float beta2, float epsilon) const override;
+        virtual void SgdStep(Tensor& parameter, const Tensor& gradient, /*float batchSize, */float lr) const override;
 
     private:
         void Activation(const cudnnActivationMode_t& activationMode, const Tensor& input, Tensor& output, float coeff) const;
         void ActivationGradient(const cudnnActivationMode_t& activationMode, const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient, float coeff) const;
 
-        void MulGeneric(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const;
-        void MulBatched(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const;
-        void MulStridedBatched(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const;
+        void MatMulGeneric(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const;
+        void MatMulBatched(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const;
+        void MatMulStridedBatched(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const;
 
         static cudnnPoolingMode_t GetCudnnPoolType(EPoolingMode mode);
         static cudnnBatchNormMode_t GetCudnnBatchNormMode(EBatchNormMode mode);
+        static cudnnActivationMode_t GetCudnnActivationMode(EActivation mode);
         static void GetKernelRunParams(int count, dim3& blocks, dim3& threads, int threadsPerBlock);
         static void GetGlobalSumKernelRunParams(int count, dim3& blocksDim, dim3& threadsDim, int maxThreads);
         static int GetBlocksNum(int count, int threadsPerBlock);

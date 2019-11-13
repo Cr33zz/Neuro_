@@ -335,7 +335,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-	void Tensor::Mul(bool transposeT, const Tensor& t, Tensor& result) const
+	void Tensor::MatMul(bool transposeT, const Tensor& t, Tensor& result) const
 	{
         NEURO_ASSERT(!transposeT, "");
 		assert((!transposeT && Width() == t.Height()) || (transposeT && Width() == t.Width()));
@@ -346,29 +346,29 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::Mul(bool transposeT, const Tensor& t) const
+	Tensor Tensor::MatMul(bool transposeT, const Tensor& t) const
 	{
 		Tensor result(Shape(transposeT ? t.m_Shape.Height() : t.m_Shape.Width(), Height(), Depth(), max(Batch(), t.Batch())));
-		Mul(transposeT, t, result);
+		MatMul(transposeT, t, result);
 		return result;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Mul(const Tensor& t, Tensor& result) const
+	void Tensor::MatMul(const Tensor& t, Tensor& result) const
 	{
-		Mul(false, t, result);
+		MatMul(false, t, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::Mul(const Tensor& t) const
+	Tensor Tensor::MatMul(const Tensor& t) const
 	{
-		return Mul(false, t);
+		return MatMul(false, t);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::MulElem(const Tensor& t, Tensor& result) const
 	{
-		Op()->MulElem(*this, t, result);
+		Op()->Mul(1.f, *this, 1.f, t, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -393,11 +393,23 @@ namespace Neuro
 		return result;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Scale(float v)
+    {
+        Op()->Scale(*this, v);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void Tensor::Div(const Tensor& t, Tensor& result) const
 	{
-        Op()->Div(*this, t, result);
+        Op()->Div(1.f, *this, 1.f, t, result);
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Div(float alpha, float beta, const Tensor& t, Tensor& result) const
+    {
+        Op()->Div(alpha, *this, beta, t, result);
+    }
 
 	//////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::Div(const Tensor& t) const
@@ -569,6 +581,20 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::Sqrt() const
+    {
+        Tensor result(m_Shape);
+        Sqrt(result);
+        return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Sqrt(Tensor& result) const
+    {
+        Op()->Sqrt(*this, result);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void Tensor::Map(const function<float(float)>& func, Tensor& result) const
 	{
 		Op()->Map(func, *this, result);
@@ -639,62 +665,57 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     template <int W, int H, int D, int N>
-    Tensor MeanTemplate(const Tensor& input, EAxis axis)
+    Shape MeanShape(const Tensor& input, EAxis axis)
     {
-        Tensor mean(Shape(W ? 1 : input.Width(), H ? 1 : input.Height(), D ? 1 : input.Depth(), N ? 1 : input.Batch()));
-        input.Mean(axis, mean);
-        return mean;
+        return Shape(W ? 1 : input.Width(), H ? 1 : input.Height(), D ? 1 : input.Depth(), N ? 1 : input.Batch());
     }
 
     //////////////////////////////////////////////////////////////////////////
     Tensor Tensor::Mean(EAxis axis) const
 	{
-        if (axis == GlobalAxis)
-            return MeanTemplate<1, 1, 1, 1>(*this, axis);
-        if (axis == WidthAxis)
-            return MeanTemplate<1, 0, 0, 0>(*this, axis);
-        if (axis == HeightAxis)
-            return MeanTemplate<0, 1, 0, 0>(*this, axis);
-        if (axis == DepthAxis)
-            return MeanTemplate<0, 0, 1, 0>(*this, axis);
-        if (axis == BatchAxis)
-            return MeanTemplate<0, 0, 0, 1>(*this, axis);
-        if (axis == _01Axes)
-            return MeanTemplate<1, 1, 0, 0>(*this, axis);
-        if (axis == _012Axes)
-            return MeanTemplate<1, 1, 1, 0>(*this, axis);
-        if (axis == _013Axes)
-            return MeanTemplate<1, 1, 0, 1>(*this, axis);
-        if (axis == _123Axes)
-            return MeanTemplate<0, 1, 1, 1>(*this, axis);
-
-        assert(false);
-        return Tensor();
+        Shape outputShape;
+        switch (axis)
+        {
+        case Neuro::GlobalAxis:
+            outputShape = MeanShape<1, 1, 1, 1>(*this, axis);
+            break;
+        case Neuro::WidthAxis:
+            outputShape = MeanShape<1, 0, 0, 0>(*this, axis);
+            break;
+        case Neuro::HeightAxis:
+            outputShape = MeanShape<0, 1, 0, 0>(*this, axis);
+            break;
+        case Neuro::DepthAxis:
+            outputShape = MeanShape<0, 0, 1, 0>(*this, axis);
+            break;
+        case Neuro::BatchAxis:
+            outputShape = MeanShape<0, 0, 0, 1>(*this, axis);
+            break;
+        case Neuro::_01Axes:
+            outputShape = MeanShape<1, 1, 0, 0>(*this, axis);
+            break;
+        case Neuro::_012Axes:
+            outputShape = MeanShape<1, 1, 1, 0>(*this, axis);
+            break;
+        case Neuro::_013Axes:
+            outputShape = MeanShape<1, 1, 0, 1>(*this, axis);
+            break;
+        case Neuro::_123Axes:
+            outputShape = MeanShape<0, 1, 1, 1>(*this, axis);
+            break;
+        default:
+            NEURO_ASSERT(false, "Unsupported axis.");
+            break;
+        }
+        Tensor output(outputShape);
+        Mean(axis, output);
+        return output;
 	}
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Mean(EAxis axis, Tensor& output) const
     {
-        Sum(axis, output);
-
-        if (axis == GlobalAxis)
-            output.Div((float)Length(), output);
-        else if (axis == WidthAxis)
-            output.Div((float)Width(), output);
-        else if (axis == HeightAxis)
-            output.Div((float)Height(), output);
-        else if (axis == DepthAxis)
-            output.Div((float)Depth(), output);
-        else if (axis == BatchAxis)
-            output.Div((float)Batch(), output);
-        else if (axis == _01Axes)
-            output.Div((float)(Len(0)*Len(1)), output);
-        else if (axis == _012Axes)
-            output.Div((float)(Len(0)*Len(1)*Len(2)), output);
-        else if (axis == _013Axes)
-            output.Div((float)(Len(0)*Len(1)*Len(3)), output);
-        else if (axis == _123Axes)
-            output.Div((float)(Len(1)*Len(2)*Len(3)), output);
+        Op()->Mean(*this, axis, output);
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -852,40 +873,41 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::MergeMin(const const_tensor_ptr_vec_t& inputs, Tensor& result)
+	void Tensor::MergeMin(const const_tensor_ptr_vec_t& inputs, Tensor& output)
 	{
-        result.OverrideHost();
-		inputs[0]->CopyTo(result);
+        output.OverrideHost();
+		inputs[0]->CopyTo(output);
 		for (uint32_t i = 1; i < inputs.size(); ++i)
-		for (uint32_t j = 0; j < result.Length(); ++j)
-			result.m_Storage.Data()[j] = result.m_Storage.Data()[j] > inputs[i]->m_Storage.Data()[j] ? inputs[i]->m_Storage.Data()[j] : result.m_Storage.Data()[j];
+		for (uint32_t j = 0; j < output.Length(); ++j)
+			output.m_Storage.Data()[j] = output.m_Storage.Data()[j] > inputs[i]->m_Storage.Data()[j] ? inputs[i]->m_Storage.Data()[j] : output.m_Storage.Data()[j];
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::MergeMax(const const_tensor_ptr_vec_t& inputs, Tensor& result)
+	void Tensor::MergeMax(const const_tensor_ptr_vec_t& inputs, Tensor& output)
 	{
-        result.OverrideHost();
+        output.OverrideHost();
         inputs[0]->CopyToHost();
-		inputs[0]->CopyTo(result);
+		inputs[0]->CopyTo(output);
 
         for (uint32_t i = 1; i < inputs.size(); ++i)
         {
             inputs[i]->CopyToHost();
-            for (uint32_t j = 0; j < result.Length(); ++j)
-                result.m_Storage.Data()[j] = result.m_Storage.Data()[j] < inputs[i]->m_Storage.Data()[j] ? inputs[i]->m_Storage.Data()[j] : result.m_Storage.Data()[j];
+            for (uint32_t j = 0; j < output.Length(); ++j)
+                output.m_Storage.Data()[j] = output.m_Storage.Data()[j] < inputs[i]->m_Storage.Data()[j] ? inputs[i]->m_Storage.Data()[j] : output.m_Storage.Data()[j];
         }
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::MergeSum(const const_tensor_ptr_vec_t& inputs, Tensor& result)
+	void Tensor::MergeSum(const const_tensor_ptr_vec_t& inputs, Tensor& output)
 	{
-        result.OverrideHost();
-		result.Zero();
+        //output.OverrideHost();
+		output.Zero();
         for (uint32_t i = 0; i < inputs.size(); ++i)
         {
-            inputs[i]->CopyToHost();
+            inputs[i]->Add(1.f, 1.f, output, output);
+            /*inputs[i]->CopyToHost();
             for (uint32_t j = 0; j < result.Length(); ++j)
-                result.m_Storage.Data()[j] += inputs[i]->m_Storage.Data()[j];
+                result.m_Storage.Data()[j] += inputs[i]->m_Storage.Data()[j];*/
         }
 	}
 
@@ -1328,21 +1350,41 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& result) const
+    void Tensor::Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& output) const
 	{
         assert((dataFormat == NCHW ? Depth() : Len(0)) == kernels.Depth());
-		Op()->Conv2D(*this, kernels, stride, padding, padding, dataFormat, result);
+		Op()->Conv2D(*this, kernels, stride, padding, padding, dataFormat, output);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
     Tensor Tensor::Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat) const
 	{
-		Tensor result(GetConvOutputShape(GetShape(), kernels.Batch(), kernels.Width(), kernels.Height(), stride, padding, padding, dataFormat));
-		Conv2D(kernels, stride, padding, dataFormat, result);
-		return result;
+		Tensor output(GetConvOutputShape(GetShape(), kernels.Batch(), kernels.Width(), kernels.Height(), stride, padding, padding, dataFormat));
+		Conv2D(kernels, stride, padding, dataFormat, output);
+		return output;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Conv2DBiasActivation(const Tensor& kernels, uint32_t stride, uint32_t padding, const Tensor& bias, EActivation activation, float activationAlpha, Tensor& output) const
+    {
+        Op()->Conv2DBiasActivation(*this, kernels, stride, padding, padding, bias, activation, activationAlpha, output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::Conv2DBiasActivation(const Tensor& kernels, uint32_t stride, uint32_t padding, const Tensor& bias, EActivation activation, float activationAlpha) const
+    {
+        Tensor output(GetConvOutputShape(GetShape(), kernels.Batch(), kernels.Width(), kernels.Height(), stride, padding, padding, NCHW));
+        Conv2DBiasActivation(kernels, stride, padding, bias, activation, activationAlpha, output);
+        return output;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Conv2DBiasGradient(const Tensor& gradient, Tensor& inputsGradient) const
+    {
+        Op()->Conv2DBiasGradient(gradient, inputsGradient);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void Tensor::Conv2DInputsGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& inputsGradient) const
 	{
 		Op()->Conv2DInputGradient(gradient, kernels, stride, padding, padding, dataFormat, inputsGradient);
@@ -1485,6 +1527,15 @@ namespace Neuro
 	{
 		return Width() == t.Width() && Height() == t.Height() && Depth() == t.Depth();
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    bool Tensor::SameDimensionsOrOne(const Tensor& t) const
+    {
+        return (Width() == 1 || Width() == t.Width()) &&
+               (Height() == 1 || Height() == t.Height()) &&
+               (Depth() == 1 || Depth() == t.Depth()) &&
+               (Batch() == 1 || Batch() == t.Batch());
+    }
 
     //////////////////////////////////////////////////////////////////////////
     pair<uint32_t, uint32_t> Tensor::GetPadding(EPaddingMode paddingMode, uint32_t kernelWidth, uint32_t kernelHeight)
@@ -1874,15 +1925,57 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void Tensor::Activation(EActivation activation, float coeff, Tensor& output) const
+    {
+        switch (activation)
+        {
+        case _Sigmoid:
+            return Sigmoid(output);
+        case _ReLU:
+            return ReLU(output);
+        case _TanH:
+            return Tanh(output);
+        case _ELU:
+            return Elu(coeff, output);
+        case _LeakyReLU:
+            return LeakyReLU(coeff, output);
+        case _Softmax:
+            return Softmax(output);
+        }
+        NEURO_ASSERT(false, "Unsupported activation.");
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::ActivationGradient(EActivation activation, float coeff, const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const
+    {
+        switch (activation)
+        {
+        case _Sigmoid:
+            return SigmoidGradient(output, outputGradient, inputGradient);
+        case _ReLU:
+            return ReLUGradient(output, outputGradient, inputGradient);
+        case _TanH:
+            return TanhGradient(output, outputGradient, inputGradient);
+        case _ELU:
+            return EluGradient(output, outputGradient, coeff, inputGradient);
+        case _LeakyReLU:
+            return LeakyReLUGradient(output, outputGradient, coeff, inputGradient);
+        case _Softmax:
+            return SoftmaxGradient(output, outputGradient, inputGradient);
+        }
+        NEURO_ASSERT(false, "Unsupported activation.");
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void Tensor::Sigmoid(Tensor& result) const
     {
         Op()->Sigmoid(*this, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::SigmoidGradient(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
+    void Tensor::SigmoidGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const
     {
-        Op()->SigmoidGradient(output, outputGradient, result);
+        Op()->SigmoidGradient(output, outputGradient, inputGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1904,9 +1997,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::ReLUGradient(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
+    void Tensor::ReLUGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const
     {
-        Op()->ReLUGradient(output, outputGradient, result);
+        Op()->ReLUGradient(output, outputGradient, inputGradient);
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -1916,9 +2009,9 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& result) const
+	void Tensor::EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const
 	{
-		Op()->EluGradient(output, outputGradient, alpha, result);
+		Op()->EluGradient(output, outputGradient, alpha, inputGradient);
 	}
 
     //////////////////////////////////////////////////////////////////////////
@@ -1928,9 +2021,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::LeakyReLUGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& result) const
+    void Tensor::LeakyReLUGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const
     {
-        Op()->LeakyReLUGradient(output, outputGradient, alpha, result);
+        Op()->LeakyReLUGradient(output, outputGradient, alpha, inputGradient);
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -1940,9 +2033,9 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
+	void Tensor::SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const
 	{
-		Op()->SoftmaxGradient(output, outputGradient, result);
+		Op()->SoftmaxGradient(output, outputGradient, inputGradient);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -2092,7 +2185,7 @@ namespace Neuro
             return;
 
         SyncToHost();
-        ofstream stream(Replace(outFile, "/", "_"));
+        ofstream stream(Replace(outFile, "/", "-"));
         for (int i = 0; i < 4; ++i)
             stream << m_Shape.Dimensions[i] << "\n";
         stream << fixed << setprecision(6);
@@ -2104,11 +2197,11 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::DebugRecoverValues(const string& inFile)
     {
-        ifstream stream(Replace(inFile, "/", "_"));
+        ifstream stream(inFile);
 
         if (!stream)
         {
-            NEURO_ASSERT(false, "File '" << Replace(inFile, "/", "_") << "' not found.");
+            NEURO_ASSERT(false, "File '" << inFile << "' not found.");
             return;
         }
 
@@ -2215,7 +2308,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     Tensor sqrt(const Tensor& t)
     {
-        return t.Map([](float x) { return ::sqrt(x); });
+        return t.Sqrt();
     }
 
     //////////////////////////////////////////////////////////////////////////

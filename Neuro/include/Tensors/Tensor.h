@@ -74,17 +74,19 @@ namespace Neuro
         Tensor ToNHWC() const;
 	
 	private:
-        void Mul(bool transposeT, const Tensor& t, Tensor& result) const;
-        Tensor Mul(bool transposeT, const Tensor& t) const;
+        void MatMul(bool transposeT, const Tensor& t, Tensor& result) const;
+        Tensor MatMul(bool transposeT, const Tensor& t) const;
 
 	public:
-        void Mul(const Tensor& t, Tensor& result) const;
-        Tensor Mul(const Tensor& t) const;
+        void MatMul(const Tensor& t, Tensor& result) const;
+        Tensor MatMul(const Tensor& t) const;
         void MulElem(const Tensor& t, Tensor& result) const;
         Tensor MulElem(const Tensor& t) const;
         void Mul(float v, Tensor& result) const;
         Tensor Mul(float v) const;
+        void Scale(float v);
         void Div(const Tensor& t, Tensor& result) const;
+        void Div(float alpha, float beta, const Tensor& t, Tensor& result) const;
         Tensor Div(const Tensor& t) const;
         void Div(float v, Tensor& result) const;
         Tensor Div(float v) const;
@@ -110,6 +112,9 @@ namespace Neuro
         void Pow(float power, Tensor& result) const;
         void PowGradient(const Tensor& input, float power, const Tensor& outputGradient, Tensor& inputGradient) const;
 
+        Tensor Sqrt() const;
+        void Sqrt(Tensor& result) const;
+
         void Map(const function<float(float)>& func, Tensor& result) const;
 		Tensor Map(const function<float(float)>& func) const;
 		void Map(const function<float(float, float)>&, const Tensor& other, Tensor& result) const;
@@ -133,10 +138,10 @@ namespace Neuro
         // This is reverse Concat operation
         void Split(EAxis axis, tensor_ptr_vec_t& outputs) const;
 
-        static void MergeMin(const const_tensor_ptr_vec_t& inputs, Tensor& result);
-        static void MergeMax(const const_tensor_ptr_vec_t& inputs, Tensor& result);
-        static void MergeSum(const const_tensor_ptr_vec_t& inputs, Tensor& result);
-        static void MergeAvg(const const_tensor_ptr_vec_t& inputs, Tensor& result);
+        static void MergeMin(const const_tensor_ptr_vec_t& inputs, Tensor& output);
+        static void MergeMax(const const_tensor_ptr_vec_t& inputs, Tensor& output);
+        static void MergeSum(const const_tensor_ptr_vec_t& inputs, Tensor& output);
+        static void MergeAvg(const const_tensor_ptr_vec_t& inputs, Tensor& output);
         static void MergeMinMaxGradient(const Tensor& output, const const_tensor_ptr_vec_t& inputs, const Tensor& outputGradient, tensor_ptr_vec_t& results);
         static void MergeSumGradient(const Tensor& output, const const_tensor_ptr_vec_t& inputs, const Tensor& outputGradient, tensor_ptr_vec_t& results);
         static void MergeAvgGradient(const Tensor& output, const const_tensor_ptr_vec_t& inputs, const Tensor& outputGradient, tensor_ptr_vec_t& results);
@@ -177,8 +182,11 @@ namespace Neuro
         pair<Tensor, Tensor> Standardized(EAxis axis, Tensor& result, Tensor* mean = nullptr, Tensor* invVariance = nullptr) const;
         Tensor Standardized(EAxis axis, Tensor* mean = nullptr, Tensor* invVariance = nullptr) const;
 
-        void Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& result) const;
+        void Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& output) const;
         Tensor Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat) const;
+        void Conv2DBiasActivation(const Tensor& kernels, uint32_t stride, uint32_t padding, const Tensor& bias, EActivation activation, float activationAlpha, Tensor& output) const;
+        Tensor Conv2DBiasActivation(const Tensor& kernels, uint32_t stride, uint32_t padding, const Tensor& bias, EActivation activation, float activationAlpha) const;
+        void Conv2DBiasGradient(const Tensor& gradient, Tensor& inputsGradient) const;
         void Conv2DInputsGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& inputsGradient) const;
         void Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& kernelsGradient) const;
 
@@ -208,6 +216,7 @@ namespace Neuro
 
         string ToString() const;
         bool SameDimensionsExceptBatches(const Tensor& t) const;
+        bool SameDimensionsOrOne(const Tensor& t) const;
 
         static pair<uint32_t, uint32_t> GetPadding(EPaddingMode paddingMode, uint32_t kernelWidth, uint32_t kernelHeight);
         static uint32_t GetPadding(EPaddingMode paddingMode, uint32_t kernelSize);
@@ -257,19 +266,20 @@ namespace Neuro
         Tensor GetDepth(uint32_t depthId, uint32_t batchId = 0) const;
         bool Equals(const Tensor& other, float epsilon = 0.00001f) const;        
         
+        void Activation(EActivation activation, float coeff, Tensor& output) const;
+        void ActivationGradient(EActivation activation, float coeff, const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const;
         void Sigmoid(Tensor& result) const;
-        void SigmoidGradient(const Tensor& output, const Tensor& outputGradient, Tensor& result) const;
+        void SigmoidGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const;
         void Tanh(Tensor& result) const;
-        void TanhGradient(const Tensor& output, const Tensor& outputGradient, Tensor& result) const;
+        void TanhGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const;
         void ReLU(Tensor& result) const;
-        void ReLUGradient(const Tensor& output, const Tensor& outputGradient, Tensor& result) const;
+        void ReLUGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const;
         void Elu(float alpha, Tensor& result) const;
-        void EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& result) const;
+        void EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const;
         void LeakyReLU(float alpha, Tensor& result) const;
-        void LeakyReLUGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& result) const;
-
+        void LeakyReLUGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const;
         void Softmax(Tensor& result) const;
-        void SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& result) const;
+        void SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const;
 
 		const Shape& GetShape() const { return m_Shape; }
 

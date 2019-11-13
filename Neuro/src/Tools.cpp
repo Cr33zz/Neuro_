@@ -5,10 +5,13 @@
 #include <fstream>
 #include <memory>
 #include <stdarg.h>
+#include <experimental/filesystem>
 #include <FreeImage.h>
 
 #include "Tools.h"
 #include "Tensors/Tensor.h"
+
+namespace fs = std::experimental::filesystem;
 
 namespace Neuro
 {
@@ -468,7 +471,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    FIBITMAP* LoadResizedImage(const string& filename, uint32_t targetSizeX, uint32_t targetSizeY, bool crop, uint32_t& sizeX, uint32_t& sizeY)
+    FIBITMAP* LoadResizedImage(const string& filename, uint32_t targetSizeX, uint32_t targetSizeY, uint32_t cropSizeX, uint32_t cropSizeY, uint32_t& sizeX, uint32_t& sizeY)
     {
         ImageLibInit();
 
@@ -486,7 +489,7 @@ namespace Neuro
 
         if (targetSizeX > 0 || targetSizeY > 0)
         {
-            if (crop)
+            if (cropSizeX || cropSizeY)
             {
                 float xScale = (float)targetSizeX / imgWidth;
                 float yScale = (float)targetSizeY / imgHeight;
@@ -500,16 +503,16 @@ namespace Neuro
             FreeImage_Unload(image);
             image = resizedImage;
 
-            if (crop && (targetWidth > targetSizeX || targetHeight > targetSizeY))
+            if ((cropSizeX || cropSizeY) && (targetWidth > cropSizeX || targetHeight > cropSizeY))
             {
-                // copy center-part
-                auto left = (targetWidth - targetSizeX) >> 1;
-                auto top = (targetHeight - targetSizeY) >> 1;
-                auto croppedImage = FreeImage_Copy(resizedImage, left, top, left + targetSizeX, top + targetSizeY);
+                // copy random-part
+                auto left = GlobalRng().Next(targetWidth - cropSizeX);
+                auto top = GlobalRng().Next(targetHeight - cropSizeY);
+                auto croppedImage = FreeImage_Copy(resizedImage, left, top, left + cropSizeX, top + cropSizeY);
                 FreeImage_Unload(resizedImage);
                 image = croppedImage;
-                targetWidth = targetSizeX;
-                targetHeight = targetSizeY;
+                targetWidth = cropSizeX;
+                targetHeight = cropSizeY;
             }
         }
 
@@ -546,25 +549,98 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void LoadImage(const string& filename, float* buffer, uint32_t targetSizeX, uint32_t targetSizeY, bool crop, EDataFormat targetFormat)
+    void LoadImage(const string& filename, float* buffer, uint32_t targetSizeX, uint32_t targetSizeY, uint32_t cropSizeX, uint32_t cropSizeY, EDataFormat targetFormat)
     {
         uint32_t sizeX, sizeY;
-        FIBITMAP* image = LoadResizedImage(filename, targetSizeX, targetSizeY, crop, sizeX, sizeY);
+        FIBITMAP* image = LoadResizedImage(filename, targetSizeX, targetSizeY, cropSizeX, cropSizeY, sizeX, sizeY);
         Shape imageShape = targetFormat == NCHW ? Shape(sizeX, sizeY, 3) : Shape(3, sizeX, sizeY);
         LoadImageInternal(image, imageShape, targetFormat, buffer);
         FreeImage_Unload(image);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor LoadImage(const string& filename, uint32_t targetSizeX, uint32_t targetSizeY, bool crop, EDataFormat targetFormat)
+    Tensor LoadImage(const string& filename, uint32_t targetSizeX, uint32_t targetSizeY, uint32_t cropSizeX, uint32_t cropSizeY, EDataFormat targetFormat)
     {
         uint32_t sizeX, sizeY;
-        FIBITMAP* image = LoadResizedImage(filename, targetSizeX, targetSizeY, crop, sizeX, sizeY);
+        FIBITMAP* image = LoadResizedImage(filename, targetSizeX, targetSizeY, cropSizeX, cropSizeY, sizeX, sizeY);
         Shape imageShape = targetFormat == NCHW ? Shape(sizeX, sizeY, 3) : Shape(3, sizeX, sizeY);
         Tensor result(imageShape);
         LoadImageInternal(image, imageShape, targetFormat, &result.Values()[0]);
         FreeImage_Unload(image);
         return result;
+    }
+
+    struct PixelData
+    {
+        uint8_t r;
+        uint8_t g;
+        uint8_t b;
+        uint8_t a;
+    };
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor LoadImage(uint8_t* imageBuffer, uint32_t width, uint32_t height, EPixelFormat format)
+    {
+        Tensor output(Shape(width, height, 3));
+        output.OverrideHost();
+        
+        PixelData pixel;
+
+        for (uint32_t h = 0; h < height; ++h)
+        for (uint32_t w = 0; w < width; ++w)
+        {
+            if (format == RGB)
+            {
+                pixel.r = *(imageBuffer++);
+                pixel.g = *(imageBuffer++);
+                pixel.b = *(imageBuffer++);
+            }
+            else if (format == BGR)
+            {
+                pixel.b = *(imageBuffer++);
+                pixel.g = *(imageBuffer++);
+                pixel.r = *(imageBuffer++);
+            }
+            else if (format == RGBA)
+            {
+                pixel.r = *(imageBuffer++);
+                pixel.g = *(imageBuffer++);
+                pixel.b = *(imageBuffer++);
+                pixel.a = *(imageBuffer++);
+            }
+            else
+                NEURO_ASSERT(false, "Unsupported pixel format.");
+
+            output.Set((float)pixel.r, w, h, 0);
+            output.Set((float)pixel.g, w, h, 1);
+            output.Set((float)pixel.b, w, h, 2);
+        }
+
+        return output;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    bool IsImageFileValid(const string& filename)
+    {
+        ImageLibInit();
+
+        FIBITMAP* image = nullptr;
+        try
+        {
+            auto format = FreeImage_GetFileType(filename.c_str());
+            image = FreeImage_Load(format, filename.c_str());
+        }
+        catch (...)
+        {
+            return false;
+        }
+
+        if (!image)
+            return false;
+
+        FreeImage_Unload(image);
+
+        return true;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -583,6 +659,76 @@ namespace Neuro
         FreeImage_Unload(image);
         
         return shape;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    vector<string> LoadFilesList(const string& dir, bool shuffle, bool useCache, bool validate)
+    {
+        vector<string> files;
+        ifstream contentCache = ifstream(dir + "_cache");
+
+        if (!useCache)
+            contentCache.close();
+
+        if (contentCache && useCache)
+        {
+            string entry;
+            while (getline(contentCache, entry))
+                files.push_back(entry);
+            contentCache.close();
+        }
+        else
+        {
+            auto contentCache = ofstream(dir + "_cache");
+
+            // build content files list
+            for (const auto& entry : fs::directory_iterator(dir))
+            {
+                string filename = entry.path().generic_string();
+                files.push_back(filename);
+                if (!validate)
+                    contentCache << files.back() << endl;
+            }
+
+            if (validate)
+            {
+                vector<string> validFiles;
+
+                //Tqdm progress(files.size(), 20);
+                for (size_t i = 0; i < files.size(); ++i/*, progress.NextStep()*/)
+                {
+                    if (!IsImageFileValid(files[i]))
+                    {
+                        cout << "Detected invalid image file '" << files[i] << "'" << endl;
+                        continue;
+                    }
+                    validFiles.push_back(files[i]);
+                    contentCache << files.back() << endl;
+                }
+
+                files = validFiles;
+            }
+
+            contentCache.close();
+        }
+
+        if (shuffle)
+            random_shuffle(files.begin(), files.end(), [&](size_t max) { return GlobalRng().Next((int)max); });
+
+        return files;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void SampleImagesBatch(const vector<string>& files, Tensor& output, bool loadAll)
+    {
+        NEURO_ASSERT(output.Depth() == 3, "Output must have depth 3.");
+        output.OverrideHost();
+        
+        if (loadAll)
+            output.ResizeBatch((uint32_t)files.size());
+
+        for (size_t j = 0; j < (size_t)output.Batch(); ++j)
+            LoadImage(files[loadAll ? j : GlobalRng().Next((int)files.size())], output.Values() + j * output.BatchLength(), output.Width(), output.Height(), output.Width(), output.Height());
     }
 
     //////////////////////////////////////////////////////////////////////////

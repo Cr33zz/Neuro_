@@ -6,8 +6,7 @@ namespace Neuro
 {
     class TensorLike;
 
-    // This layer should only be used when we want to combine raw input with output of another layer
-    // somewhere inside a network
+    // Models require input layers to be first ones. Sequential model will automatically create input when adding first non-input layer to it.
     class Input : public LayerBase
     {
 	public:

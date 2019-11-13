@@ -17,7 +17,7 @@ namespace Neuro
 		virtual string ToString() = 0;
 		virtual const char* ClassName() const = 0;
 
-        virtual Operation* Minimize(const vector<TensorLike*>& losses, const vector<Variable*>& vars = {}) = 0;
+        virtual Operation* Minimize(const vector<TensorLike*>& losses, const vector<Variable*>& vars = {}, Variable* globalStep = nullptr) = 0;
         //virtual Operation* Maximize(const vector<TensorLike*>& losses) = 0;
 	};
 }

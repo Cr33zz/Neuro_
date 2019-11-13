@@ -93,7 +93,7 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::MulElem(const Tensor& t1, const Tensor& t2, Tensor& output) const
+	void TensorOpCpu::Mul(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const
 	{
         t1.CopyToHost();
         t2.CopyToHost();
@@ -119,7 +119,7 @@ namespace Neuro
                         uint32_t t1W = w % t1.Width();
                         uint32_t t2W = w % t2.Width();
 
-                        output(w, h, d, n) = t1(t1W, t1H, t1D, t1N) * t2(t2W, t2H, t2D, t2N);
+                        output(w, h, d, n) = alpha * t1(t1W, t1H, t1D, t1N) * beta * t2(t2W, t2H, t2D, t2N);
                     }
                 }
             }
@@ -140,6 +140,17 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Scale(Tensor& input, float v) const
+    {
+        input.CopyToHost();
+
+        auto inputValues = input.Values();
+
+        for (uint32_t i = 0; i < input.Length(); ++i)
+            inputValues[i] *= v;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::Div(const Tensor& input, float v, Tensor& output) const
     {
         input.CopyToHost();
@@ -153,7 +164,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::Div(const Tensor& t1, const Tensor& t2, Tensor& output) const
+    void TensorOpCpu::Div(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const
     {
         t1.CopyToHost();
         t2.CopyToHost();
@@ -179,7 +190,7 @@ namespace Neuro
                         uint32_t t1W = w % t1.Width();
                         uint32_t t2W = w % t2.Width();
 
-                        output(w, h, d, n) = t1(t1W, t1H, t1D, t1N) / t2(t2W, t2H, t2D, t2N);
+                        output(w, h, d, n) = (alpha * t1(t1W, t1H, t1D, t1N)) / (beta * t2(t2W, t2H, t2D, t2N));
                     }
                 }
             }
@@ -243,6 +254,31 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Mean(const Tensor& input, EAxis axis, Tensor& output) const
+    {
+        input.Sum(axis, output);
+
+        if (axis == GlobalAxis)
+            output.Div((float)input.Length(), output);
+        else if (axis == WidthAxis)
+            output.Div((float)input.Width(), output);
+        else if (axis == HeightAxis)
+            output.Div((float)input.Height(), output);
+        else if (axis == DepthAxis)
+            output.Div((float)input.Depth(), output);
+        else if (axis == BatchAxis)
+            output.Div((float)input.Batch(), output);
+        else if (axis == _01Axes)
+            output.Div((float)(input.Len(0)*input.Len(1)), output);
+        else if (axis == _012Axes)
+            output.Div((float)(input.Len(0)*input.Len(1)*input.Len(2)), output);
+        else if (axis == _013Axes)
+            output.Div((float)(input.Len(0)*input.Len(1)*input.Len(3)), output);
+        else if (axis == _123Axes)
+            output.Div((float)(input.Len(1)*input.Len(2)*input.Len(3)), output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::Pow(const Tensor& input, float power, Tensor& output) const
     {
         input.CopyToHost();
@@ -253,6 +289,19 @@ namespace Neuro
 
         for (uint32_t i = 0; i < input.Length(); ++i)
             outputValues[i] = ::pow(inputValues[i], power);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Sqrt(const Tensor& input, Tensor& output) const
+    {
+        input.CopyToHost();
+        output.OverrideHost();
+
+        auto inputValues = input.Values();
+        auto outputValues = output.Values();
+
+        for (uint32_t i = 0; i < input.Length(); ++i)
+            outputValues[i] = ::sqrt(inputValues[i]);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -445,19 +494,19 @@ namespace Neuro
         inputGradient.Zero();
 
 		Tensor outputReshaped = output.Reshaped(Shape(1, Shape::Auto, 1, output.Batch()));
-		Tensor jacob = outputReshaped.DiagFlat().Sub(outputReshaped.Mul(outputReshaped.Transposed()));
-        outputGradient.Mul(jacob, inputGradient);
+		Tensor jacob = outputReshaped.DiagFlat().Sub(outputReshaped.MatMul(outputReshaped.Transposed()));
+        outputGradient.MatMul(jacob, inputGradient);
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::AdamStep(Tensor& parameter, const Tensor& gradient, Tensor& mGrad, Tensor& vGrad, float batchSize, float lr, float beta1, float beta2, float epsilon) const
+    void TensorOpCpu::AdamStep(Tensor& parameter, const Tensor& gradient, Tensor& mGrad, Tensor& vGrad, /*float batchSize, */float lr, float beta1, float beta2, float epsilon) const
     {
         parameter.CopyToHost();
         gradient.CopyToHost();
         mGrad.CopyToHost();
         vGrad.CopyToHost();
 
-        float gradScale = 1.f / batchSize;
+        float gradScale = 1.f/* / batchSize*/;
         float gradScale2 = gradScale * gradScale;
         
         // mGrad = beta1 * mGrad + (1 - beta1) * gradient
@@ -469,9 +518,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::SgdStep(Tensor& parameter, const Tensor& gradient, float batchSize, float lr) const
+    void TensorOpCpu::SgdStep(Tensor& parameter, const Tensor& gradient, /*float batchSize, */float lr) const
     {
-        parameter.Add(1, -lr / batchSize, gradient, parameter);
+        parameter.Add(1, -lr/* / batchSize*/, gradient, parameter);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -516,6 +565,21 @@ namespace Neuro
 		    }
         }
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Conv2DBiasActivation(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, const Tensor& bias, EActivation activation, float activationAlpha, Tensor& output)
+    {
+        NEURO_ASSERT(paddingX == paddingY, "");
+        input.Conv2D(kernels, stride, paddingX, NCHW, output);
+        output.Add(bias, output);
+        output.Activation(activation, activationAlpha, output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Conv2DBiasGradient(const Tensor& gradient, Tensor& biasGradient)
+    {
+        gradient.Sum(_013Axes, biasGradient); // used in case of biases in convolutional layers
+    }
 
 	//////////////////////////////////////////////////////////////////////////
 	void TensorOpCpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& inputGradient) const

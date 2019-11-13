@@ -88,7 +88,7 @@ namespace NeuroTests
             }
 
             auto input = Uniform::Random(-1, 1, x->GetShape());
-            auto output = input.Mul(Tensor(Shape(2, 5)).FillWithRand());
+            auto output = input.MatMul(Tensor(Shape(2, 5)).FillWithRand());
 
             for (int step = 0; step < 200; ++step)
                 auto result = Session::Default()->Run({ fetches }, { {x, &input}, {y, &output} });

@@ -14,7 +14,7 @@ namespace Neuro
 		virtual string ToString() override;
 		const char* ClassName() const;
 
-        virtual Operation* Minimize(const vector<TensorLike*>& losses, const vector<Variable*>& vars = {}) override { return new MinimizationOperation(losses, vars, m_LearningRate); }
+        virtual Operation* Minimize(const vector<TensorLike*>& losses, const vector<Variable*>& vars = {}, Variable* globalStep = nullptr) override { return new MinimizationOperation(losses, vars, m_LearningRate); }
 
     private:
         class MinimizationOperation : public Operation

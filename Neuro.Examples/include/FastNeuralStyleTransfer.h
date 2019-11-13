@@ -13,9 +13,8 @@
 #include "NeuralStyleTransfer.h"
 #include "Memory/MemoryManager.h"
 #include "Neuro.h"
-#include "VGG19.h"
 
-#define STYLE "mosaic"
+#define STYLE "starry_night"
 
 //#define SLOW
 //#define FAST_SINGLE_CONTENT
@@ -43,7 +42,7 @@ public:
 #else
         const uint32_t IMAGE_WIDTH = 256;
         const uint32_t IMAGE_HEIGHT = 256;
-        const float CONTENT_WEIGHT = 500.f;
+        const float CONTENT_WEIGHT = 100.f;
         const float STYLE_WEIGHT = 0.1f;
         const float LEARNING_RATE = 0.001f;
 
@@ -53,7 +52,7 @@ public:
         const uint32_t BATCH_SIZE = 4;
 #       endif
 
-        const string TEST_FILE = "data/test.jpg";
+        const string TEST_FILE = "data/contents/content.jpg";
 #endif
 
         const string STYLE_FILE = string("data/styles/") + STYLE + ".jpg";
@@ -101,7 +100,7 @@ public:
 
         cout << "Creating VGG model...\n";
         
-        auto vggModel = VGG16::CreateModel(NCHW, Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), false, MaxPool);
+        auto vggModel = VGG16::CreateModel(NCHW, Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), false, MaxPool, "data/");
         vggModel->SetTrainable(false);
 
         cout << "Pre-computing style features and grams...\n";
@@ -151,7 +150,7 @@ public:
             Tensor* x = targetStyleFeatures[i];
             uint32_t featureMapSize = x->Width() * x->Height();
             auto features = x->Reshaped(Shape(featureMapSize, x->Depth()));
-            targetStyleGrams.push_back(new Constant(features.Mul(features.Transposed()).Div((float)features.GetShape().Length), "style_" + to_string(i) + "_gram"));
+            targetStyleGrams.push_back(new Constant(features.MatMul(features.Transposed()).Div((float)features.GetShape().Length), "style_" + to_string(i) + "_gram"));
             ///targetStyleGrams.push_back(new Constant(features.Mul(features.Transposed()).Div((float)featureMapSize), "style_" + to_string(i) + "_gram"));
         }
 
@@ -189,7 +188,7 @@ public:
 
         ///auto totalLoss = weightedContentLoss;
         ///auto totalLoss = weightedStyleLoss;
-        auto totalLoss = add(weightedContentLoss, weightedStyleLoss, "total_loss");
+        auto totalLoss = div(add(weightedContentLoss, weightedStyleLoss), (float)BATCH_SIZE, "total_loss");
         ///auto totalLoss = mean(square(sub(stylizedContentPre, contentPre)), GlobalAxis, "total");
 
         auto optimizer = Adam(LEARNING_RATE);
@@ -308,16 +307,19 @@ public:
     void Test()
     {
         Tensor::SetForcedOpMode(GPU);
-        const string TEST_FILE = "data/contents/content.jpg";
+        Tensor testContent(Shape(320, 320, 3));
+        SampleImagesBatch(LoadFilesList("e:/Downloads/test_content", false), testContent, true);
+        testContent.SaveAsImage("_test_content.png", false);
 
-        Tensor testImage = LoadImage(TEST_FILE);
-        auto input = new Placeholder(testImage.GetShape(), "input");
+        /*const string TEST_FILE = "data/contents/content.jpg";
+        Tensor testImage = LoadImage(TEST_FILE);*/
+        auto input = new Placeholder(testContent.GetShape(), "input");
         auto inputPre = VGG16::Preprocess(input, NCHW);
-        auto generator = CreateGeneratorModel(testImage.GetShape().Width(), testImage.GetShape().Height(), new Constant(0));
+        auto generator = CreateGeneratorModel(testContent.GetShape().Width(), testContent.GetShape().Height(), new Constant(0));
         generator->LoadWeights(string("data/") + STYLE + "_weights.h5", false, true);
         auto stylizedContentPre = (*generator)(inputPre, new Constant(0))[0];
 
-        auto results = Session::Default()->Run({ stylizedContentPre }, { { input, &testImage } });
+        auto results = Session::Default()->Run({ stylizedContentPre }, { { input, &testContent } });
         auto genImage = *results[0];
         VGG16::DeprocessImage(genImage, NCHW);
         genImage.SaveAsImage(string(STYLE) + "_test_output.png", false);

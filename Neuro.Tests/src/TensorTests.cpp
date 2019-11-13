@@ -179,7 +179,7 @@ namespace NeuroTests
                 Assert::AreEqual((double)result.GetFlat(i), (double)t1.GetFlat(i) * t2.GetFlat(i), 1e-5);
         }
 
-        TEST_METHOD(Mul_1Batch)
+        TEST_METHOD(MatMul_1Batch)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
@@ -188,13 +188,13 @@ namespace NeuroTests
             Tensor t2 = Tensor(Shape(2, 4, 2));
             t2.FillWithRange(0);
 
-            Tensor r = t1.Mul(t2);
+            Tensor r = t1.MatMul(t2);
             Tensor correct = Tensor({ 28, 34, 76, 98, 428, 466, 604, 658 }, Shape(2, 2, 2));
 
             Assert::IsTrue(r.Equals(correct));
         }
 
-        TEST_METHOD(Mul_1Batch_2D)
+        TEST_METHOD(MatMul_1Batch_2D)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
@@ -203,13 +203,13 @@ namespace NeuroTests
             Tensor t2 = Tensor(Shape(2, 4));
             t2.FillWithRange(0);
 
-            Tensor r = t1.Mul(t2);
+            Tensor r = t1.MatMul(t2);
             Tensor correct = Tensor({ 28, 34, 76, 98 }, Shape(2, 2));
 
             Assert::IsTrue(r.Equals(correct));
         }
 
-        TEST_METHOD(Mul_2Batches_1Batch)
+        TEST_METHOD(MatMul_2Batches_1Batch)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
@@ -218,13 +218,13 @@ namespace NeuroTests
             Tensor t2 = Tensor(Shape(2, 4, 2));
             t2.FillWithRange(0);
 
-            Tensor r = t1.Mul(t2);
+            Tensor r = t1.MatMul(t2);
             Tensor correct = Tensor({ 28, 34, 76, 98, 428, 466, 604, 658, 220, 290, 268, 354, 1132, 1234, 1308, 1426 }, Shape(2, 2, 2, 2));
 
             Assert::IsTrue(r.Equals(correct));
         }
 
-        TEST_METHOD(Mul_2Batches_2Batches)
+        TEST_METHOD(MatMul_2Batches_2Batches)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
@@ -233,7 +233,7 @@ namespace NeuroTests
             Tensor t2 = Tensor(Shape(2, 4, 2, 2));
             t2.FillWithRange(0);
 
-            Tensor r = t1.Mul(t2);
+            Tensor r = t1.MatMul(t2);
             Tensor correct = Tensor({ 28, 34, 76, 98, 428, 466, 604, 658, 1340, 1410, 1644, 1730, 2764, 2866, 3196, 3314 }, Shape(2, 2, 2, 2));
 
             Assert::IsTrue(r.Equals(correct));

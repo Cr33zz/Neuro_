@@ -205,7 +205,7 @@ __global__ void addBroadcast(float alpha, const float* __restrict t1, float beta
     output[i] = alpha * t1[i] + beta * t2[getIndex(t2W, t2H, t2D, t2N, t2Dim0, t2Dim0Dim1, t2Dim0Dim1Dim2)];
 }
 
-__global__ void mulElem(int len, const float* __restrict t1, const float* __restrict t2, float* __restrict output, int subLen)
+__global__ void mul(int len, const float* __restrict t1, const float* __restrict t2, float* __restrict output, int subLen)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -216,7 +216,7 @@ __global__ void mulElem(int len, const float* __restrict t1, const float* __rest
         output[n] = t1[n] * t2[n];
 }
 
-__global__ void mulElemBroadcast(const float* __restrict t1, const float* __restrict t2, int t2Width, int t2Height, int t2Depth, int t2Batch, float* __restrict output, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
+__global__ void mulBroadcast(float alpha, const float* __restrict t1, float beta, const float* __restrict t2, int t2Width, int t2Height, int t2Depth, int t2Batch, float* __restrict output, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -241,10 +241,10 @@ __global__ void mulElemBroadcast(const float* __restrict t1, const float* __rest
     int t2H = t2Height == 1 ? 0 : (h % t2Height);
     int t2W = t2Width == 1 ? 0 : (w % t2Width);
 
-    output[i] = t1[i] * t2[getIndex(t2W, t2H, t2D, t2N, t2Dim0, t2Dim0Dim1, t2Dim0Dim1Dim2)];
+    output[i] = alpha * t1[i] * beta * t2[getIndex(t2W, t2H, t2D, t2N, t2Dim0, t2Dim0Dim1, t2Dim0Dim1Dim2)];
 }
 
-__global__ void div(int len, const float* __restrict t1, const float* __restrict t2, float* __restrict output, int subLen)
+__global__ void div(int len, float alpha, const float* __restrict t1, float beta, const float* __restrict t2, float* __restrict output, int subLen)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     
@@ -252,10 +252,10 @@ __global__ void div(int len, const float* __restrict t1, const float* __restrict
     if (maxN > len)
         maxN = len;
     for (int n = i * subLen; n < maxN; ++n)
-        output[n] = t1[n] / t2[n];
+        output[n] = (alpha * t1[n]) / (beta * t2[n]);
 }
 
-__global__ void divBroadcast(const float* __restrict t1, int t1Width, int t1Height, int t1Depth, int t1Batch, const float* __restrict t2, int t2Width, int t2Height, int t2Depth, int t2Batch, float* __restrict output, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
+__global__ void divBroadcast(float alpha, const float* __restrict t1, int t1Width, int t1Height, int t1Depth, int t1Batch, float beta, const float* __restrict t2, int t2Width, int t2Height, int t2Depth, int t2Batch, float* __restrict output, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
 
@@ -287,7 +287,7 @@ __global__ void divBroadcast(const float* __restrict t1, int t1Width, int t1Heig
     int t1W = w % t1Width;
     int t2W = w % t2Width;
 
-    output[i] = t1[getIndex(t1W, t1H, t1D, t1N, t1Dim0, t1Dim0Dim1, t1Dim0Dim1Dim2)] / t2[getIndex(t2W, t2H, t2D, t2N, t2Dim0, t2Dim0Dim1, t2Dim0Dim1Dim2)];
+    output[i] = (alpha * t1[getIndex(t1W, t1H, t1D, t1N, t1Dim0, t1Dim0Dim1, t1Dim0Dim1Dim2)]) / (beta * t2[getIndex(t2W, t2H, t2D, t2N, t2Dim0, t2Dim0Dim1, t2Dim0Dim1Dim2)]);
 }
 
 template<int W, int H, int D, int N>
@@ -472,24 +472,24 @@ template __global__ void sumTemplate<1, 1, 1, 0>(const float* __restrict input, 
 template __global__ void sumTemplate<1, 1, 0, 1>(const float* __restrict input, int width, int height, int depth, int batch, float* __restrict output);
 template __global__ void sumTemplate<0, 1, 1, 1>(const float* __restrict input, int width, int height, int depth, int batch, float* __restrict output);
 
-__global__ void adamStep(int inputLen, float* __restrict parameterDev, const float* __restrict gradientDev, float* __restrict mGradDev, float* __restrict vGradDev, float batchSize, float lr, float beta1, float beta2, float epsilon)
+__global__ void adamStep(int inputLen, float* __restrict parameterDev, const float* __restrict gradientDev, float* __restrict mGradDev, float* __restrict vGradDev, /*float batchSize, */float lr, float beta1, float beta2, float epsilon)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < inputLen)
     {
-        float grad = gradientDev[i] / batchSize;
+        float grad = gradientDev[i]/* / batchSize*/;
         mGradDev[i] = beta1 * mGradDev[i] + (1 - beta1) * grad;
         vGradDev[i] = beta2 * vGradDev[i] + (1 - beta2) * grad * grad;
         parameterDev[i] -= mGradDev[i] / (sqrt(vGradDev[i]) + epsilon) * lr;
     }
 }
 
-__global__ void sgdStep(int inputLen, float* __restrict parameterDev, const float* __restrict gradientDev, float batchSize, float lr)
+__global__ void sgdStep(int inputLen, float* __restrict parameterDev, const float* __restrict gradientDev, /*float batchSize, */float lr)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < inputLen)
     {
-        parameterDev[i] -= gradientDev[i] / batchSize * lr;
+        parameterDev[i] -= gradientDev[i]/* / batchSize*/ * lr;
     }
 }
 
@@ -604,39 +604,39 @@ namespace Neuro
         cudaStreamSynchronize(0);
     }
 
-    void CudaKernels::MulElem(const dim3& blocks, const dim3& threads, int len, const float* t1, const float* t2, float* outputDev, int subLen)
+    void CudaKernels::Mul(const dim3& blocks, const dim3& threads, int len, const float* t1, const float* t2, float* outputDev, int subLen)
     {
-        mulElem<<<blocks, threads>>>(len, t1, t2, outputDev, subLen);
+        mul<<<blocks, threads>>>(len, t1, t2, outputDev, subLen);
         cudaStreamSynchronize(0);
     }
 
-    void CudaKernels::MulElemBroadcast(const dim3& blocks, const dim3& threads, const float* t1Dev, const float* t2Dev, int t2Width, int t2Height, int t2Depth, int t2Batch, float* outputDev, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
+    void CudaKernels::MulBroadcast(const dim3& blocks, const dim3& threads, float alpha, const float* t1Dev, float beta, const float* t2Dev, int t2Width, int t2Height, int t2Depth, int t2Batch, float* outputDev, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
     {
-        mulElemBroadcast<<<blocks, threads>>>(t1Dev, t2Dev, t2Width, t2Height, t2Depth, t2Batch, outputDev, outputWidth, outputHeight, outputDepth, outputBatch);
+        mulBroadcast<<<blocks, threads>>>(alpha, t1Dev, beta, t2Dev, t2Width, t2Height, t2Depth, t2Batch, outputDev, outputWidth, outputHeight, outputDepth, outputBatch);
         cudaStreamSynchronize(0);
     }
 
-    void CudaKernels::Div(const dim3& blocks, const dim3& threads, int len, const float* t1, const float* t2, float* outputDev, int subLen)
+    void CudaKernels::Div(const dim3& blocks, const dim3& threads, int len, float alpha, const float* t1, float beta, const float* t2, float* outputDev, int subLen)
     {
-        div<<<blocks, threads>>>(len, t1, t2, outputDev, subLen);
+        div<<<blocks, threads>>>(len, alpha, t1, beta,t2, outputDev, subLen);
         cudaStreamSynchronize(0);
     }
 
-    void CudaKernels::DivBroadcast(const dim3& blocks, const dim3& threads, const float* t1Dev, int t1Width, int t1Height, int t1Depth, int t1Batch, const float* t2Dev, int t2Width, int t2Height, int t2Depth, int t2Batch, float* outputDev, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
+    void CudaKernels::DivBroadcast(const dim3& blocks, const dim3& threads, float alpha, const float* t1Dev, int t1Width, int t1Height, int t1Depth, int t1Batch, float beta, const float* t2Dev, int t2Width, int t2Height, int t2Depth, int t2Batch, float* outputDev, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
     {
-        divBroadcast<<<blocks, threads>>>(t1Dev, t1Width, t1Height, t1Depth, t1Batch, t2Dev, t2Width, t2Height, t2Depth, t2Batch, outputDev, outputWidth, outputHeight, outputDepth, outputBatch);
+        divBroadcast<<<blocks, threads>>>(alpha, t1Dev, t1Width, t1Height, t1Depth, t1Batch, beta, t2Dev, t2Width, t2Height, t2Depth, t2Batch, outputDev, outputWidth, outputHeight, outputDepth, outputBatch);
         cudaStreamSynchronize(0);
     }
 
-    void CudaKernels::AdamStep(const dim3& blocks, const dim3& threads, int inputLen, float* parameterDev, const float* gradientDev, float* mGradDev, float* vGradDev, float batchSize, float lr, float beta1, float beta2, float epsilon)
+    void CudaKernels::AdamStep(const dim3& blocks, const dim3& threads, int inputLen, float* parameterDev, const float* gradientDev, float* mGradDev, float* vGradDev, /*float batchSize, */float lr, float beta1, float beta2, float epsilon)
     {
-        adamStep<<<blocks, threads>>>(inputLen, parameterDev, gradientDev, mGradDev, vGradDev, batchSize, lr, beta1, beta2, epsilon);
+        adamStep<<<blocks, threads>>>(inputLen, parameterDev, gradientDev, mGradDev, vGradDev, /*batchSize, */lr, beta1, beta2, epsilon);
         cudaStreamSynchronize(0);
     }
 
-    void CudaKernels::SgdStep(const dim3& blocks, const dim3& threads, int inputLen, float* parameterDev, const float* gradientDev, float batchSize, float lr)
+    void CudaKernels::SgdStep(const dim3& blocks, const dim3& threads, int inputLen, float* parameterDev, const float* gradientDev, /*float batchSize, */float lr)
     {
-        sgdStep<<<blocks, threads>>>(inputLen, parameterDev, gradientDev, batchSize, lr);
+        sgdStep<<<blocks, threads>>>(inputLen, parameterDev, gradientDev, /*batchSize, */lr);
         cudaStreamSynchronize(0);
     }
 }

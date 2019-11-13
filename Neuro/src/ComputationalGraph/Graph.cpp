@@ -183,7 +183,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<Variable*> Graph::ComputeGradientsInOrder(const vector<TensorLike*>& order, const vector<TensorLike*>& losses, const unordered_set<TensorLike*> nodesAffectingLosses, const vector<Variable*>& params)
     {
-        const size_t PREFETCH_STEPS = 12;
+        const size_t PREFETCH_STEPS = 16;
         vector<Variable*> variables;
 
         /// remove all node which don't care about gradient. it has to be done at runtime since variables can be switched between trainable and non-trainable state
@@ -265,14 +265,14 @@ namespace Neuro
 
                     if (Debug::ShouldLogGrad(node->Name()))
                     {
-                        nodeOutputGrad.DebugDumpValues(Replace(node->Name() + "_output0_grad_step" + to_string(Debug::GetStep()) + ".log", "/", "_"));
+                        nodeOutputGrad.DebugDumpValues(node->Name() + "_output0_grad_step" + to_string(Debug::GetStep()) + ".log");
                         for (size_t i = 0; i < opNode->InputsGrads().size(); ++i)
                         {
                             if (opNode->InputNodes()[i]->CareAboutGradient())
-                                opNode->InputsGrads()[i].DebugDumpValues(Replace(node->Name() + "_input" + to_string(i) + "_grad_step" + to_string(Debug::GetStep()) + ".log", "/", "_"));
+                                opNode->InputsGrads()[i].DebugDumpValues(node->Name() + "_input" + to_string(i) + "_grad_step" + to_string(Debug::GetStep()) + ".log");
                             else
                             {
-                                ofstream s(Replace(node->Name() + "_input" + to_string(i) + "_grad_step" + to_string(Debug::GetStep()) + ".log", "/", "_"));
+                                ofstream s(node->Name() + "_input" + to_string(i) + "_grad_step" + to_string(Debug::GetStep()) + ".log");
                                 s << "doesn't care about gradient";
                                 s.close();
                             }
@@ -285,7 +285,7 @@ namespace Neuro
                 else
                 {
                     if (Debug::ShouldLogGrad(node->Name()))
-                        nodeOutputGrad.DebugDumpValues(Replace(node->Name() + "_grad_step" + to_string(Debug::GetStep()) + ".log", "/", "_"));
+                        nodeOutputGrad.DebugDumpValues(node->Name() + "_grad_step" + to_string(Debug::GetStep()) + ".log");
                 }
             }
 
@@ -314,7 +314,7 @@ namespace Neuro
         for (auto node : m_Variables)
         {
             if (Debug::ShouldLogGrad(node->Name()))
-                node->OutputGrad().DebugDumpValues(Replace(node->Name() + "_grad_step" + to_string(m_CurrentStep) + ".log", "/", "_"));
+                node->OutputGrad().DebugDumpValues(node->Name() + "_grad_step" + to_string(m_CurrentStep) + ".log");
         }
     }
 }

@@ -55,4 +55,7 @@
 
 #include "ComputationalGraph/Ops.h"
 
+#include "Applications/VGG16.h"
+#include "Applications/VGG19.h"
+
 #include "Debug.h"

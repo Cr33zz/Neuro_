@@ -13,7 +13,7 @@ namespace Neuro
     void SqrtOp::ComputeInternal()
     {
         m_Output.ResizeBatch(m_Inputs[0]->Batch());
-        m_Inputs[0]->Map([](float x) {return ::sqrt(x); }, m_Output);
+        m_Inputs[0]->Sqrt(m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -21,6 +21,6 @@ namespace Neuro
     {
         //in_grad = grad / (2 * sqrt(x))
         if (m_InputNodes[0]->CareAboutGradient())
-            grad.Map([](float g, float x) {return g / 2 * x; }, m_Output, m_InputsGrads[0]);
+            grad.Div(1.f, 2.f, m_Output, m_InputsGrads[0]);
     }
 }

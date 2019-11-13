@@ -18,6 +18,9 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	int Random::Next(int min, int max)
 	{
+        if (min == max)
+            return min;
+
         ++m_GeneratedNumbersCount;
 		uniform_int_distribution<> range(min, max - 1);
 		return range(m_Engine);
@@ -38,6 +41,9 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	float Random::NextFloat(float min, float max)
 	{
+        if (min == max)
+            return min;
+
         ++m_GeneratedNumbersCount;
 		uniform_real_distribution<float> range(min, max);
 		return range(m_Engine);

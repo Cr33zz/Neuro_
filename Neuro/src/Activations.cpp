@@ -5,12 +5,6 @@
 namespace Neuro
 {	
 	//////////////////////////////////////////////////////////////////////////
-    TensorLike* Linear::Build(TensorLike* input)
-    {
-        return input;
-    }
-
-	//////////////////////////////////////////////////////////////////////////
     TensorLike* Sigmoid::Build(TensorLike* input)
     {
         return sigmoid(input);

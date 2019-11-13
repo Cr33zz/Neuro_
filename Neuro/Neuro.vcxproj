@@ -174,6 +174,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\Activations.h" />
+    <ClInclude Include="include\Applications\VGG16.h" />
+    <ClInclude Include="include\Applications\VGG19.h" />
     <ClInclude Include="include\ChartGenerator.h" />
     <ClInclude Include="include\ComputationalGraph\Constant.h" />
     <ClInclude Include="include\ComputationalGraph\Graph.h" />
@@ -184,6 +186,7 @@
     <ClInclude Include="include\ComputationalGraph\Operations\BatchNormalizeOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\BatchReshapeOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\ClipOp.h" />
+    <ClInclude Include="include\ComputationalGraph\Operations\Conv2dBiasActivationOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\Conv2dTransposeOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\DivideOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\DropoutOp.h" />
@@ -286,6 +289,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Activations.cpp" />
+    <ClCompile Include="src\Applications\VGG16.cpp" />
+    <ClCompile Include="src\Applications\VGG19.cpp" />
     <ClCompile Include="src\ChartGenerator.cpp" />
     <ClCompile Include="src\ComputationalGraph\Constant.cpp" />
     <ClCompile Include="src\ComputationalGraph\Graph.cpp" />
@@ -296,6 +301,7 @@
     <ClCompile Include="src\ComputationalGraph\Operations\BatchNormalizeOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\BatchReshapeOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\ClipOp.cpp" />
+    <ClCompile Include="src\ComputationalGraph\Operations\Conv2dBiasActivationOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\Conv2dTransposeOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\DivideOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\DropoutOp.cpp" />
