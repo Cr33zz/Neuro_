@@ -13,7 +13,6 @@
 #include "NeuralStyleTransfer.h"
 #include "Memory/MemoryManager.h"
 #include "Neuro.h"
-#include "VGG19.h"
 
 #define STYLE "starry_night"
 
@@ -101,7 +100,7 @@ public:
 
         cout << "Creating VGG model...\n";
         
-        auto vggModel = VGG16::CreateModel(NCHW, Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), false, MaxPool);
+        auto vggModel = VGG16::CreateModel(NCHW, Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), false, MaxPool, "data/");
         vggModel->SetTrainable(false);
 
         cout << "Pre-computing style features and grams...\n";

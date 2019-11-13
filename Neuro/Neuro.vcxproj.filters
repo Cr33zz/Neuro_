@@ -58,6 +58,12 @@
     <Filter Include="include\Memory">
       <UniqueIdentifier>{722bf6bd-4bab-4fcc-8d0b-3f6535a7b443}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\Applications">
+      <UniqueIdentifier>{90a005bb-1d28-45ff-a252-2f7d8b288d33}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\Applications">
+      <UniqueIdentifier>{91bc1f6f-fd21-4254-a342-f7efab2fb586}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Tensors\Shape.h">
@@ -393,6 +399,12 @@
     <ClInclude Include="include\ComputationalGraph\Operations\Conv2dBiasActivationOp.h">
       <Filter>include\ComputationalGraph\Operations</Filter>
     </ClInclude>
+    <ClInclude Include="include\Applications\VGG16.h">
+      <Filter>include\Applications</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Applications\VGG19.h">
+      <Filter>include\Applications</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -676,6 +688,12 @@
     </ClCompile>
     <ClCompile Include="src\ComputationalGraph\Operations\Conv2dBiasActivationOp.cpp">
       <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Applications\VGG16.cpp">
+      <Filter>src\Applications</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Applications\VGG19.cpp">
+      <Filter>src\Applications</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

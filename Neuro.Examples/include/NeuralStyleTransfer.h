@@ -8,7 +8,6 @@
 
 #include "Neuro.h"
 #include "Memory/MemoryManager.h"
-#include "VGG19.h"
 
 using namespace std;
 using namespace Neuro;
@@ -36,7 +35,7 @@ public:
 
         assert(contentImage.GetShape() == styleImage.GetShape());
         
-        auto vggModel = VGG16::CreateModel(NCHW, contentImage.GetShape(), false);
+        auto vggModel = VGG16::CreateModel(NCHW, contentImage.GetShape(), false, MaxPool, "data/");
         vggModel->SetTrainable(false);
 
         /*vector<TensorLike*> contentOutputs = { vggModel->Layer("block2_conv2")->Outputs()[0] };

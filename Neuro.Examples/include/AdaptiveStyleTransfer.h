@@ -12,7 +12,6 @@
 #include "NeuralStyleTransfer.h"
 #include "Memory/MemoryManager.h"
 #include "Neuro.h"
-#include "VGG19.h"
 
 //#define SLOW
 //#define FAST_SINGLE_CONTENT
@@ -70,7 +69,7 @@ public:
 
         cout << "Creating VGG model...\n";
 
-        auto vggModel = VGG19::CreateModel(NCHW, Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), false, MaxPool);
+        auto vggModel = VGG19::CreateModel(NCHW, Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), false, MaxPool, "data/");
         vggModel->SetTrainable(false);
 
         vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv1")->Outputs()[0],

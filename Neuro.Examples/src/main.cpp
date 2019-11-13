@@ -8,7 +8,6 @@
 #include "GAN.h"
 #include "DeepConvGAN.h"
 #include "CifarGAN.h"
-#include "VGG16.h"
 #include "ComputationalGraph.h"
 #include "NeuralStyleTransfer.h"
 #include "FastNeuralStyleTransfer.h"
@@ -28,7 +27,6 @@ int main()
     //DeepConvGAN().Run();
     //CifarGAN().RunDiscriminatorTrainTest();
     //CifarGAN().Run();
-    //VGG16().Run();
     //NeuralStyleTransfer().Run();
     FastNeuralStyleTransfer().Run();
     //FastNeuralStyleTransfer().Test();
