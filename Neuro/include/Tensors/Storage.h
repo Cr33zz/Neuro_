@@ -81,6 +81,7 @@ namespace Neuro
         static void OnOffloadDone(void* userData);
         static void OnPreloadDone(void* userData);
 
+        void WaitForOffload() const;
         void WaitForPreload() const;
 
         float* m_DataPtr = nullptr;
@@ -91,8 +92,9 @@ namespace Neuro
         int m_DeviceDataRefCount = 0;
         int m_DataRefCount = 0;
         cudaEvent_t m_OffloadEvent = nullptr;
-        mutex m_FreeDeviceMemOnOffloadMtx;
-        bool m_FreeDeviceMemOnOffloadDone = false;
+        mutable mutex m_FreeDeviceMemOnOffloadMtx;
+        mutable bool m_FreeDeviceMemOnOffloadDone = false;
+        mutable bool m_OffloadRequested = false;
         mutable promise<void> m_OffloadPromise;
         mutable future<void> m_OffloadFuture;
         mutable promise<void> m_PreloadPromise;

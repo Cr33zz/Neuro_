@@ -15,7 +15,7 @@
 #include "Neuro.h"
 #include "VGG19.h"
 
-#define STYLE "rain_princess"
+#define STYLE "starry_night"
 
 //#define SLOW
 //#define FAST_SINGLE_CONTENT
@@ -43,7 +43,7 @@ public:
 #else
         const uint32_t IMAGE_WIDTH = 256;
         const uint32_t IMAGE_HEIGHT = 256;
-        const float CONTENT_WEIGHT = 500.f;
+        const float CONTENT_WEIGHT = 100.f;
         const float STYLE_WEIGHT = 0.1f;
         const float LEARNING_RATE = 0.001f;
 
@@ -53,7 +53,7 @@ public:
         const uint32_t BATCH_SIZE = 4;
 #       endif
 
-        const string TEST_FILE = "data/test.jpg";
+        const string TEST_FILE = "data/contents/content.jpg";
 #endif
 
         const string STYLE_FILE = string("data/styles/") + STYLE + ".jpg";
