@@ -28,7 +28,7 @@ public:
         const float CONTENT_WEIGHT = 1.f;
         const float STYLE_WEIGHT = 0.01f;
         const float ALPHA = 1.f;
-        const float TEST_ALPHA = 0.5f;
+        const float TEST_ALPHA = 1.f;
         const float LEARNING_RATE = 1e-4f;
         const float DECAY_RATE = 5e-5f;
 
