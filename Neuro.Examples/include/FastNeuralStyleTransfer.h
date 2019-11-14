@@ -14,7 +14,7 @@
 #include "Memory/MemoryManager.h"
 #include "Neuro.h"
 
-#define STYLE "starry_night"
+#define STYLE "mosaic"
 
 //#define SLOW
 //#define FAST_SINGLE_CONTENT
@@ -28,6 +28,7 @@ public:
     void Run()
     {
         const int NUM_EPOCHS = 2;
+        int DETAILS_ITER = 20;
         
 #if defined(SLOW)
         const uint32_t IMAGE_WIDTH = 512;
@@ -42,7 +43,7 @@ public:
 #else
         const uint32_t IMAGE_WIDTH = 256;
         const uint32_t IMAGE_HEIGHT = 256;
-        const float CONTENT_WEIGHT = 100.f;
+        const float CONTENT_WEIGHT = 500.f;
         const float STYLE_WEIGHT = 0.1f;
         const float LEARNING_RATE = 0.001f;
 
@@ -100,23 +101,24 @@ public:
 
         cout << "Creating VGG model...\n";
         
-        auto vggModel = VGG16::CreateModel(NCHW, Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), false, MaxPool, "data/");
+        auto vggModel = VGG16::CreateModel(NCHW, Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), false, AvgPool, "data/");
         vggModel->SetTrainable(false);
 
         cout << "Pre-computing style features and grams...\n";
 
-        vector<TensorLike*> contentOutputs = { vggModel->Layer("block2_conv2")->Outputs()[0] };
-        vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv2")->Outputs()[0],
+        //vector<TensorLike*> contentOutputs = { vggModel->Layer("block2_conv2")->Outputs()[0] };
+        /*vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv2")->Outputs()[0],
                                              vggModel->Layer("block2_conv2")->Outputs()[0],
                                              vggModel->Layer("block3_conv3")->Outputs()[0],
                                              vggModel->Layer("block4_conv3")->Outputs()[0],
-                                            };
-        /*vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv1")->Outputs()[0],
+                                            };*/
+        vector<TensorLike*> contentOutputs = { vggModel->Layer("block5_conv2")->Outputs()[0] };
+        vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv1")->Outputs()[0],
                                              vggModel->Layer("block2_conv1")->Outputs()[0],
                                              vggModel->Layer("block3_conv1")->Outputs()[0],
                                              vggModel->Layer("block4_conv1")->Outputs()[0],
-                                             ///vggModel->Layer("block5_conv1")->Outputs()[0],
-                                            };*/
+                                             vggModel->Layer("block5_conv1")->Outputs()[0],
+                                            };
 
         vector<float> styleOutputsWeights(styleOutputs.size());
         fill(styleOutputsWeights.begin(), styleOutputsWeights.end(), 1.f / styleOutputs.size());
@@ -127,7 +129,7 @@ public:
         Tensor styleImage;
         {
             // style transfer works best when both style and content images have similar resolutions
-            float maxDim = (float)max(IMAGE_WIDTH, IMAGE_HEIGHT);
+            float maxDim = (float)max(IMAGE_WIDTH * 2, IMAGE_HEIGHT * 2);
             auto styleDims = GetImageDims(STYLE_FILE);
             float longDim = (float)max(styleDims.Width(), styleDims.Height());
             float scale = maxDim / longDim;
@@ -213,7 +215,6 @@ public:
 
         float minLoss = 0;
         float lastLoss = 0;
-        int DETAILS_ITER = 10;
 
         //DumpMemoryManagers("mem.log");
 
@@ -230,7 +231,14 @@ public:
                 testImage.CopyTo(contentBatch);
 #else
                 for (int j = 0; j < BATCH_SIZE; ++j)
-                    LoadImage(contentFiles[(i * BATCH_SIZE + j)%contentFiles.size()], contentBatch.Values() + j * contentBatch.BatchLength(), input->GetShape().Width(), input->GetShape().Height());
+                {
+                    LoadImage(contentFiles[(i * BATCH_SIZE + j) % contentFiles.size()],
+                        contentBatch.Values() + j * contentBatch.BatchLength(),
+                        IMAGE_WIDTH * 2,
+                        IMAGE_HEIGHT * 2,
+                        IMAGE_WIDTH,
+                        IMAGE_HEIGHT);
+                }
 #endif
                 
                 auto results = Session::Default()->Run(MergeVectors({ vector<TensorLike*>{ stylizedContentPre, totalLoss, weightedContentLoss, weightedStyleLoss, minimize }, styleLosses }),

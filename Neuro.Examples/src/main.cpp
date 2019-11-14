@@ -29,7 +29,6 @@ int main()
     //CifarGAN().Run();
     //NeuralStyleTransfer().Run();
     FastNeuralStyleTransfer().Run();
-    //FastNeuralStyleTransfer().Test();
     //AdaptiveStyleTransfer().Run();
 
     cin.get();

@@ -20,22 +20,22 @@ public:
     const uint32_t IMAGE_HEIGHT = 300;
 
     const string CONTENT_FILE = "content.jpg";
-    const string STYLE_FILE = "style.jpg";
+    const string STYLE_FILE = "pillars_of_creation.jpg";
 
     void Run()
     {
         Tensor::SetForcedOpMode(GPU);
         
-        Tensor contentImage = LoadImage("data/" + CONTENT_FILE, IMAGE_WIDTH, IMAGE_HEIGHT);
+        Tensor contentImage = LoadImage("data/contents/" + CONTENT_FILE, IMAGE_WIDTH, IMAGE_HEIGHT);
         contentImage.SaveAsImage(CONTENT_FILE, false);
         VGG16::PreprocessImage(contentImage, NCHW);
-        Tensor styleImage = LoadImage("data/" + STYLE_FILE, IMAGE_WIDTH, IMAGE_HEIGHT);
+        Tensor styleImage = LoadImage("data/styles/" + STYLE_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_HEIGHT);
         styleImage.SaveAsImage(STYLE_FILE, false);
         VGG16::PreprocessImage(styleImage, NCHW);
 
         assert(contentImage.GetShape() == styleImage.GetShape());
         
-        auto vggModel = VGG16::CreateModel(NCHW, contentImage.GetShape(), false, MaxPool, "data/");
+        auto vggModel = VGG16::CreateModel(NCHW, contentImage.GetShape(), false, AvgPool, "data/");
         vggModel->SetTrainable(false);
 
         /*vector<TensorLike*> contentOutputs = { vggModel->Layer("block2_conv2")->Outputs()[0] };
@@ -91,8 +91,6 @@ public:
 
         auto optimizer = Adam(5.f, 0.99f, 0.999f, 0.1f);
         auto minimize = optimizer.Minimize({ totalLoss }, { outputImg });
-
-        DumpMemoryManagers("mem_before.log");
 
         const int EPOCHS = 1000;
         Tqdm progress(EPOCHS, 10);
