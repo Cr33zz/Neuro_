@@ -28,7 +28,7 @@ public:
         const float CONTENT_WEIGHT = 1.f;
         const float STYLE_WEIGHT = 0.01f;
         const float ALPHA = 1.f;
-        const float TEST_ALPHA = 0.5f;
+        const float TEST_ALPHA = 1.f;
         const float LEARNING_RATE = 1e-4f;
         const float DECAY_RATE = 5e-5f;
 
@@ -39,8 +39,11 @@ public:
         const string STYLE_FILES_DIR = "e:/Downloads/fake_wikiart";
         const uint32_t BATCH_SIZE = 1;
 #else
-        const string CONTENT_FILES_DIR = "e:/Downloads/coco14";
+        /*const string CONTENT_FILES_DIR = "e:/Downloads/coco14";
         const string STYLE_FILES_DIR = "e:/Downloads/wikiart";
+        const uint32_t BATCH_SIZE = 6;*/
+        const string CONTENT_FILES_DIR = "e:/Downloads/test_content";
+        const string STYLE_FILES_DIR = "e:/Downloads/test_style";
         const uint32_t BATCH_SIZE = 4;
 #endif
 
@@ -175,7 +178,7 @@ public:
         int DETAILS_ITER = 10;
 
         Tqdm progress(steps, 0);
-        progress.ShowStep(true).ShowPercent(false).ShowElapsed(false).ShowIterTime(true);//.EnableSeparateLines(true);
+        progress.ShowStep(true).ShowPercent(false).ShowElapsed(false).ShowEta(false).ShowIterTime(true);//.EnableSeparateLines(true);
         for (int i = 0; i < steps; ++i, progress.NextStep())
         {
             contentBatch.OverrideHost();

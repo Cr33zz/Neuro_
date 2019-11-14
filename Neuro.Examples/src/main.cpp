@@ -28,8 +28,8 @@ int main()
     //CifarGAN().RunDiscriminatorTrainTest();
     //CifarGAN().Run();
     //NeuralStyleTransfer().Run();
-    FastNeuralStyleTransfer().Run();
-    //AdaptiveStyleTransfer().Run();
+    //FastNeuralStyleTransfer().Run();
+    AdaptiveStyleTransfer().Run();
 
     cin.get();
     return 0;
