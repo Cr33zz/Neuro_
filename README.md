@@ -19,18 +19,18 @@ Supported layers:
 #### Neural Style Transfer
 This neural network is given style image and any image we want to stylize. Model is using pre-trained VGG16/19 network to extract feature maps from style and content image and uses them to compute style and content loss. The only trainable element of the whole model is input image itself.  
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/content.jpg)  
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/style.jpg)
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/neural_transfer.jpg)  
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/style3.jpg)
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/neural_transfer3.jpg)  
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/style4.jpg)
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/neural_transfer4.jpg)  
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/style5.jpg)
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/neural_transfer5.jpg)  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/great_wave.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/neural_transfer_great_wave.jpg)  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/starry_night.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/neural_transfer_starry_night.jpg)  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/composition_vii.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/neural_transfer_composition_vii.jpg)  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/pillars_of_creation.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/neural_transfer_pillars_of_creation.jpg)  
 ```cpp
-Tensor contentImage = LoadImage("data/content.jpg", 224, 224, NCHW);
+Tensor contentImage = LoadImage("data/content.jpg", 400, 300, NCHW);
 VGG16::PreprocessImage(contentImage, NCHW);
-Tensor styleImage = LoadImage("data/style3.jpg", 224, 224, NCHW);
+Tensor styleImage = LoadImage("data/style3.jpg", 400, 300, NCHW);
 VGG16::PreprocessImage(styleImage, NCHW);
 
 auto vgg16Model = VGG16::CreateModel(NCHW);
