@@ -43,7 +43,7 @@ public:
 #else
         const uint32_t IMAGE_WIDTH = 256;
         const uint32_t IMAGE_HEIGHT = 256;
-        const float CONTENT_WEIGHT = 500.f;
+        const float CONTENT_WEIGHT = 1000.f;
         const float STYLE_WEIGHT = 0.1f;
         const float LEARNING_RATE = 0.001f;
 
@@ -112,7 +112,7 @@ public:
                                              vggModel->Layer("block3_conv3")->Outputs()[0],
                                              vggModel->Layer("block4_conv3")->Outputs()[0],
                                             };*/
-        vector<TensorLike*> contentOutputs = { vggModel->Layer("block5_conv2")->Outputs()[0] };
+        vector<TensorLike*> contentOutputs = { vggModel->Layer("block4_conv2")->Outputs()[0] };
         vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv1")->Outputs()[0],
                                              vggModel->Layer("block2_conv1")->Outputs()[0],
                                              vggModel->Layer("block3_conv1")->Outputs()[0],

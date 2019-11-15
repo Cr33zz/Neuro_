@@ -13,8 +13,8 @@
 #include "Memory/MemoryManager.h"
 #include "Neuro.h"
 
-//#define SLOW
-//#define FAST_SINGLE_CONTENT
+#define FAST_SINGLE_CONTENT
+#define USE_GRAMS
 
 using namespace Neuro;
 
@@ -25,8 +25,13 @@ public:
     {
         const uint32_t IMAGE_WIDTH = 256;
         const uint32_t IMAGE_HEIGHT = 256;
+        const int UP_SCALE_FACTOR = 2;
         const float CONTENT_WEIGHT = 1.f;
+#ifdef USE_GRAMS
+        const float STYLE_WEIGHT = 2.f;
+#else
         const float STYLE_WEIGHT = 0.01f;
+#endif
         const float ALPHA = 1.f;
         const float TEST_ALPHA = 1.f;
         const float LEARNING_RATE = 1e-4f;
@@ -35,16 +40,18 @@ public:
         const string TEST_CONTENT_FILES_DIR = "e:/Downloads/test_content";
         const string TEST_STYLES_FILES_DIR = "e:/Downloads/test_style";
 #ifdef FAST_SINGLE_CONTENT
-        const string CONTENT_FILES_DIR = "e:/Downloads/fake_coco";
+        /*const string CONTENT_FILES_DIR = "e:/Downloads/fake_coco";
         const string STYLE_FILES_DIR = "e:/Downloads/fake_wikiart";
-        const uint32_t BATCH_SIZE = 1;
+        const uint32_t BATCH_SIZE = 4;*/
+        const string CONTENT_FILES_DIR = "e:/Downloads/test_content";
+        const string STYLE_FILES_DIR = "e:/Downloads/test_style";
+        //const string CONTENT_FILES_DIR = "e:/Downloads/coco14";
+        //const string STYLE_FILES_DIR = "e:/Downloads/wikiart";
+        const uint32_t BATCH_SIZE = 4;
 #else
         /*const string CONTENT_FILES_DIR = "e:/Downloads/coco14";
         const string STYLE_FILES_DIR = "e:/Downloads/wikiart";
-        const uint32_t BATCH_SIZE = 6;*/
-        const string CONTENT_FILES_DIR = "e:/Downloads/test_content";
-        const string STYLE_FILES_DIR = "e:/Downloads/test_style";
-        const uint32_t BATCH_SIZE = 4;
+        const uint32_t BATCH_SIZE = 6;*/        
 #endif
 
         Tensor::SetForcedOpMode(GPU);
@@ -62,7 +69,7 @@ public:
         SampleImagesBatch(LoadFilesList(TEST_STYLES_FILES_DIR, false), testStyle, true);
         testStyle.SaveAsImage("_test_style.png", false);
 
-        NEURO_ASSERT(testStyle.Batch() == testContent.Batch(), "Mismatched number or content and style test images.");
+        //NEURO_ASSERT(testStyle.Batch() == testContent.Batch(), "Mismatched number or content and style test images.");
 
         cout << "Collecting dataset files list...\n";
 
@@ -113,6 +120,19 @@ public:
         for (size_t i = 0; i < styleFeat.size(); ++i)
         {
             NameScope scope("style_loss_" + to_string(i));
+#ifdef USE_GRAMS
+            /*auto gramMatrix = [](TensorLike* x)
+            {
+                uint32_t featureMapSize = x->GetShape().Width() * x->GetShape().Height();
+                auto features = reshape(x, Shape(featureMapSize, x->GetShape().Depth()));
+                return div(matmul(features, transpose(features)), (float)featureMapSize);
+            };*/
+
+            auto gramS = GramMatrix(styleFeat[i], "s_gram_" + to_string(i));
+            auto gramG = GramMatrix(stylizedFeat[i], "g_gram_" + to_string(i));
+
+            styleLosses.push_back(mean(square(sub(gramG, gramS))));
+#else
             auto meanS = mean(styleFeat[i], _01Axes, "mean_s");
             auto varS = variance(styleFeat[i], meanS, _01Axes, "var_s");
 
@@ -131,6 +151,7 @@ public:
             }
 
             styleLosses.push_back(add(meanLoss, sigmaLoss, "mean_std_loss"));
+#endif
         }
         auto weightedStyleLoss = multiply(merge_sum(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "weighted_style_loss");
 
@@ -141,9 +162,10 @@ public:
 
         auto globalStep = new Variable(0, "global_step");
         globalStep->SetTrainable(false);
-        auto learningRate = div(new Constant(LEARNING_RATE), add(multiply(globalStep, DECAY_RATE), 1));
+        //auto learningRate = div(new Constant(LEARNING_RATE), add(multiply(globalStep, DECAY_RATE), 1));
         
-        auto optimizer = Adam(learningRate, 0.9f, 0.9f);
+        //auto optimizer = Adam(learningRate, 0.9f, 0.9f);
+        auto optimizer = Adam(LEARNING_RATE, 0.9f, 0.9f);
         auto minimize = optimizer.Minimize({ totalLoss }, {}, globalStep);
 
         Tensor contentBatch(Shape::From(content->GetShape(), BATCH_SIZE), "content_batch");
@@ -177,35 +199,40 @@ public:
         float lastLoss = 0;
         int DETAILS_ITER = 10;
 
-        Tqdm progress(steps, 0);
-        progress.ShowStep(true).ShowPercent(false).ShowElapsed(false).ShowEta(false).ShowIterTime(true);//.EnableSeparateLines(true);
-        for (int i = 0; i < steps; ++i, progress.NextStep())
+        //Tqdm progress(steps, 0);
+        //progress.ShowStep(true).ShowPercent(false).ShowElapsed(false).ShowEta(false).ShowIterTime(true);//.EnableSeparateLines(true);
+        for (int i = 0; i < steps; ++i/*, progress.NextStep()*/)
         {
             contentBatch.OverrideHost();
             for (int j = 0; j < BATCH_SIZE; ++j)
-                LoadImage(contentFiles[(i * BATCH_SIZE + j) % contentFiles.size()], contentBatch.Values() + j * contentBatch.BatchLength(), IMAGE_WIDTH * 2, IMAGE_HEIGHT * 2, IMAGE_WIDTH, IMAGE_HEIGHT);
+                LoadImage(contentFiles[GlobalRng().Next((int)contentFiles.size())], contentBatch.Values() + j * contentBatch.BatchLength(), IMAGE_WIDTH * UP_SCALE_FACTOR, IMAGE_HEIGHT * UP_SCALE_FACTOR, IMAGE_WIDTH, IMAGE_HEIGHT);
             styleBatch.OverrideHost();
             for (int j = 0; j < BATCH_SIZE; ++j)
-                LoadImage(styleFiles[(i * BATCH_SIZE + j) % styleFiles.size()], styleBatch.Values() + j * styleBatch.BatchLength(), IMAGE_WIDTH * 2, IMAGE_HEIGHT * 2, IMAGE_WIDTH, IMAGE_HEIGHT);
+                LoadImage(styleFiles[GlobalRng().Next((int)styleFiles.size())], styleBatch.Values() + j * styleBatch.BatchLength(), IMAGE_WIDTH * UP_SCALE_FACTOR, IMAGE_HEIGHT * UP_SCALE_FACTOR, IMAGE_WIDTH, IMAGE_HEIGHT);
+            
+            /*contentBatch.SaveAsImage("_c_batch_" + to_string(i) + ".jpg", false);
+            styleBatch.SaveAsImage("_s_batch_" + to_string(i) + ".jpg", false);*/
 
-            /*contentBatch.SaveAsImage("___cB.jpg", false);
-            styleBatch.SaveAsImage("___sB.jpg", false);*/
-
-            auto results = Session::Default()->Run({ stylized, totalLoss, weightedContentLoss, weightedStyleLoss, learningRate, minimize },
+            auto results = Session::Default()->Run({ stylized, totalLoss, weightedContentLoss, weightedStyleLoss, /*learningRate,*/ minimize },
                 { { content, &contentBatch }, { style, &styleBatch }, { alpha, &trainAlpha }, { training, &trainingOn } });
 
-            stringstream extString;
+            /*stringstream extString;
             extString << setprecision(4) << " - lr: " << (*results[4])(0) << " - total_loss: " << (*results[1])(0);
-            progress.SetExtraString(extString.str());
+            progress.SetExtraString(extString.str());*/
+
+            cout << fixed << setprecision(4) << "Step: " << i << " Content: " << (*results[2])(0) << " Style: " << (*results[3])(0) << endl;
 
             if (i % DETAILS_ITER == 0)
             {
+                contentBatch.SaveAsImage("_c_batch_" + to_string(i) + ".jpg", false);
+                styleBatch.SaveAsImage("_s_batch_" + to_string(i) + ".jpg", false);
+
 #if !defined(FAST_SINGLE_CONTENT)
                 auto results = Session::Default()->Run({ stylized, totalLoss, weightedContentLoss, weightedStyleLoss },
                     { { content, &testContent }, { style, &testStyle }, { alpha, &testAlpha }, { training, &trainingOff } });
 #endif
                 auto genImage = *results[0];
-                genImage.Clipped(0, 255).SaveAsImage("adaptive_" + to_string(i) + "_output.png", false);
+                genImage.Clipped(0, 255).SaveAsImage("u_adaptive_" + to_string(i) + "_output.png", false);
 
                 float loss = (*results[1])(0);
                 if (minLoss <= 0 || loss < minLoss)
@@ -219,12 +246,12 @@ public:
                     change = (lastLoss - loss) / lastLoss * 100.f;
                 lastLoss = loss;
 
-                cout << endl;
+                /*cout << endl;
                 cout << "----------------------------------------------------" << endl;
                 cout << setprecision(4) << "iter: " << i << " - total loss: " << loss << "(min: " << minLoss << ") - change: " << change << "%" << endl;
                 cout << "----------------------------------------------------" << endl;
                 cout << "content loss: " << (*results[2])(0) << " - style loss: " << (*results[3])(0) << endl;
-                cout << "----------------------------------------------------" << endl;
+                cout << "----------------------------------------------------" << endl;*/
             }
         }
     }
