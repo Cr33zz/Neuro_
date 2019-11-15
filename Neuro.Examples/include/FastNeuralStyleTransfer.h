@@ -43,7 +43,7 @@ public:
 #else
         const uint32_t IMAGE_WIDTH = 256;
         const uint32_t IMAGE_HEIGHT = 256;
-        const float CONTENT_WEIGHT = 500.f;
+        const float CONTENT_WEIGHT = 1000.f;
         const float STYLE_WEIGHT = 0.1f;
         const float LEARNING_RATE = 0.001f;
 

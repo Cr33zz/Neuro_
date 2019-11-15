@@ -12,6 +12,10 @@
 using namespace std;
 using namespace Neuro;
 
+TensorLike* GramMatrix(TensorLike* reshapedFeatures, const string& name);
+TensorLike* StyleLoss(TensorLike* styleGram, TensorLike* stylizedFeatures, int index);
+TensorLike* ContentLoss(TensorLike* contentFeatures, TensorLike* stylizedFeatures);
+
 //https://medium.com/tensorflow/neural-style-transfer-creating-art-with-deep-learning-using-tf-keras-and-eager-execution-7d541ac31398
 class NeuralStyleTransfer
 {
@@ -117,9 +121,5 @@ public:
         auto genImage = *results[0];
         VGG16::DeprocessImage(genImage, NCHW);
         genImage.SaveAsImage("_neural_transfer.jpg", false);
-    }
-
-    TensorLike* GramMatrix(TensorLike* x, const string& name);
-    TensorLike* StyleLoss(TensorLike* styleGram, TensorLike* gen, int index);
-    TensorLike* ContentLoss(TensorLike* content, TensorLike* gen);
+    }    
 };
