@@ -99,7 +99,9 @@ public:
         auto contentPre = VGG16::Preprocess(content, NCHW, false);
         auto stylePre = VGG16::Preprocess(style, NCHW, false);
 
-        auto generator = CreateGeneratorModel(contentPre, stylePre, alpha, vggEncoder, training);
+        auto styleFeat = vggEncoder(stylePre, nullptr, "style_features");
+
+        auto generator = CreateGeneratorModel(contentPre, styleFeat.back(), alpha, vggEncoder, training);
         //generator->LoadWeights("decoder.h5", false, true);
         generator->LoadWeights("adaptive_weights.h5", false, true);
 
@@ -113,8 +115,6 @@ public:
         auto contentLoss = mean(square(sub(adaptiveFeat, stylizedFeat.back())));
         auto weightedContentLoss = multiply(contentLoss, CONTENT_WEIGHT, "weighted_content_loss");
         
-        auto styleFeat = vggEncoder(stylePre, nullptr, "style_features"); // actually it was already computed inside generator... could reuse that
-
         vector<TensorLike*> styleLosses;
         //compute style losses
         for (size_t i = 0; i < styleFeat.size(); ++i)
@@ -258,20 +258,57 @@ public:
 
     void Test()
     {
-        /*Tensor::SetForcedOpMode(GPU);
-        const string TEST_FILE = "data/contents/content.jpg";
+        Tensor::SetForcedOpMode(GPU);
+        const string TEST_CONTENT_FILE = "data/contents/content.jpg";
+        const string TEST_STYLE_FILE = "data/styles/mosaic.jpg";
 
-        Tensor testImage = LoadImage(TEST_FILE);
-        auto input = new Placeholder(testImage.GetShape(), "input");
-        auto inputPre = VGG16::Preprocess(input, NCHW);
-        auto generator = CreateGeneratorModel(testImage.GetShape().Width(), testImage.GetShape().Height(), new Constant(0));
-        generator->LoadWeights(string("data/") + STYLE + "_weights.h5", false, true);
-        auto stylizedContentPre = (*generator)(inputPre, new Constant(0))[0];
+        const uint32_t TEST_WIDTH = 512;
+        const uint32_t TEST_HEIGHT = 512;
 
-        auto results = Session::Default()->Run({ stylizedContentPre }, { { input, &testImage } });
-        auto genImage = *results[0];
-        VGG16::UnprocessImage(genImage, NCHW);
-        genImage.SaveAsImage(string(STYLE) + "_test_output.png", false);*/
+        Tensor testImage = LoadImage(TEST_CONTENT_FILE, TEST_WIDTH, TEST_HEIGHT, TEST_WIDTH, TEST_HEIGHT);
+        Tensor styleImage = LoadImage(TEST_STYLE_FILE, TEST_WIDTH, TEST_HEIGHT, TEST_WIDTH, TEST_HEIGHT);
+
+        auto vggModel = VGG19::CreateModel(NCHW, Shape(TEST_WIDTH, TEST_HEIGHT, 3), false, MaxPool, "data/");
+        vggModel->SetTrainable(false);
+
+        vector<TensorLike*> styleOutputs = { 
+            vggModel->Layer("block1_conv1")->Outputs()[0],
+            vggModel->Layer("block2_conv1")->Outputs()[0],
+            vggModel->Layer("block3_conv1")->Outputs()[0],
+            vggModel->Layer("block4_conv1")->Outputs()[0] };
+
+        auto vggEncoder = Flow(vggModel->InputsAt(-1), styleOutputs, "vgg_features");
+
+        auto input_content = new Placeholder(Shape(TEST_WIDTH, TEST_HEIGHT, 3), "input_content");
+        auto input_style = new Placeholder(Shape(TEST_WIDTH, TEST_HEIGHT, 3), "input_style");
+        auto input_alpha = new Constant(1.f, "alpha");
+
+        auto contentPre = VGG16::Preprocess(input_content, NCHW, false);
+        
+        // pre-compute style content features
+        VGG16::PreprocessImage(styleImage, NCHW, false);
+        auto styleFeatModel = vggEncoder(input_style, nullptr, "style_features");
+
+        auto results = Session::Default()->Run({ styleFeatModel.back() }, { { input_style, &styleImage } });
+        auto styleData = *(results[0]);
+
+        // build the actual generator
+        auto styleContentFeatures = new Placeholder(styleData.GetShape());
+
+        auto generator = CreateGeneratorModel(contentPre, styleContentFeatures, input_alpha, vggEncoder, new Constant(0));
+
+        generator->LoadWeights("data/adaptive_weights.h5", false, true);
+
+        auto stylized = clip(generator->Outputs()[0], 0, 255);
+
+        for (int i = 0; i < 100; ++i)
+        {
+            AutoStopwatch prof(Milliseconds);
+            results = Session::Default()->Run({ stylized }, { { input_content, &testImage }, { styleContentFeatures, &styleData } });
+            auto genImage = *results[0];
+            //genImage.SaveAsImage("_test_output.png", false);
+            cout << prof.ToString() << endl;
+        }
     }
 
     class AdaIN : public LayerBase
