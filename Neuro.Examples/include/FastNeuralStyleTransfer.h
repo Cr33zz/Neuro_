@@ -14,7 +14,7 @@
 #include "Memory/MemoryManager.h"
 #include "Neuro.h"
 
-#define STYLE "mosaic"
+#define STYLE "weeping_woman"
 
 //#define SLOW
 //#define FAST_SINGLE_CONTENT
@@ -112,7 +112,7 @@ public:
                                              vggModel->Layer("block3_conv3")->Outputs()[0],
                                              vggModel->Layer("block4_conv3")->Outputs()[0],
                                             };*/
-        vector<TensorLike*> contentOutputs = { vggModel->Layer("block5_conv2")->Outputs()[0] };
+        vector<TensorLike*> contentOutputs = { vggModel->Layer("block4_conv2")->Outputs()[0] };
         vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv1")->Outputs()[0],
                                              vggModel->Layer("block2_conv1")->Outputs()[0],
                                              vggModel->Layer("block3_conv1")->Outputs()[0],
