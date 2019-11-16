@@ -14,7 +14,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void VGG16::PreprocessImage(Tensor& image, EDataFormat dataFormat, bool swapChannels)
     {
-        if (swapChannels)
+        image.Sub(Tensor({ 123.68f, 116.779f, 103.939f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), image);
+        if (swapChannels) // weights in first conv layer of VGG are expecting image in BGR format
         {
             Tensor temp(image);
             //convert RGB to BGR
@@ -23,18 +24,15 @@ namespace Neuro
                 temp.CopyDepthTo(0, n, 2, n, image);
                 temp.CopyDepthTo(2, n, 0, n, image);
             }
-            image.Sub(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), image);
         }
-        else
-            image.Sub(Tensor({ 123.68f, 116.779f, 103.939f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), image);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void VGG16::DeprocessImage(Tensor& image, EDataFormat dataFormat, bool swapChannels, bool clipValues)
     {
+        image.Add(Tensor({ 123.68f, 116.779f, 103.939f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), image);
         if (swapChannels)
         {
-            image.Add(Tensor({ 103.939f, 116.779f, 123.68f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), image);
             Tensor temp(image);
             //convert BGR to RGB
             for (uint32_t n = 0; n < image.Batch(); ++n)
@@ -43,8 +41,6 @@ namespace Neuro
                 temp.CopyDepthTo(2, n, 0, n, image);
             }
         }
-        else
-            image.Add(Tensor({ 123.68f, 116.779f, 103.939f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), image);
 
         if (clipValues)
             image.Clipped(0, 255, image);
