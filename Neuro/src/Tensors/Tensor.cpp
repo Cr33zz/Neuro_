@@ -1298,6 +1298,13 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void Tensor::Resize(uint32_t length)
+    {
+        NEURO_ASSERT(m_Shape.Width() == m_Shape.Length, "");
+        Resize(Shape(length));
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void Tensor::ResizeBatch(uint32_t batch)
     {
         if (Batch() == batch)
@@ -1306,7 +1313,13 @@ namespace Neuro
         Resize(Shape::From(m_Shape, batch));
     }
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    float Tensor::Norm() const
+    {
+        return ::sqrt(Pow(2).Sum(GlobalAxis)(0));
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::Resized(uint32_t width, uint32_t height, uint32_t depth) const
 	{
 		uint32_t newBatchLength = width * height * depth;

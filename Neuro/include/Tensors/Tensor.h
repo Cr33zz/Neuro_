@@ -163,7 +163,10 @@ namespace Neuro
 
         // Changes shape and resizes values if necessary.
         void Resize(const Shape& shape);
+        void Resize(uint32_t length);
         void ResizeBatch(uint32_t batch);
+
+        float Norm() const;
 
         // Create new tensor with different batch length and use current tensors values to fill the new tensor.
         // Number of batches will be the same as in source tensor.
