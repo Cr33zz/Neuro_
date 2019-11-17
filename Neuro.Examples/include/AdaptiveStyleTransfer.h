@@ -53,7 +53,8 @@ public:
         const uint32_t BATCH_SIZE = 4;
 #else
         const string CONTENT_FILES_DIR = "e:/Downloads/coco14";
-        const string STYLE_FILES_DIR = "e:/Downloads/deviantart";
+        //const string STYLE_FILES_DIR = "e:/Downloads/deviantart";
+        const string STYLE_FILES_DIR = "e:/Downloads/wikiart";
         const uint32_t BATCH_SIZE = 6;
 #endif
 
@@ -67,11 +68,11 @@ public:
 
         //Tensor testContent = LoadImage("data/contents/chicago.jpg", IMAGE_WIDTH, IMAGE_HEIGHT);
         Tensor testContent(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3, BATCH_SIZE));
-        SampleImagesBatch(LoadFilesList(TEST_CONTENT_FILES_DIR, false), testContent);
+        SampleImagesBatch(LoadFilesList(TEST_CONTENT_FILES_DIR, false), testContent, true);
         testContent.SaveAsImage("_test_content.png", false);
         //Tensor testStyle = LoadImage("data/styles/asheville.jpg", IMAGE_WIDTH, IMAGE_HEIGHT);
         Tensor testStyle(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3, BATCH_SIZE));
-        SampleImagesBatch(LoadFilesList(TEST_STYLES_FILES_DIR, false), testStyle);
+        SampleImagesBatch(LoadFilesList(TEST_STYLES_FILES_DIR, false), testStyle, true);
         testStyle.SaveAsImage("_test_style.png", false);
 
         //NEURO_ASSERT(testStyle.Batch() == testContent.Batch(), "Mismatched number or content and style test images.");
@@ -229,8 +230,6 @@ public:
                 VGG16::SwapChannels(genImage);
                 genImage.Clipped(0, 255).SaveAsImage("adaptive_" + to_string(i) + "_output.png", false);
 
-                cout << fixed << setprecision(4) << "Test - Content: " << (*results[2])(0) << " Style: " << (*results[3])(0) << " Total: " << (*results[1])(0) << endl;
-
                 float loss = (*results[1])(0);
                 if (minLoss <= 0 || loss < minLoss)
                 {
@@ -238,17 +237,7 @@ public:
                     minLoss = loss;
                 }
 
-                float change = 0;
-                if (lastLoss > 0)
-                    change = (lastLoss - loss) / lastLoss * 100.f;
-                lastLoss = loss;
-
-                /*cout << endl;
-                cout << "----------------------------------------------------" << endl;
-                cout << setprecision(4) << "iter: " << i << " - total loss: " << loss << "(min: " << minLoss << ") - change: " << change << "%" << endl;
-                cout << "----------------------------------------------------" << endl;
-                cout << "content loss: " << (*results[2])(0) << " - style loss: " << (*results[3])(0) << endl;
-                cout << "----------------------------------------------------" << endl;*/
+                cout << fixed << setprecision(4) << "Test - Content: " << (*results[2])(0) << " Style: " << (*results[3])(0) << " Total: " << loss << " Total_Min: " << minLoss << endl;
             }
 
             auto results = Session::Default()->Run({ stylized, totalLoss, weightedContentLoss, weightedStyleLoss, /*learningRate,*/ minimize },
@@ -300,14 +289,14 @@ public:
         auto generator = CreateGeneratorModel(contentPre, styleContentFeatures, input_alpha, vggEncoder, new Constant(0));
         generator->LoadWeights("data/adaptive_weights.h5", false, true);
 
-        auto stylized = VGG16::Deprocess(generator->Outputs()[0], NCHW);
+        auto stylized = clip(swap_red_blue_channels(generator->Outputs()[0]), 0, 255);
 
         for (int i = 0; i < 100; ++i)
         {
             AutoStopwatch prof(Milliseconds);
             results = Session::Default()->Run({ stylized }, { { input_content, &testImage }, { styleContentFeatures, &styleData } });
             auto genImage = *results[0];
-            genImage.SaveAsImage("_test_output.png", false);
+            //genImage.SaveAsImage("_test_output.png", false);
             cout << prof.ToString() << endl;
         }
     }
