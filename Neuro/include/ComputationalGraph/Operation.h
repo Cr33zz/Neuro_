@@ -14,10 +14,11 @@ namespace Neuro
         uint32_t LastComputeStep() const { return m_LastComputeStep; }
         vector<const Tensor*> GatherInputs() const;
 
-        const Tensor& Compute(const vector<const Tensor*>& inputs);
+        const Tensor& Compute();
         const vector<Tensor*>& ComputeGradient(const Tensor& grad);
 
         const vector<Tensor>& InputsGrads() const { return m_InputsGrads; }
+        const vector<const Tensor*>& Inputs() const { return m_Inputs; }
 
         virtual bool CareAboutGradient() const override { return m_CareAboutGradient; }
         virtual void RefreshCareAboutGradient() override;

@@ -310,19 +310,12 @@ namespace NeuroTests
 
             GlobalRngSeed(101);
 
-            vector<Tensor> inputs;
-            inputs.reserve(op->InputNodes().size());
-            vector<const Tensor*> inputsPtrs;
             for (auto inputNode : op->InputNodes())
-            {
-                inputs.push_back(Tensor(inputNode->GetShape()));
-                inputs.back().FillWithRand(-1, onlyPositiveInputs ? 0.f : -1.f, 1.f);
-                inputsPtrs.push_back(&inputs.back());
-            }
+                inputNode->Output().FillWithRand(-1, onlyPositiveInputs ? 0.f : -1.f, 1.f);
 
             float GRAD_VALUE = 2.f;
 
-            auto output = op->Compute(inputsPtrs);
+            auto output = op->Compute();
             /*vector<Tensor> tmpOutputGrad = { Tensor(output.GetShape()) };
             tensor_ptr_vec_t outputGradient = { &tmpOutputGrad[0] };
             outputGradient[0]->FillWithValue(GRAD_VALUE);*/
@@ -335,12 +328,12 @@ namespace NeuroTests
 
             bool fail = false;
 
-            for (uint32_t n = 0; n < (int)inputs.size(); ++n)
+            for (uint32_t n = 0; n < (int)op->InputNodes().size(); ++n)
             {
                 if (n < ignoreInput.size() && ignoreInput[n])
                     continue;
 
-                auto& input = inputs[n];
+                auto& input = op->InputNodes()[n]->Output();
                 for (uint32_t i = 0; i < input.Length(); ++i)
                 {
                     result.Zero();
@@ -349,10 +342,10 @@ namespace NeuroTests
 
                     input.SetFlat(oldValue - DERIVATIVE_EPSILON, i);
                     GlobalRngSeed(101);
-                    auto output1 = op->Compute(inputsPtrs);
+                    auto output1 = op->Compute();
                     input.SetFlat(oldValue + DERIVATIVE_EPSILON, i);
                     GlobalRngSeed(101);
-                    auto output2 = op->Compute(inputsPtrs);
+                    auto output2 = op->Compute();
 
                     input.SetFlat(oldValue, i);
 

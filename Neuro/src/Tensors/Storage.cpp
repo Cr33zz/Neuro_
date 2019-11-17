@@ -8,6 +8,10 @@
 
 //#define DISABLE_OFFLOAD_PREFETCH
 //#define ENABLE_STORAGE_LOGS
+//
+
+#include <windows.h>
+#include <debugapi.h>
 
 #ifdef ENABLE_STORAGE_LOGS
 #include <windows.h>
@@ -18,6 +22,8 @@
 #define STORAGE_DEBUG_INFO_NO_TS(...) {}
 #define STORAGE_DEBUG_INFO(...) {}
 #endif
+
+#define WAITING_DEBUG_INFO(...) do { static char buffer[1024]; sprintf(buffer, __VA_ARGS__); cout << buffer; } while (0)
 
 namespace Neuro
 {
@@ -372,11 +378,11 @@ namespace Neuro
         if (m_OffloadRequested)
         {
             AutoStopwatch prof(Microseconds);
-            STORAGE_DEBUG_INFO("Waiting for offload callback... '%s'[%d]\n", m_Name.c_str(), m_Type);
+            WAITING_DEBUG_INFO("Waiting for offload callback... '%s'[%d]\n", m_Name.c_str(), m_Type);
             m_OffloadFuture.get(); // wait for callback
             m_OffloadPromise = promise<void>();
             m_OffloadRequested = false;
-            STORAGE_DEBUG_INFO("--> waited %s\n", prof.ToString().c_str());
+            WAITING_DEBUG_INFO("--> waited %s\n", prof.ToString().c_str());
         }
     }
 
@@ -386,11 +392,11 @@ namespace Neuro
         if (m_PreloadRequested)
         {
             AutoStopwatch prof(Microseconds);
-            STORAGE_DEBUG_INFO("Waiting for preload callback... '%s'[%d]\n", m_Name.c_str(), m_Type);
+            WAITING_DEBUG_INFO("Waiting for preload callback... '%s'[%d]\n", m_Name.c_str(), m_Type);
             m_PreloadFuture.get(); // wait for callback
             m_PreloadPromise = promise<void>();
             m_PreloadRequested = false;
-            STORAGE_DEBUG_INFO("--> waited %s\n", prof.ToString().c_str());
+            WAITING_DEBUG_INFO("--> waited %s\n", prof.ToString().c_str());
         }
     }
 
@@ -481,11 +487,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Storage::CopyToDevice() const
     {
-        if (m_OffloadRequested)
-        {
-            STORAGE_DEBUG_INFO("Copy to device '%s'[%d] <<< offload completed check\n", m_Name.c_str(), m_Type);
-            WaitForOffload();
-        }
         if (m_PreloadRequested)
         {
             STORAGE_DEBUG_INFO("Copy to device '%s'[%d] <<< preload completed check\n", m_Name.c_str(), m_Type);

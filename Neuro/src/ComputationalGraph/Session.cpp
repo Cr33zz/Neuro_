@@ -82,6 +82,8 @@ namespace Neuro
 
         for (size_t n = 0; n < order.size(); ++n)
         {
+            AutoStopwatch prof(Microseconds);
+
             if (n + 1 < order.size())
             {
                 auto node = order[n + 1];
@@ -95,18 +97,19 @@ namespace Neuro
             {
                 SESSION_DEBUG_INFO("##Session: Computing '%s'...\n", node->Name().c_str());
                 Operation* op = static_cast<Operation*>(node);
-                auto inputs = op->GatherInputs();
-                op->Compute(inputs);
+                op->Compute();
 
                 if (Debug::ShouldLogOutput(node->Name()))
                 {
-                    for (size_t i = 0; i < inputs.size(); ++i)
-                        inputs[i]->DebugDumpValues(node->Name() + "_input" + to_string(i) + "_step" + to_string(Debug::GetStep()) + ".log");
+                    for (size_t i = 0; i < op->Inputs().size(); ++i)
+                        op->Inputs()[i]->DebugDumpValues(node->Name() + "_input" + to_string(i) + "_step" + to_string(Debug::GetStep()) + ".log");
                 }
             }
 
             if (Debug::ShouldLogOutput(node->Name()))
                 node->Output().DebugDumpValues(node->Name() + "_output0_step" + to_string(Debug::GetStep()) + ".log");
+
+            cout << "'" << node->Name() << "' - " << prof.ToString() << endl;
         }
 
         Debug::Step();

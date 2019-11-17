@@ -18,6 +18,7 @@ namespace Neuro
         {
             inputNode->m_Consumers.push_back(this);
             m_CareAboutGradient |= inputNode->CareAboutGradient();
+            m_Inputs.push_back(inputNode->OutputPtr());
         }
 
         m_InputsGradsPtrs.resize(m_InputNodes.size());
@@ -44,17 +45,13 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const Tensor& Operation::Compute(const vector<const Tensor*>& inputs)
+    const Tensor& Operation::Compute()
     {
         if (m_Output.TryDeviceAllocate())
             m_Output.OverrideDevice();
         m_Output.ResetDeviceRef(m_Consumers.size());
         m_Output.IncRef();
-        m_Inputs = inputs;
         m_InputsManuallyConsumed = false;
-
-        /*for (auto input : inputs)
-            NEURO_ASSERT(ValidateArrayNotFreed(input->Values(), input->Length()), "");*/
 
         ComputeInternal();
 
@@ -65,8 +62,6 @@ namespace Neuro
             if (!m_InputsManuallyConsumed)
                 inputNode->OutputConsumed();
         }
-
-        //NEURO_ASSERT(ValidateArrayModifiedAfterAlloc(m_Output.Values(), m_Output.Length()), "");
 
         m_Output.Offload(); // at this point output won't change so start offloading it, it will be released when all consumers used it
         return m_Output;
