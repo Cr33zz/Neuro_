@@ -681,8 +681,15 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Storage::CopyWithinDevice(void* destDevPtr) const
     {
-        NEURO_ASSERT(m_DeviceDataPtr, "Invalid device pointer.");
-        NEURO_ASSERT(destDevPtr, "Invalid destination device pointer.");
-        CUDA_CHECK(cudaMemcpy(destDevPtr, (void*)m_DeviceDataPtr, SizeInBytes(), cudaMemcpyDeviceToDevice));
+        CopyWithinDevice((void*)m_DeviceDataPtr, destDevPtr, SizeInBytes());
     }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Storage::CopyWithinDevice(void* destDevPtr, const void* srcDevPtr, size_t sizeInBytes) const
+    {
+        NEURO_ASSERT(srcDevPtr, "Invalid device pointer.");
+        NEURO_ASSERT(destDevPtr, "Invalid destination device pointer.");
+        CUDA_CHECK(cudaMemcpy(destDevPtr, srcDevPtr, sizeInBytes, cudaMemcpyDeviceToDevice));
+    }
+
 }

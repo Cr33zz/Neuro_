@@ -51,6 +51,7 @@ namespace Neuro
         void CopyToHost(bool allowAlloc = false) const;
         void SyncToHost() const;
         void CopyWithinDevice(void* destDevPtr) const;
+        void CopyWithinDevice(void* destDevPtr, const void* srcDevPtr, size_t sizeInBytes) const;
 
         void OverrideHost();
         void OverrideDevice();

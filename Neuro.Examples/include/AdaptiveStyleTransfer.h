@@ -296,7 +296,7 @@ public:
             AutoStopwatch prof(Milliseconds);
             results = Session::Default()->Run({ stylized }, { { input_content, &testImage }, { styleContentFeatures, &styleData } });
             auto genImage = *results[0];
-            //genImage.SaveAsImage("_test_output.png", false);
+            genImage.SaveAsImage("_test_output.png", false);
             cout << prof.ToString() << endl;
         }
     }

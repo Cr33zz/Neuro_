@@ -80,6 +80,7 @@ namespace Neuro
         static bool s_Initialized;
         static cudaDeviceProp s_CudaDevProp;
         static cublasHandle_t s_CublasHandle;
+    public:
         static cudnnHandle_t s_CudnnHandle;
     };
 }
