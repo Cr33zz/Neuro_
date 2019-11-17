@@ -148,10 +148,10 @@ namespace Neuro
 
         const uint32_t TENSOR_WIDTH = Width();
         const uint32_t TENSOR_HEIGHT = Height();
-        const uint32_t IMG_ROWS = (uint32_t)ceil(::sqrt((float)Batch()));
         const uint32_t IMG_COLS = (uint32_t)ceil(::sqrt((float)Batch()));
-        const uint32_t IMG_WIDTH = IMG_ROWS * TENSOR_WIDTH;
-        const uint32_t IMG_HEIGHT = IMG_COLS * TENSOR_HEIGHT;
+        const uint32_t IMG_ROWS = (uint32_t)ceil(Batch() / IMG_COLS);
+        const uint32_t IMG_WIDTH = IMG_COLS * TENSOR_WIDTH;
+        const uint32_t IMG_HEIGHT = IMG_ROWS * TENSOR_HEIGHT;
         const bool GRAYSCALE = (Depth() == 1);
         
         RGBQUAD color;
