@@ -572,7 +572,8 @@ namespace Neuro
         NEURO_ASSERT(paddingX == paddingY, "");
         input.Conv2D(kernels, stride, paddingX, NCHW, output);
         output.Add(bias, output);
-        output.Activation(activation, activationAlpha, output);
+        if (activation != _Identity)
+            output.Activation(activation, activationAlpha, output);
     }
 
     //////////////////////////////////////////////////////////////////////////

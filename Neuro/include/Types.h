@@ -79,6 +79,7 @@ namespace Neuro
 
     enum EActivation
     {
+        _Identity,
         _Sigmoid,
         _ReLU,
         _TanH,

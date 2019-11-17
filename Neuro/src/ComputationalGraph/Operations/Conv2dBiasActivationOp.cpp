@@ -31,18 +31,27 @@ namespace Neuro
         if (!m_InputNodes[0]->CareAboutGradient() && !m_InputNodes[1]->CareAboutGradient() && !m_InputNodes[2]->CareAboutGradient())
             return;
 
-        m_OutputGradTemp.Resize(grad.GetShape());
-        m_OutputGradTemp.TryDeviceAllocate(); // this is actually workspace
+        const Tensor* outputGrad = nullptr;
 
-        grad.ActivationGradient(m_Activation, m_ActivationAlpha, m_Output, grad, m_OutputGradTemp);
+        if (m_Activation != _Identity)
+        {
+            m_OutputGradTemp.Resize(grad.GetShape());
+            m_OutputGradTemp.TryDeviceAllocate(); // this is actually workspace
+
+            grad.ActivationGradient(m_Activation, m_ActivationAlpha, m_Output, grad, m_OutputGradTemp);
+            outputGrad = &m_OutputGradTemp;
+        }
+        else
+            outputGrad = &grad;
 
         if (m_InputNodes[1]->CareAboutGradient())
-            grad.Conv2DKernelsGradient(x, m_OutputGradTemp, m_Stride, m_Padding, NCHW, m_InputsGrads[1]);
+            grad.Conv2DKernelsGradient(x, *outputGrad, m_Stride, m_Padding, NCHW, m_InputsGrads[1]);
         if (m_InputNodes[2]->CareAboutGradient())
-            grad.Conv2DBiasGradient(m_OutputGradTemp, m_InputsGrads[2]);
+            grad.Conv2DBiasGradient(*outputGrad, m_InputsGrads[2]);
         if (m_InputNodes[0]->CareAboutGradient())
-            grad.Conv2DInputsGradient(m_OutputGradTemp, kernels, m_Stride, m_Padding, NCHW, m_InputsGrads[0]);
+            grad.Conv2DInputsGradient(*outputGrad, kernels, m_Stride, m_Padding, NCHW, m_InputsGrads[0]);
 
-        m_OutputGradTemp.TryDeviceRelease();
+        if (m_Activation != _Identity)
+            m_OutputGradTemp.TryDeviceRelease();
     }
 }
