@@ -20,11 +20,15 @@ TensorLike* ContentLoss(TensorLike* contentFeatures, TensorLike* stylizedFeature
 class NeuralStyleTransfer
 {
 public:
-    const uint32_t IMAGE_WIDTH = 400;
-    const uint32_t IMAGE_HEIGHT = 300;
+    const uint32_t IMAGE_WIDTH = 512;
+    const uint32_t IMAGE_HEIGHT = 384;
 
-    const string CONTENT_FILE = "content.jpg";
-    const string STYLE_FILE = "pillars_of_creation.jpg";
+    const float CONTENT_WEIGHT = 5e0f;
+    const float STYLE_WEIGHT = 1e4f;
+    const float STYLE_LAYER_WEIGHT = 0.2f;
+
+    const string CONTENT_FILE = "tubingen.jpg";
+    const string STYLE_FILE = "starry_night.jpg";
 
     void Run()
     {
@@ -33,13 +37,14 @@ public:
         Tensor contentImage = LoadImage("data/contents/" + CONTENT_FILE, IMAGE_WIDTH, IMAGE_HEIGHT);
         contentImage.SaveAsImage(CONTENT_FILE, false);
         VGG16::PreprocessImage(contentImage, NCHW);
+
         Tensor styleImage = LoadImage("data/styles/" + STYLE_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_HEIGHT);
         styleImage.SaveAsImage(STYLE_FILE, false);
         VGG16::PreprocessImage(styleImage, NCHW);
 
         assert(contentImage.GetShape() == styleImage.GetShape());
         
-        auto vggModel = VGG16::CreateModel(NCHW, contentImage.GetShape(), false, AvgPool, "data/");
+        auto vggModel = VGG19::CreateModel(NCHW, contentImage.GetShape(), false, AvgPool, "data/");
         vggModel->SetTrainable(false);
 
         /*vector<TensorLike*> contentOutputs = { vggModel->Layer("block2_conv2")->Outputs()[0] };
@@ -48,12 +53,15 @@ public:
                                              vggModel->Layer("block3_conv3")->Outputs()[0],
                                              vggModel->Layer("block4_conv3")->Outputs()[0] };*/
 
-        vector<TensorLike*> contentOutputs = { vggModel->Layer("block5_conv2")->Outputs()[0] };
+        vector<TensorLike*> contentOutputs = { vggModel->Layer("block4_conv2")->Outputs()[0] };
         vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv1")->Outputs()[0], 
                                              vggModel->Layer("block2_conv1")->Outputs()[0], 
                                              vggModel->Layer("block3_conv1")->Outputs()[0], 
                                              vggModel->Layer("block4_conv1")->Outputs()[0],
                                              vggModel->Layer("block5_conv1")->Outputs()[0] };
+
+        vector<float> styleLayersWeights(styleOutputs.size());
+        fill(styleLayersWeights.begin(), styleLayersWeights.end(), STYLE_LAYER_WEIGHT);
 
         auto outputImg = new Variable(contentImage, "output_image");
 
@@ -76,34 +84,28 @@ public:
         // generate beginning of the computational graph for processing output image
         auto outputs = model(outputImg);
 
-        float contentLossWeight = 1e3f;
-        float styleLossWeight = 1e-2f;
-
         // compute content loss from first output...
-        auto contentLoss = multiply(ContentLoss(content, outputs[0]), contentLossWeight);
+        auto contentLoss = multiply(ContentLoss(content, outputs[0]), CONTENT_WEIGHT);
         outputs.erase(outputs.begin());
 
         vector<TensorLike*> styleLosses;
         // ... and style losses from remaining outputs
         assert(outputs.size() == styles.size());
         for (size_t i = 0; i < outputs.size(); ++i)
-            styleLosses.push_back(StyleLoss(styleGrams[i], outputs[i], (int)i));
-        //auto styleLoss = merge_avg(styleLosses, "style_loss");
-        auto styleLoss = multiply(merge_avg(styleLosses, "mean_style_loss"), styleLossWeight, "style_loss");
+            styleLosses.push_back(multiply(StyleLoss(styleGrams[i], outputs[i], (int)i), styleLayersWeights[i]));
+        auto styleLoss = multiply(merge_avg(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "style_loss");
 
         auto totalLoss = add(contentLoss, styleLoss, "total_loss");
 
-        auto optimizer = Adam(5.f, 0.99f, 0.999f, 0.1f);
+        auto optimizer = Adam(1.f);
         auto minimize = optimizer.Minimize({ totalLoss }, { outputImg });
 
         const int EPOCHS = 1000;
         Tqdm progress(EPOCHS, 10);
-        progress.ShowStep(false).ShowElapsed(false);
+        progress.ShowStep(true).ShowElapsed(false).EnableSeparateLines(true);
         for (int e = 0; e < EPOCHS; ++e, progress.NextStep())
         {
             auto results = Session::Default()->Run({ outputImg, contentLoss, styleLoss, totalLoss, minimize }, {});
-
-            DumpMemoryManagers("mem.log");
 
             stringstream extString;
             extString << setprecision(4) << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - total_l: " << (*results[3])(0);
