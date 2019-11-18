@@ -17,7 +17,7 @@ namespace Neuro
     cublasHandle_t TensorOpGpu::s_CublasHandle = nullptr;
     cudnnHandle_t TensorOpGpu::s_CudnnHandle = nullptr;
 
-    static const int INNER_KERNEL_LOOP_LENGTH = 1; // for simple per-element kernels
+    static const int INNER_KERNEL_LOOP_LENGTH = 32; // for simple per-element kernels
 
     //////////////////////////////////////////////////////////////////////////
     TensorOpGpu::TensorOpGpu()
@@ -302,7 +302,7 @@ namespace Neuro
 
         if (t1.GetShape() == t2.GetShape())
         {
-            GetKernelRunParams(max(t1.Length() / INNER_KERNEL_LOOP_LENGTH, 1), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
+            GetKernelRunParams((int)ceil(t1.Length() / (float)INNER_KERNEL_LOOP_LENGTH), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
             CudaKernels::Div(blocks, threads, t1.Length(), alpha, t1.GetDevicePtr(), beta, t2.GetDevicePtr(), output.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);
         }
         else
@@ -377,7 +377,7 @@ namespace Neuro
         }
 
         dim3 blocks, threads;
-        GetKernelRunParams(max((int)input.Length() / INNER_KERNEL_LOOP_LENGTH, 1), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);        
+        GetKernelRunParams((int)ceil(input.Length() / (float)INNER_KERNEL_LOOP_LENGTH), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);        
 
         CudaKernels::Pow(blocks, threads, input.Length(), input.GetDevicePtr(), power, output.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);
     }
@@ -396,7 +396,7 @@ namespace Neuro
         }
 
         dim3 blocks, threads;
-        GetKernelRunParams(max((int)input.Length() / INNER_KERNEL_LOOP_LENGTH, 1), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
+        GetKernelRunParams((int)ceil(input.Length() / (float)INNER_KERNEL_LOOP_LENGTH), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
 
         CudaKernels::PowGradient(blocks, threads, input.Length(), input.GetDevicePtr(), power, outputGradient.GetDevicePtr(), inputGradient.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);
     }
