@@ -23,7 +23,8 @@
 #define STORAGE_DEBUG_INFO(...) {}
 #endif
 
-#define WAITING_DEBUG_INFO(...) do { static char buffer[1024]; sprintf(buffer, __VA_ARGS__); cout << buffer; } while (0)
+//#define WAITING_DEBUG_INFO(...) do { static char buffer[1024]; sprintf(buffer, __VA_ARGS__); cout << buffer; } while (0)
+#define WAITING_DEBUG_INFO(...) {}
 
 namespace Neuro
 {
