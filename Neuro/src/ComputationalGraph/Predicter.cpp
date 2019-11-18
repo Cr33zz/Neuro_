@@ -14,7 +14,9 @@ namespace Neuro
         m_InputPlaceholders = inputPlaceholders;
         m_OutputOps = outputOps;
 
-        m_Order = Graph::Default()->BuildForwardOrder(m_OutputOps);
+        bool isTraining = Graph::Default()->BuildForwardOrder(m_OutputOps, m_Order);
+
+        NEURO_ASSERT(!isTraining, "Fetching training operation in predictor.");
 
         for (size_t i = 0; i < m_InputPlaceholders.size(); ++i)
             m_Feeds[m_InputPlaceholders[i]] = nullptr;
@@ -29,7 +31,7 @@ namespace Neuro
         for (size_t i = 0; i < m_InputPlaceholders.size(); ++i)
             m_Feeds[m_InputPlaceholders[i]] = inputs[i];
 
-        return Session::Default()->RunInOrder(m_Order, m_OutputOps, m_Feeds);
+        return Session::Default()->RunInOrder(m_Order, m_OutputOps, m_Feeds, false);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -37,6 +39,6 @@ namespace Neuro
     {
         auto localFeeds = feeds;
         localFeeds[m_TrainingPlaceholder] = m_Feeds[m_TrainingPlaceholder];
-        return Session::Default()->RunInOrder(m_Order, m_OutputOps, localFeeds);
+        return Session::Default()->RunInOrder(m_Order, m_OutputOps, localFeeds, false);
     }
 }

@@ -45,13 +45,14 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const Tensor& Operation::Compute()
+    const Tensor& Operation::Compute(bool training)
     {
         if (m_Output.TryDeviceAllocate())
             m_Output.OverrideDevice();
         m_Output.ResetDeviceRef(m_Consumers.size());
         m_Output.IncRef();
         m_InputsManuallyConsumed = false;
+        m_Training = training;
 
         ComputeInternal();
 
@@ -63,7 +64,9 @@ namespace Neuro
                 inputNode->OutputConsumed();
         }
 
-        m_Output.Offload(); // at this point output won't change so start offloading it, it will be released when all consumers used it
+        // operations not participating in gradient computation offload is not necessary, it can be simply deallocated when consumed
+        if (m_Training && CareAboutGradient())
+            m_Output.Offload(); // at this point output won't change so start offloading it, it will be released when all consumers used it
         return m_Output;
     }
 
@@ -72,6 +75,9 @@ namespace Neuro
     {
         for (size_t i = 0; i < m_InputsGrads.size(); ++i)
         {
+            if (!m_InputNodes[i]->CareAboutGradient() && !ForceAllocInputGradNode(i))
+                continue;
+
             m_InputsGrads[i].ResizeBatch(m_Inputs[i]->GetShape().Batch());
             if (m_InputsGrads[i].TryDeviceAllocate())
                 m_InputsGrads[i].OverrideDevice();

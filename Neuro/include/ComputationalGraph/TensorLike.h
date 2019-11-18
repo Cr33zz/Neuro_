@@ -45,6 +45,10 @@ namespace Neuro
         virtual void OutputConsumed() {}
         virtual void InputGradConsumed(TensorLike* inputNode) {}
 
+        // In most cases pre-loading nodes which don't care about gradient is pointless
+        // However, in some cases we still need them to compute other inputs gradient (ie. multiplication)
+        virtual bool ForcePreloadInputNode(size_t index) const { return false; }
+
         struct metadata
         {
             LayerBase* layer; // layer which created this tensor

@@ -56,15 +56,17 @@ namespace Neuro
         auto orderIt = m_OrderCache.find(fetchesHash);
         if (orderIt == m_OrderCache.end())
         {
-            m_OrderCache[fetchesHash] = m_Graph->BuildForwardOrder(fetches);
+            OrderCacheData data;
+            data.is_training = m_Graph->BuildForwardOrder(fetches, data.order);
+            m_OrderCache[fetchesHash] = data;
             orderIt = m_OrderCache.find(fetchesHash);
         }
 
-        return RunInOrder(orderIt->second, fetches, feeds);
+        return RunInOrder(orderIt->second.order, fetches, feeds, orderIt->second.is_training);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<Tensor*> Session::RunInOrder(const vector<TensorLike*>& order, const vector<TensorLike*>& fetches, const map<Placeholder*, const Tensor*>& feeds)
+    vector<Tensor*> Session::RunInOrder(const vector<TensorLike*>& order, const vector<TensorLike*>& fetches, const map<Placeholder*, const Tensor*>& feeds, bool training)
     {
         m_Graph->InitVariables();
         m_Graph->IncrementStep();
@@ -77,27 +79,28 @@ namespace Neuro
             feed.second->CopyTo(feed.first->m_Output);
         }
 
-        for (size_t i = 0; i < fetches.size(); ++i)
-            fetches[i]->Output().ResetRef(1); // lock fetches outputs so they don't get released
-
         for (size_t n = 0; n < order.size(); ++n)
         {
             AutoStopwatch prof(Microseconds);
 
-            if (n + 1 < order.size())
+            // as of right now there is no functionality using that feature
+            /*if (n + 1 < order.size())
             {
                 auto node = order[n + 1];
                 SESSION_DEBUG_INFO("##Session: Prefetching '%s'...\n", node->Name().c_str());
                 node->Prefetch();
-            }
+            }*/
 
             auto node = order[n];
+
+            bool isFetched = find(fetches.begin(), fetches.end(), node) != fetches.end();
+            node->Output().ResetRef(isFetched ? 1 : 0); // lock fetches outputs so they don't get released
             
             if (node->IsOp())
             {
                 SESSION_DEBUG_INFO("##Session: Computing '%s'...\n", node->Name().c_str());
                 Operation* op = static_cast<Operation*>(node);
-                op->Compute();
+                op->Compute(training);
 
                 if (Debug::ShouldLogOutput(node->Name()))
                 {

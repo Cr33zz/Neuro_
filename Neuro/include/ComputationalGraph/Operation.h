@@ -14,7 +14,7 @@ namespace Neuro
         uint32_t LastComputeStep() const { return m_LastComputeStep; }
         vector<const Tensor*> GatherInputs() const;
 
-        const Tensor& Compute();
+        const Tensor& Compute(bool training);
         const vector<Tensor*>& ComputeGradient(const Tensor& grad);
 
         const vector<Tensor>& InputsGrads() const { return m_InputsGrads; }
@@ -24,6 +24,11 @@ namespace Neuro
         virtual void RefreshCareAboutGradient() override;
         virtual void OutputConsumed() override;
         virtual void InputGradConsumed(TensorLike* inputNode) override;
+        
+        virtual bool ForceAllocInputGradNode(size_t index) const { return false; }
+
+        // Existence of training operations in fetched list will cause network to automatically run in training mode
+        virtual bool IsTrainingOp() const { return false; }
 
     protected:
         Operation(const vector<TensorLike*>& inputNodes, const string& name);
@@ -41,5 +46,6 @@ namespace Neuro
         /// This flag in a hint for operation not to notify input nodes again
         bool m_InputsManuallyConsumed = false;
         bool m_CareAboutGradient = false;
+        bool m_Training = false;
     };
 }

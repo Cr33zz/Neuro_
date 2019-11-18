@@ -226,6 +226,9 @@ public:
                 auto results = Session::Default()->Run({ stylized, totalLoss, weightedContentLoss, weightedStyleLoss },
                     { { content, &testContent }, { style, &testStyle }, { alpha, &testAlpha }, { training, &trainingOff } });
 
+                DumpMemoryManagers("mem.log");
+
+
                 auto genImage = *results[0];
                 VGG16::SwapChannels(genImage);
                 genImage.Clipped(0, 255).SaveAsImage("adaptive_" + to_string(i) + "_output.png", false);
@@ -242,6 +245,9 @@ public:
 
             auto results = Session::Default()->Run({ stylized, totalLoss, weightedContentLoss, weightedStyleLoss, /*learningRate,*/ minimize },
                 { { content, &contentBatch }, { style, &styleBatch }, { alpha, &trainAlpha }, { training, &trainingOn } });
+
+            DumpMemoryManagers("mem.log");
+
 
             cout << fixed << setprecision(4) << "Step: " << i << " Content: " << (*results[2])(0) << " Style: " << (*results[3])(0) << endl;
         }
@@ -297,8 +303,7 @@ public:
             results = Session::Default()->Run({ stylized }, { { input_content, &testImage }, { styleContentFeatures, &styleData } });
             //auto genImage = *results[0];
             //genImage.SaveAsImage("_test_output.png", false);
-            Sleep(5000);
-            DumpMemoryManagers("mem.log");
+            //DumpMemoryManagers("mem.log");
             cout << prof.ToString() << endl;
         }
     }

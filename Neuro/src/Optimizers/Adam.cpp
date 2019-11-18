@@ -60,6 +60,8 @@ namespace Neuro
         if (m_MGradients.size() != vars.size())
         {
             assert(m_MGradients.empty() && m_VGradients.empty());
+            m_MGradients.reserve(vars.size());
+            m_VGradients.reserve(vars.size());
 
             for (uint32_t i = 0; i < vars.size(); ++i)
             {

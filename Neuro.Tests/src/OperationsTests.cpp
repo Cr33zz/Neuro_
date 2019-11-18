@@ -315,7 +315,7 @@ namespace NeuroTests
 
             float GRAD_VALUE = 2.f;
 
-            auto output = op->Compute();
+            auto output = op->Compute(true);
             /*vector<Tensor> tmpOutputGrad = { Tensor(output.GetShape()) };
             tensor_ptr_vec_t outputGradient = { &tmpOutputGrad[0] };
             outputGradient[0]->FillWithValue(GRAD_VALUE);*/
@@ -342,10 +342,10 @@ namespace NeuroTests
 
                     input.SetFlat(oldValue - DERIVATIVE_EPSILON, i);
                     GlobalRngSeed(101);
-                    auto output1 = op->Compute();
+                    auto output1 = op->Compute(true);
                     input.SetFlat(oldValue + DERIVATIVE_EPSILON, i);
                     GlobalRngSeed(101);
-                    auto output2 = op->Compute();
+                    auto output2 = op->Compute(true);
 
                     input.SetFlat(oldValue, i);
 

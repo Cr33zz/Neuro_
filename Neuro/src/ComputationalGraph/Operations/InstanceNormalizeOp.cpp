@@ -15,13 +15,12 @@ namespace Neuro
         auto& x = *m_Inputs[0];
         auto& gamma = *m_Inputs[1];
         auto& beta = *m_Inputs[2];
-        bool training = (*m_Inputs[3])(0) != 0;
-
+        
         m_Output.ResizeBatch(m_Inputs[0]->Batch());
         m_SaveMean.Resize(Shape(1, 1, x.GetShape().Depth(), x.GetShape().Batch()));
         m_SaveInvVar.Resize(m_SaveMean.GetShape());
 
-        if (training)
+        if (m_Training)
             m_Inputs[0]->InstanceNormTrain(gamma, beta, m_Epsilon, m_SaveMean, m_SaveInvVar, m_Output);
         else
             m_Inputs[0]->InstanceNorm(gamma, beta, m_Epsilon, m_Output);

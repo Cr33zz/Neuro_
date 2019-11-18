@@ -15,7 +15,9 @@ namespace Neuro
         m_TargetPlaceholders = targetPlaceholders;
         m_FetchOps = fetchOps;
 
-        m_Order = Graph::Default()->BuildForwardOrder(m_FetchOps);
+        bool isTraining = Graph::Default()->BuildForwardOrder(m_FetchOps, m_Order);
+
+        NEURO_ASSERT(isTraining, "There is no training operation fetched in trainer.");
 
         for (size_t i = 0; i < m_InputPlaceholders.size(); ++i)
             m_Feeds[m_InputPlaceholders[i]] = nullptr;
@@ -34,6 +36,6 @@ namespace Neuro
         for (size_t i = 0; i < m_TargetPlaceholders.size(); ++i)
             m_Feeds[m_TargetPlaceholders[i]] = outputs[i];
 
-        return Session::Default()->RunInOrder(m_Order, m_FetchOps, m_Feeds);
+        return Session::Default()->RunInOrder(m_Order, m_FetchOps, m_Feeds, true);
     }
 }

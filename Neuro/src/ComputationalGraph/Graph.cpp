@@ -71,28 +71,27 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> Graph::BuildForwardOrder(const vector<TensorLike*>& endNodes)
+    bool Graph::BuildForwardOrder(const vector<TensorLike*>& endNodes, vector<TensorLike*>& order)
     {
-        vector<TensorLike*> result;
+        bool isTraining = false;
         unordered_set<TensorLike*> visited;
 
         for (auto node : endNodes)
-            ProcessForwardNode(node, result, visited);
+            ProcessForwardNode(node, order, visited, isTraining);
 
-        return result;
+        return isTraining;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Graph::ProcessForwardNode(TensorLike* node, vector<TensorLike*>& nodes, unordered_set<TensorLike*>& visited)
+    void Graph::ProcessForwardNode(TensorLike* node, vector<TensorLike*>& nodes, unordered_set<TensorLike*>& visited, bool& is_training)
     {
         if (visited.find(node) != visited.end())
             return;
 
         for (auto inputNode : node->m_InputNodes)
-            ProcessForwardNode(inputNode, nodes, visited);
+            ProcessForwardNode(inputNode, nodes, visited, is_training);
 
-        /*if (!node->IsOp())
-            return;*/
+        is_training |= (node->IsOp() && static_cast<Operation*>(node)->IsTrainingOp());
 
         visited.insert(node);
         nodes.push_back(node);
@@ -108,7 +107,8 @@ namespace Neuro
         // later on when check if all consumers were visited we will additionally check if
         // any particular consumer is required, otherwise it's inputs' gradients are not important 
         // (and won't be computed anyway)
-        auto tempNodesAffectingEndNodes = BuildForwardOrder(endNodes);
+        vector<TensorLike*> tempNodesAffectingEndNodes;
+        BuildForwardOrder(endNodes, tempNodesAffectingEndNodes);
 
         // build hash set for fast lookup
         nodesAffectingEndNodes.clear();

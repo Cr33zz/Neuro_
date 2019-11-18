@@ -23,11 +23,18 @@ namespace Neuro
         static size_t GetFetchesHash(const vector<TensorLike*>& fetches);
 
         vector<Tensor*> Run(const vector<TensorLike*>& fetches, const map<Placeholder*, const Tensor*>& feeds = {});
-        vector<Tensor*> RunInOrder(const vector<TensorLike*>& order, const vector<TensorLike*>& fetches, const map<Placeholder*, const Tensor*>& feeds);
+        vector<Tensor*> RunInOrder(const vector<TensorLike*>& order, const vector<TensorLike*>& fetches, const map<Placeholder*, const Tensor*>& feeds, bool training);
 
     private:
         Graph* m_Graph;
-        map<size_t, vector<TensorLike*>> m_OrderCache;
+
+        struct OrderCacheData
+        {
+            vector<TensorLike*> order;
+            bool is_training;
+        };
+        map<size_t, OrderCacheData> m_OrderCache;
+
         static Session* s_Default;
     };
 }

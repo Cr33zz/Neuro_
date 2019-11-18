@@ -9,7 +9,7 @@
 #include "Memory/MemoryManager.h"
 #include "Tensors/Cuda/CudaErrorCheck.h"
 
-#define ENABLE_MEMORY_LOGS
+//#define ENABLE_MEMORY_LOGS
 
 //#define MEMSET_ALLOCATED_MEMORY
 

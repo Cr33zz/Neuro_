@@ -16,6 +16,8 @@ namespace Neuro
 
         vector<TensorLike*> Grads() { return m_Grads; }
 
+        virtual bool IsTrainingOp() const override { return true; }
+
     protected:
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override { assert(false); }

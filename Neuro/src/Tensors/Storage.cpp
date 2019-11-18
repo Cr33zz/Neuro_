@@ -286,6 +286,7 @@ namespace Neuro
             STORAGE_DEBUG_INFO_NO_TS("<<< already allocated.\n");
             return;
         }
+
         STORAGE_DEBUG_INFO_NO_TS("<<< allocating.\n");
         CUDA_CHECK(DeviceMemoryManager::Default().Allocate((void**)&m_DeviceDataPtr, AllocSizeInBytes(), m_Name));
     }

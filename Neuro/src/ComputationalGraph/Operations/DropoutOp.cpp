@@ -15,10 +15,9 @@ namespace Neuro
     void DropoutOp::ComputeInternal()
     {
         auto& x = *m_Inputs[0];
-        bool training = (*m_Inputs[1])(0) != 0;
 
         m_Output.ResizeBatch(m_Inputs[0]->Batch());
-        if (training)
+        if (m_Training)
         {
             m_Mask.ResizeBatch(m_Inputs[0]->Batch());
             m_Inputs[0]->Dropout(m_Prob, m_Mask, m_Output);

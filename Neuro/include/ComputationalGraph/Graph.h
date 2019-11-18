@@ -32,8 +32,8 @@ namespace Neuro
         void IncrementStep();
         uint32_t CurrentStep() const { return m_CurrentStep; }
 
-        // Builds nodes visitation order for forward pass
-        vector<TensorLike*> BuildForwardOrder(const vector<TensorLike*>& endNodes);
+        // Builds nodes visitation order for forward pass, returns true when order contains training operation
+        bool BuildForwardOrder(const vector<TensorLike*>& endNodes, vector<TensorLike*>& order);
         // Builds nodes visitation order for backward/gradients computation pass
         vector<TensorLike*> BuildBackwardOrder(const vector<TensorLike*>& endNodes, unordered_set<TensorLike*>& nodesAffectingEndNodes, const vector<Variable*>& params = {});
 
@@ -44,7 +44,7 @@ namespace Neuro
         void DebugLog();
 
     private:
-        void ProcessForwardNode(TensorLike* node, vector<TensorLike*>& nodes, unordered_set<TensorLike*>& visited);
+        void ProcessForwardNode(TensorLike* node, vector<TensorLike*>& nodes, unordered_set<TensorLike*>& visited, bool& is_training);
         void ProcessBackwardNode(TensorLike* node, vector<TensorLike*>& nodes, const vector<Variable*>& params, bool ignoreConsumersCheck, unordered_set<TensorLike*>& visited, unordered_set<TensorLike*>& visitedParams, const unordered_set<TensorLike*>& required);
 
         vector<Placeholder*> m_Placeholders;
