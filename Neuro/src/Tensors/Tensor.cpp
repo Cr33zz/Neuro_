@@ -1701,31 +1701,38 @@ namespace Neuro
 			Map([&](float v1, float v2) { return v1 * tau + v2 * (1 - tau); }, target, target);
 	}
 
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::CopyTo(size_t offset, Tensor& target, size_t targetOffset, size_t elementsNum) const
+    {
+        if (target.IsOnDevice()) // target is more important
+        {
+            CopyToDevice();
+            m_Storage.CopyWithinDevice(target.GetDevicePtr() + targetOffset, GetDevicePtr() + offset, elementsNum * sizeof(float));
+            return;
+        }
+
+        CopyToHost();
+        target.CopyToHost(true);
+
+        memcpy(target.m_Storage.Data() + targetOffset, m_Storage.Data() + offset, elementsNum * sizeof(float));
+    }
+
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::CopyBatchTo(uint32_t batchId, uint32_t targetBatchId, Tensor& target) const
 	{
-        assert(SameDimensionsExceptBatches(target));
-        assert(batchId < Batch());
-        assert(targetBatchId < target.Batch());
+        NEURO_ASSERT(SameDimensionsExceptBatches(target), "");
+        NEURO_ASSERT(batchId < Batch(), "");
+        NEURO_ASSERT(targetBatchId < target.Batch(), "");
 		
-        CopyToHost();
-		target.CopyToHost(true);
-        
-		copy(m_Storage.Data() + batchId * m_Shape.Dim0Dim1Dim2, 
-			 m_Storage.Data() + batchId * m_Shape.Dim0Dim1Dim2 + m_Shape.Dim0Dim1Dim2,
-			 target.m_Storage.Data() + targetBatchId * m_Shape.Dim0Dim1Dim2);
+        CopyTo(batchId * m_Shape.Dim0Dim1Dim2, target, targetBatchId * m_Shape.Dim0Dim1Dim2, m_Shape.Dim0Dim1Dim2);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::CopyDepthTo(uint32_t depthId, uint32_t batchId, uint32_t targetDepthId, uint32_t targetBatchId, Tensor& target) const
 	{
-		CopyToHost();
-		target.CopyToHost(true);
-		//if (m_Shape.Width != result.m_Shape.Width || m_Shape.Height != result.m_Shape.Height) throw new Exception("Incompatible tensors.");
+        NEURO_ASSERT(Width() == target.Width() && Height() == target.Height(), "Incompatible tensors.");
 
-		copy(m_Storage.Data() + batchId * m_Shape.Dim0Dim1Dim2 + depthId * m_Shape.Dim0Dim1, 
-			 m_Storage.Data() + batchId * m_Shape.Dim0Dim1Dim2 + (depthId + 1) * m_Shape.Dim0Dim1,
-		     target.m_Storage.Data() + targetBatchId * m_Shape.Dim0Dim1Dim2 + targetDepthId * m_Shape.Dim0Dim1);
+        CopyTo(batchId * m_Shape.Dim0Dim1Dim2 + depthId * m_Shape.Dim0Dim1, target, targetBatchId * m_Shape.Dim0Dim1Dim2 + targetDepthId * m_Shape.Dim0Dim1, m_Shape.Dim0Dim1);
 	}
 
 	//////////////////////////////////////////////////////////////////////////

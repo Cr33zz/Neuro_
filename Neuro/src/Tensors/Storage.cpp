@@ -681,7 +681,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Storage::CopyWithinDevice(void* destDevPtr) const
     {
-        CopyWithinDevice((void*)m_DeviceDataPtr, destDevPtr, SizeInBytes());
+        CopyWithinDevice(destDevPtr, (void*)m_DeviceDataPtr, SizeInBytes());
     }
 
     //////////////////////////////////////////////////////////////////////////
