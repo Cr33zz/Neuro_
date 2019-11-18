@@ -534,7 +534,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Clipped(float min, float max, Tensor& result) const
 	{
-		Map([&](float x) { return Clip(x, min, max); }, result);
+        Op()->Clip(*this, min, max, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////

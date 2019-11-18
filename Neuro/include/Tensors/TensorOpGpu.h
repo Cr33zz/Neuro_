@@ -28,6 +28,7 @@ namespace Neuro
         virtual void Sqrt(const Tensor& input, Tensor& output) const override;
         virtual void Negate(const Tensor& input, Tensor& output) const override;
         virtual void Inverse(const Tensor& input, Tensor& output) const override;
+        virtual void Clip(const Tensor& input, float min, float max, Tensor& output) const override;
         virtual void Sum(const Tensor& input, EAxis axis, Tensor& output) const override;
         virtual void Mean(const Tensor& input, EAxis axis, Tensor& output) const override;
         virtual void Transpose(const Tensor& input, Tensor& output) const override;
