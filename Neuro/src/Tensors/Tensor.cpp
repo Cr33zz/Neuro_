@@ -518,16 +518,16 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::Inversed(Tensor& result) const
+    void Tensor::Inversed(float alpha, Tensor& result) const
     {
-        Op()->Inverse(*this, result);
+        Op()->Inverse(alpha, *this, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor Tensor::Inversed() const
+    Tensor Tensor::Inversed(float alpha) const
     {
         Tensor result(m_Shape);
-        Inversed(result);
+        Inversed(alpha, result);
         return result;
     }
 
@@ -2280,7 +2280,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     Tensor operator/(float v, const Tensor& t)
     {
-        return t.Map([&](float x) { return v / x; });
+        return t.Inversed(v);
     }
 
     //////////////////////////////////////////////////////////////////////////

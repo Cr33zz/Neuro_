@@ -318,7 +318,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::Inverse(const Tensor& input, Tensor& output) const
+    void TensorOpCpu::Inverse(float alpha, const Tensor& input, Tensor& output) const
     {
         input.CopyToHost();
         output.OverrideHost();
@@ -327,7 +327,7 @@ namespace Neuro
         auto outputValues = output.Values();
 
         for (uint32_t i = 0; i < input.Length(); ++i)
-            outputValues[i] = 1.f / inputValues[i];
+            outputValues[i] = alpha / inputValues[i];
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -955,7 +955,7 @@ namespace Neuro
         Tensor xMu = input - saveMean;
         Tensor var = mean(sqr(xMu), axis);
         Tensor varSqrt = sqrt(var + epsilon);
-        varSqrt.Inversed(saveInvVariance);
+        varSqrt.Inversed(1.f, saveInvVariance);
         Tensor xNorm = xMu * saveInvVariance;
         xNorm.MulElem(gamma).Add(beta, output);
 

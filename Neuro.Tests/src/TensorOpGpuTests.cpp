@@ -52,13 +52,26 @@ namespace NeuroTests
 
         TEST_METHOD(Inversed_CompareWithCpuResult)
         {
-            Tensor input(Shape(8, 9, 3, 3)); input.FillWithRand();
+            Tensor input(Shape(81, 9, 37, 31)); input.FillWithRand();
 
             Tensor::SetForcedOpMode(CPU);
-            NEURO_PROFILE("CPU", Tensor r(input.GetShape()); input.Inversed(r);)
+            NEURO_PROFILE("CPU", Tensor r(input.GetShape()); input.Inversed(1.f, r);)
 
             Tensor::SetForcedOpMode(GPU);
-            NEURO_PROFILE("GPU", Tensor r2(input.GetShape()); input.Inversed(r2);)
+            NEURO_PROFILE("GPU", Tensor r2(input.GetShape()); input.Inversed(1.f, r2);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(Inversed_Alpha_CompareWithCpuResult)
+        {
+            Tensor input(Shape(81, 9, 37, 31)); input.FillWithRand();
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r(input.GetShape()); input.Inversed(5.f, r);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2(input.GetShape()); input.Inversed(5.f, r2);)
 
             Assert::IsTrue(r.Equals(r2));
         }

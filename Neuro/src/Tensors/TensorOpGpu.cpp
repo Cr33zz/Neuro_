@@ -8,7 +8,7 @@
 #include "Tensors/Cuda/CudaKernels.h"
 #include "Memory/MemoryManager.h"
 
-#define PROF_ENABLED
+//#define PROF_ENABLED
 
 namespace Neuro
 {
@@ -426,14 +426,17 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Inverse(const Tensor& input, Tensor& output) const
+    void TensorOpGpu::Inverse(float alpha, const Tensor& input, Tensor& output) const
     {
-        dim3 blocks, threads;
-        GetKernelRunParams(max((int)input.Length() / INNER_KERNEL_LOOP_LENGTH, 1), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
         input.CopyToDevice();
         output.OverrideDevice();
 
-        CudaKernels::Inverse(blocks, threads, input.Length(), input.GetDevicePtr(), output.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);
+        const int INV_SUB_LOOP_LEN = 32;
+
+        dim3 blocks, threads;
+        GetKernelRunParams((int)ceil(input.Length() / (float)INV_SUB_LOOP_LEN), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
+
+        CudaKernels::Inverse(blocks, threads, input.Length(), input.GetDevicePtr(), alpha, output.GetDevicePtr(), INV_SUB_LOOP_LEN);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -537,7 +540,7 @@ namespace Neuro
         input.CopyToDevice();
         kernels.CopyToDevice();
         output.OverrideDevice();
-        output.Zero();
+        //output.Zero();
 
 #ifdef PROF_ENABLED
         cout << "Conv2D - prep - '" << output.Name() << "' - " << prepProf.ToString() << endl;
@@ -602,7 +605,7 @@ namespace Neuro
         kernels.CopyToDevice();
         bias.CopyToDevice();
         output.OverrideDevice();
-        output.Zero();
+        //output.Zero();
 
 #ifdef PROF_ENABLED
         cout << "Conv2DBiasActivation - prep - '" << output.Name() << "' - " << prepProf.ToString() << endl;

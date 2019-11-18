@@ -155,15 +155,15 @@ __global__ void negate(int inputLen, const float* __restrict input, float* __res
         output[n] = -input[n];
 }
 
-__global__ void inverse(int inputLen, const float* __restrict input, float* __restrict output, int subLen)
+__global__ void inverse(int inputLen, const float* __restrict input, float alpha, float* __restrict output, int subLen)
 {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    int tid = blockIdx.x * blockDim.x + threadIdx.x;
 
-    int maxN = i * subLen + subLen;
-    if (maxN > inputLen)
-        maxN = inputLen;
-    for (int n = i * subLen; n < maxN; ++n)
-        output[n] = 1.f / input[n];
+    int maxIdx = tid * subLen + subLen;
+    if (maxIdx > inputLen)
+        maxIdx = inputLen;
+    for (int idx = tid * subLen; idx < maxIdx; ++idx)
+        output[idx] = alpha / input[idx];
 }
 
 __global__ void add(int inputLen, const float* __restrict input, float v, float* __restrict output, int subLen)
@@ -569,9 +569,9 @@ namespace Neuro
         cudaStreamSynchronize(0);
     }
 
-    void CudaKernels::Inverse(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float* outputDev, int subLen)
+    void CudaKernels::Inverse(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float alpha, float* outputDev, int subLen)
     {
-        inverse<<<blocks, threads>>>(inputLen, inputDev, outputDev, subLen);
+        inverse<<<blocks, threads>>>(inputLen, inputDev, alpha, outputDev, subLen);
         cudaStreamSynchronize(0);
     }
 
