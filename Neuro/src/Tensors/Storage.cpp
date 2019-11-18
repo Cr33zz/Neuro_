@@ -255,6 +255,16 @@ namespace Neuro
         if (!m_DataPtr)
             AllocateOnHost();
 
+        // Disable free memory on offload
+        /*{
+            unique_lock<mutex> mtx(m_FreeDeviceMemOnOffloadMtx);
+            if (m_FreeDeviceMemOnOffloadDone)
+            {
+                STORAGE_DEBUG_INFO("Cancelling free device memory on offload done '%s'\n", m_Name.c_str());
+                m_FreeDeviceMemOnOffloadDone = false;
+            }
+        }*/
+
         if (m_OffloadFuture.valid())
         {
             m_OffloadRequested = false;

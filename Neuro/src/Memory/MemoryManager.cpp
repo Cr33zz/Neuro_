@@ -9,7 +9,7 @@
 #include "Memory/MemoryManager.h"
 #include "Tensors/Cuda/CudaErrorCheck.h"
 
-//#define ENABLE_MEMORY_LOGS
+#define ENABLE_MEMORY_LOGS
 
 //#define MEMSET_ALLOCATED_MEMORY
 
@@ -89,7 +89,10 @@ namespace Neuro
 
         // If there's no block left in the list of free blocks (with a sufficient size). Request a new block. 
         if (!best && !(m_Flags & MEM_FLAGS_CANNOT_GROW))
+        {
+            DumpMemoryManagers("mem.log");
             MEM_CHECK(AllocateBlock(best, prev, size));
+        }
 
         // Make sure we do have a block or quit.
         if (!best)
@@ -153,6 +156,8 @@ namespace Neuro
         Block* curr = m_UsedBlocks, *prev = nullptr;
         for (; curr && curr->GetData() != ptr; curr = curr->GetNext())
             prev = curr;
+
+        NEURO_ASSERT(curr, "Freeing unrecognized pointer");
 
         // Make sure we have found a node.
         if (!curr)

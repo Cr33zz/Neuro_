@@ -291,12 +291,14 @@ public:
 
         auto stylized = clip(swap_red_blue_channels(generator->Outputs()[0]), 0, 255);
 
-        for (int i = 0; i < 100; ++i)
+        for (int i = 0; i < 20; ++i)
         {
             AutoStopwatch prof(Milliseconds);
             results = Session::Default()->Run({ stylized }, { { input_content, &testImage }, { styleContentFeatures, &styleData } });
-            auto genImage = *results[0];
-            genImage.SaveAsImage("_test_output.png", false);
+            //auto genImage = *results[0];
+            //genImage.SaveAsImage("_test_output.png", false);
+            Sleep(5000);
+            DumpMemoryManagers("mem.log");
             cout << prof.ToString() << endl;
         }
     }
