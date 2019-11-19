@@ -58,7 +58,7 @@ public:
         const uint32_t BATCH_SIZE = 6;
 #endif
 
-        Tensor::SetForcedOpMode(GPU);
+        Tensor::SetDefaultOpMode(GPU);
         //GlobalRngSeed(1337);
 
         auto trainAlpha = Tensor({ ALPHA }, Shape(1), "training_alpha");
@@ -226,9 +226,6 @@ public:
                 auto results = Session::Default()->Run({ stylized, totalLoss, weightedContentLoss, weightedStyleLoss },
                     { { content, &testContent }, { style, &testStyle }, { alpha, &testAlpha }, { training, &trainingOff } });
 
-                DumpMemoryManagers("mem.log");
-
-
                 auto genImage = *results[0];
                 VGG16::SwapChannels(genImage);
                 genImage.Clipped(0, 255).SaveAsImage("adaptive_" + to_string(i) + "_output.png", false);
@@ -243,13 +240,13 @@ public:
                 cout << fixed << setprecision(4) << "Test - Content: " << (*results[2])(0) << " Style: " << (*results[3])(0) << " Total: " << loss << " Total_Min: " << minLoss << endl;
             }
 
-            auto results = Session::Default()->Run({ stylized, totalLoss, weightedContentLoss, weightedStyleLoss, /*learningRate,*/ minimize },
+            auto results = Session::Default()->Run({ weightedContentLoss, weightedStyleLoss, minimize },
                 { { content, &contentBatch }, { style, &styleBatch }, { alpha, &trainAlpha }, { training, &trainingOn } });
 
-            DumpMemoryManagers("mem.log");
+            //DumpMemoryManagers("mem.log");
 
 
-            cout << fixed << setprecision(4) << "Step: " << i << " Content: " << (*results[2])(0) << " Style: " << (*results[3])(0) << endl;
+            cout << fixed << setprecision(4) << "Step: " << i << " Content: " << (*results[0])(0) << " Style: " << (*results[1])(0) << endl;
         }
     }
 
@@ -301,10 +298,10 @@ public:
         {
             AutoStopwatch prof(Milliseconds);
             results = Session::Default()->Run({ stylized }, { { content, &testImage }, { styleContentFeatures, &styleData } });
+            cout << prof.ToString() << endl;
             auto genImage = *results[0];
             genImage.SaveAsImage("_test_output.png", false);
             //DumpMemoryManagers("mem.log");
-            cout << prof.ToString() << endl;
         }
     }
 

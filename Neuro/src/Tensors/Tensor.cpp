@@ -38,6 +38,9 @@ namespace Neuro
     {
         m_Shape = shape;
         m_Op = DefaultOp();
+
+        if (m_Shape.Length == 1)
+            m_Op = g_OpCpu;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1292,6 +1295,9 @@ namespace Neuro
     {
         if (m_Shape == shape)
             return;
+
+        if (m_Shape.Length == 0 && shape.Length == 1)
+            m_Op = g_OpCpu;
 
         m_Shape = shape;
         m_Storage.Resize(shape.Length);
