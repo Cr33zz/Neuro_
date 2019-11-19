@@ -13,7 +13,7 @@ namespace Neuro
     void NegativeOp::ComputeInternal()
     {
         m_Output.ResizeBatch(m_Inputs[0]->Batch());
-        m_Inputs[0]->Map([](float x) {return -x; }, m_Output);
+        m_Inputs[0]->Negated(m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -21,6 +21,6 @@ namespace Neuro
     {
         //in_grad = -grad
         if (m_InputNodes[0]->CareAboutGradient())
-            grad.Map([](float g) {return -g; }, m_InputsGrads[0]);
+            grad.Negated(m_InputsGrads[0]);
     }
 }
