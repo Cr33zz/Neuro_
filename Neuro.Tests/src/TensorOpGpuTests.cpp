@@ -52,7 +52,7 @@ namespace NeuroTests
 
         TEST_METHOD(Inversed_CompareWithCpuResult)
         {
-            Tensor input(Shape(81, 9, 37, 31)); input.FillWithRand();
+            Tensor input(Shape(81, 9, 37, 31)); input.FillWithRand(-1, 1, 5);
 
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r(input.GetShape()); input.Inversed(1.f, r);)
@@ -65,7 +65,7 @@ namespace NeuroTests
 
         TEST_METHOD(Inversed_Alpha_CompareWithCpuResult)
         {
-            Tensor input(Shape(81, 9, 37, 31)); input.FillWithRand();
+            Tensor input(Shape(81, 9, 37, 31)); input.FillWithRand(-1, 1, 5);
 
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r(input.GetShape()); input.Inversed(5.f, r);)
@@ -256,8 +256,8 @@ namespace NeuroTests
 
         TEST_METHOD(Div_SameDims_CompareWithCpuResult)
         {
-            Tensor t1(Shape(20, 30, 40, 50)); t1.FillWithRand();
-            Tensor t2(Shape(20, 30, 40, 50)); t2.FillWithRand();
+            Tensor t1(Shape(20, 30, 40, 50)); t1.FillWithRand(-1, 1, 5);
+            Tensor t2(Shape(20, 30, 40, 50)); t2.FillWithRand(-1, 1, 5);
 
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t1.Div(t2);)
@@ -270,8 +270,8 @@ namespace NeuroTests
 
         TEST_METHOD(Div_Broadcast_CompareWithCpuResult)
         {
-            Tensor t1(Shape(20, 30, 40, 50)); t1.FillWithRand();
-            Tensor t2(Shape(2, 3, 4, 2)); t2.FillWithRand();
+            Tensor t1(Shape(20, 30, 40, 50)); t1.FillWithRand(-1, 1, 5);
+            Tensor t2(Shape(2, 3, 4, 2)); t2.FillWithRand(-1, 1, 5);
 
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t1.Div(t2);)

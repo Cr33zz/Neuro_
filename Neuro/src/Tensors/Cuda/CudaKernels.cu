@@ -111,7 +111,7 @@ __global__ void div(int inputLen, const float* __restrict input, float v, float*
     if (maxN > inputLen)
         maxN = inputLen;
     for (int n = i * subLen; n < maxN; ++n)
-        output[n] = input[n] / v;
+        output[n] = __fdividef(input[n], v);
 }
 
 __global__ void pow(int inputLen, const float* __restrict input, float power, float* __restrict output, int subLen)
@@ -163,7 +163,7 @@ __global__ void inverse(int inputLen, const float* __restrict input, float alpha
     if (maxIdx > inputLen)
         maxIdx = inputLen;
     for (int idx = tid * subLen; idx < maxIdx; ++idx)
-        output[idx] = alpha / input[idx];
+        output[idx] = __fdividef(alpha, input[idx]);
 }
 
 __global__ void add(int inputLen, const float* __restrict input, float v, float* __restrict output, int subLen)
@@ -252,7 +252,7 @@ __global__ void div(int len, float alpha, const float* __restrict t1, float beta
     if (maxN > len)
         maxN = len;
     for (int n = i * subLen; n < maxN; ++n)
-        output[n] = (alpha * t1[n]) / (beta * t2[n]);
+        output[n] = __fdividef(alpha * t1[n], beta * t2[n]);
 }
 
 __global__ void divBroadcast(float alpha, const float* __restrict t1, int t1Width, int t1Height, int t1Depth, int t1Batch, float beta, const float* __restrict t2, int t2Width, int t2Height, int t2Depth, int t2Batch, float* __restrict output, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
@@ -287,7 +287,7 @@ __global__ void divBroadcast(float alpha, const float* __restrict t1, int t1Widt
     int t1W = w % t1Width;
     int t2W = w % t2Width;
 
-    output[i] = (alpha * t1[getIndex(t1W, t1H, t1D, t1N, t1Dim0, t1Dim0Dim1, t1Dim0Dim1Dim2)]) / (beta * t2[getIndex(t2W, t2H, t2D, t2N, t2Dim0, t2Dim0Dim1, t2Dim0Dim1Dim2)]);
+    output[i] = __fdividef(alpha * t1[getIndex(t1W, t1H, t1D, t1N, t1Dim0, t1Dim0Dim1, t1Dim0Dim1Dim2)], beta * t2[getIndex(t2W, t2H, t2D, t2N, t2Dim0, t2Dim0Dim1, t2Dim0Dim1Dim2)]);
 }
 
 template<int W, int H, int D, int N>
