@@ -8,7 +8,6 @@
 
 //#define DISABLE_OFFLOAD_PREFETCH
 //#define ENABLE_STORAGE_LOGS
-//
 
 #include <windows.h>
 #include <debugapi.h>
@@ -525,7 +524,11 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Storage::CopyToHost(bool allowAlloc) const
     {
-        WaitForPreload();
+        if (m_PreloadRequested)
+        {
+            STORAGE_DEBUG_INFO("Copy to host '%s'[%d] <<< preload completed check\n", m_Name.c_str(), m_Type);
+            WaitForPreload();
+        }
 
         if (m_DataLocation == Host)
             return;
@@ -539,21 +542,18 @@ namespace Neuro
             NEURO_ASSERT(m_DataLocation != None, "Attempting to copy to unallocated host memory");
             NEURO_ASSERT(m_DataPtr && m_DeviceDataPtr, "");
 
-            STORAGE_DEBUG_INFO("Copy to host '%s'[%d]\n", m_Name.c_str(), m_Type);
 #ifndef DISABLE_OFFLOAD_PREFETCH
-            if (m_Type & ST_Offloadable)
+            if (m_OffloadRequested && (m_Type & ST_Offloadable))
             {
-                if (cudaEventQuery(m_OffloadEvent) == cudaErrorNotReady)
-                {
-                    AutoStopwatch prof(Microseconds);
-                    STORAGE_DEBUG_INFO("Waiting for offload... '%s'[%d]\n", m_Name.c_str(), m_Type);
-                    DeviceMemoryManager::Default().WaitForMemEvent(m_OffloadEvent);
-                    STORAGE_DEBUG_INFO("--> waited %s\n", prof.ToString().c_str());
-                }
+                STORAGE_DEBUG_INFO("Copy to host '%s'[%d] <<< offload completed check\n", m_Name.c_str(), m_Type);
+                WaitForOffload();
             }
             else
 #endif
+            {
+                STORAGE_DEBUG_INFO("Copy to host '%s'[%d] <<< %s\n", m_Name.c_str(), m_Type, (m_Type & ST_Offloadable) ? "offloadable but offload wasn't requested" : "not offloadable");
                 CUDA_CHECK(cudaMemcpy((void*)m_DataPtr, (void*)m_DeviceDataPtr, SizeInBytes(), cudaMemcpyDeviceToHost));
+            }
         }
 
         m_DataLocation = Host;

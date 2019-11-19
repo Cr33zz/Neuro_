@@ -89,10 +89,7 @@ namespace Neuro
 
         // If there's no block left in the list of free blocks (with a sufficient size). Request a new block. 
         if (!best && !(m_Flags & MEM_FLAGS_CANNOT_GROW))
-        {
-            DumpMemoryManagers("mem.log");
             MEM_CHECK(AllocateBlock(best, prev, size));
-        }
 
         // Make sure we do have a block or quit.
         if (!best)
