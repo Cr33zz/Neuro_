@@ -5,12 +5,12 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    void TensorLike::Prefetch()
+    void TensorLike::Preload()
     {
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorLike::PrefetchForGradient()
+    void TensorLike::PreloadForGradient()
     {
         Output().Prefetch();
         for (auto inputNode : m_InputNodes)

@@ -202,7 +202,7 @@ namespace Neuro
 
                 auto node = newOrder[p];
                 GRAPH_DEBUG_INFO("##Graph: Prefetching '%s'...\n", node->Name().c_str());
-                node->PrefetchForGradient();
+                node->PreloadForGradient();
                 lastPrefetched = p;
             }
 

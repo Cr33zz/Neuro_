@@ -184,7 +184,7 @@ public:
 
         size_t steps = 2 * contentFiles.size() / BATCH_SIZE; // go over training set twice
 
-        ///Debug::LogAllOutputs(true);
+        //Debug::LogAllOutputs(true);
         //Debug::LogAllGrads(true);
         ///Debug::LogOutput("generator_model/output", true);
         //Debug::LogOutput("generator/content_features/block4_conv1", true);
@@ -276,23 +276,23 @@ public:
 
         auto vggEncoder = Flow(vggModel->InputsAt(-1), styleOutputs, "vgg_features");
 
-        auto input_content = new Placeholder(Shape(TEST_WIDTH, TEST_HEIGHT, 3), "input_content");
-        auto input_style = new Placeholder(Shape(TEST_WIDTH, TEST_HEIGHT, 3), "input_style");
-        auto input_alpha = new Constant(1.f, "alpha");
+        auto content = new Placeholder(Shape(TEST_WIDTH, TEST_HEIGHT, 3), "input_content");
+        auto style = new Placeholder(Shape(TEST_WIDTH, TEST_HEIGHT, 3), "input_style");
+        auto alpha = new Constant(1.f, "alpha");
 
-        auto contentPre = VGG16::Preprocess(input_content, NCHW);
+        auto contentPre = VGG16::Preprocess(content, NCHW);
         
         // pre-compute style content features
         VGG16::PreprocessImage(styleImage, NCHW);
-        auto styleFeatModel = vggEncoder(input_style, nullptr, "style_features");
+        auto styleFeatModel = vggEncoder(style, nullptr, "style_features");
 
-        auto results = Session::Default()->Run({ styleFeatModel.back() }, { { input_style, &styleImage } });
+        auto results = Session::Default()->Run({ styleFeatModel.back() }, { { style, &styleImage } });
         auto styleData = *(results[0]);
 
         // build the actual generator
         auto styleContentFeatures = new Placeholder(styleData.GetShape());
 
-        auto generator = CreateGeneratorModel(contentPre, styleContentFeatures, input_alpha, vggEncoder, new Constant(0));
+        auto generator = CreateGeneratorModel(contentPre, styleContentFeatures, alpha, vggEncoder, new Constant(0));
         generator->LoadWeights("data/adaptive_weights.h5", false, true);
 
         auto stylized = clip(swap_red_blue_channels(generator->Outputs()[0]), 0, 255);
@@ -300,9 +300,9 @@ public:
         for (int i = 0; i < 20; ++i)
         {
             AutoStopwatch prof(Milliseconds);
-            results = Session::Default()->Run({ stylized }, { { input_content, &testImage }, { styleContentFeatures, &styleData } });
-            //auto genImage = *results[0];
-            //genImage.SaveAsImage("_test_output.png", false);
+            results = Session::Default()->Run({ stylized }, { { content, &testImage }, { styleContentFeatures, &styleData } });
+            auto genImage = *results[0];
+            genImage.SaveAsImage("_test_output.png", false);
             //DumpMemoryManagers("mem.log");
             cout << prof.ToString() << endl;
         }

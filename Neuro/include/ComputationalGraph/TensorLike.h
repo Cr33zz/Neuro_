@@ -35,8 +35,8 @@ namespace Neuro
         virtual bool IsVar() const { return false; }
         virtual bool IsConst() const { return false; }
 
-        virtual void Prefetch();
-        virtual void PrefetchForGradient();
+        virtual void Preload();
+        virtual void PreloadForGradient();
         
         void AddInputNode(TensorLike* node) { m_InputNodes.push_back(node); }
 
@@ -48,6 +48,9 @@ namespace Neuro
         // In most cases pre-loading nodes which don't care about gradient is pointless
         // However, in some cases we still need them to compute other inputs gradient (ie. multiplication)
         virtual bool ForcePreloadInputNode(size_t index) const { return false; }
+
+        bool IsFetched() const { return m_Fetched; }
+        void SetFetched(bool fetched) { m_Fetched = fetched; }
 
         struct metadata
         {
@@ -68,6 +71,7 @@ namespace Neuro
         Tensor m_Output;
         Tensor m_OutputGrad;
         string m_Name;
+        bool m_Fetched;
 
         friend class Operation;
         friend class Session;

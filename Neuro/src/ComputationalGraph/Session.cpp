@@ -94,7 +94,8 @@ namespace Neuro
             auto node = order[n];
 
             bool isFetched = find(fetches.begin(), fetches.end(), node) != fetches.end();
-            node->Output().ResetRef(isFetched ? 1 : 0); // lock fetches outputs so they don't get released
+            node->SetFetched(isFetched);
+            node->Output().ResetRef(isFetched ? 1 : 0); // lock fetches outputs so they don't get completely released 
             
             if (node->IsOp())
             {
