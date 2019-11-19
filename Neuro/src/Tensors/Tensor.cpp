@@ -1685,9 +1685,11 @@ namespace Neuro
 	{
         NEURO_ASSERT(m_Shape.Length == target.m_Shape.Length, "");
 
-        if (tau <= 0 && target.IsOnDevice()) // target is more important
+        if (tau <= 0 && (target.IsOnDevice() || IsOnDevice())) // device is more important
         {
             CopyToDevice();
+            target.OverrideDevice();
+
             m_Storage.CopyWithinDevice(target.GetDevicePtr());
             return;
         }
