@@ -87,7 +87,7 @@ namespace Neuro
             /*if (n + 1 < order.size())
             {
                 auto node = order[n + 1];
-                SESSION_DEBUG_INFO("##Session: Prefetching '%s'...\n", node->Name().c_str());
+                SESSION_DEBUG_INFO("##Session: Preloading '%s'...\n", node->Name().c_str());
                 node->Prefetch();
             }*/
 

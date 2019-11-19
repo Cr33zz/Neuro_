@@ -65,7 +65,7 @@ namespace Neuro
         }
 
         // operations not participating in gradient computation offload is not necessary, it can be simply deallocated when consumed
-        if (m_Fetched || (m_Training && CareAboutGradient()))
+        if (m_AlwaysOffload || m_Fetched || (m_Training && CareAboutGradient()))
             m_Output.Offload(); // at this point output won't change so start offloading it, it will be released when all consumers used it
         return m_Output;
     }

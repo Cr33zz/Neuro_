@@ -49,7 +49,8 @@ namespace Neuro
         // However, in some cases we still need them to compute other inputs gradient (ie. multiplication)
         virtual bool ForcePreloadInputNode(size_t index) const { return false; }
 
-        bool IsFetched() const { return m_Fetched; }
+        // This is relevant only for operations
+        void SetAlwaysOffload(bool enabled) { m_AlwaysOffload = enabled; }
         void SetFetched(bool fetched) { m_Fetched = fetched; }
 
         struct metadata
@@ -71,7 +72,8 @@ namespace Neuro
         Tensor m_Output;
         Tensor m_OutputGrad;
         string m_Name;
-        bool m_Fetched;
+        bool m_AlwaysOffload : 1;
+        bool m_Fetched : 1;
 
         friend class Operation;
         friend class Session;

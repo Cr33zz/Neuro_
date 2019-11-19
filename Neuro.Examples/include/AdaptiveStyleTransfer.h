@@ -168,7 +168,7 @@ public:
 
         auto globalStep = new Variable(0, "global_step");
         globalStep->SetTrainable(false);
-        auto learningRate = div(new Constant(LEARNING_RATE), add(multiply(globalStep, DECAY_RATE), 1));
+        auto learningRate = div(new Constant(LEARNING_RATE, "base_lr"), add(multiply(globalStep, DECAY_RATE), 1), "learning_rate");
         
         auto optimizer = Adam(learningRate, 0.9f, 0.9f);
         //auto optimizer = Adam(LEARNING_RATE, 0.9f, 0.9f);
