@@ -302,7 +302,9 @@ namespace Neuro
 
         if (t1.GetShape() == t2.GetShape())
         {
-            GetKernelRunParams((int)ceil(t1.Length() / (float)INNER_KERNEL_LOOP_LENGTH), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
+            //GetKernelRunParams((int)ceil(t1.Length() / (float)INNER_KERNEL_LOOP_LENGTH), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
+            blocks.x = 8;
+            threads.x = 512;
             CudaKernels::Div(blocks, threads, t1.Length(), alpha, t1.GetDevicePtr(), beta, t2.GetDevicePtr(), output.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);
         }
         else

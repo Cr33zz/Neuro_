@@ -248,11 +248,14 @@ __global__ void div(int len, float alpha, const float* __restrict t1, float beta
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     
-    int maxN = i * subLen + subLen;
+    for (; i<len; i += gridDim.x*blockDim.x)
+        output[i] = __fdividef(alpha * t1[i], beta * t2[i]);
+
+    /*int maxN = i * subLen + subLen;
     if (maxN > len)
         maxN = len;
     for (int n = i * subLen; n < maxN; ++n)
-        output[n] = __fdividef(alpha * t1[n], beta * t2[n]);
+        output[n] = __fdividef(alpha * t1[n], beta * t2[n]);*/
 }
 
 __global__ void divBroadcast(float alpha, const float* __restrict t1, int t1Width, int t1Height, int t1Depth, int t1Batch, float beta, const float* __restrict t2, int t2Width, int t2Height, int t2Depth, int t2Batch, float* __restrict output, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
