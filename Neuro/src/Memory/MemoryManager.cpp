@@ -65,7 +65,7 @@ namespace Neuro
     EMemStatus MemoryManagerBase::Allocate(void** ptr, size_t size, const string& annotation)
     {
         {
-            unique_lock<mutex> mtx(m_ScheduledFreeMtx);
+            unique_lock<mutex> deallocationsLocker(m_ScheduledFreeMtx);
 #ifdef ENABLE_MEMORY_LOGS
             if (!m_ScheduledDeallocations.empty())
             {
@@ -74,12 +74,19 @@ namespace Neuro
                 OutputDebugString(ss.str().c_str());
             }
 #endif
-            for (auto p : m_ScheduledDeallocations)
-                Free(p);
-            m_ScheduledDeallocations.clear();
+            if (!m_ScheduledDeallocations.empty())
+            {
+                // make a copy and release the lock to avoid dead-lock inside free
+                auto scheduledDeallocsCopy = m_ScheduledDeallocations;
+                m_ScheduledDeallocations.clear();
+                deallocationsLocker.unlock();
+
+                for (auto p : scheduledDeallocsCopy)
+                    Free(p);
+            }
         }
 
-        unique_lock<mutex> mtx(m_AllocFreeMtx);
+        unique_lock<mutex> allocFreeLocker(m_AllocFreeMtx);
 
         size = ceilInt(size, m_AllocGranularity);
 
@@ -147,7 +154,7 @@ namespace Neuro
         if (!ptr)
             return MEM_STATUS_SUCCESS;
 
-        unique_lock<mutex> mtx(m_AllocFreeMtx);
+        unique_lock<mutex> allocFreeLocker(m_AllocFreeMtx);
 
         // Find the node in the list of used blocks.
         Block* curr = m_UsedBlocks, *prev = nullptr;
