@@ -378,9 +378,6 @@
     <ClInclude Include="include\Tensors\Storage.h">
       <Filter>include\Tensors</Filter>
     </ClInclude>
-    <ClInclude Include="include\ComputationalGraph\Operations\VariationOp.h">
-      <Filter>include\ComputationalGraph\Operations</Filter>
-    </ClInclude>
     <ClInclude Include="include\ComputationalGraph\Operations\L2LossOp.h">
       <Filter>include\ComputationalGraph\Operations</Filter>
     </ClInclude>
@@ -407,6 +404,9 @@
     </ClInclude>
     <ClInclude Include="include\DataPreloader.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\TotalVariationOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -683,9 +683,6 @@
     <ClCompile Include="src\Tensors\Storage.cpp">
       <Filter>src\Tensors</Filter>
     </ClCompile>
-    <ClCompile Include="src\ComputationalGraph\Operations\VariationOp.cpp">
-      <Filter>src\ComputationalGraph\Operations</Filter>
-    </ClCompile>
     <ClCompile Include="src\ComputationalGraph\Operations\SwapRedBlueChannelsOp.cpp">
       <Filter>src\ComputationalGraph\Operations</Filter>
     </ClCompile>
@@ -700,6 +697,9 @@
     </ClCompile>
     <ClCompile Include="src\DataPreloader.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\TotalVariationOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

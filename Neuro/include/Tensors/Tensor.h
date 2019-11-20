@@ -120,6 +120,8 @@ namespace Neuro
 		void Map(const function<float(float, float)>&, const Tensor& other, Tensor& result) const;
 		Tensor Map(const function<float(float, float)>& func, const Tensor& other) const;
 
+        Tensor AbsSum(EAxis axis) const;
+        void AbsSum(EAxis axis, Tensor& output) const;
         Tensor Sum(EAxis axis) const;
         void Sum(EAxis axis, Tensor& output) const;
 		Tensor Mean(EAxis axis) const;

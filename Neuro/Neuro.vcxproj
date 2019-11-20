@@ -206,7 +206,7 @@
     <ClInclude Include="include\ComputationalGraph\Operations\TransposeOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\UpSample2dOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\VarianceOp.h" />
-    <ClInclude Include="include\ComputationalGraph\Operations\VariationOp.h" />
+    <ClInclude Include="include\ComputationalGraph\Operations\TotalVariationOp.h" />
     <ClInclude Include="include\ComputationalGraph\TensorLike.h" />
     <ClInclude Include="include\ComputationalGraph\Operation.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\AddOp.h" />
@@ -318,7 +318,7 @@
     <ClCompile Include="src\ComputationalGraph\Operations\SwapRedBlueChannelsOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\TransposeOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\UpSample2dOp.cpp" />
-    <ClCompile Include="src\ComputationalGraph\Operations\VariationOp.cpp" />
+    <ClCompile Include="src\ComputationalGraph\Operations\TotalVariationOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\TensorLike.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operation.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\EluOp.cpp" />

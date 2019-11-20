@@ -211,7 +211,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    template <int W, int H, int D, int N>
+    template <int W, int H, int D, int N, bool ABS>
     void SumTemplate(const Tensor& input, Tensor& output)
     {
         auto inputValues = input.Values();
@@ -223,7 +223,34 @@ namespace Neuro
         for (uint32_t d = 0; d < input.Depth(); ++d)
         for (uint32_t h = 0; h < input.Height(); ++h)
         for (uint32_t w = 0; w < input.Width(); ++w, ++i)
-            outputValues[outputShape.GetIndex(w * (1 - W), h * (1 - H), d * (1 - D), n * (1 - N))] += inputValues[i];
+            outputValues[outputShape.GetIndex(w * (1 - W), h * (1 - H), d * (1 - D), n * (1 - N))] += ABS ? abs(inputValues[i]) : inputValues[i];
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::AbsSum(const Tensor& input, EAxis axis, Tensor& output) const
+    {
+        input.CopyToHost();
+        output.OverrideHost();
+        output.Zero();
+
+        if (axis == EAxis::GlobalAxis)
+            return SumTemplate<1, 1, 1, 1, true>(input, output);
+        if (axis == EAxis::WidthAxis)
+            return SumTemplate<1, 0, 0, 0, true>(input, output);
+        else if (axis == EAxis::HeightAxis)
+            return SumTemplate<0, 1, 0, 0, true>(input, output);
+        else if (axis == EAxis::DepthAxis)
+            return SumTemplate<0, 0, 1, 0, true>(input, output);
+        else if (axis == EAxis::BatchAxis)
+            return SumTemplate<0, 0, 0, 1, true>(input, output);
+        else if (axis == EAxis::_01Axes)
+            return SumTemplate<1, 1, 0, 0, true>(input, output);
+        else if (axis == EAxis::_012Axes)
+            return SumTemplate<1, 1, 1, 0, true>(input, output);
+        else if (axis == EAxis::_013Axes)
+            return SumTemplate<1, 1, 0, 1, true>(input, output);
+        else if (axis == EAxis::_123Axes)
+            return SumTemplate<0, 1, 1, 1, true>(input, output);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -234,23 +261,23 @@ namespace Neuro
         output.Zero();
 
         if (axis == EAxis::GlobalAxis)
-            return SumTemplate<1, 1, 1, 1>(input, output);
+            return SumTemplate<1, 1, 1, 1, false>(input, output);
         if (axis == EAxis::WidthAxis)
-            return SumTemplate<1, 0, 0, 0>(input, output);
+            return SumTemplate<1, 0, 0, 0, false>(input, output);
         else if (axis == EAxis::HeightAxis)
-            return SumTemplate<0, 1, 0, 0>(input, output);
+            return SumTemplate<0, 1, 0, 0, false>(input, output);
         else if (axis == EAxis::DepthAxis)
-            return SumTemplate<0, 0, 1, 0>(input, output);
+            return SumTemplate<0, 0, 1, 0, false>(input, output);
         else if (axis == EAxis::BatchAxis)
-            return SumTemplate<0, 0, 0, 1>(input, output);
+            return SumTemplate<0, 0, 0, 1, false>(input, output);
         else if (axis == EAxis::_01Axes)
-            return SumTemplate<1, 1, 0, 0>(input, output);
+            return SumTemplate<1, 1, 0, 0, false>(input, output);
         else if (axis == EAxis::_012Axes)
-            return SumTemplate<1, 1, 1, 0>(input, output);
+            return SumTemplate<1, 1, 1, 0, false>(input, output);
         else if (axis == EAxis::_013Axes)
-            return SumTemplate<1, 1, 0, 1>(input, output);
+            return SumTemplate<1, 1, 0, 1, false>(input, output);
         else if (axis == EAxis::_123Axes)
-            return SumTemplate<0, 1, 1, 1>(input, output);
+            return SumTemplate<0, 1, 1, 1, false>(input, output);
     }
 
     //////////////////////////////////////////////////////////////////////////

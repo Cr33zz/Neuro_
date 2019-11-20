@@ -29,6 +29,7 @@ namespace Neuro
         virtual void Negate(const Tensor& input, Tensor& output) const override;
         virtual void Inverse(float alpha, const Tensor& input, Tensor& output) const override;
         virtual void Clip(const Tensor& input, float min, float max, Tensor& output) const override;
+        virtual void AbsSum(const Tensor& input, EAxis axis, Tensor& output) const override;
         virtual void Sum(const Tensor& input, EAxis axis, Tensor& output) const override;
         virtual void Mean(const Tensor& input, EAxis axis, Tensor& output) const override;
         virtual void Transpose(const Tensor& input, Tensor& output) const override;
@@ -63,6 +64,8 @@ namespace Neuro
         virtual void SgdStep(Tensor& parameter, const Tensor& gradient, /*float batchSize, */float lr) const override;
 
     private:
+        void Reduce(const Tensor& input, cudnnReduceTensorOp_t reductionOp, Tensor& output) const;
+
         void Activation(const cudnnActivationMode_t& activationMode, const Tensor& input, Tensor& output, float coeff) const;
         void ActivationGradient(const cudnnActivationMode_t& activationMode, const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient, float coeff) const;
 

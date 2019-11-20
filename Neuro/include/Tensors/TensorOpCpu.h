@@ -20,6 +20,7 @@ namespace Neuro
         virtual void Scale(Tensor& input, float v) const;
         virtual void Div(const Tensor& input, float v, Tensor& output) const;
         virtual void Add(const Tensor& input, float v, Tensor& output) const;
+        virtual void AbsSum(const Tensor& input, EAxis axis, Tensor& output) const;
         virtual void Sum(const Tensor& input, EAxis axis, Tensor& output) const;
         virtual void Mean(const Tensor& input, EAxis axis, Tensor& output) const;
         virtual void Pow(const Tensor& input, float power, Tensor& output) const;

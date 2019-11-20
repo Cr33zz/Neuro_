@@ -626,35 +626,70 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    template <int W, int H, int D, int N>
+    template <int W, int H, int D, int N, bool ABS>
     Tensor SumTemplate(const Tensor& input, EAxis axis)
     {
         Tensor sum(Shape(W ? 1 : input.Width(), H ? 1 : input.Height(), D ? 1 : input.Depth(), N ? 1 : input.Batch()));
-        input.Sum(axis, sum);
+        if (ABS)
+            input.AbsSum(axis, sum);
+        else
+            input.Sum(axis, sum);
         return sum;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::AbsSum(EAxis axis) const
+    {
+        if (axis == GlobalAxis)
+            return SumTemplate<1, 1, 1, 1, true>(*this, axis);
+        if (axis == WidthAxis)
+            return SumTemplate<1, 0, 0, 0, true>(*this, axis);
+        if (axis == HeightAxis)
+            return SumTemplate<0, 1, 0, 0, true>(*this, axis);
+        if (axis == DepthAxis)
+            return SumTemplate<0, 0, 1, 0, true>(*this, axis);
+        if (axis == BatchAxis)
+            return SumTemplate<0, 0, 0, 1, true>(*this, axis);
+        if (axis == _01Axes)
+            return SumTemplate<1, 1, 0, 0, true>(*this, axis);
+        if (axis == _012Axes)
+            return SumTemplate<1, 1, 1, 0, true>(*this, axis);
+        if (axis == _013Axes)
+            return SumTemplate<1, 1, 0, 1, true>(*this, axis);
+        if (axis == _123Axes)
+            return SumTemplate<0, 1, 1, 1, true>(*this, axis);
+
+        assert(false);
+        return Tensor();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::AbsSum(EAxis axis, Tensor& output) const
+    {
+        Op()->AbsSum(*this, axis, output);
     }
 
 	//////////////////////////////////////////////////////////////////////////
     Tensor Tensor::Sum(EAxis axis) const
 	{
         if (axis == GlobalAxis)
-            return SumTemplate<1, 1, 1, 1>(*this, axis);
+            return SumTemplate<1, 1, 1, 1, false>(*this, axis);
         if (axis == WidthAxis)
-            return SumTemplate<1, 0, 0, 0>(*this, axis);
+            return SumTemplate<1, 0, 0, 0, false>(*this, axis);
         if (axis == HeightAxis)
-            return SumTemplate<0, 1, 0, 0>(*this, axis);
+            return SumTemplate<0, 1, 0, 0, false>(*this, axis);
         if (axis == DepthAxis)
-            return SumTemplate<0, 0, 1, 0>(*this, axis);
+            return SumTemplate<0, 0, 1, 0, false>(*this, axis);
         if (axis == BatchAxis)
-            return SumTemplate<0, 0, 0, 1>(*this, axis);
+            return SumTemplate<0, 0, 0, 1, false>(*this, axis);
         if (axis == _01Axes)
-            return SumTemplate<1, 1, 0, 0>(*this, axis);
+            return SumTemplate<1, 1, 0, 0, false>(*this, axis);
         if (axis == _012Axes)
-            return SumTemplate<1, 1, 1, 0>(*this, axis);
+            return SumTemplate<1, 1, 1, 0, false>(*this, axis);
         if (axis == _013Axes)
-            return SumTemplate<1, 1, 0, 1>(*this, axis);
+            return SumTemplate<1, 1, 0, 1, false>(*this, axis);
         if (axis == _123Axes)
-            return SumTemplate<0, 1, 1, 1>(*this, axis);
+            return SumTemplate<0, 1, 1, 1, false>(*this, axis);
 
         assert(false);
         return Tensor();
