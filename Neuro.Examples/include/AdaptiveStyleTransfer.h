@@ -182,7 +182,7 @@ public:
         ///contentBatch.DebugRecoverValues("content_batch_raw");
         ///styleBatch.DebugRecoverValues("style_batch_raw");
 
-        size_t steps = 2 * contentFiles.size() / BATCH_SIZE; // go over training set twice
+        size_t steps = 160000;
 
         //Debug::LogAllOutputs(true);
         //Debug::LogAllGrads(true);
