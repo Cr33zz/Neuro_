@@ -233,6 +233,7 @@
     <ClInclude Include="include\ComputationalGraph\Session.h" />
     <ClInclude Include="include\ComputationalGraph\Trainer.h" />
     <ClInclude Include="include\ComputationalGraph\Variable.h" />
+    <ClInclude Include="include\DataPreloader.h" />
     <ClInclude Include="include\Debug.h" />
     <ClInclude Include="include\Initializers\Const.h" />
     <ClInclude Include="include\Initializers\GlorotNormal.h" />
@@ -343,6 +344,7 @@
     <ClCompile Include="src\ComputationalGraph\Session.cpp" />
     <ClCompile Include="src\ComputationalGraph\Trainer.cpp" />
     <ClCompile Include="src\ComputationalGraph\Variable.cpp" />
+    <ClCompile Include="src\DataPreloader.cpp" />
     <ClCompile Include="src\Debug.cpp" />
     <ClCompile Include="src\Initializers\Const.cpp" />
     <ClCompile Include="src\Initializers\Normal.cpp" />

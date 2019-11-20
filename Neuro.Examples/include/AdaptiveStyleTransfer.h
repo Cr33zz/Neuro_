@@ -204,17 +204,38 @@ public:
         float minLoss = 0;
         float lastLoss = 0;
 
+        struct ImageLoader : public ILoader
+        {
+            ImageLoader(const vector<string>& files) : m_Files(files) {}
+
+            void operator()(Tensor& dest)
+            {
+                dest.ResizeBatch(BATCH_SIZE);
+                dest.OverrideHost();
+                for (uint32_t j = 0; j < dest.Batch(); ++j)
+                    LoadImage(m_Files[GlobalRng().Next((int)m_Files.size())], dest.Values() + j * dest.BatchLength(), IMAGE_WIDTH * UP_SCALE_FACTOR, IMAGE_HEIGHT * UP_SCALE_FACTOR, IMAGE_WIDTH, IMAGE_HEIGHT);
+                dest.CopyToDevice();
+            }
+
+            vector<string> m_Files;
+        };
+
+        ImageLoader contentLoader(contentFiles);
+        ImageLoader styleLoader(styleFiles);
+
+        DataPreloader preloader({ content, style }, { &contentLoader, &styleLoader}, 4);
+
         //Tqdm progress(steps, 0);
         //progress.ShowStep(true).ShowPercent(false).ShowElapsed(false).ShowEta(false).ShowIterTime(true);//.EnableSeparateLines(true);
         for (int i = 0; i < steps; ++i/*, progress.NextStep()*/)
         {
-            contentBatch.OverrideHost();
+            /*contentBatch.OverrideHost();
             for (int j = 0; j < BATCH_SIZE; ++j)
                 LoadImage(contentFiles[GlobalRng().Next((int)contentFiles.size())], contentBatch.Values() + j * contentBatch.BatchLength(), IMAGE_WIDTH * UP_SCALE_FACTOR, IMAGE_HEIGHT * UP_SCALE_FACTOR, IMAGE_WIDTH, IMAGE_HEIGHT);
             styleBatch.OverrideHost();
             for (int j = 0; j < BATCH_SIZE; ++j)
-                LoadImage(styleFiles[GlobalRng().Next((int)styleFiles.size())], styleBatch.Values() + j * styleBatch.BatchLength(), IMAGE_WIDTH * UP_SCALE_FACTOR, IMAGE_HEIGHT * UP_SCALE_FACTOR, IMAGE_WIDTH, IMAGE_HEIGHT);
-            
+                LoadImage(styleFiles[GlobalRng().Next((int)styleFiles.size())], styleBatch.Values() + j * styleBatch.BatchLength(), IMAGE_WIDTH * UP_SCALE_FACTOR, IMAGE_HEIGHT * UP_SCALE_FACTOR, IMAGE_WIDTH, IMAGE_HEIGHT);*/
+
             /*contentBatch.SaveAsImage("_c_batch_" + to_string(i) + ".jpg", false);
             styleBatch.SaveAsImage("_s_batch_" + to_string(i) + ".jpg", false);*/
 
@@ -240,8 +261,10 @@ public:
                 cout << fixed << setprecision(4) << "Test - Content: " << (*results[2])(0) << " Style: " << (*results[3])(0) << " Total: " << loss << " Total_Min: " << minLoss << endl;
             }
 
+            preloader.Load();
+
             auto results = Session::Default()->Run({ weightedContentLoss, weightedStyleLoss, minimize },
-                { { content, &contentBatch }, { style, &styleBatch }, { alpha, &trainAlpha }, { training, &trainingOn } });
+                { /*{ content, &contentBatch }, { style, &styleBatch },*/ { alpha, &trainAlpha }, { training, &trainingOn } });
 
             //DumpMemoryManagers("mem.log");
 

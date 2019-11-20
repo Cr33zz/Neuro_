@@ -405,6 +405,9 @@
     <ClInclude Include="include\Applications\VGG19.h">
       <Filter>include\Applications</Filter>
     </ClInclude>
+    <ClInclude Include="include\DataPreloader.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -694,6 +697,9 @@
     </ClCompile>
     <ClCompile Include="src\Applications\VGG19.cpp">
       <Filter>src\Applications</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DataPreloader.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
