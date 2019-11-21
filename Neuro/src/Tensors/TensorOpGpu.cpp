@@ -8,8 +8,6 @@
 #include "Tensors/Cuda/CudaKernels.h"
 #include "Memory/MemoryManager.h"
 
-//#define PROF_ENABLED
-
 namespace Neuro
 {
     bool TensorOpGpu::s_Initialized = false;
@@ -40,7 +38,7 @@ namespace Neuro
                 cudaMemGetInfo(&freeBytes, &totalBytes);
 
                 stringstream ss;
-                ss << "GPU >> " << s_CudaDevProp.name << " threads_per_block=" << s_CudaDevProp.maxThreadsPerBlock << " available/total_memory=" << freeBytes/(1024*1024) << "/" << totalBytes/(1024*1024) << "MB\n";
+                ss << "GPU >> " << s_CudaDevProp.name << " tpb=" << s_CudaDevProp.maxThreadsPerBlock << " SM_count=" << s_CudaDevProp.multiProcessorCount << " available/total_memory=" << freeBytes/(1024*1024) << "/" << totalBytes/(1024*1024) << "MB\n";
                 OutputDebugString(ss.str().c_str());
             }
         }
@@ -74,7 +72,6 @@ namespace Neuro
             dim3 blocks, threads;
             GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
 
-            
             if (t1.SameDimensionsExceptBatches(output))
             {
                 if (t2.SameDimensionsOrOne(output))
@@ -302,10 +299,12 @@ namespace Neuro
 
         if (t1.GetShape() == t2.GetShape())
         {
-            //GetKernelRunParams((int)ceil(t1.Length() / (float)INNER_KERNEL_LOOP_LENGTH), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
-            blocks.x = 8;
-            threads.x = 512;
-            CudaKernels::Div(blocks, threads, t1.Length(), alpha, t1.GetDevicePtr(), beta, t2.GetDevicePtr(), output.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);
+            /*const int TMP = 32;
+            GetKernelRunParams((int)ceil(t1.Length() / (float)TMP), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);*/
+            threads.x = 128;
+            //blocks.x = min((t1.Length() + threads.x - 1) / threads.x, s_CudaDevProp.multiProcessorCount);
+            blocks.x = (unsigned int)ceil((float)t1.Length() / threads.x / s_CudaDevProp.multiProcessorCount);
+            CudaKernels::Div(blocks, threads, t1.Length(), alpha, t1.GetDevicePtr(), beta, t2.GetDevicePtr(), output.GetDevicePtr());
         }
         else
         {
@@ -536,18 +535,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Conv2D(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& output) const
     {
-#ifdef PROF_ENABLED
-        AutoStopwatch prepProf(Microseconds);
-#endif
         input.CopyToDevice();
         kernels.CopyToDevice();
         output.OverrideDevice();
-        //output.Zero();
-
-#ifdef PROF_ENABLED
-        cout << "Conv2D - prep - '" << output.Name() << "' - " << prepProf.ToString() << endl;
-        AutoStopwatch prof(Microseconds);
-#endif
 
         cudnnConvolutionDescriptor_t convolutionDesc; cudnnCreateConvolutionDescriptor(&convolutionDesc);
         cudnnTensorDescriptor_t inputDesc; cudnnCreateTensorDescriptor(&inputDesc);
@@ -592,27 +582,15 @@ namespace Neuro
             output.GetDevicePtr()));
 
         DeviceMemoryManager::Default().Free(workspacePtr);
-#ifdef PROF_ENABLED
-        cout << "Conv2D - '" << output.Name() << "' - " << prof.ToString() << endl;
-#endif
     }
 
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Conv2DBiasActivation(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, const Tensor& bias, EActivation activation, float activationAlpha, Tensor& output)
     {
-#ifdef PROF_ENABLED
-        AutoStopwatch prepProf(Microseconds);
-#endif
         input.CopyToDevice();
         kernels.CopyToDevice();
         bias.CopyToDevice();
         output.OverrideDevice();
-        //output.Zero();
-
-#ifdef PROF_ENABLED
-        cout << "Conv2DBiasActivation - prep - '" << output.Name() << "' - " << prepProf.ToString() << endl;
-        AutoStopwatch prof(Microseconds);
-#endif
 
         cudnnConvolutionDescriptor_t convolutionDesc; cudnnCreateConvolutionDescriptor(&convolutionDesc);
         cudnnActivationDescriptor_t activationDesc; cudnnCreateActivationDescriptor(&activationDesc);
@@ -660,26 +638,14 @@ namespace Neuro
             output.GetDevicePtr()));
 
         DeviceMemoryManager::Default().Free(workspacePtr);
-
-#ifdef PROF_ENABLED
-        cout << "Conv2DBiasActivation - '" << output.Name() << "' - " << prof.ToString() << endl;
-#endif
     }
 
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Conv2DBiasGradient(const Tensor& gradient, Tensor& biasGradient)
     {
-#ifdef PROF_ENABLED
-        AutoStopwatch prepProf(Microseconds);
-#endif
         gradient.CopyToDevice();
         biasGradient.OverrideDevice();
         biasGradient.Zero();
-
-#ifdef PROF_ENABLED
-        cout << "Conv2DBiasGradient - prep - '" << gradient.Name() << "' - " << prepProf.ToString() << endl;
-        AutoStopwatch prof(Microseconds);
-#endif
 
         cudnnTensorDescriptor_t gradientDesc; cudnnCreateTensorDescriptor(&gradientDesc);
         cudnnTensorDescriptor_t biasGradientDesc; cudnnCreateTensorDescriptor(&biasGradientDesc);
@@ -696,18 +662,11 @@ namespace Neuro
             &beta,
             biasGradientDesc,
             biasGradient.GetDevicePtr()));
-
-#ifdef PROF_ENABLED
-        cout << "Conv2DBiasGradient - '" << gradient.Name() << "' - " << prof.ToString() << endl;
-#endif
     }
 
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& inputGradient) const
     {
-#ifdef PROF_ENABLED
-        AutoStopwatch prepProf(Microseconds);
-#endif
         if (dataFormat == NHWC) // CuDNN doesn't support gradients for NHWC format
             return __super::Conv2DInputGradient(gradient, kernels, stride, paddingX, paddingY, dataFormat, inputGradient);
 
@@ -715,11 +674,6 @@ namespace Neuro
         kernels.CopyToDevice();
         inputGradient.OverrideDevice();
         inputGradient.Zero();
-
-#ifdef PROF_ENABLED
-        cout << "Conv2DInputGradient - prep - '" << inputGradient.Name() << "' - " << prepProf.ToString() << endl;
-        AutoStopwatch prof(Microseconds);
-#endif
 
         cudnnConvolutionDescriptor_t convolutionDesc; cudnnCreateConvolutionDescriptor(&convolutionDesc);
         cudnnTensorDescriptor_t gradientDesc; cudnnCreateTensorDescriptor(&gradientDesc);
@@ -765,18 +719,11 @@ namespace Neuro
             inputGradient.GetDevicePtr()));
 
         DeviceMemoryManager::Default().Free(workspacePtr);
-
-#ifdef PROF_ENABLED
-        cout << "Conv2DInputGradient - '" << inputGradient.Name() << "' - " << prof.ToString() << endl;
-#endif
     }
 
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& kernelsGradient) const
     {
-#ifdef PROF_ENABLED
-        AutoStopwatch prepProf(Microseconds);
-#endif
         if (dataFormat == NHWC) // CuDNN doesn't support gradients for NHWC format
             return __super::Conv2DKernelsGradient(input, gradient, stride, paddingX, paddingY, dataFormat, kernelsGradient);
 
@@ -784,11 +731,6 @@ namespace Neuro
         input.CopyToDevice();
         kernelsGradient.OverrideDevice();
         kernelsGradient.Zero();
-
-#ifdef PROF_ENABLED
-        cout << "Conv2DKernelsGradient - prep - '" << kernelsGradient.Name() << "' - " << prepProf.ToString() << endl;
-        AutoStopwatch prof(Microseconds);
-#endif
 
         cudnnConvolutionDescriptor_t convolutionDesc; cudnnCreateConvolutionDescriptor(&convolutionDesc);
         cudnnTensorDescriptor_t gradientDesc; cudnnCreateTensorDescriptor(&gradientDesc);
@@ -834,10 +776,6 @@ namespace Neuro
             kernelsGradient.GetDevicePtr()));
 
         DeviceMemoryManager::Default().Free(workspacePtr);
-
-#ifdef PROF_ENABLED
-        cout << "Conv2DKernelsGradient - '" << kernelsGradient.Name() << "' - " << prof.ToString() << endl;
-#endif
     }
 
     //////////////////////////////////////////////////////////////////////////
