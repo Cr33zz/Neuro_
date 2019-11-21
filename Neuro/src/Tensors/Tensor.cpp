@@ -2152,6 +2152,15 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    /*void Tensor::ScheduleOffload() const
+    {
+        if (Op() != g_OpGpu)
+            return;
+
+        m_Storage.ScheduleOffload();
+    }*/
+
+    //////////////////////////////////////////////////////////////////////////
     void Tensor::Offload() const
     {
         if (Op() != g_OpGpu)

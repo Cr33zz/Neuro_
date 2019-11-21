@@ -45,6 +45,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::DeallocateWorkspace(void* ptr)
+    {
+        CUDA_CHECK(DeviceMemoryManager::Default().ScheduleFree(ptr));
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Zero(Tensor& input) const
     {
         input.OverrideDevice();
@@ -88,10 +94,11 @@ namespace Neuro
 
                     float beta2 = 0.f;
                     CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, addDesc, &alpha, t1Desc, t1.GetDevicePtr(), &beta, t2Desc, t2.GetDevicePtr(), &beta2, outputDesc, output.GetDevicePtr()));
+                    cudaStreamSynchronize(0);
                     return;
                 }
 
-                return CudaKernels::AddBroadcast(
+                CudaKernels::AddBroadcast(
                     blocks,
                     threads,
                     alpha,
@@ -107,6 +114,8 @@ namespace Neuro
                     output.Height(),
                     output.Depth(),
                     output.Batch());
+                cudaStreamSynchronize(0);
+                return;
             }
             else if (t2.SameDimensionsExceptBatches(output))
             {
@@ -124,10 +133,11 @@ namespace Neuro
 
                     float beta2 = 0.f;
                     CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, addDesc, &beta, t2Desc, t2.GetDevicePtr(), &alpha, t1Desc, t1.GetDevicePtr(), &beta2, outputDesc, output.GetDevicePtr()));
+                    cudaStreamSynchronize(0);
                     return;
                 }
 
-                return CudaKernels::AddBroadcast(
+                CudaKernels::AddBroadcast(
                     blocks,
                     threads,
                     beta,
@@ -143,6 +153,8 @@ namespace Neuro
                     output.Height(),
                     output.Depth(),
                     output.Batch());
+                cudaStreamSynchronize(0);
+                return;
             }
             else
                 __super::Add(alpha, t1, beta, t2, output);
@@ -164,6 +176,7 @@ namespace Neuro
                 t2.Length(),
                 output.GetDevicePtr(),
                 output.Length()));
+            cudaStreamSynchronize(0);
             return;
         }
 
@@ -187,6 +200,7 @@ namespace Neuro
                 output.GetDevicePtr() + n * output.BatchLength(),
                 output.BatchLength()));
         }
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -229,6 +243,7 @@ namespace Neuro
                 CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, mulDesc, &alpha, t1Desc, t1.GetDevicePtr(), &beta, t2Desc, t2.GetDevicePtr(), &beta2, outputDesc, output.GetDevicePtr()));
             else
                 CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, mulDesc, &beta, t2Desc, t2.GetDevicePtr(), &alpha, t1Desc, t1.GetDevicePtr(), &beta2, outputDesc, output.GetDevicePtr()));
+            cudaStreamSynchronize(0);
             return;
         }
 
@@ -237,7 +252,7 @@ namespace Neuro
 
         if (t2.SameDimensionsExceptBatches(output))
         {
-            return CudaKernels::MulBroadcast(
+            CudaKernels::MulBroadcast(
                 blocks,
                 threads,
                 beta,
@@ -253,10 +268,11 @@ namespace Neuro
                 output.Height(),
                 output.Depth(),
                 output.Batch());
+            cudaStreamSynchronize(0);
         }
         else if (t1.SameDimensionsExceptBatches(output))
         {
-            return CudaKernels::MulBroadcast(
+            CudaKernels::MulBroadcast(
                 blocks,
                 threads,
                 alpha,
@@ -272,6 +288,7 @@ namespace Neuro
                 output.Height(),
                 output.Depth(),
                 output.Batch());
+            cudaStreamSynchronize(0);
         }
         else
             __super::Mul(alpha, t1, beta, t2, output);
@@ -286,6 +303,7 @@ namespace Neuro
         cudnnSetTensor4dDescriptor(inputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
 
         CUDA_CHECK(cudnnScaleTensor(s_CudnnHandle, inputDesc, input.GetDevicePtr(), &v));
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -305,12 +323,13 @@ namespace Neuro
             //blocks.x = min((t1.Length() + threads.x - 1) / threads.x, s_CudaDevProp.multiProcessorCount);
             blocks.x = (unsigned int)ceil((float)t1.Length() / threads.x / s_CudaDevProp.multiProcessorCount);
             CudaKernels::Div(blocks, threads, t1.Length(), alpha, t1.GetDevicePtr(), beta, t2.GetDevicePtr(), output.GetDevicePtr());
+            cudaStreamSynchronize(0);
         }
         else
         {
             GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock / 2);
 
-            return CudaKernels::DivBroadcast(
+            CudaKernels::DivBroadcast(
                 blocks,
                 threads,
                 alpha,
@@ -330,6 +349,7 @@ namespace Neuro
                 output.Height(),
                 output.Depth(),
                 output.Batch());
+            cudaStreamSynchronize(0);
         }
     }
 
@@ -348,6 +368,7 @@ namespace Neuro
             output.Zero();
             CUDA_CHECK(cublasSaxpy_v2(s_CublasHandle, input.Length(), &v, input.GetDevicePtr(), 1, output.GetDevicePtr(), 1));
         }
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -374,6 +395,7 @@ namespace Neuro
 
             float alpha1 = 1.f, alpha2 = 1.f, beta = 0.f;
             CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, sqrDesc, &alpha1, inputDesc, input.GetDevicePtr(), &alpha2, inputDesc, input.GetDevicePtr(), &beta, outputDesc, output.GetDevicePtr()));
+            cudaStreamSynchronize(0);
             return;
         }
 
@@ -381,6 +403,7 @@ namespace Neuro
         GetKernelRunParams((int)ceil(input.Length() / (float)INNER_KERNEL_LOOP_LENGTH), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);        
 
         CudaKernels::Pow(blocks, threads, input.Length(), input.GetDevicePtr(), power, output.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -400,6 +423,7 @@ namespace Neuro
         GetKernelRunParams((int)ceil(input.Length() / (float)INNER_KERNEL_LOOP_LENGTH), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
 
         CudaKernels::PowGradient(blocks, threads, input.Length(), input.GetDevicePtr(), power, outputGradient.GetDevicePtr(), inputGradient.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -418,6 +442,7 @@ namespace Neuro
 
         float alpha1 = 1, alpha2 = 0, beta = 0;
         CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, sqrDesc, &alpha1, inputDesc, input.GetDevicePtr(), &alpha2, inputDesc, input.GetDevicePtr(), &beta, outputDesc, output.GetDevicePtr()));
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -469,7 +494,8 @@ namespace Neuro
         CUDA_CHECK(cudnnSetTensor(s_CudnnHandle, clipValDesc, clipValPtr, &min));
         CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, maxDesc, &alpha, outputDesc, output.GetDevicePtr(), &beta, clipValDesc, clipValPtr, &beta2, outputDesc, output.GetDevicePtr()));
 
-        DeviceMemoryManager::Default().Free(clipValPtr);
+        CUDA_CHECK(cudaLaunchHostFunc(0, DeallocateWorkspace, clipValPtr));
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -495,7 +521,8 @@ namespace Neuro
         CUDA_CHECK(cudnnSetTensor(s_CudnnHandle, biasDesc, biasPtr, &v));
         CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, addDesc, &alpha, inputDesc, input.GetDevicePtr(), &beta, biasDesc, biasPtr, &beta2, outputDesc, output.GetDevicePtr()));
 
-        DeviceMemoryManager::Default().Free(biasPtr);
+        CUDA_CHECK(cudaLaunchHostFunc(0, DeallocateWorkspace, biasPtr));
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -530,6 +557,7 @@ namespace Neuro
                 output.GetDevicePtr() + b * output.GetShape().Dim0Dim1, 
                 m));
         }
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -581,7 +609,8 @@ namespace Neuro
             outputDesc,
             output.GetDevicePtr()));
 
-        DeviceMemoryManager::Default().Free(workspacePtr);
+        CUDA_CHECK(cudaLaunchHostFunc(0, DeallocateWorkspace, workspacePtr));
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -615,7 +644,6 @@ namespace Neuro
         void* workspacePtr;
         DeviceMemoryManager::Default().Allocate(&workspacePtr, workspaceSize, "conv2d_workspace");
 
-
         float alpha = 1, beta = 0;
         CUDA_CHECK(cudnnConvolutionBiasActivationForward(
             s_CudnnHandle,
@@ -637,7 +665,8 @@ namespace Neuro
             outputDesc,
             output.GetDevicePtr()));
 
-        DeviceMemoryManager::Default().Free(workspacePtr);
+        CUDA_CHECK(cudaLaunchHostFunc(0, DeallocateWorkspace, workspacePtr));
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -662,6 +691,7 @@ namespace Neuro
             &beta,
             biasGradientDesc,
             biasGradient.GetDevicePtr()));
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -718,7 +748,8 @@ namespace Neuro
             inputGradientDesc,
             inputGradient.GetDevicePtr()));
 
-        DeviceMemoryManager::Default().Free(workspacePtr);
+        CUDA_CHECK(cudaLaunchHostFunc(0, DeallocateWorkspace, workspacePtr));
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -775,7 +806,8 @@ namespace Neuro
             kernelsGradientsDesc,
             kernelsGradient.GetDevicePtr()));
 
-        DeviceMemoryManager::Default().Free(workspacePtr);
+        CUDA_CHECK(cudaLaunchHostFunc(0, DeallocateWorkspace, workspacePtr));
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -810,6 +842,7 @@ namespace Neuro
             &beta,
             outputDesc,
             output.GetDevicePtr()));
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -857,6 +890,7 @@ namespace Neuro
             &beta,
             inputGradientDesc,
             inputGradient.GetDevicePtr()));
+        cudaStreamSynchronize(0);
     }
 
     ////////////////////////////////////////////////////////////////////////
@@ -913,6 +947,7 @@ namespace Neuro
             runningMean ? runningMean->GetDevicePtr() : nullptr,
             runningVar ? runningVar->GetDevicePtr() : nullptr,
             epsilon));
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -957,6 +992,7 @@ namespace Neuro
             epsilon,
             saveMean.GetDevicePtr(),
             saveInvVariance.GetDevicePtr()));
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1004,6 +1040,7 @@ namespace Neuro
             epsilon,
             savedMean.GetDevicePtr(),
             savedInvVariance.GetDevicePtr()));
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1040,6 +1077,7 @@ namespace Neuro
     //        output.GetDevicePtr(),
     //        saveMask.m_GpuData.m_DropoutWorkspace->GetDevicePtr(),
     //        dropoutReserveSize));
+    //    cudaStreamSynchronize(0);
     //}
 
     //////////////////////////////////////////////////////////////////////////////
@@ -1070,6 +1108,7 @@ namespace Neuro
     //        inputGradient.GetDevicePtr(),
     //        savedMask.m_GpuData.m_DropoutWorkspace->GetDevicePtr(),
     //        dropoutReserveSize));
+    //    cudaStreamSynchronize(0);
     //}
 
     //////////////////////////////////////////////////////////////////////////
@@ -1129,6 +1168,7 @@ namespace Neuro
         output.OverrideDevice();
 
         CudaKernels::LeakyReLU(blocks, threads, input.Length(), input.GetDevicePtr(), alpha, output.GetDevicePtr());
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1142,6 +1182,7 @@ namespace Neuro
         inputGradient.Zero();
 
         CudaKernels::LeakyReLUGradient(blocks, threads, output.Length(), output.GetDevicePtr(), outputGradient.GetDevicePtr(), alpha, inputGradient.GetDevicePtr());
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1169,6 +1210,7 @@ namespace Neuro
             &beta,
             outputDesc,
             output.GetDevicePtr()));
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1202,6 +1244,7 @@ namespace Neuro
             &beta,
             inputGradientDesc,
             inputGradient.GetDevicePtr()));
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1238,7 +1281,8 @@ namespace Neuro
             outputDesc,
             output.GetDevicePtr()));
 
-        DeviceMemoryManager::Default().Free(workspacePtr);
+        CUDA_CHECK(cudaLaunchHostFunc(0, DeallocateWorkspace, workspacePtr));
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1297,6 +1341,7 @@ namespace Neuro
         GetKernelRunParams(parameter.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
 
         CudaKernels::SgdStep(blocks, threads, parameter.Length(), parameter.GetDevicePtr(), gradient.GetDevicePtr(), /*batchSize, */lr);
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1325,6 +1370,7 @@ namespace Neuro
             &beta,
             outputDesc,
             output.GetDevicePtr()));
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1361,6 +1407,7 @@ namespace Neuro
             &beta,
             inputGradientDesc,
             inputGradient.GetDevicePtr()));
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1393,6 +1440,7 @@ namespace Neuro
                     n));
             }
         }
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1448,6 +1496,7 @@ namespace Neuro
             devOutputList,
             n,
             (int)batches));
+        cudaStreamSynchronize(0);
 
         cudaFree(devT1List);
         cudaFree(devT2List);
@@ -1484,6 +1533,7 @@ namespace Neuro
             n,
             output.GetShape().Dim0Dim1,
             (int)batches));
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1579,11 +1629,6 @@ namespace Neuro
             blocks /= 2;
             threads *= 2;
         }
-
-        /*if (whichKernel == 6)
-        {
-            blocks = min(maxBlocks, blocks);
-        }*/
 
         blocksDim = dim3(blocks, 1, 1);
         threadsDim = dim3(threads, 1, 1);

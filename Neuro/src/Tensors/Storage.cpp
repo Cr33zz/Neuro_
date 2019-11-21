@@ -4,13 +4,10 @@
 #include "Tensors/Storage.h"
 #include "Memory/MemoryManager.h"
 #include "Tensors/Cuda/CudaErrorCheck.h"
+#include "Tools.h"
 #include "Stopwatch.h"
 
-//#define DISABLE_OFFLOAD_PREFETCH
 //#define ENABLE_STORAGE_LOGS
-
-#include <windows.h>
-#include <debugapi.h>
 
 #ifdef ENABLE_STORAGE_LOGS
 #include <windows.h>
@@ -21,9 +18,6 @@
 #define STORAGE_DEBUG_INFO_NO_TS(...) {}
 #define STORAGE_DEBUG_INFO(...) {}
 #endif
-
-//#define WAITING_DEBUG_INFO(...) do { static char buffer[1024]; sprintf(buffer, __VA_ARGS__); cout << buffer; } while (0)
-#define WAITING_DEBUG_INFO(...) {}
 
 namespace Neuro
 {
@@ -214,11 +208,9 @@ namespace Neuro
             return;
         }
         STORAGE_DEBUG_INFO_NO_TS("<<< allocating.\n");
-#ifndef DISABLE_OFFLOAD_PREFETCH
         if (m_Type & ST_Offloadable)
             HostPinnedMemoryManager::Default().Allocate((void**)&m_DataPtr, AllocSizeInBytes(), m_Name);
         else
-#endif
             HostMemoryManager::Default().Allocate((void**)&m_DataPtr, AllocSizeInBytes(), m_Name);
 
         m_DataLocation = Host;
@@ -235,11 +227,9 @@ namespace Neuro
             return;
         }
         STORAGE_DEBUG_INFO_NO_TS("<<< release incoming.\n");
-#ifndef DISABLE_OFFLOAD_PREFETCH
         if (m_Type & ST_Offloadable)
             HostPinnedMemoryManager::Default().Free(m_DataPtr);
         else
-#endif
             HostMemoryManager::Default().Free(m_DataPtr);
         
         m_DataPtr = nullptr;
@@ -296,12 +286,18 @@ namespace Neuro
     {
         WaitForPreload();
 
-        if (forceWaitForOffload && m_FreeDeviceMemOnOffloadDone)
+        if (forceWaitForOffload)
+            WaitForOffload();
+
+        if (m_OffloadRequested)
         {
-            AutoStopwatch prof(Microseconds);
-            STORAGE_DEBUG_INFO("Waiting for offload callback... '%s'[%d]\n", m_Name.c_str(), m_Type);
-            m_OffloadFuture.get();
-            STORAGE_DEBUG_INFO("--> waited %s\n", prof.ToString().c_str());
+            unique_lock<mutex> mtx(m_FreeDeviceMemOnOffloadMtx);
+            if (!m_OffloadDone)
+            {
+                m_FreeDeviceMemOnOffloadDone = true;
+                STORAGE_DEBUG_INFO_NO_TS("<<< release will take place on offload-done callback.\n");
+                return;
+            }
         }
 
         STORAGE_DEBUG_INFO("Releasing on device '%s' ", m_Name.c_str());
@@ -318,26 +314,6 @@ namespace Neuro
         }
 
         m_FreeDeviceMemOnOffloadDone = false;
-        if (m_Type & ST_Offloadable)
-        {
-            unique_lock<mutex> mtx(m_FreeDeviceMemOnOffloadMtx);
-            if (cudaEventQuery(m_OffloadEvent) == cudaErrorNotReady)
-            {
-                if (forceWaitForOffload)
-                {
-                    AutoStopwatch prof(Microseconds);
-                    STORAGE_DEBUG_INFO("Waiting for offload... '%s'[%d]\n", m_Name.c_str(), m_Type);
-                    DeviceMemoryManager::Default().WaitForMemEvent(m_OffloadEvent);
-                    STORAGE_DEBUG_INFO("--> waited %s\n", prof.ToString().c_str());
-                }
-                else
-                {
-                    m_FreeDeviceMemOnOffloadDone = true;
-                    STORAGE_DEBUG_INFO_NO_TS("<<< release will take place on offload-done callback.\n");
-                    return;
-                }
-            }
-        }
 
         STORAGE_DEBUG_INFO_NO_TS("<<< release incoming.\n");
         CUDA_CHECK(DeviceMemoryManager::Default().Free((void*)m_DeviceDataPtr));
@@ -349,7 +325,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Storage::OnOffloadDone(void* userData)
+    void Storage::OffloadDoneCallback(void* userData)
     {
         Storage* storage = (Storage*)userData;
 
@@ -366,12 +342,13 @@ namespace Neuro
         else
             STORAGE_DEBUG_INFO("Offload done '%s'[%d] <<< not releasing device memory\n", storage->m_Name.c_str(), storage->m_Type);
 
+        storage->m_OffloadDone = true;
         storage->m_FreeDeviceMemOnOffloadDone = false;
         storage->m_OffloadPromise.set_value();
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Storage::OnPreloadDone(void* userData)
+    void Storage::PreloadDoneCallback(void* userData)
     {
         Storage* storage = (Storage*)userData;
 
@@ -388,12 +365,14 @@ namespace Neuro
     {
         if (m_OffloadRequested)
         {
+            NVTXProfile p((string(__FUNCTION__) + " " + m_Name).c_str(), 0xFFB200FF);
+
             AutoStopwatch prof(Microseconds);
-            WAITING_DEBUG_INFO("Waiting for offload callback... '%s'[%d]\n", m_Name.c_str(), m_Type);
+            STORAGE_DEBUG_INFO("Waiting for offload callback... '%s'[%d]\n", m_Name.c_str(), m_Type);
             m_OffloadFuture.get(); // wait for callback
             m_OffloadPromise = promise<void>();
             m_OffloadRequested = false;
-            WAITING_DEBUG_INFO("--> waited %s\n", prof.ToString().c_str());
+            STORAGE_DEBUG_INFO("--> waited %s\n", prof.ToString().c_str());
         }
     }
 
@@ -402,19 +381,32 @@ namespace Neuro
     {
         if (m_PreloadRequested)
         {
+            NVTXProfile p((string(__FUNCTION__) + " " + m_Name).c_str(), 0xFFB200FF);
+
             AutoStopwatch prof(Microseconds);
-            WAITING_DEBUG_INFO("Waiting for preload callback... '%s'[%d]\n", m_Name.c_str(), m_Type);
+            STORAGE_DEBUG_INFO("Waiting for preload callback... '%s'[%d]\n", m_Name.c_str(), m_Type);
             m_PreloadFuture.get(); // wait for callback
             m_PreloadPromise = promise<void>();
             m_PreloadRequested = false;
-            WAITING_DEBUG_INFO("--> waited %s\n", prof.ToString().c_str());
+            STORAGE_DEBUG_INFO("--> waited %s\n", prof.ToString().c_str());
         }
+    }
+
+    void Storage::OffloadTriggerCallback(void* userData)
+    {
+        Storage* storage = (Storage*)userData;
+        storage->Offload();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Storage::ScheduleOffload() const
+    {
+        CUDA_CHECK(cudaLaunchHostFunc(0, OffloadTriggerCallback, (void*)this));
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Storage::Offload() const
     {
-#ifndef DISABLE_OFFLOAD_PREFETCH
         if (!m_AllocSize)
             return;
 
@@ -438,19 +430,18 @@ namespace Neuro
             {
                 m_OffloadFuture = m_OffloadPromise.get_future();
                 m_OffloadRequested = true;
+                m_OffloadDone = false;
                 STORAGE_DEBUG_INFO_NO_TS("<<< requested.\n");
-                CUDA_CHECK(DeviceMemoryManager::Default().Offload((void*)m_DataPtr, (void*)m_DeviceDataPtr, SizeInBytes(), m_OffloadEvent, OnOffloadDone, (void*)this));
+                CUDA_CHECK(DeviceMemoryManager::Default().Offload((void*)m_DataPtr, (void*)m_DeviceDataPtr, SizeInBytes(), m_OffloadEvent, OffloadDoneCallback, (void*)this));
             }
         }
         else
             STORAGE_DEBUG_INFO_NO_TS("<<< not supported.\n");
-#endif
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Storage::Preload() const
     {
-#ifndef DISABLE_OFFLOAD_PREFETCH
         if (!m_AllocSize)
             return;
 
@@ -487,12 +478,11 @@ namespace Neuro
                 m_PreloadFuture = m_PreloadPromise.get_future();
                 m_PreloadRequested = true;
                 STORAGE_DEBUG_INFO("Preload '%s'[%d] <<< requested.\n", m_Name.c_str(), m_Type);
-                CUDA_CHECK(DeviceMemoryManager::Default().Preload((void*)m_DeviceDataPtr, (void*)m_DataPtr, SizeInBytes(), m_PreloadEvent, OnPreloadDone, (void*)this));
+                CUDA_CHECK(DeviceMemoryManager::Default().Preload((void*)m_DeviceDataPtr, (void*)m_DataPtr, SizeInBytes(), m_PreloadEvent, PreloadDoneCallback, (void*)this));
             }
         }
         else
             STORAGE_DEBUG_INFO("Preload '%s'[%d] <<< not supported.\n", m_Name.c_str(), m_Type);
-#endif
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -502,6 +492,7 @@ namespace Neuro
         {
             STORAGE_DEBUG_INFO("Copy to device '%s'[%d] <<< preload completed check\n", m_Name.c_str(), m_Type);
             WaitForPreload();
+            NEURO_ASSERT(m_DataLocation == Device, "Data is not on device after preload...");
         }
 
         if (m_DataLocation == Device)
@@ -542,14 +533,12 @@ namespace Neuro
             NEURO_ASSERT(m_DataLocation != None, "Attempting to copy to unallocated host memory");
             NEURO_ASSERT(m_DataPtr && m_DeviceDataPtr, "");
 
-#ifndef DISABLE_OFFLOAD_PREFETCH
             if (m_OffloadRequested && (m_Type & ST_Offloadable))
             {
                 STORAGE_DEBUG_INFO("Copy to host '%s'[%d] <<< offload completed check\n", m_Name.c_str(), m_Type);
                 WaitForOffload();
             }
             else
-#endif
             {
                 STORAGE_DEBUG_INFO("Copy to host '%s'[%d] <<< %s\n", m_Name.c_str(), m_Type, (m_Type & ST_Offloadable) ? "offloadable but offload wasn't requested" : "not offloadable");
                 CUDA_CHECK(cudaMemcpy((void*)m_DataPtr, (void*)m_DeviceDataPtr, SizeInBytes(), cudaMemcpyDeviceToHost));
@@ -654,7 +643,7 @@ namespace Neuro
         if (m_DataRefCount <= 0 && (m_Type & ST_RefCounted))
         {
             STORAGE_DEBUG_INFO("Ref count zeroed '%s' <<< deallocating memory.\n", m_Name.c_str());
-            FreeOnDevice();
+            FreeOnDevice(false, true); // we have to wait for offload because we are about to release destination pinned memory
             FreeOnHost();
         }
     }

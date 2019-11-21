@@ -1,6 +1,7 @@
 #include "DataPreloader.h"
 #include "Tensors/Tensor.h"
 #include "ComputationalGraph/Placeholder.h"
+#include "Tools.h"
 
 namespace Neuro
 {
@@ -22,6 +23,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void DataPreloader::Load()
     {
+        NVTXProfile p("Loading preloaded data", 0xFF93FF72);
         vector<Tensor>* data = nullptr;
         {
             unique_lock<mutex> availableLocker(m_AvailableMtx);
@@ -47,11 +49,17 @@ namespace Neuro
     {
         while (true)
         {
+            if (m_Stop)
+                return;
+
             vector<Tensor>* data = nullptr;
 
             {
                 unique_lock<mutex> pendingLocker(m_PendingMtx);
-                m_PendingCond.wait(pendingLocker, [this]() {return !m_Pending.empty(); });
+                m_PendingCond.wait(pendingLocker, [this]() {return !m_Pending.empty() || m_Stop; });
+
+                if (m_Stop)
+                    return;
 
                 data = m_Pending.front();
                 m_Pending.pop_front();

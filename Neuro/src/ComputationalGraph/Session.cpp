@@ -81,8 +81,6 @@ namespace Neuro
 
         for (size_t n = 0; n < order.size(); ++n)
         {
-            //AutoStopwatch prof(Microseconds);
-
             // as of right now there is no functionality using that feature
             /*if (n + 1 < order.size())
             {
@@ -92,6 +90,8 @@ namespace Neuro
             }*/
 
             auto node = order[n];
+
+            NVTXProfile p(node->Name().c_str(), 0xFFD67FFF);
 
             bool isFetched = find(fetches.begin(), fetches.end(), node) != fetches.end();
             node->SetFetched(isFetched);
@@ -112,8 +112,6 @@ namespace Neuro
 
             if (Debug::ShouldLogOutput(node->Name()))
                 node->Output().DebugDumpValues(node->Name() + "_output0_step" + to_string(Debug::GetStep()) + ".log");
-
-            //cout << "'" << node->Name() << "' - " << prof.ToString() << endl;
         }
 
         Debug::Step();

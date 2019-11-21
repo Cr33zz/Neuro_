@@ -73,6 +73,20 @@ namespace Neuro
     void ImageLibInit();
     extern bool g_ImageLibInitialized;
 
+    static const uint32_t NVTX_COLOR_RED = 0xFFFF0000;
+    static const uint32_t NVTX_COLOR_GREEN = 0xFF00FF00;
+    static const uint32_t NVTX_COLOR_BLUE = 0xFF0000FF;
+    static const uint32_t NVTX_COLOR_YELLOW = 0xFFFFFF00;
+    static const uint32_t NVTX_COLOR_MAGENTA = 0xFFFF00FF;
+    static const uint32_t NVTX_COLOR_CYAN = 0xFF00FFFF;
+
+    class NVTXProfile
+    {
+    public:
+        NVTXProfile(const char* message, uint32_t color);
+        ~NVTXProfile();
+    };
+
     class Tqdm
     {
     public:

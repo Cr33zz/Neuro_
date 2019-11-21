@@ -25,6 +25,7 @@ public:
     {
         const uint32_t IMAGE_WIDTH = 256;
         const uint32_t IMAGE_HEIGHT = 256;
+        const size_t STEPS = 2;//160000;
         const int UP_SCALE_FACTOR = 2;
         const float CONTENT_WEIGHT = 1.f;
 #ifdef USE_GRAMS
@@ -182,8 +183,6 @@ public:
         ///contentBatch.DebugRecoverValues("content_batch_raw");
         ///styleBatch.DebugRecoverValues("style_batch_raw");
 
-        size_t steps = 160000;
-
         //Debug::LogAllOutputs(true);
         //Debug::LogAllGrads(true);
         ///Debug::LogOutput("generator_model/output", true);
@@ -227,18 +226,8 @@ public:
 
         //Tqdm progress(steps, 0);
         //progress.ShowStep(true).ShowPercent(false).ShowElapsed(false).ShowEta(false).ShowIterTime(true);//.EnableSeparateLines(true);
-        for (int i = 0; i < steps; ++i/*, progress.NextStep()*/)
+        for (int i = 0; i < STEPS; ++i/*, progress.NextStep()*/)
         {
-            /*contentBatch.OverrideHost();
-            for (int j = 0; j < BATCH_SIZE; ++j)
-                LoadImage(contentFiles[GlobalRng().Next((int)contentFiles.size())], contentBatch.Values() + j * contentBatch.BatchLength(), IMAGE_WIDTH * UP_SCALE_FACTOR, IMAGE_HEIGHT * UP_SCALE_FACTOR, IMAGE_WIDTH, IMAGE_HEIGHT);
-            styleBatch.OverrideHost();
-            for (int j = 0; j < BATCH_SIZE; ++j)
-                LoadImage(styleFiles[GlobalRng().Next((int)styleFiles.size())], styleBatch.Values() + j * styleBatch.BatchLength(), IMAGE_WIDTH * UP_SCALE_FACTOR, IMAGE_HEIGHT * UP_SCALE_FACTOR, IMAGE_WIDTH, IMAGE_HEIGHT);*/
-
-            /*contentBatch.SaveAsImage("_c_batch_" + to_string(i) + ".jpg", false);
-            styleBatch.SaveAsImage("_s_batch_" + to_string(i) + ".jpg", false);*/
-
             if (i % DETAILS_ITER == 0)
             {
                 /*contentBatch.SaveAsImage("_c_batch_" + to_string(i) + ".jpg", false);
@@ -246,6 +235,8 @@ public:
 
                 auto results = Session::Default()->Run({ stylized, totalLoss, weightedContentLoss, weightedStyleLoss },
                     { { content, &testContent }, { style, &testStyle }, { alpha, &testAlpha }, { training, &trainingOff } });
+
+                NVTXProfile p("Details summary", 0xFFC0C0C0);
 
                 auto genImage = *results[0];
                 VGG16::SwapChannels(genImage);
@@ -263,11 +254,11 @@ public:
 
             preloader.Load();
 
+            /*contentBatch.SaveAsImage("_c_batch_" + to_string(i) + ".jpg", false);
+            styleBatch.SaveAsImage("_s_batch_" + to_string(i) + ".jpg", false);*/
+
             auto results = Session::Default()->Run({ weightedContentLoss, weightedStyleLoss, minimize },
                 { /*{ content, &contentBatch }, { style, &styleBatch },*/ { alpha, &trainAlpha }, { training, &trainingOn } });
-
-            //DumpMemoryManagers("mem.log");
-
 
             cout << fixed << setprecision(4) << "Step: " << i << " Content: " << (*results[0])(0) << " Style: " << (*results[1])(0) << endl;
         }

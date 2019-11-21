@@ -73,6 +73,8 @@ namespace Neuro
         void MatMulBatched(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const;
         void MatMulStridedBatched(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const;
 
+        static void DeallocateWorkspace(void* ptr);
+
         static cudnnPoolingMode_t GetCudnnPoolType(EPoolingMode mode);
         static cudnnBatchNormMode_t GetCudnnBatchNormMode(EBatchNormMode mode);
         static cudnnActivationMode_t GetCudnnActivationMode(EActivation mode);

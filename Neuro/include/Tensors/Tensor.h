@@ -291,8 +291,9 @@ namespace Neuro
 
         bool TryDeviceAllocate() const;
         bool TryDeviceRelease();
-        void Prefetch() const;
+        //void ScheduleOffload() const;
         void Offload() const;
+        void Prefetch() const;
         void ResetDeviceRef(size_t n = 0);
         void IncDeviceRef(size_t n = 1);
         void DecDeviceRef(size_t n = 1);

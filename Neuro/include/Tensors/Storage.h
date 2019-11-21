@@ -43,6 +43,7 @@ namespace Neuro
         void FreeOnDevice(bool force = false, bool forceWaitForOffload = false);
 
         void Offload() const;
+        void ScheduleOffload() const;
         void Preload() const;
 
         ELocation Location() const { return m_DataLocation; }
@@ -79,8 +80,9 @@ namespace Neuro
         size_t AllocSizeInBytes() const { return m_AllocSize * sizeof(float); }
 
     private:
-        static void OnOffloadDone(void* userData);
-        static void OnPreloadDone(void* userData);
+        static void OffloadTriggerCallback(void* userData);
+        static void OffloadDoneCallback(void* userData);
+        static void PreloadDoneCallback(void* userData);
 
         void WaitForOffload() const;
         void WaitForPreload() const;
@@ -93,6 +95,7 @@ namespace Neuro
         int m_DeviceDataRefCount = 0;
         int m_DataRefCount = 0;
         cudaEvent_t m_OffloadEvent = nullptr;
+        mutable bool m_OffloadDone = false;
         mutable mutex m_FreeDeviceMemOnOffloadMtx;
         mutable bool m_FreeDeviceMemOnOffloadDone = false;
         mutable bool m_OffloadRequested = false;

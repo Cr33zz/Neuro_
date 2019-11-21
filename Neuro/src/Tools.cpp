@@ -7,11 +7,14 @@
 #include <stdarg.h>
 #include <experimental/filesystem>
 #include <FreeImage.h>
+#include <nvToolsExt.h>
 
 #include "Tools.h"
 #include "Tensors/Tensor.h"
 
 namespace fs = std::experimental::filesystem;
+
+#define CUDA_PROFILING_ENABLED
 
 namespace Neuro
 {
@@ -834,4 +837,33 @@ namespace Neuro
         else if (m_SeparateLinesEnabled)
             cout << endl;
     }
+
+    //////////////////////////////////////////////////////////////////////////
+    NVTXProfile::NVTXProfile(const char* message, uint32_t color)
+    {
+#ifdef CUDA_PROFILING_ENABLED
+        nvtxEventAttributes_t eventAttrib = { 0 };
+
+        // set the version and the size information
+        eventAttrib.version = NVTX_VERSION;
+        eventAttrib.size = NVTX_EVENT_ATTRIB_STRUCT_SIZE;
+
+        // configure the attributes.  0 is the default for all attributes.
+        eventAttrib.colorType = NVTX_COLOR_ARGB;
+        eventAttrib.color = color;
+        eventAttrib.messageType = NVTX_MESSAGE_TYPE_ASCII;
+        eventAttrib.message.ascii = message;
+
+        nvtxRangePushEx(&eventAttrib);
+#endif
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    NVTXProfile::~NVTXProfile()
+    {
+#ifdef CUDA_PROFILING_ENABLED
+        nvtxRangePop();
+#endif
+    }
+
 }

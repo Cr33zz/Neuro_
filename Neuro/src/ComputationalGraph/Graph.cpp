@@ -201,12 +201,14 @@ namespace Neuro
                     break;
 
                 auto node = newOrder[p];
-                GRAPH_DEBUG_INFO("##Graph: Prefetching '%s'...\n", node->Name().c_str());
+                NVTXProfile nvtxProf((string("Preload ") + node->Name()).c_str(), 0xFF5BB8FF);
+                GRAPH_DEBUG_INFO("##Graph: Preloading '%s'...\n", node->Name().c_str());
                 node->PreloadForGradient();
                 lastPrefetched = p;
             }
 
             auto node = newOrder[n];
+            NVTXProfile nvtxProf((string("Gradient ") + node->Name()).c_str(), 0xFF4242FF);
             GRAPH_DEBUG_INFO("##Graph: Computing gradient '%s'... (care about grad: %d)\n", node->Name().c_str(), node->CareAboutGradient() ? 1 : 0);
 
             if (node->CareAboutGradient())

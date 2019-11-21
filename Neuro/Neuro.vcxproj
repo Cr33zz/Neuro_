@@ -80,7 +80,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>include;deps;deps\FreeImage\include;deps\h5cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;deps;deps\FreeImage\include;deps\h5cpp\include;c:\Program Files\NVIDIA Corporation\NvToolsExt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FunctionLevelLinking>
       </FunctionLevelLinking>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;FREEIMAGE_LIB;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -89,8 +89,8 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Lib>
-      <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\h5cpp\lib;$(CudaToolkitLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>cuda.lib;cudart_static.lib;cudnn.lib;cublas.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\h5cpp\lib;$(CudaToolkitLibDir);c:\Program Files\NVIDIA Corporation\NvToolsExt\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cuda.lib;cudart_static.lib;cudnn.lib;cublas.lib;nvToolsExt64_1.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Lib>
     <CudaCompile>
@@ -112,7 +112,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>include;deps;deps\FreeImage\include;deps\h5cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;deps;deps\FreeImage\include;deps\h5cpp\include;c:\Program Files\NVIDIA Corporation\NvToolsExt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;FREEIMAGE_LIB;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>-D_CRT_NONSTDC_NO_DEPRECATE %(AdditionalOptions)</AdditionalOptions>
@@ -123,8 +123,8 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\h5cpp\lib;$(CudaToolkitLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>cuda.lib;cudart_static.lib;cudnn.lib;cublas.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\h5cpp\lib;$(CudaToolkitLibDir);c:\Program Files\NVIDIA Corporation\NvToolsExt\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cuda.lib;cudart_static.lib;cudnn.lib;cublas.lib;nvToolsExt64_1.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Lib>
     <CudaCompile>
@@ -146,7 +146,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>include;deps;deps\FreeImage\include;deps\h5cpp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;deps;deps\FreeImage\include;deps\h5cpp\include;c:\Program Files\NVIDIA Corporation\NvToolsExt\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PreprocessorDefinitions>NDEBUG;_CRT_SECURE_NO_WARNINGS;FREEIMAGE_LIB;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>-D_CRT_NONSTDC_NO_DEPRECATE %(AdditionalOptions)</AdditionalOptions>
@@ -157,8 +157,8 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\h5cpp\lib;$(CudaToolkitLibDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>cuda.lib;cudart_static.lib;cudnn.lib;cublas.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\h5cpp\lib;$(CudaToolkitLibDir);c:\Program Files\NVIDIA Corporation\NvToolsExt\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cuda.lib;cudart_static.lib;cudnn.lib;cublas.lib;nvToolsExt64_1.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Lib>
     <CudaCompile>

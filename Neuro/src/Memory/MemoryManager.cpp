@@ -64,6 +64,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     EMemStatus MemoryManagerBase::Allocate(void** ptr, size_t size, const string& annotation)
     {
+        NVTXProfile p(__FUNCTION__, 0xFFFF0000);
+
         {
             unique_lock<mutex> deallocationsLocker(m_ScheduledFreeMtx);
 #ifdef ENABLE_MEMORY_LOGS
@@ -151,6 +153,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     EMemStatus MemoryManagerBase::Free(void* ptr)
     {
+        NVTXProfile p(__FUNCTION__, 0xFF00FF21);
+
         if (!ptr)
             return MEM_STATUS_SUCCESS;
 
@@ -436,7 +440,7 @@ namespace Neuro
     DeviceMemoryManager::DeviceMemoryManager()
         : MemoryManagerBase(DEVICE_ALLOC_GRANULARITY, DEVICE_NATIVE_GRANULARITY)
     {
-        CUDA_CHECK(cudaStreamCreate(&m_MemoryStream));
+        CUDA_CHECK(cudaStreamCreateWithFlags(&m_MemoryStream, cudaStreamNonBlocking));
     }
 
     //////////////////////////////////////////////////////////////////////////
