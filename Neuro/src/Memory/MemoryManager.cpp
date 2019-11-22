@@ -153,7 +153,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     EMemStatus MemoryManagerBase::Free(void* ptr)
     {
-        NVTXProfile p(__FUNCTION__, 0xFF00FF21);
+        NVTXProfile p(__FUNCTION__, 0xFFFF0000);
 
         if (!ptr)
             return MEM_STATUS_SUCCESS;
@@ -440,8 +440,8 @@ namespace Neuro
     DeviceMemoryManager::DeviceMemoryManager()
         : MemoryManagerBase(DEVICE_ALLOC_GRANULARITY, DEVICE_NATIVE_GRANULARITY)
     {
-        //CUDA_CHECK(cudaStreamCreateWithFlags(&m_MemoryStream, cudaStreamNonBlocking));
-        CUDA_CHECK(cudaStreamCreate(&m_MemoryStream));
+        CUDA_CHECK(cudaStreamCreateWithFlags(&m_MemoryStream, cudaStreamNonBlocking));
+        //CUDA_CHECK(cudaStreamCreate(&m_MemoryStream));
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -511,6 +511,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     EMemStatus DeviceMemoryManager::WaitForMemEvent(cudaEvent_t memEvent)
     {
+        NVTXProfile p(__FUNCTION__, 0xFFFF0000);
         if (!memEvent)
             return MEM_STATUS_SUCCESS;
 
@@ -521,6 +522,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     Neuro::EMemStatus DeviceMemoryManager::ForceMemoryStreamSync()
     {
+        NVTXProfile p(__FUNCTION__, 0xFFFF0000);
         CUDA_CHECK(cudaStreamSynchronize(m_MemoryStream));
         return MEM_STATUS_SUCCESS;
     }
