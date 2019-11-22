@@ -7,6 +7,7 @@
 #include "ComputationalGraph/Operation.h"
 #include "Debug.h"
 #include "Tools.h"
+#include "Memory/MemoryManager.h"
 
 //#define ENABLE_GRAPH_LOGS
 
@@ -183,7 +184,10 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<Variable*> Graph::ComputeGradientsInOrder(const vector<TensorLike*>& order, const vector<TensorLike*>& losses, const unordered_set<TensorLike*> nodesAffectingLosses, const vector<Variable*>& params)
     {
-        const size_t PREFETCH_STEPS = 16;
+
+        DeviceMemoryManager::Default().ForceMemoryStreamSync();
+
+        const size_t PREFETCH_STEPS = 1;
         vector<Variable*> variables;
 
         /// remove all node which don't care about gradient. it has to be done at runtime since variables can be switched between trainable and non-trainable state
@@ -208,11 +212,11 @@ namespace Neuro
             }
 
             auto node = newOrder[n];
-            NVTXProfile nvtxProf((string("Gradient ") + node->Name()).c_str(), 0xFF4242FF);
             GRAPH_DEBUG_INFO("##Graph: Computing gradient '%s'... (care about grad: %d)\n", node->Name().c_str(), node->CareAboutGradient() ? 1 : 0);
 
             if (node->CareAboutGradient())
             {
+                NVTXProfile nvtxProf((string("Output grad for ") + node->Name()).c_str(), 0xFF4242FF);
                 if (node->IsVar())
                 {
                     Variable* var = static_cast<Variable*>(node);
@@ -263,6 +267,7 @@ namespace Neuro
                 
                 if (opNode)
                 {
+                    NVTXProfile nvtxProf((string("Compute grad ") + node->Name()).c_str(), 0xFF4242FF);
                     opNode->ComputeGradient(nodeOutputGrad);
 
                     if (Debug::ShouldLogGrad(node->Name()))
