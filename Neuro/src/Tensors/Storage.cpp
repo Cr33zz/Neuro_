@@ -498,6 +498,8 @@ namespace Neuro
         if (m_DataLocation == Device)
             return;
 
+        NVTXProfile p((string(__FUNCTION__) + " " + m_Name).c_str(), 0xFFB200FF);
+
         NEURO_ASSERT(m_DataLocation == Host, "Attempting to copy from unallocated host memory to device.");
 
         if (!m_DeviceDataPtr)
@@ -523,6 +525,8 @@ namespace Neuro
 
         if (m_DataLocation == Host)
             return;
+
+        NVTXProfile p((string(__FUNCTION__) + " " + m_Name).c_str(), 0xFFB200FF);
 
         if (allowAlloc && !m_DataPtr)
         {
@@ -553,6 +557,8 @@ namespace Neuro
     {
         if (m_DataLocation == Host)
             return;
+
+        NVTXProfile p((string(__FUNCTION__) + " " + m_Name).c_str(), 0xFFB200FF);
 
         NEURO_ASSERT(m_DataLocation != None, "Attempting to sync to unallocated host memory");
         NEURO_ASSERT(m_DataPtr && m_DeviceDataPtr, "");
