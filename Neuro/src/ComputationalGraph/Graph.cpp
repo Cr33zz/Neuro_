@@ -204,8 +204,8 @@ namespace Neuro
                 NVTXProfile nvtxProf((string("Preload ") + node->Name()).c_str(), 0xFF5BB8FF);
                 GRAPH_DEBUG_INFO("##Graph: Preloading '%s'...\n", node->Name().c_str());
                 node->PreloadForGradient();
-                lastPrefetched = p;
             }
+            lastPrefetched = n + PREFETCH_STEPS;
 
             auto node = newOrder[n];
             NVTXProfile nvtxProf((string("Gradient ") + node->Name()).c_str(), 0xFF4242FF);
