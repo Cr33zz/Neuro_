@@ -25,7 +25,8 @@ public:
     {
         const uint32_t IMAGE_WIDTH = 256;
         const uint32_t IMAGE_HEIGHT = 256;
-        const size_t STEPS = 2;//160000;
+        const size_t STEPS = 160000;
+        //const size_t STEPS = 2;//160000;
         const int UP_SCALE_FACTOR = 2;
         const float CONTENT_WEIGHT = 1.f;
 #ifdef USE_GRAMS
@@ -119,7 +120,7 @@ public:
         auto stylizedFeat = vggEncoder(stylizedPre, nullptr, "stylized_features");
 
         // compute content loss
-        auto contentLoss = mean(square(sub(adaptiveFeat, stylizedFeat.back())));
+        auto contentLoss = mean(square(sub(adaptiveFeat, stylizedFeat.back())), GlobalAxis, "content_loss");
         auto weightedContentLoss = multiply(contentLoss, CONTENT_WEIGHT, "weighted_content_loss");
         
         vector<TensorLike*> styleLosses;
@@ -157,10 +158,10 @@ public:
                 sigmaLoss = div(sum(square(sub(sqrt(varG, "sigma_g"), sqrt(varS, "sigma_s"))), GlobalAxis, "sigma_loss"), (float)BATCH_SIZE);
             }
 
-            styleLosses.push_back(add(meanLoss, sigmaLoss, "mean_std_loss"));
+            styleLosses.push_back(add(meanLoss, sigmaLoss, "mean_std_loss" + to_string(i)));
 #endif
         }
-        auto weightedStyleLoss = multiply(merge_sum(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "weighted_style_loss");
+        auto weightedStyleLoss = multiply(merge_sum(styleLosses, "style_loss"), STYLE_WEIGHT, "weighted_style_loss");
 
         ///auto totalLoss = weightedContentLoss;
         ///auto totalLoss = weightedStyleLoss;
