@@ -71,6 +71,8 @@ namespace Neuro
             m_DeviceDataPtr = nullptr;
             m_PreloadRequested = false;
             m_OffloadRequested = false;
+            m_FreeDeviceMemOnOffloadDone = false;
+            m_FreePinnedMemOnOffloadDone = false;
         }
         return *this;
     }
@@ -102,9 +104,11 @@ namespace Neuro
             NEURO_ASSERT(!other.m_OffloadRequested, "Moving while offload in progress, this may not end well...");
             other.WaitForOffload();
             m_OffloadRequested = other.m_OffloadRequested;
+            m_FreeDeviceMemOnOffloadDone = other.m_FreeDeviceMemOnOffloadDone;
+            m_FreePinnedMemOnOffloadDone = other.m_FreePinnedMemOnOffloadDone;
             NEURO_ASSERT(!other.m_PreloadRequested, "Moving while preload in progress, this may not end well...");
             other.WaitForPreload();
-            m_PreloadRequested = other.m_PreloadRequested;            
+            m_PreloadRequested = other.m_PreloadRequested;
             m_PreloadEvent = other.m_PreloadEvent;
             other.m_PreloadEvent = nullptr;
         }
@@ -219,8 +223,21 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Storage::FreeOnHost()
     {
-        NEURO_ASSERT(!m_DeviceDataPtr, "Data cannot be only on device.");
         STORAGE_DEBUG_INFO("Releasing on host '%s' ", m_Name.c_str());
+
+        if (m_OffloadRequested)
+        {
+            unique_lock<mutex> mtx(m_OffloadDoneCallbackMtx);
+            if (!m_OffloadDone)
+            {
+                m_FreePinnedMemOnOffloadDone = true;
+                STORAGE_DEBUG_INFO_NO_TS("<<< release will take place on offload-done callback.\n");
+                return;
+            }
+        }
+
+        NEURO_ASSERT(!m_DeviceDataPtr, "Data cannot be only on device.");
+        
         if (!m_DataPtr)
         {
             STORAGE_DEBUG_INFO_NO_TS("<<< not allocated.\n");
@@ -244,16 +261,6 @@ namespace Neuro
 
         if (!m_DataPtr)
             AllocateOnHost();
-
-        // Disable free memory on offload
-        /*{
-            unique_lock<mutex> mtx(m_FreeDeviceMemOnOffloadMtx);
-            if (m_FreeDeviceMemOnOffloadDone)
-            {
-                STORAGE_DEBUG_INFO("Cancelling free device memory on offload done '%s'\n", m_Name.c_str());
-                m_FreeDeviceMemOnOffloadDone = false;
-            }
-        }*/
 
         if (m_OffloadFuture.valid())
         {
@@ -291,7 +298,7 @@ namespace Neuro
 
         if (m_OffloadRequested)
         {
-            unique_lock<mutex> mtx(m_FreeDeviceMemOnOffloadMtx);
+            unique_lock<mutex> mtx(m_OffloadDoneCallbackMtx);
             if (!m_OffloadDone)
             {
                 m_FreeDeviceMemOnOffloadDone = true;
@@ -327,9 +334,10 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Storage::OffloadDoneCallback(void* userData)
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFFB200FF);
         Storage* storage = (Storage*)userData;
 
-        unique_lock<mutex> mtx(storage->m_FreeDeviceMemOnOffloadMtx);
+        unique_lock<mutex> mtx(storage->m_OffloadDoneCallbackMtx);
         if (storage->m_FreeDeviceMemOnOffloadDone)
         {
             STORAGE_DEBUG_INFO("Offload done '%s'[%d]\n", storage->m_Name.c_str(), storage->m_Type);
@@ -342,14 +350,24 @@ namespace Neuro
         else
             STORAGE_DEBUG_INFO("Offload done '%s'[%d] <<< not releasing device memory\n", storage->m_Name.c_str(), storage->m_Type);
 
+        if (storage->m_FreePinnedMemOnOffloadDone)
+        {
+            HostPinnedMemoryManager::Default().Free((void*)storage->m_DataPtr);
+            storage->m_DataPtr = nullptr;
+
+            storage->m_DataLocation = None;
+        }
+
         storage->m_OffloadDone = true;
         storage->m_FreeDeviceMemOnOffloadDone = false;
+        storage->m_FreePinnedMemOnOffloadDone = false;
         storage->m_OffloadPromise.set_value();
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Storage::PreloadDoneCallback(void* userData)
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFFB200FF);
         Storage* storage = (Storage*)userData;
 
         // user better not deallocate storage/device memory before this callback is called
@@ -449,7 +467,7 @@ namespace Neuro
         {
             // Disable free memory on offload
             {
-                unique_lock<mutex> mtx(m_FreeDeviceMemOnOffloadMtx);
+                unique_lock<mutex> mtx(m_OffloadDoneCallbackMtx);
                 if (m_FreeDeviceMemOnOffloadDone)
                 {
                     STORAGE_DEBUG_INFO("Cancelling free device memory on offload done '%s'\n", m_Name.c_str());
@@ -643,7 +661,7 @@ namespace Neuro
         if (m_DataRefCount <= 0 && (m_Type & ST_RefCounted))
         {
             STORAGE_DEBUG_INFO("Ref count zeroed '%s' <<< deallocating memory.\n", m_Name.c_str());
-            FreeOnDevice(false, true); // we have to wait for offload because we are about to release destination pinned memory
+            FreeOnDevice();
             FreeOnHost();
         }
     }

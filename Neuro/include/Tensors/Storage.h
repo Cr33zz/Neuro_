@@ -96,8 +96,9 @@ namespace Neuro
         int m_DataRefCount = 0;
         cudaEvent_t m_OffloadEvent = nullptr;
         mutable bool m_OffloadDone = false;
-        mutable mutex m_FreeDeviceMemOnOffloadMtx;
+        mutable mutex m_OffloadDoneCallbackMtx;
         mutable bool m_FreeDeviceMemOnOffloadDone = false;
+        mutable bool m_FreePinnedMemOnOffloadDone = false;
         mutable bool m_OffloadRequested = false;
         mutable promise<void> m_OffloadPromise;
         mutable future<void> m_OffloadFuture;
