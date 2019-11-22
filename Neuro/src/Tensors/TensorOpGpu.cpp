@@ -53,6 +53,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Zero(Tensor& input) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.OverrideDevice();
         CUDA_CHECK(cudaMemset(input.GetDevicePtr(), 0, input.Length() * sizeof(float)));
     }
@@ -60,6 +61,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::One(Tensor& input) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         float one = 1.f;
         unsigned int* oneBits = reinterpret_cast<unsigned int*>(&one);
         input.OverrideDevice();
@@ -69,15 +71,13 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         t1.CopyToDevice();
         t2.CopyToDevice();
         output.OverrideDevice();
 
         if (!t1.SameDimensionsExceptBatches(t2))
         {
-            dim3 blocks, threads;
-            GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
-
             if (t1.SameDimensionsExceptBatches(output))
             {
                 if (t2.SameDimensionsOrOne(output))
@@ -98,6 +98,8 @@ namespace Neuro
                     return;
                 }
 
+                dim3 blocks, threads;
+                GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
                 CudaKernels::AddBroadcast(
                     blocks,
                     threads,
@@ -137,6 +139,8 @@ namespace Neuro
                     return;
                 }
 
+                dim3 blocks, threads;
+                GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
                 CudaKernels::AddBroadcast(
                     blocks,
                     threads,
@@ -206,6 +210,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::MatMul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         t1.CopyToDevice();
         t2.CopyToDevice();
         output.OverrideDevice();
@@ -222,6 +227,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Mul(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         t1.CopyToDevice();
         t2.CopyToDevice();
         output.OverrideDevice();
@@ -297,6 +303,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Scale(Tensor& input, float v) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
 
         cudnnTensorDescriptor_t inputDesc; cudnnCreateTensorDescriptor(&inputDesc);
@@ -309,6 +316,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Div(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         t1.CopyToDevice();
         t2.CopyToDevice();
         output.OverrideDevice();
@@ -356,6 +364,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Mul(const Tensor& input, float v, Tensor& output) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
         output.OverrideDevice();
 
@@ -380,6 +389,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Pow(const Tensor& input, float power, Tensor& output) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
         output.OverrideDevice();
 
@@ -409,6 +419,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::PowGradient(const Tensor& input, float power, const Tensor& outputGradient, Tensor& inputGradient) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
         outputGradient.CopyToDevice();
         inputGradient.OverrideDevice();
@@ -429,6 +440,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Sqrt(const Tensor& input, Tensor& output) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
         output.OverrideDevice();
 
@@ -454,6 +466,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Inverse(float alpha, const Tensor& input, Tensor& output) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
         output.OverrideDevice();
 
@@ -463,11 +476,13 @@ namespace Neuro
         GetKernelRunParams((int)ceil(input.Length() / (float)INV_SUB_LOOP_LEN), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
 
         CudaKernels::Inverse(blocks, threads, input.Length(), input.GetDevicePtr(), alpha, output.GetDevicePtr(), INV_SUB_LOOP_LEN);
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Clip(const Tensor& input, float min, float max, Tensor& output) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
         output.OverrideDevice();
 
@@ -501,6 +516,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Add(const Tensor& input, float v, Tensor& output) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
         output.OverrideDevice();
 
@@ -528,6 +544,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Transpose(const Tensor& input, Tensor& output) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
         output.OverrideDevice();
 
@@ -563,6 +580,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Conv2D(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& output) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
         kernels.CopyToDevice();
         output.OverrideDevice();
@@ -616,6 +634,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Conv2DBiasActivation(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, const Tensor& bias, EActivation activation, float activationAlpha, Tensor& output)
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
         kernels.CopyToDevice();
         bias.CopyToDevice();
@@ -672,6 +691,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Conv2DBiasGradient(const Tensor& gradient, Tensor& biasGradient)
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         gradient.CopyToDevice();
         biasGradient.OverrideDevice();
         biasGradient.Zero();
@@ -700,6 +720,7 @@ namespace Neuro
         if (dataFormat == NHWC) // CuDNN doesn't support gradients for NHWC format
             return __super::Conv2DInputGradient(gradient, kernels, stride, paddingX, paddingY, dataFormat, inputGradient);
 
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         gradient.CopyToDevice();
         kernels.CopyToDevice();
         inputGradient.OverrideDevice();
@@ -758,6 +779,7 @@ namespace Neuro
         if (dataFormat == NHWC) // CuDNN doesn't support gradients for NHWC format
             return __super::Conv2DKernelsGradient(input, gradient, stride, paddingX, paddingY, dataFormat, kernelsGradient);
 
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         gradient.CopyToDevice();
         input.CopyToDevice();
         kernelsGradient.OverrideDevice();
@@ -813,6 +835,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Pool2D(const Tensor& input, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& output) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
         output.OverrideDevice();
 
@@ -848,6 +871,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& inputGradient) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         output.CopyToDevice();
         input.CopyToDevice();
         outputGradient.CopyToDevice();
@@ -916,6 +940,7 @@ namespace Neuro
         if (mode == Instance)
             return __super::BatchNormalization(input, mode, gamma, beta, epsilon, runningMean, runningVar, output);
 
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
         gamma.CopyToDevice();
         beta.CopyToDevice();
@@ -956,6 +981,7 @@ namespace Neuro
         if (mode == Instance)
             return __super::BatchNormalizationTrain(input, mode, gamma, beta, momentum, epsilon, runningMean, runningVar, saveMean, saveInvVariance, output);
 
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
         gamma.CopyToDevice();
         beta.CopyToDevice();
@@ -1001,6 +1027,7 @@ namespace Neuro
         if (mode == Instance)
             return __super::BatchNormalizationGradient(input, mode, gamma, epsilon, outputGradient, savedMean, savedInvVariance, gammaGradient, betaGradient, trainable, inputGradient);
 
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
         gamma.CopyToDevice();
         outputGradient.CopyToDevice();
@@ -1046,6 +1073,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     //void TensorOpGpu::Dropout(const Tensor& input, float prob, Tensor& saveMask, void** states, Tensor& output)
     //{
+    //    NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
     //    input.CopyToDevice();
     //    output.OverrideDevice();
     //    prob = 1 - prob;
@@ -1083,6 +1111,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////////
     //void TensorOpGpu::DropoutGradient(const Tensor& outputGradient, const Tensor& savedMask, Tensor& inputGradient)
     //{
+    //    NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
     //    outputGradient.CopyToDevice();
     //    inputGradient.OverrideDevice();
     //    inputGradient.Zero();
@@ -1162,6 +1191,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::LeakyReLU(const Tensor& input, float alpha, Tensor& output) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         dim3 blocks, threads;
         GetKernelRunParams(input.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
         input.CopyToDevice();
@@ -1174,6 +1204,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::LeakyReLUGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         dim3 blocks, threads;
         GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
         output.CopyToDevice();
@@ -1188,6 +1219,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Softmax(const Tensor& input, Tensor& output) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
         output.OverrideDevice();
 
@@ -1216,6 +1248,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         output.CopyToDevice();
         outputGradient.CopyToDevice();
         inputGradient.OverrideDevice();
@@ -1250,6 +1283,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Reduce(const Tensor& input, cudnnReduceTensorOp_t reductionOp, Tensor& output) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
         output.OverrideDevice();
 
@@ -1306,6 +1340,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::AdamStep(Tensor& parameter, const Tensor& gradient, Tensor& mGrad, Tensor& vGrad, /*float batchSize, */float lr, float beta1, float beta2, float epsilon) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         parameter.CopyToDevice();
         gradient.CopyToDevice();
         mGrad.CopyToDevice();
@@ -1334,6 +1369,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::SgdStep(Tensor& parameter, const Tensor& gradient, /*float batchSize, */float lr) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         parameter.CopyToDevice();
         gradient.CopyToDevice();
 
@@ -1347,6 +1383,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Activation(const cudnnActivationMode_t& activationMode, const Tensor& input, Tensor& output, float coeff) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
         output.OverrideDevice();
 
@@ -1376,6 +1413,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::ActivationGradient(const cudnnActivationMode_t& activationMode, const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient, float coeff) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         output.CopyToDevice();
         outputGradient.CopyToDevice();
         inputGradient.OverrideDevice();
@@ -1413,6 +1451,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::MatMulGeneric(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         int m = t1.Height(), n = t2.Width(), k = t1.Width();
         float alpha = 1, beta = 0;
 
@@ -1446,6 +1485,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::MatMulBatched(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         int m = t1.Height(), n = t2.Width(), k = t1.Width();
 
         size_t batches = output.Batch() * t1.Depth();
@@ -1506,6 +1546,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::MatMulStridedBatched(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
     {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         int m = t1.Height(), n = t2.Width(), k = t1.Width();
 
         size_t batches = output.Depth() * output.Batch();
