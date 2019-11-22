@@ -518,6 +518,13 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    Neuro::EMemStatus DeviceMemoryManager::ForceMemoryStreamSync()
+    {
+        CUDA_CHECK(cudaStreamSynchronize(m_MemoryStream));
+        return MEM_STATUS_SUCCESS;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     HostMemoryManager::HostMemoryManager()
         : MemoryManagerBase(HOST_ALLOC_GRANULARITY, HOST_NATIVE_GRANULARITY)
     {
