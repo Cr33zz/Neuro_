@@ -55,17 +55,27 @@ namespace Neuro
     {
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.OverrideDevice();
-        CUDA_CHECK(cudaMemset(input.GetDevicePtr(), 0, input.Length() * sizeof(float)));
+        cudnnTensorDescriptor_t inputDesc; cudnnCreateTensorDescriptor(&inputDesc);
+        cudnnSetTensor4dDescriptor(inputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
+
+        float zero = 0.f;
+        CUDA_CHECK(cudnnSetTensor(s_CudnnHandle, inputDesc, input.GetDevicePtr(), &zero));
+        cudaStreamSynchronize(0);
+        //CUDA_CHECK(cudaMemsetAsync(input.GetDevicePtr(), 0, input.Length() * sizeof(float)));
     }
 
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::One(Tensor& input) const
     {
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
-        float one = 1.f;
-        unsigned int* oneBits = reinterpret_cast<unsigned int*>(&one);
         input.OverrideDevice();
-        cuMemsetD32(CUdeviceptr(input.GetDevicePtr()), *oneBits, input.Length());
+
+        cudnnTensorDescriptor_t inputDesc; cudnnCreateTensorDescriptor(&inputDesc);
+        cudnnSetTensor4dDescriptor(inputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
+
+        float one = 1.f;
+        CUDA_CHECK(cudnnSetTensor(s_CudnnHandle, inputDesc, input.GetDevicePtr(), &one));
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
