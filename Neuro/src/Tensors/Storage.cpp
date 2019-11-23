@@ -21,6 +21,8 @@
 
 namespace Neuro
 {
+    static const uint32_t MIN_SIZE_TO_OFFLOAD = 1024 * 1024; // 1MB
+
     //////////////////////////////////////////////////////////////////////////
     Storage::Storage(int type, size_t size, const string& name)
         : m_Type(type), m_AllocSize(size), m_Size(size), m_Name(name), m_DataLocation(None)
@@ -413,7 +415,7 @@ namespace Neuro
     void Storage::OffloadTriggerCallback(void* userData)
     {
         Storage* storage = (Storage*)userData;
-        storage->Offload();
+        storage->Offload(true);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -423,12 +425,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Storage::Offload() const
+    void Storage::Offload(bool force) const
     {
         if (!m_AllocSize)
             return;
 
-        STORAGE_DEBUG_INFO("Offload '%s'[%d] ", m_Name.c_str(), m_Type);
+        STORAGE_DEBUG_INFO("Offload '%s'[%d] %s ", m_Name.c_str(), m_Type, force ? "(FORCED)" : "");
         if (m_Type & ST_Offloadable)
         {
             NEURO_ASSERT(m_DataPtr, "Attempting to offload to deallocated host storage.");
@@ -440,16 +442,23 @@ namespace Neuro
 
             NEURO_ASSERT(m_DataPtr && m_DeviceDataPtr, "");
 
+            if (!force && SizeInBytes() < MIN_SIZE_TO_OFFLOAD)
+            {
+                STORAGE_DEBUG_INFO_NO_TS("<<< too small.\n");
+                IncDeviceRef(1); // artificially increase device ref count so we do not deallocate device memory where only valid copy of data is located
+                return;
+            }
+
             if (m_OffloadRequested)
             {
-                STORAGE_DEBUG_INFO("Offload '%s'[%d] <<< requested already.\n", m_Name.c_str(), m_Type);
+                STORAGE_DEBUG_INFO_NO_TS("<<< requested already.\n");
             }
             else
             {
                 m_OffloadFuture = m_OffloadPromise.get_future();
                 m_OffloadRequested = true;
                 m_OffloadDone = false;
-                STORAGE_DEBUG_INFO_NO_TS("<<< requested.\n");
+                STORAGE_DEBUG_INFO_NO_TS("<<< requested - %d bytes.\n", (int)SizeInBytes());
                 CUDA_CHECK(DeviceMemoryManager::Default().Offload((void*)m_DataPtr, (void*)m_DeviceDataPtr, SizeInBytes(), m_OffloadEvent, OffloadDoneCallback, (void*)this));
             }
         }
@@ -621,7 +630,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Storage::IncDeviceRef(size_t n)
+    void Storage::IncDeviceRef(size_t n) const
     {
         NEURO_ASSERT(m_Type & ST_DeviceRefCounted, "Increasing ref count for non-refcounted storage.");
         m_DeviceDataRefCount += (int)n;
@@ -651,7 +660,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Storage::IncRef(size_t n)
+    void Storage::IncRef(size_t n) const
     {
         NEURO_ASSERT(m_Type & ST_RefCounted, "Increasing ref count for non-refcounted storage.");
         m_DataRefCount += (int)n;
@@ -695,6 +704,7 @@ namespace Neuro
     {
         NEURO_ASSERT(m_DeviceDataPtr, "Attempting to write to unallocated device memory.");
         NEURO_ASSERT(m_DataLocation == Device, "Attempting to write to data not located on device.");
+        NEURO_ASSERT(!m_OffloadRequested || m_OffloadDone, "Attempting to write to data being offloaded from device.");
         return m_DeviceDataPtr;
     }
 

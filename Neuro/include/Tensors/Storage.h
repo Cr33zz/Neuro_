@@ -42,7 +42,7 @@ namespace Neuro
         void AllocateOnDevice() const;
         void FreeOnDevice(bool force = false, bool forceWaitForOffload = false);
 
-        void Offload() const;
+        void Offload(bool force) const;
         void ScheduleOffload() const;
         void Preload() const;
 
@@ -58,11 +58,11 @@ namespace Neuro
         void OverrideDevice();
 
         void ResetDeviceRef(size_t n);
-        void IncDeviceRef(size_t n);
+        void IncDeviceRef(size_t n) const;
         void DecDeviceRef(size_t n);
 
         void ResetRef(size_t n);
-        void IncRef(size_t n);
+        void IncRef(size_t n) const;
         void DecRef(size_t n);
 
         const float* Data() const;
@@ -92,8 +92,8 @@ namespace Neuro
         int m_Type = ST_Default;
         size_t m_AllocSize = 0;
         size_t m_Size = 0;
-        int m_DeviceDataRefCount = 0;
-        int m_DataRefCount = 0;
+        mutable int m_DeviceDataRefCount = 0;
+        mutable int m_DataRefCount = 0;
         cudaEvent_t m_OffloadEvent = nullptr;
         mutable bool m_OffloadDone = false;
         mutable mutex m_OffloadDoneCallbackMtx;
