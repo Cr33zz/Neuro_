@@ -497,6 +497,19 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::Log(const Tensor& input, Tensor& output) const
+    {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
+        input.CopyToDevice();
+        output.OverrideDevice();
+
+        dim3 blocks, threads;
+        GetKernelRunParamsForSequence(input.Length(), blocks, threads, 128);
+        CudaKernels::Log(blocks, threads, input.Length(), input.GetDevicePtr(), output.GetDevicePtr());
+        cudaStreamSynchronize(0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Negate(const Tensor& input, Tensor& output) const
     {
         Mul(input, -1.f, output);
@@ -508,8 +521,6 @@ namespace Neuro
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
         output.OverrideDevice();
-
-        const int INV_SUB_LOOP_LEN = 32;
 
         dim3 blocks, threads;
         GetKernelRunParamsForSequence(input.Length(), blocks, threads, 128);

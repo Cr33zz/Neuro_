@@ -27,6 +27,7 @@ namespace Neuro
         virtual void PowGradient(const Tensor& input, float power, const Tensor& outputGradient, Tensor& inputGradient) const;
         virtual void Abs(const Tensor& input, Tensor& output) const;
         virtual void AbsGradient(const Tensor& input, const Tensor& outputGradient, Tensor& inputGradient) const;
+        virtual void Log(const Tensor& input, Tensor& output) const;
         virtual void Sqrt(const Tensor& input, Tensor& output) const;
         virtual void Negate(const Tensor& input, Tensor& output) const;
         virtual void Inverse(float alpha, const Tensor& input, Tensor& output) const;

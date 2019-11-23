@@ -142,6 +142,12 @@ __global__ void inverse(int inputLen, const float* __restrict input, float alpha
         output[i] = __fdividef(alpha, input[i]);
 }
 
+__global__ void log(int inputLen, const float* __restrict input, float* __restrict output)
+{
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < inputLen; i += gridDim.x * blockDim.x)
+        output[i] = ::log(input[i]);
+}
+
 __global__ void add(int inputLen, const float* __restrict input, float v, float* __restrict output, int subLen)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -522,6 +528,11 @@ namespace Neuro
     void CudaKernels::Negate(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float* outputDev)
     {
         negate<<<blocks, threads>>>(inputLen, inputDev, outputDev);
+    }
+
+    void CudaKernels::Log(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float* outputDev)
+    {
+        log<<<blocks, threads>>>(inputLen, inputDev, outputDev);
     }
 
     void CudaKernels::Inverse(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float alpha, float* outputDev)

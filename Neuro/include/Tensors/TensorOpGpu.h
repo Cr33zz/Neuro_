@@ -28,6 +28,7 @@ namespace Neuro
         virtual void Abs(const Tensor& input, Tensor& output) const override;
         virtual void AbsGradient(const Tensor& input, const Tensor& outputGradient, Tensor& inputGradient) const override;
         virtual void Sqrt(const Tensor& input, Tensor& output) const override;
+        virtual void Log(const Tensor& input, Tensor& output) const override;
         virtual void Negate(const Tensor& input, Tensor& output) const override;
         virtual void Inverse(float alpha, const Tensor& input, Tensor& output) const override;
         virtual void Clip(const Tensor& input, float min, float max, Tensor& output) const override;

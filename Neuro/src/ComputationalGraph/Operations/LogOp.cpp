@@ -13,8 +13,7 @@ namespace Neuro
     void LogOp::ComputeInternal()
     {
         m_Output.ResizeBatch(m_Inputs[0]->Batch());
-        //m_Inputs[0]->Log(m_Output);
-        m_Inputs[0]->Map([](float x) {return ::log(x); }, m_Output);
+        m_Inputs[0]->Log(m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -22,6 +21,6 @@ namespace Neuro
     {
         //in_grad = grad / x
         if (m_InputNodes[0]->CareAboutGradient())
-            grad.Map([](float g, float x) {return g / x; }, *m_Inputs[0], m_InputsGrads[0]);
+            grad.Div(*m_Inputs[0], m_InputsGrads[0]);
     }
 }

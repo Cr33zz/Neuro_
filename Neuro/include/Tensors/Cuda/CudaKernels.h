@@ -15,6 +15,7 @@ namespace Neuro
         static void Abs(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float* outputDev);
         static void AbsGradient(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, const float* outputGradientDev, float* inputGradientDev);
         static void Negate(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float* outputDev);
+        static void Log(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float* outputDev);
         static void Inverse(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float alpha, float* outputDev);
         static void Add(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float v, float* outputDev, int subLen);
         // Assuming t1 has the same dimensions as output

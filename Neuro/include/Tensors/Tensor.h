@@ -117,7 +117,9 @@ namespace Neuro
         void AbsGradient(const Tensor& input, const Tensor& outputGradient, Tensor& inputGradient) const;
 
         Tensor Sqrt() const;
-        void Sqrt(Tensor& result) const;
+        void Sqrt(Tensor& output) const;
+        Tensor Log() const;
+        void Log(Tensor& output) const;
 
         void Map(const function<float(float)>& func, Tensor& result) const;
 		Tensor Map(const function<float(float)>& func) const;

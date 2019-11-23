@@ -373,6 +373,19 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Log(const Tensor& input, Tensor& output) const
+    {
+        input.CopyToHost();
+        output.OverrideHost();
+
+        auto inputValues = input.Values();
+        auto outputValues = output.Values();
+
+        for (uint32_t i = 0; i < input.Length(); ++i)
+            outputValues[i] = ::log(inputValues[i]);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::Negate(const Tensor& input, Tensor& output) const
     {
         input.CopyToHost();

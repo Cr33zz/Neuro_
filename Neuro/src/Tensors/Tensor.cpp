@@ -612,9 +612,23 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::Sqrt(Tensor& result) const
+    void Tensor::Sqrt(Tensor& output) const
     {
-        Op()->Sqrt(*this, result);
+        Op()->Sqrt(*this, output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::Log() const
+    {
+        Tensor result(m_Shape);
+        Log(result);
+        return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Log(Tensor& output) const
+    {
+        Op()->Log(*this, output);
     }
 
     //////////////////////////////////////////////////////////////////////////
