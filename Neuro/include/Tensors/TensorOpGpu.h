@@ -25,6 +25,8 @@ namespace Neuro
         virtual void Add(const Tensor& input, float v, Tensor& output) const override;
         virtual void Pow(const Tensor& input, float power, Tensor& output) const override;
         virtual void PowGradient(const Tensor& input, float power, const Tensor& outputGradient, Tensor& inputGradient) const override;
+        virtual void Abs(const Tensor& input, Tensor& output) const override;
+        virtual void AbsGradient(const Tensor& input, const Tensor& outputGradient, Tensor& inputGradient) const override;
         virtual void Sqrt(const Tensor& input, Tensor& output) const override;
         virtual void Negate(const Tensor& input, Tensor& output) const override;
         virtual void Inverse(float alpha, const Tensor& input, Tensor& output) const override;
@@ -78,9 +80,8 @@ namespace Neuro
         static cudnnPoolingMode_t GetCudnnPoolType(EPoolingMode mode);
         static cudnnBatchNormMode_t GetCudnnBatchNormMode(EBatchNormMode mode);
         static cudnnActivationMode_t GetCudnnActivationMode(EActivation mode);
+        static void GetKernelRunParamsForSequence(int count, dim3& blocks, dim3& threads, int maxThreads);
         static void GetKernelRunParams(int count, dim3& blocks, dim3& threads, int threadsPerBlock);
-        static void GetGlobalSumKernelRunParams(int count, dim3& blocksDim, dim3& threadsDim, int maxThreads);
-        static int GetBlocksNum(int count, int threadsPerBlock);
         static void CudnnLog(cudnnSeverity_t sev, void *udata, const cudnnDebug_t *dbg, const char *msg);
 
         static bool s_Initialized;

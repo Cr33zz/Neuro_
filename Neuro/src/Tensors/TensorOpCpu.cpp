@@ -319,6 +319,47 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::PowGradient(const Tensor& input, float power, const Tensor& outputGradient, Tensor& inputGradient) const
+    {
+        input.CopyToHost();
+        outputGradient.CopyToHost();
+        inputGradient.OverrideHost();
+
+        if (power == 2)
+            outputGradient.Map([&](float g, float x) {return g * 2.f * x; }, input, inputGradient);
+        else
+            outputGradient.Map([&](float g, float x) {return g * power * ::pow(x, power - 1); }, input, inputGradient);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Abs(const Tensor& input, Tensor& output) const
+    {
+        input.CopyToHost();
+        output.OverrideHost();
+
+        auto inputValues = input.Values();
+        auto outputValues = output.Values();
+
+        for (uint32_t i = 0; i < input.Length(); ++i)
+            outputValues[i] = ::abs(inputValues[i]);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::AbsGradient(const Tensor& input, const Tensor& outputGradient, Tensor& inputGradient) const
+    {
+        input.CopyToHost();
+        outputGradient.CopyToHost();
+        inputGradient.OverrideHost();
+
+        auto inputValues = input.Values();
+        auto outputGradValues = outputGradient.Values();
+        auto inputGradValues = inputGradient.Values();
+
+        for (uint32_t i = 0; i < input.Length(); ++i)
+            inputGradValues[i] = Sign(inputValues[i]) * outputGradValues[i];
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::Sqrt(const Tensor& input, Tensor& output) const
     {
         input.CopyToHost();
@@ -361,19 +402,6 @@ namespace Neuro
     void TensorOpCpu::Clip(const Tensor& input, float min, float max, Tensor& output) const
     {
         input.Map([&](float x) { return Neuro::Clip(x, min, max); }, output);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::PowGradient(const Tensor& input, float power, const Tensor& outputGradient, Tensor& inputGradient) const
-    {
-        input.CopyToHost();
-        outputGradient.CopyToHost();
-        inputGradient.OverrideHost();
-
-        if (power == 2)
-            outputGradient.Map([&](float g, float x) {return g * 2.f * x; }, input, inputGradient);
-        else
-            outputGradient.Map([&](float g, float x) {return g * power * ::pow(x, power - 1); }, input, inputGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -25,6 +25,8 @@ namespace Neuro
         virtual void Mean(const Tensor& input, EAxis axis, Tensor& output) const;
         virtual void Pow(const Tensor& input, float power, Tensor& output) const;
         virtual void PowGradient(const Tensor& input, float power, const Tensor& outputGradient, Tensor& inputGradient) const;
+        virtual void Abs(const Tensor& input, Tensor& output) const;
+        virtual void AbsGradient(const Tensor& input, const Tensor& outputGradient, Tensor& inputGradient) const;
         virtual void Sqrt(const Tensor& input, Tensor& output) const;
         virtual void Negate(const Tensor& input, Tensor& output) const;
         virtual void Inverse(float alpha, const Tensor& input, Tensor& output) const;

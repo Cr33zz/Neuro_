@@ -584,6 +584,26 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::Abs() const
+    {
+        Tensor result(m_Shape);
+        Abs(result);
+        return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Abs(Tensor& result) const
+    {
+        Op()->Abs(*this, result);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::AbsGradient(const Tensor& input, const Tensor& outputGradient, Tensor& inputGradient) const
+    {
+        Op()->AbsGradient(input, outputGradient, inputGradient);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     Tensor Tensor::Sqrt() const
     {
         Tensor result(m_Shape);

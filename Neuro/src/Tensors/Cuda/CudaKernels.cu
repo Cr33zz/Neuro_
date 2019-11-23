@@ -3,6 +3,12 @@
 
 #include "Tensors/Cuda/CudaKernels.h"
 
+__device__ int sign(float x)
+{
+    int t = x < 0 ? -1 : 0;
+    return x > 0 ? 1 : t;
+}
+
 __device__ int getIndex(int w, int h, int d, int n, int dim0, int dim0dim1, int dim0dim1dim2)
 {
     return w + h * dim0 + d * dim0dim1 + n * dim0dim1dim2;
@@ -81,17 +87,6 @@ __global__ void leakyReluGrad(int inputLen, const float* __restrict output, cons
         inputGrad[i] = (output[i] > 0 ? 1 : alpha) * outputGrad[i];
 }
 
-__global__ void setValue(int inputLen, float* __restrict input, float v, int subLen)
-{
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    
-    int maxN = i * subLen + subLen;
-    if (maxN > inputLen)
-        maxN = inputLen;
-    for (int n = i * subLen; n < maxN; ++n)
-        input[n] = v;
-}
-
 __global__ void mul(int inputLen, const float* __restrict input, float v, float* __restrict output, int subLen)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -103,56 +98,48 @@ __global__ void mul(int inputLen, const float* __restrict input, float v, float*
         output[n] = input[n] * v;
 }
 
-__global__ void pow(int inputLen, const float* __restrict input, float power, float* __restrict output, int subLen)
+__global__ void pow(int inputLen, const float* __restrict input, float power, float* __restrict output)
 {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-
-    int maxN = i * subLen + subLen;
-    if (maxN > inputLen)
-        maxN = inputLen;
-    for (int n = i * subLen; n < maxN; ++n)
-        output[n] = ::pow(input[n], power);
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < inputLen; i += gridDim.x * blockDim.x)
+        output[i] = ::pow(input[i], power);
 }
 
-__global__ void powGrad(int inputLen, const float* __restrict input, float power, const float* __restrict outputGrad, float* __restrict inputGrad, int subLen)
+__global__ void powGrad(int inputLen, const float* __restrict input, float power, const float* __restrict outputGrad, float* __restrict inputGrad)
 {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-
-    int maxN = i * subLen + subLen;
-    if (maxN > inputLen)
-        maxN = inputLen;
     if (power == 2)
     {
-        for (int n = i * subLen; n < maxN; ++n)
-            inputGrad[n] = outputGrad[n] * 2.f * input[n];
+        for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < inputLen; i += gridDim.x * blockDim.x)
+            inputGrad[i] = outputGrad[i] * 2.f * input[i];
     }
     else
     {
-        for (int n = i * subLen; n < maxN; ++n)
-            inputGrad[n] = outputGrad[n] * power * ::pow(input[n], power - 1);
+        for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < inputLen; i += gridDim.x * blockDim.x)
+            inputGrad[i] = outputGrad[i] * power * ::pow(input[i], power - 1);
     }
 }
 
-__global__ void negate(int inputLen, const float* __restrict input, float* __restrict output, int subLen)
+__global__ void abs(int inputLen, const float* __restrict input, float* __restrict output)
 {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-
-    int maxN = i * subLen + subLen;
-    if (maxN > inputLen)
-        maxN = inputLen;
-    for (int n = i * subLen; n < maxN; ++n)
-        output[n] = -input[n];
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < inputLen; i += gridDim.x * blockDim.x)
+        output[i] = ::abs(input[i]);
 }
 
-__global__ void inverse(int inputLen, const float* __restrict input, float alpha, float* __restrict output, int subLen)
+__global__ void absGrad(int inputLen, const float* __restrict input, const float* __restrict outputGrad, float* __restrict inputGrad)
 {
-    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < inputLen; i += gridDim.x * blockDim.x)
+        inputGrad[i] = sign(input[i]) * outputGrad[i];
+}
 
-    int maxIdx = tid * subLen + subLen;
-    if (maxIdx > inputLen)
-        maxIdx = inputLen;
-    for (int idx = tid * subLen; idx < maxIdx; ++idx)
-        output[idx] = __fdividef(alpha, input[idx]);
+__global__ void negate(int inputLen, const float* __restrict input, float* __restrict output)
+{
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < inputLen; i += gridDim.x * blockDim.x)
+        output[i] = -input[i];
+}
+
+__global__ void inverse(int inputLen, const float* __restrict input, float alpha, float* __restrict output)
+{
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < inputLen; i += gridDim.x * blockDim.x)
+        output[i] = __fdividef(alpha, input[i]);
 }
 
 __global__ void add(int inputLen, const float* __restrict input, float v, float* __restrict output, int subLen)
@@ -237,14 +224,6 @@ __global__ void div(int len, float alpha, const float* __restrict t1, float beta
 {
     for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < len; i += gridDim.x * blockDim.x)
         output[i] = __fdividef(alpha * t1[i], beta * t2[i]);
-}
-
-__global__ void div(int len, const float* __restrict t1, const float* __restrict t2, float* __restrict output)
-{
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-
-    if (i < len)
-        output[i] = __fdividef(t1[i], t2[i]);
 }
 
 __global__ void divBroadcast(float alpha, const float* __restrict t1, int t1Width, int t1Height, int t1Depth, int t1Batch, float beta, const float* __restrict t2, int t2Width, int t2Height, int t2Depth, int t2Batch, float* __restrict output, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
@@ -495,11 +474,6 @@ __global__ void map(int inputLen, const float* __restrict input, F f, float* __r
 
 namespace Neuro
 {
-    void CudaKernels::One(const dim3& blocks, const dim3& threads, int inputLen, float* inputDev, int subLen)
-    {
-        setValue<<<blocks, threads>>>(inputLen, inputDev, 1, subLen);
-    }
-
     void CudaKernels::UpSample2D(const dim3& blocks, const dim3& threads, const float* inputDev, int inputWidth, int inputHeight, int inputDepth, int inputBatch, int scale, float* outputDev)
     {
         upSample2D<<<blocks, threads>>>(inputDev, inputWidth, inputHeight, inputDepth, inputBatch, scale, outputDev);
@@ -520,34 +494,39 @@ namespace Neuro
         leakyReluGrad<<<blocks, threads>>>(inputLen, outputDev, outputGradientDev, alpha, inputGradientDev);
     }
 
-    void CudaKernels::Mul(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float v, float* outputDev, int subLen)
-    {
-        mul<<<blocks, threads>>>(inputLen, inputDev, v, outputDev, subLen);
-    }
-
     void CudaKernels::Add(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float v, float* outputDev, int subLen)
     {
         add<<<blocks, threads>>>(inputLen, inputDev, v, outputDev, subLen);
     }
 
-    void CudaKernels::Pow(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float power, float* outputDev, int subLen)
+    void CudaKernels::Pow(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float power, float* outputDev)
     {
-        pow<<<blocks, threads>>>(inputLen, inputDev, power, outputDev, subLen);
+        pow<<<blocks, threads>>>(inputLen, inputDev, power, outputDev);
     }
 
-    void CudaKernels::PowGradient(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float power, const float* outputGradientDev, float* inputGradientDev, int subLen)
+    void CudaKernels::PowGradient(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float power, const float* outputGradientDev, float* inputGradientDev)
     {
-        powGrad<<<blocks, threads>>>(inputLen, inputDev, power, outputGradientDev, inputGradientDev, subLen);
+        powGrad<<<blocks, threads>>>(inputLen, inputDev, power, outputGradientDev, inputGradientDev);
     }
 
-    void CudaKernels::Negate(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float* outputDev, int subLen)
+    void CudaKernels::Abs(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float* outputDev)
     {
-        negate<<<blocks, threads>>>(inputLen, inputDev, outputDev, subLen);
+        abs<<<blocks, threads>>>(inputLen, inputDev, outputDev);
     }
 
-    void CudaKernels::Inverse(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float alpha, float* outputDev, int subLen)
+    void CudaKernels::AbsGradient(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, const float* outputGradientDev, float* inputGradientDev)
     {
-        inverse<<<blocks, threads>>>(inputLen, inputDev, alpha, outputDev, subLen);
+        absGrad<<<blocks, threads>>>(inputLen, inputDev, outputGradientDev, inputGradientDev);
+    }
+
+    void CudaKernels::Negate(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float* outputDev)
+    {
+        negate<<<blocks, threads>>>(inputLen, inputDev, outputDev);
+    }
+
+    void CudaKernels::Inverse(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float alpha, float* outputDev)
+    {
+        inverse<<<blocks, threads>>>(inputLen, inputDev, alpha, outputDev);
     }
 
     void CudaKernels::Sum(const dim3& blocks, const dim3& threads, const float* inputDev, int inputWidth, int inputHeight, int inputDepth, int inputBatch, int axis, float* outputDev)
@@ -590,11 +569,6 @@ namespace Neuro
     void CudaKernels::Div(const dim3& blocks, const dim3& threads, int len, float alpha, const float* t1, float beta, const float* t2, float* outputDev)
     {
         div<<<blocks, threads>>>(len, alpha, t1, beta,t2, outputDev);
-    }
-
-    void CudaKernels::Div(const dim3& blocks, const dim3& threads, int len, const float* t1, const float* t2, float* outputDev)
-    {
-        div<<<blocks, threads>>>(len, t1, t2, outputDev);
     }
 
     void CudaKernels::DivBroadcast(const dim3& blocks, const dim3& threads, float alpha, const float* t1Dev, int t1Width, int t1Height, int t1Depth, int t1Batch, float beta, const float* t2Dev, int t2Width, int t2Height, int t2Depth, int t2Batch, float* outputDev, int outputWidth, int outputHeight, int outputDepth, int outputBatch)

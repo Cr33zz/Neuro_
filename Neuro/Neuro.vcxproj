@@ -180,6 +180,7 @@
     <ClInclude Include="include\ComputationalGraph\Constant.h" />
     <ClInclude Include="include\ComputationalGraph\Graph.h" />
     <ClInclude Include="include\ComputationalGraph\NameScope.h" />
+    <ClInclude Include="include\ComputationalGraph\Operations\AbsOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\AccuracyOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\AssignOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\BatchFlattenOp.h" />
@@ -296,6 +297,7 @@
     <ClCompile Include="src\ComputationalGraph\Constant.cpp" />
     <ClCompile Include="src\ComputationalGraph\Graph.cpp" />
     <ClCompile Include="src\ComputationalGraph\NameScope.cpp" />
+    <ClCompile Include="src\ComputationalGraph\Operations\AbsOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\AccuracyOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\AssignOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\BatchFlattenOp.cpp" />

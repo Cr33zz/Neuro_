@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ComputationalGraph/Operations/AbsOp.h"
 #include "ComputationalGraph/Operations/AddOp.h"
 #include "ComputationalGraph/Operations/AccuracyOp.h"
 #include "ComputationalGraph/Operations/AssignOp.h"

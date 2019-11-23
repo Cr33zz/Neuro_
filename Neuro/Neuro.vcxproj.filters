@@ -408,6 +408,9 @@
     <ClInclude Include="include\ComputationalGraph\Operations\TotalVariationOp.h">
       <Filter>include\ComputationalGraph\Operations</Filter>
     </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\AbsOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -699,6 +702,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\ComputationalGraph\Operations\TotalVariationOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\AbsOp.cpp">
       <Filter>src\ComputationalGraph\Operations</Filter>
     </ClCompile>
   </ItemGroup>

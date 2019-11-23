@@ -249,6 +249,12 @@ namespace NeuroTests
             Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new PowOp(&x, 3.f)).get()));
         }
 
+        TEST_METHOD(Abs)
+        {
+            auto x = Variable(Shape(2, 3, 4, 2));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new AbsOp(&x)).get()));
+        }
+
         TEST_METHOD(Sqr)
         {
             auto x = Variable(Shape(2, 3, 4, 2));

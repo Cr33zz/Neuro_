@@ -77,7 +77,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<TensorLike*> Conv2D::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
     {
-        if (m_UseBias && m_DataFormat == NCHW)
+        if (m_UseBias && m_DataFormat == NCHW && (!m_Activation || m_Activation->Type() == _ReLU))
             return { conv2d_bias_activation(inputs[0], m_Kernels, m_Stride, m_Padding, m_Bias, m_Activation ? m_Activation->Type() : _Identity, m_Activation ? m_Activation->Alpha() : 0) };
         
         TensorLike* output = conv2d(inputs[0], m_Kernels, m_Stride, m_Padding, m_DataFormat);

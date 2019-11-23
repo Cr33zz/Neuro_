@@ -112,6 +112,10 @@ namespace Neuro
         void Pow(float power, Tensor& result) const;
         void PowGradient(const Tensor& input, float power, const Tensor& outputGradient, Tensor& inputGradient) const;
 
+        Tensor Abs() const;
+        void Abs(Tensor& result) const;
+        void AbsGradient(const Tensor& input, const Tensor& outputGradient, Tensor& inputGradient) const;
+
         Tensor Sqrt() const;
         void Sqrt(Tensor& result) const;
 

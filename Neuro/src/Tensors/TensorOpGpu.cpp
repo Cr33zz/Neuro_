@@ -15,8 +15,6 @@ namespace Neuro
     cublasHandle_t TensorOpGpu::s_CublasHandle = nullptr;
     cudnnHandle_t TensorOpGpu::s_CudnnHandle = nullptr;
 
-    static const int INNER_KERNEL_LOOP_LENGTH = 64; // for simple per-element kernels
-
     //////////////////////////////////////////////////////////////////////////
     TensorOpGpu::TensorOpGpu()
     {
@@ -345,11 +343,7 @@ namespace Neuro
 
         if (t1.GetShape() == t2.GetShape())
         {
-            /*const int TMP = 32;
-            GetKernelRunParams((int)ceil(t1.Length() / (float)TMP), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);*/
-            threads.x = 128;
-            //blocks.x = min((t1.Length() + threads.x - 1) / threads.x, s_CudaDevProp.multiProcessorCount);
-            blocks.x = (unsigned int)ceil((float)t1.Length() / threads.x / s_CudaDevProp.multiProcessorCount);
+            GetKernelRunParamsForSequence(t1.Length(), blocks, threads, 128);
             CudaKernels::Div(blocks, threads, t1.Length(), alpha, t1.GetDevicePtr(), beta, t2.GetDevicePtr(), output.GetDevicePtr());
             cudaStreamSynchronize(0);
         }
@@ -430,9 +424,8 @@ namespace Neuro
         }
 
         dim3 blocks, threads;
-        GetKernelRunParams((int)ceil(input.Length() / (float)INNER_KERNEL_LOOP_LENGTH), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);        
-
-        CudaKernels::Pow(blocks, threads, input.Length(), input.GetDevicePtr(), power, output.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);
+        GetKernelRunParamsForSequence(input.Length(), blocks, threads, 128);
+        CudaKernels::Pow(blocks, threads, input.Length(), input.GetDevicePtr(), power, output.GetDevicePtr());
         cudaStreamSynchronize(0);
     }
 
@@ -451,9 +444,35 @@ namespace Neuro
         }
 
         dim3 blocks, threads;
-        GetKernelRunParams((int)ceil(input.Length() / (float)INNER_KERNEL_LOOP_LENGTH), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
+        GetKernelRunParamsForSequence(input.Length(), blocks, threads, 128);
+        CudaKernels::PowGradient(blocks, threads, input.Length(), input.GetDevicePtr(), power, outputGradient.GetDevicePtr(), inputGradient.GetDevicePtr());
+        cudaStreamSynchronize(0);
+    }
 
-        CudaKernels::PowGradient(blocks, threads, input.Length(), input.GetDevicePtr(), power, outputGradient.GetDevicePtr(), inputGradient.GetDevicePtr(), INNER_KERNEL_LOOP_LENGTH);
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::Abs(const Tensor& input, Tensor& output) const
+    {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
+        input.CopyToDevice();
+        output.OverrideDevice();
+
+        dim3 blocks, threads;
+        GetKernelRunParamsForSequence(input.Length(), blocks, threads, 128);
+        CudaKernels::Abs(blocks, threads, input.Length(), input.GetDevicePtr(), output.GetDevicePtr());
+        cudaStreamSynchronize(0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::AbsGradient(const Tensor& input, const Tensor& outputGradient, Tensor& inputGradient) const
+    {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
+        input.CopyToDevice();
+        outputGradient.CopyToDevice();
+        inputGradient.OverrideDevice();
+
+        dim3 blocks, threads;
+        GetKernelRunParamsForSequence(input.Length(), blocks, threads, 128);
+        CudaKernels::AbsGradient(blocks, threads, input.Length(), input.GetDevicePtr(), outputGradient.GetDevicePtr(), inputGradient.GetDevicePtr());
         cudaStreamSynchronize(0);
     }
 
@@ -493,9 +512,8 @@ namespace Neuro
         const int INV_SUB_LOOP_LEN = 32;
 
         dim3 blocks, threads;
-        GetKernelRunParams((int)ceil(input.Length() / (float)INV_SUB_LOOP_LEN), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
-
-        CudaKernels::Inverse(blocks, threads, input.Length(), input.GetDevicePtr(), alpha, output.GetDevicePtr(), INV_SUB_LOOP_LEN);
+        GetKernelRunParamsForSequence(input.Length(), blocks, threads, 128);
+        CudaKernels::Inverse(blocks, threads, input.Length(), input.GetDevicePtr(), alpha, output.GetDevicePtr());
         cudaStreamSynchronize(0);
     }
 
@@ -1634,71 +1652,25 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::GetKernelRunParams(int count, dim3& blocksDim, dim3& threadsDim, int maxThreads)
+    void TensorOpGpu::GetKernelRunParamsForSequence(int count, dim3& blocks, dim3& threads, int maxThreads)
     {
-        int blocks = GetBlocksNum(count, maxThreads);
+        threads.x = maxThreads;
+        blocks.x = (unsigned int)ceil((float)count / threads.x / s_CudaDevProp.multiProcessorCount);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::GetKernelRunParams(int count, dim3& blocks, dim3& threads, int maxThreads)
+    {
+        int blocksNum = (int)ceil(count / (float)maxThreads);
 
         if (count <= maxThreads)
         {
-            blocks = 1;
+            blocksNum = 1;
             maxThreads = count;
         }
 
-        blocksDim = dim3(blocks, 1, 1);
-        threadsDim = dim3(maxThreads, 1, 1);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    unsigned int nextPow2(unsigned int x)
-    {
-        --x;
-        x |= x >> 1;
-        x |= x >> 2;
-        x |= x >> 4;
-        x |= x >> 8;
-        x |= x >> 16;
-        return ++x;
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::GetGlobalSumKernelRunParams(int count, dim3& blocksDim, dim3& threadsDim, int maxThreads)
-    {
-        int whichKernel = 3;
-        int blocks, threads;
-
-        if (whichKernel < 3)
-        {
-            threads = (count < maxThreads) ? nextPow2(count) : maxThreads;
-            blocks = (count + threads - 1) / threads;
-        }
-        else
-        {
-            threads = (count < maxThreads * 2) ? nextPow2((count + 1) / 2) : maxThreads;
-            blocks = (count + (threads * 2 - 1)) / (threads * 2);
-        }
-
-        if ((float)threads*blocks > (float)s_CudaDevProp.maxGridSize[0] * s_CudaDevProp.maxThreadsPerBlock)
-        {
-            printf("n is too large, please choose a smaller number!\n");
-        }
-
-        if (blocks > s_CudaDevProp.maxGridSize[0])
-        {
-            printf("Grid size <%d> exceeds the device capability <%d>, set block size as %d (original %d)\n",
-                blocks, s_CudaDevProp.maxGridSize[0], threads * 2, threads);
-
-            blocks /= 2;
-            threads *= 2;
-        }
-
-        blocksDim = dim3(blocks, 1, 1);
-        threadsDim = dim3(threads, 1, 1);
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    int TensorOpGpu::GetBlocksNum(int count, int threadsPerBlock)
-    {
-        return (int)ceil(count / (float)threadsPerBlock);
+        blocks = dim3(blocksNum, 1, 1);
+        threads = dim3(maxThreads, 1, 1);
     }
 
     //////////////////////////////////////////////////////////////////////////
