@@ -186,7 +186,7 @@ namespace Neuro
     {
         //DeviceMemoryManager::Default().ForceMemoryStreamSync();
 
-        const size_t PREFETCH_STEPS = 6;
+        const size_t PRELOAD_STEPS = 8;
         vector<Variable*> variables;
 
         /// remove all node which don't care about gradient. it has to be done at runtime since variables can be switched between trainable and non-trainable state
@@ -198,7 +198,7 @@ namespace Neuro
         
         for (size_t n = 0; n < newOrder.size(); ++n)
         {
-            for (size_t p = lastPrefetched + 1; p <= n + PREFETCH_STEPS; ++p)
+            for (size_t p = lastPrefetched + 1; p <= n + PRELOAD_STEPS; ++p)
             {
                 if (p >= newOrder.size())
                     break;
@@ -208,7 +208,7 @@ namespace Neuro
                 GRAPH_DEBUG_INFO("##Graph: Preloading '%s'...\n", node->Name().c_str());
                 node->PreloadForGradient();
             }
-            lastPrefetched = n + PREFETCH_STEPS;
+            lastPrefetched = n + PRELOAD_STEPS;
 
             auto node = newOrder[n];
             GRAPH_DEBUG_INFO("##Graph: Computing gradient '%s'... (care about grad: %d)\n", node->Name().c_str(), node->CareAboutGradient() ? 1 : 0);

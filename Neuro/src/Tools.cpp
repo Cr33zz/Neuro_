@@ -14,7 +14,9 @@
 
 namespace fs = std::experimental::filesystem;
 
+#ifndef NDEBUG
 #define CUDA_PROFILING_ENABLED
+#endif
 
 namespace Neuro
 {
