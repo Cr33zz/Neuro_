@@ -46,9 +46,6 @@ namespace NeuroTests
             auto output = input.MatMul(Tensor(Shape(2, 5)).FillWithRand());
             output.Name("output");
 
-            /*Debug::LogAllOutputs(true);
-            Debug::LogAllGrads(true);*/
-
             float lastLoss = 0.f;
             for (int step = 0; step < 5; ++step)
                 lastLoss = (*Session::Default()->Run({ fetches }, { {x, &input}, {y, &output} })[0])(0);
@@ -60,22 +57,19 @@ namespace NeuroTests
         {
             Tensor::SetForcedOpMode(GPU);
             float loss = TrainIrisNetwork("iris_gpu");
-            Assert::AreEqual(0.4183, (double)loss, 0.0001);
+            Assert::AreEqual(0.41869, (double)loss, 0.00001);
         }
 
         TEST_METHOD(Iris_Network_CPU)
         {
             Tensor::SetForcedOpMode(MultiCPU);
             float loss = TrainIrisNetwork("iris_cpu");
-            Assert::AreEqual(0.4183, (double)loss, 0.0001);
+            Assert::AreEqual(0.41869, (double)loss, 0.00001);
         }
 
         float TrainIrisNetwork(const string& name)
         {
             GlobalRngSeed(1337);
-
-            /*Debug::LogAllOutputs(true);
-            Debug::LogAllGrads(true);*/
 
             auto model = Sequential(name);
             model.AddLayer(new Dense(4, 300, new ReLU()));
@@ -112,6 +106,9 @@ namespace NeuroTests
         float TrainConvNetwork()
         {
             GlobalRngSeed(1337);
+
+            //Debug::LogAllOutputs(true);
+            //Debug::LogAllGrads(true);
 
             Shape inputShape(64, 64, 4);
             auto model = Sequential("conv");
