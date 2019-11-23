@@ -8,6 +8,7 @@
 #include "Stopwatch.h"
 
 //#define ENABLE_STORAGE_LOGS
+//#define DISABLE_OFFLOADABLE_SUPPORT
 
 #ifdef ENABLE_STORAGE_LOGS
 #include <windows.h>
@@ -427,6 +428,12 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Storage::Offload(bool force) const
     {
+#ifdef DISABLE_OFFLOADABLE_SUPPORT
+        STORAGE_DEBUG_INFO_NO_TS("<<< disabled.\n");
+        IncDeviceRef(1); // artificially increase device ref count so we do not deallocate device memory where only valid copy of data is located
+        return;
+#endif
+
         if (!m_AllocSize)
             return;
 
@@ -469,6 +476,11 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Storage::Preload() const
     {
+#ifdef DISABLE_OFFLOADABLE_SUPPORT
+        STORAGE_DEBUG_INFO_NO_TS("<<< disabled.\n");
+        return;
+#endif
+
         if (!m_AllocSize)
             return;
 
