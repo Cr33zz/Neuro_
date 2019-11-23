@@ -465,13 +465,15 @@ namespace Neuro
 
         if (m_Type & ST_Offloadable)
         {
-            // Disable free memory on offload
+            // If we didn't finish offloading yet, cancel device memory deallocation on offload to avoid preload
+            if (m_OffloadRequested)
             {
                 unique_lock<mutex> mtx(m_OffloadDoneCallbackMtx);
-                if (m_FreeDeviceMemOnOffloadDone)
+                if (!m_OffloadDone)
                 {
                     STORAGE_DEBUG_INFO("Cancelling free device memory on offload done '%s'\n", m_Name.c_str());
                     m_FreeDeviceMemOnOffloadDone = false;
+                    NEURO_ASSERT(!m_FreePinnedMemOnOffloadDone, "Wtf.");
                 }
             }
 
