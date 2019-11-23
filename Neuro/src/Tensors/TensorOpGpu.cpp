@@ -176,6 +176,16 @@ namespace Neuro
 
         if (t2.Batch() == t1.Batch())
         {
+            if (output.GetDevicePtr() == t1.GetDevicePtr())
+            {
+                cudnnTensorDescriptor_t outputDesc; cudnnCreateTensorDescriptor(&outputDesc);
+                cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, output.GetShape().Dimensions[3], output.GetShape().Dimensions[2], output.GetShape().Dimensions[1], output.GetShape().Dimensions[0]);
+
+                CUDA_CHECK(cudnnAddTensor(s_CudnnHandle, &beta, outputDesc, t2.GetDevicePtr(), &alpha, outputDesc, output.GetDevicePtr()));
+                cudaStreamSynchronize(0);
+                return;
+            }
+
             CUDA_CHECK(cublasSgeam(
                 s_CublasHandle,
                 CUBLAS_OP_N,
