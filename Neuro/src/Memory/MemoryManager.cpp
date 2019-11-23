@@ -440,7 +440,8 @@ namespace Neuro
     DeviceMemoryManager::DeviceMemoryManager()
         : MemoryManagerBase(DEVICE_ALLOC_GRANULARITY, DEVICE_NATIVE_GRANULARITY)
     {
-        CUDA_CHECK(cudaStreamCreateWithFlags(&m_MemoryStream, cudaStreamNonBlocking));
+        CUDA_CHECK(cudaStreamCreateWithFlags(&m_OffloadStream, cudaStreamNonBlocking));
+        CUDA_CHECK(cudaStreamCreateWithFlags(&m_PreloadStream, cudaStreamNonBlocking));
         //CUDA_CHECK(cudaStreamCreate(&m_MemoryStream));
     }
 
@@ -489,10 +490,10 @@ namespace Neuro
     {
         NEURO_ASSERT(dst, "Host pinned memory is not allocated.");
         NEURO_ASSERT(cudaEventQuery(memEvent) == cudaSuccess, "Memory sync event is not ready.");
-        CUDA_CHECK(cudaMemcpyAsync(dst, src, size, cudaMemcpyDeviceToHost, m_MemoryStream));
-        CUDA_CHECK(cudaEventRecord(memEvent, m_MemoryStream));
+        CUDA_CHECK(cudaMemcpyAsync(dst, src, size, cudaMemcpyDeviceToHost, m_OffloadStream));
+        CUDA_CHECK(cudaEventRecord(memEvent, m_OffloadStream));
         if (callback)
-            CUDA_CHECK(cudaLaunchHostFunc(m_MemoryStream, callback, userData));
+            CUDA_CHECK(cudaLaunchHostFunc(m_OffloadStream, callback, userData));
         return MEM_STATUS_SUCCESS;
     }
 
@@ -501,10 +502,10 @@ namespace Neuro
     {
         NEURO_ASSERT(src, "Host pinned memory is not allocated.");
         NEURO_ASSERT(cudaEventQuery(memEvent) == cudaSuccess, "Memory sync event is not ready.");
-        CUDA_CHECK(cudaMemcpyAsync(dst, src, size, cudaMemcpyHostToDevice, m_MemoryStream));
-        CUDA_CHECK(cudaEventRecord(memEvent, m_MemoryStream));
+        CUDA_CHECK(cudaMemcpyAsync(dst, src, size, cudaMemcpyHostToDevice, m_PreloadStream));
+        CUDA_CHECK(cudaEventRecord(memEvent, m_PreloadStream));
         if (callback)
-            CUDA_CHECK(cudaLaunchHostFunc(m_MemoryStream, callback, userData));
+            CUDA_CHECK(cudaLaunchHostFunc(m_PreloadStream, callback, userData));
         return MEM_STATUS_SUCCESS;
     }
 
@@ -520,10 +521,18 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Neuro::EMemStatus DeviceMemoryManager::ForceMemoryStreamSync()
+    Neuro::EMemStatus DeviceMemoryManager::ForceOffloadStreamSync()
     {
         NVTXProfile p(__FUNCTION__, 0xFFFF0000);
-        CUDA_CHECK(cudaStreamSynchronize(m_MemoryStream));
+        CUDA_CHECK(cudaStreamSynchronize(m_OffloadStream));
+        return MEM_STATUS_SUCCESS;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Neuro::EMemStatus DeviceMemoryManager::ForcePreloadStreamSync()
+    {
+        NVTXProfile p(__FUNCTION__, 0xFFFF0000);
+        CUDA_CHECK(cudaStreamSynchronize(m_PreloadStream));
         return MEM_STATUS_SUCCESS;
     }
 

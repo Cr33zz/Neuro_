@@ -126,7 +126,8 @@ namespace Neuro
         EMemStatus Offload(void* dst, void* src, size_t size, cudaEvent_t memEvent, cudaHostFn_t callback = nullptr, void* userData = nullptr);
         EMemStatus Preload(void* dst, void* src, size_t size, cudaEvent_t memEvent, cudaHostFn_t callback = nullptr, void* userData = nullptr);
         EMemStatus WaitForMemEvent(cudaEvent_t memEvent);
-        EMemStatus ForceMemoryStreamSync();
+        EMemStatus ForceOffloadStreamSync();
+        EMemStatus ForcePreloadStreamSync();
 
     protected:
         virtual void InternalAllocate(void** ptr, size_t size, const string& annotation = "") override;
@@ -135,7 +136,8 @@ namespace Neuro
         virtual const char* InternalName() const override { return "Device"; }
 
     private:
-        cudaStream_t m_MemoryStream = nullptr;
+        cudaStream_t m_OffloadStream = nullptr;
+        cudaStream_t m_PreloadStream = nullptr;
         bool m_IsStreamBlocking = false;
     };
 
