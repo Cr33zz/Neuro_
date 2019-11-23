@@ -184,8 +184,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<Variable*> Graph::ComputeGradientsInOrder(const vector<TensorLike*>& order, const vector<TensorLike*>& losses, const unordered_set<TensorLike*> nodesAffectingLosses, const vector<Variable*>& params)
     {
-
-        DeviceMemoryManager::Default().ForceMemoryStreamSync();
+        //DeviceMemoryManager::Default().ForceMemoryStreamSync();
 
         const size_t PREFETCH_STEPS = 6;
         vector<Variable*> variables;
