@@ -21,7 +21,7 @@
 
 namespace Neuro
 {
-    static const uint32_t MIN_SIZE_TO_OFFLOAD = 1024 * 1024; // 1MB
+    static const uint32_t MIN_SIZE_TO_OFFLOAD = 4*1024*1024; // 4MB
 
     //////////////////////////////////////////////////////////////////////////
     Storage::Storage(int type, size_t size, const string& name)
