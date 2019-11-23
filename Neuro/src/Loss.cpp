@@ -28,7 +28,7 @@ namespace Neuro
         auto clippedOutput = clip(output, _EPSILON, 1 - _EPSILON);
         return negative(add(multiply(targetOutput, log(clippedOutput, "log(y)"), "yTrue×log(y)"),
                             multiply(subtract(new Constant(1), targetOutput, "1-yTrue"), 
-                                     log(subtract(new Constant(1), clippedOutput, "1-y"), "log(1-y)"), "(1-y)×log(1-y)"), "yTrue×log(y)+(1-y)×log(1-y)"));
+                                     log(subtract(new Constant(1), clippedOutput, "1-y"), "log(1-y)"), "(1-yTrue)×log(1-y)"), "yTrue×log(y)+(1-yTrue)×log(1-y)"));
     }
 
     //////////////////////////////////////////////////////////////////////////

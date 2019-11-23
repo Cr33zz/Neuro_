@@ -3,7 +3,7 @@
 #include "Debug.h"
 
 #ifndef NDEBUG
-//#define DEBUG_LOG_ENABLED
+#define DEBUG_LOG_ENABLED
 #endif
 
 namespace Neuro
