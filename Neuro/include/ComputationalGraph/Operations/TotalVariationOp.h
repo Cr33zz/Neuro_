@@ -2,6 +2,9 @@
 
 #include "ComputationalGraph/Constant.h"
 #include "ComputationalGraph/Operations/Conv2DOp.h"
+#include "ComputationalGraph/Operations/AbsOp.h"
+#include "ComputationalGraph/Operations/SumOp.h"
+#include "ComputationalGraph/Operations/AddOp.h"
 
 namespace Neuro
 {
@@ -17,7 +20,6 @@ namespace Neuro
         auto horizDiff = conv2d(x, new Constant(horizKernel), 1, 0, NCHW, "horiz_diff");
         auto vertDiff = conv2d(x, new Constant(vertKernel), 1, 0, NCHW, "vert_diff");
 
-        //return add(sum(abs(horizDiff), _012Axes), sum(abs(vertDiff), _012Axes));
-        return nullptr;
+        return add(sum(abs(horizDiff), _012Axes), sum(abs(vertDiff), _012Axes));
     }
 }
