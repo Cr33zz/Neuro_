@@ -25,8 +25,8 @@ public:
     {
         const uint32_t IMAGE_WIDTH = 256;
         const uint32_t IMAGE_HEIGHT = 256;
-        const size_t STEPS = 160000;
-        //const size_t STEPS = 2;//160000;
+        //const size_t STEPS = 160000;
+        const size_t STEPS = 4;
         const int UP_SCALE_FACTOR = 2;
         const float CONTENT_WEIGHT = 1.f;
 #ifdef USE_GRAMS
@@ -49,19 +49,19 @@ public:
         const uint32_t BATCH_SIZE = 4;*/
         //const string CONTENT_FILES_DIR = "e:/Downloads/test_content";
         //const string STYLE_FILES_DIR = "e:/Downloads/test_style";
-        const string CONTENT_FILES_DIR = "e:/Downloads/coco14";
-        //const string STYLE_FILES_DIR = "e:/Downloads/wikiart";
-        const string STYLE_FILES_DIR = "e:/Downloads/deviantart";
+        const string CONTENT_FILES_DIR = "f:/!TrainingData/coco14";
+        //const string STYLE_FILES_DIR = "f:/!TrainingData/wikiart";
+        const string STYLE_FILES_DIR = "f:/!TrainingData/deviantart";
         const uint32_t BATCH_SIZE = 4;
 #else
-        const string CONTENT_FILES_DIR = "e:/Downloads/coco14";
-        //const string STYLE_FILES_DIR = "e:/Downloads/deviantart";
-        const string STYLE_FILES_DIR = "e:/Downloads/wikiart";
+        const string CONTENT_FILES_DIR = "f:/!TrainingData/coco14";
+        //const string STYLE_FILES_DIR = "f:/!TrainingData/deviantart";
+        const string STYLE_FILES_DIR = "f:/!TrainingData/wikiart";
         const uint32_t BATCH_SIZE = 6;
 #endif
 
         Tensor::SetDefaultOpMode(GPU);
-        //GlobalRngSeed(1337);
+        GlobalRngSeed(1337);
 
         auto trainAlpha = Tensor({ ALPHA }, Shape(1), "training_alpha");
         auto testAlpha = Tensor({ TEST_ALPHA }, Shape(1), "testing_alpha");
@@ -204,24 +204,8 @@ public:
         float minLoss = 0;
         float lastLoss = 0;
 
-        struct ImageLoader : public ILoader
-        {
-            ImageLoader(const vector<string>& files) : m_Files(files) {}
-
-            void operator()(Tensor& dest)
-            {
-                dest.ResizeBatch(BATCH_SIZE);
-                dest.OverrideHost();
-                for (uint32_t j = 0; j < dest.Batch(); ++j)
-                    LoadImage(m_Files[GlobalRng().Next((int)m_Files.size())], dest.Values() + j * dest.BatchLength(), IMAGE_WIDTH * UP_SCALE_FACTOR, IMAGE_HEIGHT * UP_SCALE_FACTOR, IMAGE_WIDTH, IMAGE_HEIGHT);
-                dest.CopyToDevice();
-            }
-
-            vector<string> m_Files;
-        };
-
-        ImageLoader contentLoader(contentFiles);
-        ImageLoader styleLoader(styleFiles);
+        ImageLoader contentLoader(contentFiles, BATCH_SIZE, UP_SCALE_FACTOR);
+        ImageLoader styleLoader(styleFiles, BATCH_SIZE, UP_SCALE_FACTOR);
 
         DataPreloader preloader({ content, style }, { &contentLoader, &styleLoader}, 4);
 
@@ -229,6 +213,7 @@ public:
         //progress.ShowStep(true).ShowPercent(false).ShowElapsed(false).ShowEta(false).ShowIterTime(true);//.EnableSeparateLines(true);
         for (int i = 0; i < STEPS; ++i/*, progress.NextStep()*/)
         {
+            AutoStopwatch p;
             if (i % DETAILS_ITER == 0)
             {
                 /*contentBatch.SaveAsImage("_c_batch_" + to_string(i) + ".jpg", false);
@@ -261,23 +246,24 @@ public:
             auto results = Session::Default()->Run({ weightedContentLoss, weightedStyleLoss, minimize },
                 { /*{ content, &contentBatch }, { style, &styleBatch },*/ { alpha, &trainAlpha }, { training, &trainingOn } });
 
-            cout << fixed << setprecision(4) << "Step: " << i << " Content: " << (*results[0])(0) << " Style: " << (*results[1])(0) << endl;
+            cout << fixed << setprecision(4) << "Step: " << i << " Content: " << (*results[0])(0) << " Style: " << (*results[1])(0) << " Step: " << p.ToString() << endl;
         }
     }
 
     void Test()
     {
         Tensor::SetForcedOpMode(GPU);
+
         const string TEST_CONTENT_FILE = "data/contents/chicago.jpg";
-        const string TEST_STYLE_FILE = "data/styles/asheville.jpg";
+        const string TEST_STYLE_FILE = "data/styles/mosaic.jpg";
 
         const uint32_t TEST_WIDTH = 512;
         const uint32_t TEST_HEIGHT = 512;
 
-        Tensor testImage = LoadImage(TEST_CONTENT_FILE, TEST_WIDTH, TEST_HEIGHT);
+        Tensor testImage = LoadImage(TEST_CONTENT_FILE);
         Tensor styleImage = LoadImage(TEST_STYLE_FILE, TEST_WIDTH, TEST_HEIGHT);
 
-        auto vggModel = VGG19::CreateModel(NCHW, Shape(TEST_WIDTH, TEST_HEIGHT, 3), false, MaxPool, "data/");
+        auto vggModel = VGG19::CreateModel(NCHW, testImage.GetShape(), false, MaxPool, "data/");
         vggModel->SetTrainable(false);
 
         vector<TensorLike*> styleOutputs = { 
@@ -288,8 +274,8 @@ public:
 
         auto vggEncoder = Flow(vggModel->InputsAt(-1), styleOutputs, "vgg_features");
 
-        auto content = new Placeholder(Shape(TEST_WIDTH, TEST_HEIGHT, 3), "input_content");
-        auto style = new Placeholder(Shape(TEST_WIDTH, TEST_HEIGHT, 3), "input_style");
+        auto content = new Placeholder(testImage.GetShape(), "input_content");
+        auto style = new Placeholder(styleImage.GetShape(), "input_style");
         auto alpha = new Constant(1.f, "alpha");
 
         auto contentPre = VGG16::Preprocess(content, NCHW);
@@ -302,21 +288,20 @@ public:
         auto styleData = *(results[0]);
 
         // build the actual generator
-        auto styleContentFeatures = new Placeholder(styleData.GetShape());
+        auto styleContentFeatures = new Placeholder(styleData);
 
         auto generator = CreateGeneratorModel(contentPre, styleContentFeatures, alpha, vggEncoder, new Constant(0));
         generator->LoadWeights("data/adaptive_weights.h5", false, true);
 
         auto stylized = clip(swap_red_blue_channels(generator->Outputs()[0]), 0, 255);
 
-        for (int i = 0; i < 20; ++i)
+        for (int i = 0; i < 10; ++i)
         {
             AutoStopwatch prof(Milliseconds);
             results = Session::Default()->Run({ stylized }, { { content, &testImage }, { styleContentFeatures, &styleData } });
             cout << prof.ToString() << endl;
             auto genImage = *results[0];
             genImage.SaveAsImage("_test_output.png", false);
-            //DumpMemoryManagers("mem.log");
         }
     }
 

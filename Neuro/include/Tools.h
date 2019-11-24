@@ -7,6 +7,7 @@
 #include "Types.h"
 #include "Random.h"
 #include "Stopwatch.h"
+#include "DataPreloader.h"
 #include "Tensors/Shape.h"
 
 #define NEURO_CONCATENATE_DETAIL(x, y) x##y
@@ -85,6 +86,17 @@ namespace Neuro
     public:
         NVTXProfile(const char* message, uint32_t color);
         ~NVTXProfile();
+    };
+
+    struct ImageLoader : public ILoader
+    {
+        ImageLoader(const vector<string>& files, uint32_t batch_size, uint32_t upScaleFactor = 1) : m_Files(files), m_BatchSize(batch_size), m_UpScaleFactor(upScaleFactor) {}
+
+        void operator()(Tensor& dest);
+
+        vector<string> m_Files;
+        uint32_t m_BatchSize;
+        uint32_t m_UpScaleFactor;
     };
 
     class Tqdm

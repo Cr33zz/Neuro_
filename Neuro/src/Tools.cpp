@@ -868,4 +868,13 @@ namespace Neuro
 #endif
     }
 
+    //////////////////////////////////////////////////////////////////////////
+    void ImageLoader::operator()(Tensor& dest)
+    {
+        dest.ResizeBatch(m_BatchSize);
+        dest.OverrideHost();
+        for (uint32_t j = 0; j < dest.Batch(); ++j)
+            LoadImage(m_Files[GlobalRng().Next((int)m_Files.size())], dest.Values() + j * dest.BatchLength(), dest.Width() * m_UpScaleFactor, dest.Height() * m_UpScaleFactor, dest.Width(), dest.Height());
+        dest.CopyToDevice();
+    }
 }

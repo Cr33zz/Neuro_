@@ -14,7 +14,7 @@
 #include "Memory/MemoryManager.h"
 #include "Neuro.h"
 
-#define STYLE "weeping_woman"
+#define STYLE "woman_with_hat_matisse"
 
 //#define SLOW
 //#define FAST_SINGLE_CONTENT
@@ -43,8 +43,8 @@ public:
 #else
         const uint32_t IMAGE_WIDTH = 256;
         const uint32_t IMAGE_HEIGHT = 256;
-        const float CONTENT_WEIGHT = 1000.f;
-        const float STYLE_WEIGHT = 0.1f;
+        const float CONTENT_WEIGHT = 1e3f;
+        const float STYLE_WEIGHT = 1e-2f;
         const float LEARNING_RATE = 0.001f;
 
 #       ifdef FAST_SINGLE_CONTENT
@@ -53,7 +53,7 @@ public:
         const uint32_t BATCH_SIZE = 4;
 #       endif
 
-        const string TEST_FILE = "data/contents/content.jpg";
+        const string TEST_FILE = "data/contents/chicago.jpg";
 #endif
 
         const string STYLE_FILE = string("data/styles/") + STYLE + ".jpg";
@@ -61,7 +61,7 @@ public:
 #ifdef FAST_SINGLE_CONTENT
         const string CONTENT_FILES_DIR = "e:/Downloads/fake_coco";
 #else
-        const string CONTENT_FILES_DIR = "e:/Downloads/coco14";
+        const string CONTENT_FILES_DIR = "f:/!TrainingData/coco14";
 #endif
 
         Tensor::SetForcedOpMode(GPU);
@@ -101,17 +101,11 @@ public:
 
         cout << "Creating VGG model...\n";
         
-        auto vggModel = VGG16::CreateModel(NCHW, Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), false, AvgPool, "data/");
+        auto vggModel = VGG16::CreateModel(NCHW, Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), false, MaxPool, "data/");
         vggModel->SetTrainable(false);
 
         cout << "Pre-computing style features and grams...\n";
 
-        //vector<TensorLike*> contentOutputs = { vggModel->Layer("block2_conv2")->Outputs()[0] };
-        /*vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv2")->Outputs()[0],
-                                             vggModel->Layer("block2_conv2")->Outputs()[0],
-                                             vggModel->Layer("block3_conv3")->Outputs()[0],
-                                             vggModel->Layer("block4_conv3")->Outputs()[0],
-                                            };*/
         vector<TensorLike*> contentOutputs = { vggModel->Layer("block4_conv2")->Outputs()[0] };
         vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv1")->Outputs()[0],
                                              vggModel->Layer("block2_conv1")->Outputs()[0],
@@ -188,10 +182,7 @@ public:
             styleLosses.push_back(multiply(StyleLoss(targetStyleGrams[i], stylizedFeatures[i], (int)i), styleOutputsWeights[i]));
         auto weightedStyleLoss = multiply(merge_sum(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "style_loss");
 
-        ///auto totalLoss = weightedContentLoss;
-        ///auto totalLoss = weightedStyleLoss;
         auto totalLoss = div(add(weightedContentLoss, weightedStyleLoss), (float)BATCH_SIZE, "total_loss");
-        ///auto totalLoss = mean(square(sub(stylizedContentPre, contentPre)), GlobalAxis, "total");
 
         auto optimizer = Adam(LEARNING_RATE);
         auto minimize = optimizer.Minimize({ totalLoss });
@@ -205,18 +196,11 @@ public:
         size_t steps = samples / BATCH_SIZE;
 #endif
 
-        ///Debug::LogAllOutputs(true);
-        ///Debug::LogAllGrads(true);
-        ///Debug::LogOutput("generator_model/output", true);
-        ///Debug::LogOutput("vgg_preprocess", true);
-        ///Debug::LogOutput("output_image", true);
-        ///Debug::LogGrad("vgg_preprocess", true);
-        ///Debug::LogGrad("output_image", true);
-
         float minLoss = 0;
         float lastLoss = 0;
 
-        //DumpMemoryManagers("mem.log");
+        ImageLoader contentLoader(contentFiles, BATCH_SIZE, 2);
+        DataPreloader preloader({ input }, { &contentLoader }, 4);
 
         for (int e = 0; e < NUM_EPOCHS; ++e)
         {
@@ -230,7 +214,7 @@ public:
 #if defined(SLOW) || defined(FAST_SINGLE_CONTENT)
                 testImage.CopyTo(contentBatch);
 #else
-                for (int j = 0; j < BATCH_SIZE; ++j)
+                /*for (int j = 0; j < BATCH_SIZE; ++j)
                 {
                     LoadImage(contentFiles[(i * BATCH_SIZE + j) % contentFiles.size()],
                         contentBatch.Values() + j * contentBatch.BatchLength(),
@@ -238,11 +222,13 @@ public:
                         IMAGE_HEIGHT * 2,
                         IMAGE_WIDTH,
                         IMAGE_HEIGHT);
-                }
+                }*/
+                preloader.Load();
+
 #endif
                 
                 auto results = Session::Default()->Run(MergeVectors({ vector<TensorLike*>{ stylizedContentPre, totalLoss, weightedContentLoss, weightedStyleLoss, minimize }, styleLosses }),
-                                                       { { input, &contentBatch }, { training, &trainingOn } });
+                                                       { /*{ input, &contentBatch },*/ { training, &trainingOn } });
 
                 if (i % DETAILS_ITER == 0)
                 {
@@ -281,33 +267,6 @@ public:
 #endif
                     cout << "----------------------------------------------------" << endl;
                 }
-
-                //auto results = Session::Default()->Run({ stylizedContentPre, totalLoss, minimize }, { { input, &testImage }, { training, &trainingOn } });
-                //if (i % detailsIter == 0)
-                //{
-                //    auto genImage = *results[0];
-                //    VGG16::UnprocessImage(genImage, NCHW);
-                //    genImage./*NormalizedMinMax(GlobalAxis, 0, 255).*/SaveAsImage("fnst_" + to_string(e) + "_" + to_string(i) + "_output.png", false);
-                //}
-
-                /*auto results = Session::Default()->Run({ stylizedContentPre, contentLoss, styleLosses[0], styleLosses[1], styleLosses[2], styleLosses[3], totalLoss, minimize }, 
-                                                       { { input, &contentBatch }, { training, &trainingOn } });
-                
-                stringstream extString;
-                extString << setprecision(4) << " - cL: " << cLoss << " - s1L: " << sLoss1 << " - s2L: " << sLoss2 <<
-                    " - s3L: " << sLoss3 << " - s4L: " << sLoss4 << " - tL: " << (cLoss + sLoss1 + sLoss2 + sLoss3 + sLoss4);
-                progress.SetExtraString(extString.str());*/
-
-                /*auto results = Session::Default()->Run({ stylizedContent, totalLoss, minimize },
-                                                       { { input, &contentBatch },{ training, &trainingOn } });
-
-                stringstream extString;
-                extString << setprecision(4) << " - total_l: " << (*results[1])(0);
-                progress.SetExtraString(extString.str());*/
-
-                /*stringstream extString;
-                extString << setprecision(4) << " - cL: " << (*results[0])(0) << " - sL: " << (*results[1])(0) << " - tL: " << (*results[2])(0);
-                progress.SetExtraString(extString.str());*/
             }
         }
     }
