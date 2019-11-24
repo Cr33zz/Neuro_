@@ -20,15 +20,16 @@ TensorLike* ContentLoss(TensorLike* contentFeatures, TensorLike* stylizedFeature
 class NeuralStyleTransfer
 {
 public:
-    const uint32_t IMAGE_WIDTH = 512;
-    const uint32_t IMAGE_HEIGHT = 384;
+    const uint32_t IMAGE_WIDTH = 400;
+    const uint32_t IMAGE_HEIGHT = 300;
 
     const float CONTENT_WEIGHT = 5e0f;
     const float STYLE_WEIGHT = 1e4f;
+    const float TV_WEIGHT = 1e-3f;
     const float STYLE_LAYER_WEIGHT = 0.2f;
 
-    const string CONTENT_FILE = "tubingen.jpg";
-    const string STYLE_FILE = "starry_night.jpg";
+    const string CONTENT_FILE = "content.jpg";
+    const string STYLE_FILE = "great_wave.jpg";
 
     void Run()
     {
@@ -95,20 +96,22 @@ public:
             styleLosses.push_back(multiply(StyleLoss(styleGrams[i], outputs[i], (int)i), styleLayersWeights[i]));
         auto styleLoss = multiply(merge_avg(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "style_loss");
 
-        auto totalLoss = add(contentLoss, styleLoss, "total_loss");
+        auto tvLoss = multiply(total_variation(outputImg), TV_WEIGHT, "tv_loss");
+
+        auto totalLoss = merge_sum({ contentLoss, styleLoss, tvLoss }, "total_loss");
 
         auto optimizer = Adam(1.f);
         auto minimize = optimizer.Minimize({ totalLoss }, { outputImg });
 
         const int EPOCHS = 1000;
         Tqdm progress(EPOCHS, 10);
-        progress.ShowStep(true).ShowElapsed(false).EnableSeparateLines(true);
+        progress.ShowStep(false).ShowElapsed(false).EnableSeparateLines(false);
         for (int e = 0; e < EPOCHS; ++e, progress.NextStep())
         {
-            auto results = Session::Default()->Run({ outputImg, contentLoss, styleLoss, totalLoss, minimize }, {});
+            auto results = Session::Default()->Run({ outputImg, contentLoss, styleLoss, tvLoss, totalLoss, minimize }, {});
 
             stringstream extString;
-            extString << setprecision(4) << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - total_l: " << (*results[3])(0);
+            extString << setprecision(4) << " - content_l: " << (*results[1])(0) << " - style_l: " << (*results[2])(0) << " - tv_l: " << (*results[3])(0) << " - total_l: " << (*results[4])(0);
             progress.SetExtraString(extString.str());
 
             if (e % 20 == 0)
