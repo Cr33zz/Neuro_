@@ -1653,16 +1653,16 @@ namespace Neuro
         assert(stride > 0);
         if (dataFormat == NCHW)
         {
-            NEURO_ASSERT((inputShape.Width() + 2 * paddingX - kernelWidth) > 0, "");
-            NEURO_ASSERT((inputShape.Height() + 2 * paddingY - kernelHeight) > 0, "");
+            NEURO_ASSERT((inputShape.Width() + 2 * paddingX - kernelWidth) >= 0, "");
+            NEURO_ASSERT((inputShape.Height() + 2 * paddingY - kernelHeight) >= 0, "");
             return Shape((int)floor((inputShape.Width() + 2 * paddingX - kernelWidth) / (float)stride) + 1, 
                          (int)floor((inputShape.Height() + 2 * paddingY - kernelHeight) / (float)stride) + 1,
                          inputShape.Depth(),
                          inputShape.Batch());
         }
 
-        NEURO_ASSERT((inputShape.Len(1) + 2 * paddingX - kernelWidth) > 0, "");
-        NEURO_ASSERT((inputShape.Len(2) + 2 * paddingY - kernelHeight) > 0, "");
+        NEURO_ASSERT((inputShape.Len(1) + 2 * paddingX - kernelWidth) >= 0, "");
+        NEURO_ASSERT((inputShape.Len(2) + 2 * paddingY - kernelHeight) >= 0, "");
         return Shape(inputShape.Len(0), 
                      (int)floor((inputShape.Len(1) + 2 * paddingX - kernelWidth) / (float)stride) + 1,
                      (int)floor((inputShape.Len(2) + 2 * paddingY - kernelHeight) / (float)stride) + 1,
@@ -1675,16 +1675,16 @@ namespace Neuro
         assert(stride > 0);
         if (dataFormat == NCHW)
         {
-            NEURO_ASSERT((inputShape.Width() + 2 * paddingX - kernelWidth) > 0, "");
-            NEURO_ASSERT((inputShape.Height() + 2 * paddingY - kernelHeight) > 0, "");
+            NEURO_ASSERT((inputShape.Width() + 2 * paddingX - kernelWidth) >= 0, "");
+            NEURO_ASSERT((inputShape.Height() + 2 * paddingY - kernelHeight) >= 0, "");
             return Shape((int)floor((inputShape.Width() + 2 * paddingX - kernelWidth) / (float)stride) + 1, 
                          (int)floor((inputShape.Height() + 2 * paddingY - kernelHeight) / (float)stride) + 1,
                          kernelsNum,
                          inputShape.Batch());
         }
 
-        NEURO_ASSERT((inputShape.Len(1) + 2 * paddingX - kernelWidth) > 0, "");
-        NEURO_ASSERT((inputShape.Len(2) + 2 * paddingY - kernelHeight) > 0, "");
+        NEURO_ASSERT((inputShape.Len(1) + 2 * paddingX - kernelWidth) >= 0, "");
+        NEURO_ASSERT((inputShape.Len(2) + 2 * paddingY - kernelHeight) >= 0, "");
         return Shape(kernelsNum, 
                      (int)floor((inputShape.Len(1) + 2 * paddingX - kernelWidth) / (float)stride) + 1,
                      (int)floor((inputShape.Len(2) + 2 * paddingY - kernelHeight) / (float)stride) + 1,

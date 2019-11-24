@@ -1387,7 +1387,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::AdamStep(Tensor& parameter, const Tensor& gradient, Tensor& mGrad, Tensor& vGrad, /*float batchSize, */float lr, float beta1, float beta2, float epsilon) const
+    void TensorOpGpu::AdamStep(Tensor& parameter, const Tensor& gradient, Tensor& mGrad, Tensor& vGrad, float lr, float beta1, float beta2, float epsilon) const
     {
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         parameter.CopyToDevice();
@@ -1408,15 +1408,10 @@ namespace Neuro
         Div(1.f, mGrad, 1.f, tmp, tmp);
         Scale(tmp, lr);
         Sub(parameter, tmp, parameter);
-        
-        //dim3 blocks, threads;
-        //GetKernelRunParams(parameter.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
-        //
-        //CudaKernels::AdamStep(blocks, threads, parameter.Length(), parameter.GetDevicePtr(), gradient.GetDevicePtr(), mGrad.GetDevicePtr(), vGrad.GetDevicePtr(), /*batchSize, */lr, beta1, beta2, epsilon);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::SgdStep(Tensor& parameter, const Tensor& gradient, /*float batchSize, */float lr) const
+    void TensorOpGpu::SgdStep(Tensor& parameter, const Tensor& gradient, float lr) const
     {
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         parameter.CopyToDevice();
@@ -1425,7 +1420,7 @@ namespace Neuro
         dim3 blocks, threads;
         GetKernelRunParams(parameter.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
 
-        CudaKernels::SgdStep(blocks, threads, parameter.Length(), parameter.GetDevicePtr(), gradient.GetDevicePtr(), /*batchSize, */lr);
+        CudaKernels::SgdStep(blocks, threads, parameter.Length(), parameter.GetDevicePtr(), gradient.GetDevicePtr(), lr);
         cudaStreamSynchronize(0);
     }
 

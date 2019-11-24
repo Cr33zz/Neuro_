@@ -63,8 +63,8 @@ namespace Neuro
         virtual void Softmax(const Tensor& input, Tensor& output) const override;
         virtual void SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const override;
 
-        virtual void AdamStep(Tensor& parameter, const Tensor& gradient, Tensor& mGrad, Tensor& vGrad, /*float batchSize, */float lr, float beta1, float beta2, float epsilon) const override;
-        virtual void SgdStep(Tensor& parameter, const Tensor& gradient, /*float batchSize, */float lr) const override;
+        virtual void AdamStep(Tensor& parameter, const Tensor& gradient, Tensor& mGrad, Tensor& vGrad, float lr, float beta1, float beta2, float epsilon) const override;
+        virtual void SgdStep(Tensor& parameter, const Tensor& gradient, float lr) const override;
 
     private:
         void Reduce(const Tensor& input, cudnnReduceTensorOp_t reductionOp, Tensor& output) const;
@@ -88,7 +88,6 @@ namespace Neuro
         static bool s_Initialized;
         static cudaDeviceProp s_CudaDevProp;
         static cublasHandle_t s_CublasHandle;
-    public:
         static cudnnHandle_t s_CudnnHandle;
     };
 }
