@@ -25,8 +25,8 @@ public:
     {
         const uint32_t IMAGE_WIDTH = 256;
         const uint32_t IMAGE_HEIGHT = 256;
-        //const size_t STEPS = 160000;
-        const size_t STEPS = 4;
+        const size_t STEPS = 160000;
+        //const size_t STEPS = 4;
         const int UP_SCALE_FACTOR = 2;
         const float CONTENT_WEIGHT = 1.f;
 #ifdef USE_GRAMS

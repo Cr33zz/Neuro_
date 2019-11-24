@@ -192,8 +192,7 @@ public:
 #if defined(SLOW) || defined(FAST_SINGLE_CONTENT)
         size_t steps = 20000;
 #else
-        size_t samples = contentFiles.size();
-        size_t steps = samples / BATCH_SIZE;
+        size_t steps = 160000;
 #endif
 
         float minLoss = 0;
@@ -202,71 +201,55 @@ public:
         ImageLoader contentLoader(contentFiles, BATCH_SIZE, 2);
         DataPreloader preloader({ input }, { &contentLoader }, 4);
 
-        for (int e = 0; e < NUM_EPOCHS; ++e)
+        Tqdm progress(steps, 0);
+        progress.ShowStep(true).ShowPercent(false).ShowElapsed(false).ShowIterTime(true);// .EnableSeparateLines(true);
+        for (int i = 0; i < steps; ++i, progress.NextStep())
         {
-            cout << "Epoch " << e+1 << endl;
-
-            Tqdm progress(steps, 0);
-            progress.ShowStep(true).ShowPercent(false).ShowElapsed(false).ShowIterTime(true);// .EnableSeparateLines(true);
-            for (int i = 0; i < steps; ++i, progress.NextStep())
-            {
-                contentBatch.OverrideHost();
 #if defined(SLOW) || defined(FAST_SINGLE_CONTENT)
-                testImage.CopyTo(contentBatch);
+            testImage.CopyTo(contentBatch);
 #else
-                /*for (int j = 0; j < BATCH_SIZE; ++j)
-                {
-                    LoadImage(contentFiles[(i * BATCH_SIZE + j) % contentFiles.size()],
-                        contentBatch.Values() + j * contentBatch.BatchLength(),
-                        IMAGE_WIDTH * 2,
-                        IMAGE_HEIGHT * 2,
-                        IMAGE_WIDTH,
-                        IMAGE_HEIGHT);
-                }*/
-                preloader.Load();
-
+            preloader.Load();
 #endif
                 
-                auto results = Session::Default()->Run(MergeVectors({ vector<TensorLike*>{ stylizedContentPre, totalLoss, weightedContentLoss, weightedStyleLoss, minimize }, styleLosses }),
-                                                       { /*{ input, &contentBatch },*/ { training, &trainingOn } });
+            auto results = Session::Default()->Run(MergeVectors({ vector<TensorLike*>{ stylizedContentPre, totalLoss, weightedContentLoss, weightedStyleLoss, minimize }, styleLosses }),
+                                                    { /*{ input, &contentBatch },*/ { training, &trainingOn } });
 
-                if (i % DETAILS_ITER == 0)
-                {
+            if (i % DETAILS_ITER == 0)
+            {
 #if !defined(SLOW) && !defined(FAST_SINGLE_CONTENT)
-                    auto results = Session::Default()->Run({ stylizedContentPre, totalLoss, weightedContentLoss, weightedStyleLoss },
-                                                           { { input, &testImage }, { training, &trainingOff } });
+                auto results = Session::Default()->Run({ stylizedContentPre, totalLoss, weightedContentLoss, weightedStyleLoss },
+                                                        { { input, &testImage }, { training, &trainingOff } });
 #endif
 
-                    float loss = (*results[1])(0);
-                    auto genImage = *results[0];
-                    VGG16::DeprocessImage(genImage, NCHW);
-                    genImage.SaveAsImage(string(STYLE) + "_" + to_string(e) + "_" + to_string(i) + "_output.png", false);
-                    if (minLoss <= 0 || loss < minLoss)
-                    {
+                float loss = (*results[1])(0);
+                auto genImage = *results[0];
+                VGG16::DeprocessImage(genImage, NCHW);
+                genImage.SaveAsImage(string(STYLE) + "_" + to_string(i) + "_output.png", false);
+                if (minLoss <= 0 || loss < minLoss)
+                {
 #if !defined(SLOW)
-                        generator->SaveWeights(string(STYLE) + "_weights.h5");
+                    generator->SaveWeights(string(STYLE) + "_weights.h5");
 #endif
-                        minLoss = loss;
-                    }
-
-                    const float SINGLE_STYLE_WEIGHT = STYLE_WEIGHT / styleLosses.size();
-
-                    float change = 0;
-                    if (lastLoss > 0)
-                        change = (lastLoss - loss) / lastLoss * 100.f;
-                    lastLoss = loss;
-
-                    cout << endl;
-                    cout << setprecision(4) << "iter: " << i << " - total loss: " << loss << "(min: " << minLoss << ") - change: " << change << "%"<< endl;
-                    cout << "----------------------------------------------------" << endl;
-                    cout << "content loss: " << (*results[2])(0) << " - style loss: " << (*results[3])(0) << endl;
-#if defined(SLOW) || defined(FAST_SINGLE_CONTENT)
-                    cout << "style_1 loss: " << (*results[5])(0) * SINGLE_STYLE_WEIGHT; if (styleLosses.size() > 1) cout << " - style_2 loss: " << (*results[6])(0) * SINGLE_STYLE_WEIGHT; cout << endl;
-                    if (styleLosses.size() > 2) cout << "style_3 loss: " << (*results[7])(0) * SINGLE_STYLE_WEIGHT; if (styleLosses.size() > 3) cout << " - style_4 loss: " << (*results[8])(0) * SINGLE_STYLE_WEIGHT; if (styleLosses.size() > 2) cout << endl;
-                    if (styleLosses.size() > 4) cout << "style_5 loss: " << (*results[9])(0) * SINGLE_STYLE_WEIGHT; if (styleLosses.size() > 4) cout << endl;
-#endif
-                    cout << "----------------------------------------------------" << endl;
+                    minLoss = loss;
                 }
+
+                const float SINGLE_STYLE_WEIGHT = STYLE_WEIGHT / styleLosses.size();
+
+                float change = 0;
+                if (lastLoss > 0)
+                    change = (lastLoss - loss) / lastLoss * 100.f;
+                lastLoss = loss;
+
+                cout << endl;
+                cout << setprecision(4) << "iter: " << i << " - total loss: " << loss << "(min: " << minLoss << ") - change: " << change << "%"<< endl;
+                cout << "----------------------------------------------------" << endl;
+                cout << "content loss: " << (*results[2])(0) << " - style loss: " << (*results[3])(0) << endl;
+#if defined(SLOW) || defined(FAST_SINGLE_CONTENT)
+                cout << "style_1 loss: " << (*results[5])(0) * SINGLE_STYLE_WEIGHT; if (styleLosses.size() > 1) cout << " - style_2 loss: " << (*results[6])(0) * SINGLE_STYLE_WEIGHT; cout << endl;
+                if (styleLosses.size() > 2) cout << "style_3 loss: " << (*results[7])(0) * SINGLE_STYLE_WEIGHT; if (styleLosses.size() > 3) cout << " - style_4 loss: " << (*results[8])(0) * SINGLE_STYLE_WEIGHT; if (styleLosses.size() > 2) cout << endl;
+                if (styleLosses.size() > 4) cout << "style_5 loss: " << (*results[9])(0) * SINGLE_STYLE_WEIGHT; if (styleLosses.size() > 4) cout << endl;
+#endif
+                cout << "----------------------------------------------------" << endl;
             }
         }
     }
