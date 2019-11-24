@@ -23,12 +23,7 @@ namespace Neuro
     {
     public:
         DataPreloader(const vector<Placeholder*>& destination, const vector<ILoader*>& loaders, size_t capacity);
-
-        ~DataPreloader()
-        {
-            m_Stop = true;
-            m_PreloaderThread.join();
-        }
+        ~DataPreloader();
 
         // This function will copy first available tensors to the destination placeholders
         void Load();

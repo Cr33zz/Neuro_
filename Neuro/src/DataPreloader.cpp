@@ -21,6 +21,14 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    DataPreloader::~DataPreloader()
+    {
+        m_Stop = true;
+        m_PendingCond.notify_all();
+        m_PreloaderThread.join();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void DataPreloader::Load()
     {
         vector<Tensor>* data = nullptr;
