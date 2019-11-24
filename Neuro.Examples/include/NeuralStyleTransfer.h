@@ -23,10 +23,9 @@ public:
     const uint32_t IMAGE_WIDTH = 400;
     const uint32_t IMAGE_HEIGHT = 300;
 
-    const float CONTENT_WEIGHT = 5e0f;
-    const float STYLE_WEIGHT = 1e4f;
+    const float CONTENT_WEIGHT = 1e3f;
+    const float STYLE_WEIGHT = 1e-2f;
     const float TV_WEIGHT = 1e-3f;
-    const float STYLE_LAYER_WEIGHT = 0.2f;
 
     const string CONTENT_FILE = "content.jpg";
     const string STYLE_FILE = "great_wave.jpg";
@@ -38,31 +37,21 @@ public:
         Tensor contentImage = LoadImage("data/contents/" + CONTENT_FILE, IMAGE_WIDTH, IMAGE_HEIGHT);
         contentImage.SaveAsImage(CONTENT_FILE, false);
         VGG16::PreprocessImage(contentImage, NCHW);
-
         Tensor styleImage = LoadImage("data/styles/" + STYLE_FILE, IMAGE_WIDTH, IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_HEIGHT);
         styleImage.SaveAsImage(STYLE_FILE, false);
         VGG16::PreprocessImage(styleImage, NCHW);
 
         assert(contentImage.GetShape() == styleImage.GetShape());
         
-        auto vggModel = VGG19::CreateModel(NCHW, contentImage.GetShape(), false, AvgPool, "data/");
+        auto vggModel = VGG16::CreateModel(NCHW, contentImage.GetShape(), false, MaxPool, "data/");
         vggModel->SetTrainable(false);
 
-        /*vector<TensorLike*> contentOutputs = { vggModel->Layer("block2_conv2")->Outputs()[0] };
-        vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv2")->Outputs()[0],
-                                             vggModel->Layer("block2_conv2")->Outputs()[0],
-                                             vggModel->Layer("block3_conv3")->Outputs()[0],
-                                             vggModel->Layer("block4_conv3")->Outputs()[0] };*/
-
-        vector<TensorLike*> contentOutputs = { vggModel->Layer("block4_conv2")->Outputs()[0] };
+        vector<TensorLike*> contentOutputs = { vggModel->Layer("block5_conv2")->Outputs()[0] };
         vector<TensorLike*> styleOutputs = { vggModel->Layer("block1_conv1")->Outputs()[0], 
                                              vggModel->Layer("block2_conv1")->Outputs()[0], 
                                              vggModel->Layer("block3_conv1")->Outputs()[0], 
                                              vggModel->Layer("block4_conv1")->Outputs()[0],
                                              vggModel->Layer("block5_conv1")->Outputs()[0] };
-
-        vector<float> styleLayersWeights(styleOutputs.size());
-        fill(styleLayersWeights.begin(), styleLayersWeights.end(), STYLE_LAYER_WEIGHT);
 
         auto outputImg = new Variable(contentImage, "output_image");
 
@@ -93,14 +82,15 @@ public:
         // ... and style losses from remaining outputs
         assert(outputs.size() == styles.size());
         for (size_t i = 0; i < outputs.size(); ++i)
-            styleLosses.push_back(multiply(StyleLoss(styleGrams[i], outputs[i], (int)i), styleLayersWeights[i]));
+            styleLosses.push_back(StyleLoss(styleGrams[i], outputs[i], (int)i));
+        //auto styleLoss = merge_avg(styleLosses, "style_loss");
         auto styleLoss = multiply(merge_avg(styleLosses, "mean_style_loss"), STYLE_WEIGHT, "style_loss");
 
         auto tvLoss = multiply(total_variation(outputImg), TV_WEIGHT, "tv_loss");
 
         auto totalLoss = merge_sum({ contentLoss, styleLoss, tvLoss }, "total_loss");
 
-        auto optimizer = Adam(1.f);
+        auto optimizer = Adam(5.f, 0.99f, 0.999f, 0.1f);
         auto minimize = optimizer.Minimize({ totalLoss }, { outputImg });
 
         const int EPOCHS = 1000;
