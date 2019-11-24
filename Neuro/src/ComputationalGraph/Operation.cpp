@@ -64,8 +64,12 @@ namespace Neuro
                 inputNode->OutputConsumed();
         }
 
+        bool anyConsumerCareAboutGradient = false;
+        for (auto consumer : m_Consumers)
+            anyConsumerCareAboutGradient |= consumer->CareAboutGradient();
+
         // operations not participating in gradient computation offload is not necessary, it can be simply deallocated when consumed
-        if (m_AlwaysOffload || m_Fetched || m_Training)
+        if (m_AlwaysOffload || m_Fetched || (m_Training && anyConsumerCareAboutGradient))
             m_Output.Offload(m_AlwaysOffload || m_Fetched); // at this point output won't change so start offloading it, it will be released when all consumers used it
         return m_Output;
     }
