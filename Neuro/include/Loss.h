@@ -38,6 +38,13 @@ namespace Neuro
         virtual TensorLike* Build(TensorLike* targetOutput, TensorLike* output) override;
 	};
 
+    class MeanAbsoluteError : public LossBase
+    {
+    public:
+        virtual LossBase* Clone() const override { return new MeanAbsoluteError(*this); }
+        virtual TensorLike* Build(TensorLike* targetOutput, TensorLike* output) override;
+    };
+
     class Huber : public LossBase
     {
 	public:

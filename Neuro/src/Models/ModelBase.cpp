@@ -282,11 +282,21 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void ModelBase::Optimize(OptimizerBase* optimizer, const vector<LossBase*>& losses, const vector<float>& lossWeights, int metrics)
+    {
+        map<string, LossBase*> lossDict;
+        for (size_t i = 0; i < m_OutputLayers.size(); ++i)
+            lossDict[m_OutputLayers[i]->Name()] = losses[i];
+
+        Optimize(optimizer, lossDict, lossWeights, metrics);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void ModelBase::Optimize(OptimizerBase* optimizer, map<string, LossBase*> lossDict, const vector<float>& lossWeights, int metrics)
     {
         NameScope scope(Name());
 
-        NEURO_ASSERT(lossWeights.empty() || lossWeights.size() == lossDict.size(), "Mismatched number or output layers and loss weights.");
+        NEURO_ASSERT(lossWeights.empty() || lossWeights.size() == lossDict.size(), "Mismatched number or loss functions and loss weights " << lossDict.size() << " and " << lossWeights.size() << ".");
 
         m_TrackedMetrics = metrics;
         m_Optimizer = optimizer;

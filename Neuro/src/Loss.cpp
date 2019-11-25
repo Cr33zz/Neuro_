@@ -38,6 +38,13 @@ namespace Neuro
         return multiply(square(subtract(output, targetOutput)), new Constant(0.5f));
     }
 
+    //////////////////////////////////////////////////////////////////////////
+    TensorLike* MeanAbsoluteError::Build(TensorLike* targetOutput, TensorLike* output)
+    {
+        NameScope scope("mean_absolute_error");
+        return abs(subtract(output, targetOutput));
+    }
+
 	//////////////////////////////////////////////////////////////////////////
 	Huber::Huber(float delta)
 	{

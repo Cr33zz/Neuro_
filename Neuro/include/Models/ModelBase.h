@@ -26,6 +26,7 @@ namespace Neuro
         ~ModelBase();
 
         void Optimize(OptimizerBase* optimizer, LossBase* loss, const vector<float>& lossWeights = {}, int metrics = Loss);
+        void Optimize(OptimizerBase* optimizer, const vector<LossBase*>& losses, const vector<float>& lossWeights = {}, int metrics = Loss);
         void Optimize(OptimizerBase* optimizer, map<string, LossBase*> lossDict, const vector<float>& lossWeights = {}, int metrics = Loss);
 
         void Fit(const Tensor& input, const Tensor& output, int batchSize = -1, uint32_t epochs = 1, const Tensor* validInputs = nullptr, const Tensor* validOutputs = nullptr, uint32_t verbose = 1, bool shuffle = true);
