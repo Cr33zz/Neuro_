@@ -229,6 +229,7 @@
     <ClInclude Include="include\MnistConvNetwork.h" />
     <ClInclude Include="include\MnistNetwork.h" />
     <ClInclude Include="include\NeuralStyleTransfer.h" />
+    <ClInclude Include="include\Pix2Pix.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Neuro\Neuro.vcxproj">

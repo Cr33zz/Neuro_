@@ -77,5 +77,8 @@
     <ClInclude Include="include\AdaptiveStyleTransfer.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Pix2Pix.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
