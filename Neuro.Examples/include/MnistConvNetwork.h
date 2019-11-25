@@ -27,7 +27,7 @@ public:
         model.AddLayer(new Flatten());
         model.AddLayer(new Dense(128, new ReLU()));
         model.AddLayer(new Dense(10, new Softmax()));        
-        model.Optimize(new Adam(), new BinaryCrossEntropy(), All);
+        model.Optimize(new Adam(), new BinaryCrossEntropy(), {}, All);
 
         cout << "Example: " << model.Name() << endl;
         cout << model.Summary();

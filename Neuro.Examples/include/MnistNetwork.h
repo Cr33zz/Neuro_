@@ -27,7 +27,7 @@ public:
         cout << "Example: " << model.Name() << endl;
         cout << model.Summary();
 
-        model.Optimize(new Adam(), new BinaryCrossEntropy(), All);
+        model.Optimize(new Adam(), new BinaryCrossEntropy(), {}, All);
 
         Tensor input, output;
         LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", input, output, true, false, -1);

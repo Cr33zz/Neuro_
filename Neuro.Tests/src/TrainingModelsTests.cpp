@@ -77,7 +77,7 @@ namespace NeuroTests
             model.AddLayer(new Dense(100, new ReLU()));
 
             model.AddLayer(new Dense(3, new Softmax()));
-            model.Optimize(new Adam(), new BinaryCrossEntropy(), Loss | Accuracy);
+            model.Optimize(new Adam(), new BinaryCrossEntropy(), {}, Loss | Accuracy);
 
             Tensor inputs;
             Tensor outputs;

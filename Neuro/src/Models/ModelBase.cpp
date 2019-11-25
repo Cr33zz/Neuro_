@@ -272,19 +272,21 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::Optimize(OptimizerBase* optimizer, LossBase* loss, int metrics)
+    void ModelBase::Optimize(OptimizerBase* optimizer, LossBase* loss, const vector<float>& lossWeights, int metrics)
     {
         map<string, LossBase*> lossDict;
         for (auto outLayer : m_OutputLayers)
             lossDict[outLayer->Name()] = loss;
 
-        Optimize(optimizer, lossDict, metrics);
+        Optimize(optimizer, lossDict, lossWeights, metrics);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ModelBase::Optimize(OptimizerBase* optimizer, map<string, LossBase*> lossDict, int metrics)
+    void ModelBase::Optimize(OptimizerBase* optimizer, map<string, LossBase*> lossDict, const vector<float>& lossWeights, int metrics)
     {
         NameScope scope(Name());
+
+        NEURO_ASSERT(lossWeights.empty() || lossWeights.size() == lossDict.size(), "Mismatched number or output layers and loss weights.");
 
         m_TrackedMetrics = metrics;
         m_Optimizer = optimizer;
@@ -306,22 +308,25 @@ namespace Neuro
                 auto output = m_Outputs[i];
                 auto layer = output->m_Metadata->layer;
 
-                targets.push_back(new Placeholder(Shape(output->GetShape()), "target" + to_string(i)));
+                targets.push_back(new Placeholder(Shape(output->GetShape()), "target_" + to_string(i)));
                 auto loss = lossDict[layer->Name()]->Build(targets.back(), output);
+
+                if (!lossWeights.empty())
+                    loss = multiply(loss, lossWeights[i], "weighted_loss_" + to_string(i));
 
                 losses.push_back(loss);
                 fetches.push_back(loss);
 
                 if (!totalLoss)
-                    totalLoss = mean(loss, GlobalAxis, "mean_loss" + to_string(i));
+                    totalLoss = mean(loss, GlobalAxis, "mean_loss_" + to_string(i));                    
                 else
                     totalLoss = merge_sum({ totalLoss, mean(loss) }, "total_loss");
 
                 if (metrics & Accuracy)
                 {
                     auto acc = output->GetShape().Length == 1 ? 
-                        binary_accuracy(targets.back(), output, "accuracy" + to_string(i)) :
-                        accuracy(targets.back(), output, "accuracy" + to_string(i));
+                        binary_accuracy(targets.back(), output, "accuracy_" + to_string(i)) :
+                        accuracy(targets.back(), output, "accuracy_" + to_string(i));
 
                     if (!totalAcc)
                         totalAcc = acc;

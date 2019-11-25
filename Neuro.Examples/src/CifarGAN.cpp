@@ -31,6 +31,6 @@ Neuro::ModelBase* CifarGAN::CreateDiscriminator()
     model->AddLayer(new Flatten());
     //model->AddLayer(new Dropout(0.4f));
     model->AddLayer(new Dense(1, new Sigmoid()));
-    model->Optimize(new Adam(0.0002f, 0.5f), new BinaryCrossEntropy(), All);
+    model->Optimize(new Adam(0.0002f, 0.5f), new BinaryCrossEntropy(), {}, All);
     return model;
 }
