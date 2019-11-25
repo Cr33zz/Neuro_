@@ -12,6 +12,7 @@
 #include "NeuralStyleTransfer.h"
 #include "FastNeuralStyleTransfer.h"
 #include "AdaptiveStyleTransfer.h"
+#include "Pix2Pix.h"
 
 #include <cuda.h>
 #include <cudnn.h>
@@ -75,8 +76,9 @@ int main()
     //CifarGAN().Run();
     //NeuralStyleTransfer().Run();
     //FastNeuralStyleTransfer().Run();
-    AdaptiveStyleTransfer().Run();
+    //AdaptiveStyleTransfer().Run();
     //AdaptiveStyleTransfer().Test();
+    Pix2Pix().Run();
 
     return 0;
 }

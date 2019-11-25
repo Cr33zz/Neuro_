@@ -207,7 +207,7 @@ public:
         ImageLoader contentLoader(contentFiles, BATCH_SIZE, UP_SCALE_FACTOR);
         ImageLoader styleLoader(styleFiles, BATCH_SIZE, UP_SCALE_FACTOR);
 
-        DataPreloader preloader({ content, style }, { &contentLoader, &styleLoader}, 4);
+        DataPreloader preloader({ content->OutputPtr(), style->OutputPtr() }, { &contentLoader, &styleLoader}, 4);
 
         //Tqdm progress(steps, 0);
         //progress.ShowStep(true).ShowPercent(false).ShowElapsed(false).ShowEta(false).ShowIterTime(true);//.EnableSeparateLines(true);

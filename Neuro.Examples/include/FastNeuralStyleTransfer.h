@@ -199,7 +199,7 @@ public:
         float lastLoss = 0;
 
         ImageLoader contentLoader(contentFiles, BATCH_SIZE, 2);
-        DataPreloader preloader({ input }, { &contentLoader }, 4);
+        DataPreloader preloader({ input->OutputPtr() }, { &contentLoader }, 4);
 
         Tqdm progress(steps, 0);
         progress.ShowStep(true).ShowPercent(false).ShowElapsed(false).ShowIterTime(true);// .EnableSeparateLines(true);

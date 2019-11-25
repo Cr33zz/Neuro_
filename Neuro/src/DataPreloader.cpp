@@ -6,9 +6,10 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    DataPreloader::DataPreloader(const vector<Placeholder*>& destination, const vector<ILoader*>& loaders, size_t capacity)
+    DataPreloader::DataPreloader(const vector<Tensor*>& destination, const vector<ILoader*>& loaders, size_t capacity)
         : m_Destination(destination), m_Loaders(loaders)
     {
+        NEURO_ASSERT(destination.size() == loaders.size(), "");
         for (size_t i = 0; i < capacity; ++i)
         {
             vector<Tensor>* data = new vector<Tensor>(destination.size());
@@ -43,11 +44,11 @@ namespace Neuro
 
         {
             NVTXProfile p("Copying preloaded data to placeholders", 0xFF93FF72);
-            // copy data to placeholders
+            // copy data to destination
             for (size_t i = 0; i < m_Destination.size(); ++i)
             {
-                m_Destination[i]->Output().ResizeBatch((*data)[i].Batch());
-                (*data)[i].CopyTo(m_Destination[i]->Output());
+                m_Destination[i]->ResizeBatch((*data)[i].Batch());
+                (*data)[i].CopyTo(*m_Destination[i]);
             }
         }
 

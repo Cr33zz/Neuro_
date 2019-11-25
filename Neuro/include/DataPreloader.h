@@ -11,7 +11,6 @@ namespace Neuro
     using namespace std;
 
     class Tensor;
-    class Placeholder;
 
     struct ILoader
     {
@@ -22,10 +21,10 @@ namespace Neuro
     class DataPreloader
     {
     public:
-        DataPreloader(const vector<Placeholder*>& destination, const vector<ILoader*>& loaders, size_t capacity);
+        DataPreloader(const vector<Tensor*>& destination, const vector<ILoader*>& loaders, size_t capacity);
         ~DataPreloader();
 
-        // This function will copy first available tensors to the destination placeholders
+        // This function will copy first available tensors to the destination tensors
         void Load();
 
     private:
@@ -41,7 +40,7 @@ namespace Neuro
         mutex m_PendingMtx;
         list<vector<Tensor>*> m_Pending;
 
-        vector<Placeholder*> m_Destination;
+        vector<Tensor*> m_Destination;
         vector<ILoader*> m_Loaders;
     };
 }

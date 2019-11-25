@@ -901,7 +901,7 @@ namespace Neuro
 
         for (uint32_t i = 0; i < (uint32_t)outputs.size(); ++i)
         {
-            auto outputValues = outputs[0]->Values();
+            auto outputValues = outputs[i]->Values();
             size_t j = 0;
             for (uint32_t n = 0; n < batch; ++n)
             for (uint32_t d = 0; d < depth; ++d)
