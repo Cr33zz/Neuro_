@@ -74,6 +74,13 @@ namespace Neuro
     void ImageLibInit();
     extern bool g_ImageLibInitialized;
 
+    Tensor GaussianFilter(uint32_t size, float sigma = 1.f);
+    void SobelFilters(const Tensor& img, Tensor& g, Tensor& theta);
+    Tensor NonMaxSuppression(const Tensor& img, const Tensor& theta);
+    tuple<Tensor, float, float> Treshold(const Tensor& img, float lowThresholdRatio = 0.05f, float highThresholdRatio = 0.09f);
+    void Hysteresis(Tensor& img, float weak, float strong = 255.f);
+    Tensor CannyEdgeDetection(Tensor& img);
+
     static const uint32_t NVTX_COLOR_RED = 0xFFFF0000;
     static const uint32_t NVTX_COLOR_GREEN = 0xFF00FF00;
     static const uint32_t NVTX_COLOR_BLUE = 0xFF0000FF;

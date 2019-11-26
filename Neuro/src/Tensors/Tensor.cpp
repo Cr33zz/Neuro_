@@ -338,6 +338,22 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::ToGrayScale() const
+    {
+        NEURO_ASSERT(Depth() == 3, "Expected 3 color channels.");
+        NEURO_ASSERT(Batch() == 1, "Batches are not supported.");
+        SyncToHost();
+        Tensor output(Shape(Width(), Height()));
+
+        uint32_t i = 0;
+        for (uint32_t h = 0; h < Height(); ++h)
+        for (uint32_t w = 0; w < Width(); ++w, ++i)
+            output.Values()[i] = Get(w, h, 0) * 0.3f + Get(w, h, 1) * 0.59f + Get(w, h, 2) * 0.11f;
+
+        return output;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void Tensor::MatMul(bool transposeT, const Tensor& t, Tensor& result) const
 	{
         NEURO_ASSERT(!transposeT, "");

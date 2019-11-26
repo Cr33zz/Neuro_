@@ -72,6 +72,7 @@ namespace Neuro
         Tensor ToNCHW() const;
         // Converts to NHWC assuming the data is in NCHW format. Shape remains unchanged.
         Tensor ToNHWC() const;
+        Tensor ToGrayScale() const;
 	
 	private:
         void MatMul(bool transposeT, const Tensor& t, Tensor& result) const;
@@ -309,7 +310,7 @@ namespace Neuro
         void ReleaseData();
         void CopyToDevice() const;
         void CopyToHost(bool allowAlloc = false) const;
-        /// Sync will copy data from device to host but it won't change location
+        /// Sync will copy data from device to host but it won't change location (useful for read-only operations performed on CPU)
         void SyncToHost() const; 
         /// Use whatever data there is on the host (usually used for output tensors so copy can be avoided)
         void OverrideHost();
