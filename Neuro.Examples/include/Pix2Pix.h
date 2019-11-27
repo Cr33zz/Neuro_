@@ -36,17 +36,24 @@ public:
                 auto& filename = trainFiles[i];
                 auto img = LoadImage(filename, IMG_SHAPE.Width() * 2 * 1, IMG_SHAPE.Height() * 1, IMG_SHAPE.Width() * 2, IMG_SHAPE.Height());
 
-                img.Split(WidthAxis, output);
+                t1 = CannyEdgeDetection(img).Sub(127.5f).Div(127.5f);
+                t2 = img.Sub(127.5f).Div(127.5f);
+                //actual pre-process
+                //img.Split(WidthAxis, output);
 
                 t1.CopyBatchTo(0, i, inImages);
                 t2.CopyBatchTo(0, i, outImages);
                 /*t1.SaveAsImage("1.jpg", false);
                 t2.SaveAsImage("2.jpg", false);*/
             }
+            inImages.SaveAsH5("inImages.h5");
+            outImages.SaveAsH5("outImages.h5");
         }
-
-        inImages.SaveAsImage("inImages.png", false);
-        outImages.SaveAsImage("outImages.png", false);
+        // load pre-processed data
+        /*{
+            inImages.LoadFromH5("inImages.h5");
+            outImages.LoadFromH5("outImages.h5");
+        }*/
 
         auto gModel = CreateGenerator(IMG_SHAPE);
         //cout << "Generator" << endl << gModel->Summary();
@@ -69,15 +76,18 @@ public:
         //images.Reshape(Shape::From(dModel->InputShapesAt(-1)[0], images.Batch()));
         //images.Name("images");
 
-        //const uint32_t BATCH_SIZE = 1;
-        //const uint32_t STEPS = 100000;
+        const uint32_t BATCH_SIZE = 1;
+        const uint32_t STEPS = 100000;
 
 
 
         //Tensor testNoise(Shape::From(gModel->InputShapesAt(-1)[0], 100), "test_noise"); testNoise.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
 
-        //Tensor noise(Shape::From(gModel->InputShapesAt(-1)[0], BATCH_SIZE), "noise");
-        //Tensor real(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE), "real"); real.FillWithValue(1.f);
+        Tensor condImages(Shape::From(gModel->InputShapesAt(-1)[0], BATCH_SIZE), "cond_image");
+        Tensor expectedImages(Shape::From(gModel->OutputShapesAt(-1)[0], BATCH_SIZE), "output_image");
+
+        Tensor real(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE), "real"); real.FillWithValue(1.f);
+        Tensor fake(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE), "fake"); fake.FillWithValue(0.f);
 
         //Tensor noiseHalf(Shape::From(gModel->InputShapesAt(-1)[0], BATCH_SIZE / 2), "noise_half");
         //Tensor realHalf(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE / 2), "real_half"); realHalf.FillWithValue(1.f);
@@ -85,29 +95,34 @@ public:
 
         //float totalGanLoss = 0.f;
 
-        //Tqdm progress(STEPS, 0);
-        //progress.ShowEta(true).ShowElapsed(false).ShowPercent(false);
-        //for (uint32_t i = 0; i < STEPS; ++i, progress.NextStep())
-        //{
-        //    noiseHalf.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
+        Tqdm progress(STEPS, 0);
+        progress.ShowEta(true).ShowElapsed(false).ShowPercent(false);
+        for (uint32_t i = 0; i < STEPS; ++i, progress.NextStep())
+        {
+            //select random batch indices
+            vector<uint32_t> batchesIdx(BATCH_SIZE);
+            generate(batchesIdx.begin(), batchesIdx.end(), [&]() { return (uint32_t)GlobalRng().Next(inImages.Batch()); });
 
-        //    // generate fake images from noise
-        //    Tensor fakeImages = *gModel->Predict(noiseHalf)[0];
+            inImages.GetBatches(batchesIdx, condImages);
+            outImages.GetBatches(batchesIdx, expectedImages);
+
+            // generate fake images from condition
+            Tensor fakeImages = *gModel->Predict(condImages)[0];
         //    fakeImages.Name("fake_images");
         //    // grab random batch of real images
         //    Tensor realImages = images.GetRandomBatches(BATCH_SIZE / 2);
         //    realImages.Name("real_images");
 
-        //    // perform step of training discriminator to distinguish fake from real images
-        //    dModel->SetTrainable(true);
-        //    float dRealLoss = get<0>(dModel->TrainOnBatch(realImages, realHalf));
-        //    float dFakeLoss = get<0>(dModel->TrainOnBatch(fakeImages, fakeHalf));
+            // perform step of training discriminator to distinguish fake from real images
+            dModel->SetTrainable(true);
+            float dRealLoss = get<0>(dModel->TrainOnBatch({ condImages, expectedImages }, real));
+            float dFakeLoss = get<0>(dModel->TrainOnBatch({ condImages, fakeImages }, fake));
 
         //    noise.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
 
-        //    // perform step of training generator to generate more real images (the more discriminator is confident that a particular image is fake the more generator will learn)
-        //    dModel->SetTrainable(false);
-        //    float ganLoss = get<0>(ganModel->TrainOnBatch(noise, real));
+            // perform step of training generator to generate more real images (the more discriminator is confident that a particular image is fake the more generator will learn)
+            dModel->SetTrainable(false);
+            float ganLoss = get<0>(ganModel->TrainOnBatch(condImages, { real, expectedImages }));
 
         //    stringstream extString;
         //    extString << setprecision(4) << fixed << " - real_l: " << dRealLoss << " - fake_l: " << dFakeLoss << " - gan_l: " << ganLoss;
