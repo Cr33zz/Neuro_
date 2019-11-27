@@ -59,6 +59,8 @@ namespace Neuro
         void SetStorageType(int type);
 
         void SaveAsImage(const string& imageFile, bool denormalize) const;
+        void SaveAsH5(const string& h5File) const;
+        void LoadFromH5(const string& h5File);
 
         Tensor& FillWithRand(int seed = -1, float min = -1, float max = 1, uint32_t offset = 0);
         Tensor& FillWithRange(float start = 0, float increment = 1, uint32_t offset = 0);

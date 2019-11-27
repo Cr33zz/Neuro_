@@ -1,7 +1,9 @@
 ﻿#include <algorithm>
 #include <fstream>
 #include <numeric>
+#include <experimental/filesystem>
 #include <FreeImage.h>
+#include <H5Cpp.h>
 
 #include "Tensors/Tensor.h"
 #include "Tensors/TensorOpCpu.h"
@@ -13,6 +15,7 @@
 
 namespace Neuro
 {
+    using namespace H5;
     using namespace std;
 
 	TensorOpCpu* Tensor::g_OpCpu = new TensorOpCpu();
@@ -38,9 +41,6 @@ namespace Neuro
     {
         m_Shape = shape;
         m_Op = DefaultOp();
-
-        /*if (m_Shape.Length == 1)
-            m_Op = g_OpCpu;*/
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -176,6 +176,58 @@ namespace Neuro
 
         FreeImage_Save(format, image, imageFile.c_str());
         FreeImage_Unload(image);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::SaveAsH5(const string& h5File) const
+    {
+        SyncToHost();
+        H5File file = H5File(h5File, H5F_ACC_TRUNC);
+        Group g(file.createGroup(Name().empty() ? "g" : Name()));
+
+        const auto& shape = GetShape();
+        vector<hsize_t> dims;
+        for (uint32_t i = 0; i < shape.NDim; ++i)
+            dims.push_back(shape.Dimensions[i]);
+
+        DataSet dataset(g.createDataSet("data", PredType::NATIVE_FLOAT, DataSpace(shape.NDim, &dims[0])));
+        dataset.write(Values(), PredType::NATIVE_FLOAT);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::LoadFromH5(const string& h5File)
+    {
+        if (!std::experimental::filesystem::exists(h5File))
+        {
+            cout << "File '" << h5File << "' does not exist.\n";
+            return;
+        }
+
+        if (!H5File::isHdf5(h5File.c_str()))
+        {
+            cout << "File '" << h5File << "' is not valid HDF5 file.\n";
+            return;
+        }
+
+        OverrideHost();
+        H5File file = H5File(h5File, H5F_ACC_RDONLY);
+
+        hsize_t groupsNum;
+        H5Gget_num_objs(file.getId(), &groupsNum);
+
+        NEURO_ASSERT(groupsNum == 1, "Expected exactly 1 group, found " << groupsNum << ".");
+
+        Group g(file.openGroup(file.getObjnameByIdx(0)));
+
+        auto dataset = g.openDataSet("data");
+
+        hsize_t nDims = dataset.getSpace().getSimpleExtentNdims();
+        hsize_t dims[5];
+        dataset.getSpace().getSimpleExtentDims(nullptr, dims);
+
+        Resize(Shape::From({ (int)dims[0], nDims > 1 ? (int)dims[1] : 1, nDims > 2 ? (int)dims[2] : 1, nDims > 3 ? (int)dims[3] : 1 }));
+
+        dataset.read(Values(), PredType::NATIVE_FLOAT);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1380,9 +1432,6 @@ namespace Neuro
     {
         if (m_Shape == shape)
             return;
-
-        /*if (m_Shape.Length == 0 && shape.Length == 1)
-            m_Op = g_OpCpu;*/
 
         m_Shape = shape;
         m_Storage.Resize(shape.Length);
