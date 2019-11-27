@@ -348,7 +348,7 @@ namespace Neuro
         uint32_t i = 0;
         for (uint32_t h = 0; h < Height(); ++h)
         for (uint32_t w = 0; w < Width(); ++w, ++i)
-            output.Values()[i] = Get(w, h, 0) * 0.3f + Get(w, h, 1) * 0.59f + Get(w, h, 2) * 0.11f;
+            output.Values()[i] = Get(w, h, 0) * 0.2989f + Get(w, h, 1) * 0.5870f + Get(w, h, 2) * 0.1140f;
 
         return output;
     }

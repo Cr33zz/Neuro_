@@ -77,7 +77,7 @@ namespace Neuro
     Tensor GaussianFilter(uint32_t size, float sigma = 1.f);
     void SobelFilters(const Tensor& img, Tensor& g, Tensor& theta);
     Tensor NonMaxSuppression(const Tensor& img, const Tensor& theta);
-    tuple<Tensor, float, float> Treshold(const Tensor& img, float lowThresholdRatio = 0.05f, float highThresholdRatio = 0.09f);
+    tuple<Tensor, float, float> Threshold(const Tensor& img, float lowThresholdRatio = 0.05f, float highThresholdRatio = 0.09f);
     void Hysteresis(Tensor& img, float weak, float strong = 255.f);
     Tensor CannyEdgeDetection(Tensor& img);
 

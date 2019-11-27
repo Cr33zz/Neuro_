@@ -21,10 +21,11 @@
 
 int main()
 {
-    Tensor::SetForcedOpMode(GPU);
+    Tensor::SetForcedOpMode(CPU);
 
     Tensor img("e:/Dropbox/!BLOG/4.jpg", false);
     Tensor edges = CannyEdgeDetection(img);
+    edges.SaveAsImage("edges.png", false);
 
     //const int DEPTH_IN = 64;
     //const int KERNELS_NUM = 3;

@@ -786,11 +786,11 @@ namespace Neuro
         NEURO_ASSERT(img.Depth() == 1, "Image has to be black and white (only 1 channel).");
         NEURO_ASSERT(img.Batch() == 1, "Batches are not supported.");
 
-        Tensor kX({ -1.f, 0.f, 1.f, -2.f, 0.f, 2.f, -1.f, 0.f, 1.f }, Shape(3, 3));
-        Tensor kY({ 1.f, 2.f, 1.f, 0.f, 0.f, 0.f, -1.f, -2.f, -1.f }, Shape(3, 3));
+        Tensor kX({ 1.f, 0.f, -1.f, 2.f, 0.f, -2.f, 1.f, 0.f, -1.f }, Shape(3, 3));
+        Tensor kY({ -1.f, -2.f, -1.f, 0.f, 0.f, 0.f, 1.f, 2.f, 1.f }, Shape(3, 3));
 
-        Tensor iX = img.Conv2D(kX.Rotated180(), 1, 1, NCHW);
-        Tensor iY = img.Conv2D(kY.Rotated180(), 1, 1, NCHW);
+        Tensor iX = img.Conv2D(kX, 1, 1, NCHW);
+        Tensor iY = img.Conv2D(kY, 1, 1, NCHW);
 
         g = sqrt(sqr(iX) + sqr(iY));
         g.Mul(255.f / g.Max(GlobalAxis)(0), g);
@@ -804,59 +804,59 @@ namespace Neuro
         NEURO_ASSERT(img.Depth() == 1, "Image has to be black and white (only 1 channel).");
         NEURO_ASSERT(img.Batch() == 1, "Batches are not supported.");
 
-        uint32_t m = img.Width(), n = img.Height();
+        uint32_t m = img.Height(), n = img.Width();
         Tensor z = zeros(img.GetShape());
 
         Tensor angle = theta.Mul(180.f / (float)M_PI);
         angle.Map([](float x) { return x < 0 ? x + 180.f : x; }, angle);
 
         for (uint32_t i = 1; i < m - 1; ++i)
-            for (uint32_t j = 1; j < n - 1; ++j)
+        for (uint32_t j = 1; j < n - 1; ++j)
+        {
+            float q = 255.f;
+            float r = 255.f;
+
+            // angle 0
+            if ((angle(j, i) >= 0 && angle(j, i) < 22.5f) || (angle(j, i) >= 157.5f && angle(j, i) <= 180.f))
             {
-                float q = 255.f;
-                float r = 255.f;
-
-                // angle 0
-                if ((angle(i, j) >= 0 && angle(i, j) < 22.5f) || (angle(i, j) >= 157.5f && angle(i, j) <= 180.f))
-                {
-                    q = img(i, j + 1);
-                    r = img(i, j - 1);
-                }
-                // angle 45
-                else if (angle(i, j) >= 22.5f && angle(i, j) < 67.5f)
-                {
-                    q = img(i + 1, j - 1);
-                    r = img(i - 1, j + 1);
-                }
-                // angle 90
-                else if (angle(i, j) >= 67.5f && angle(i, j) < 112.5f)
-                {
-                    q = img(i + 1, j);
-                    r = img(i - 1, j);
-                }
-                // angle 135
-                else if (angle(i, j) >= 112.5f && angle(i, j) < 157.5f)
-                {
-                    q = img(i - 1, j - 1);
-                    r = img(i + 1, j + 1);
-                }
-
-                if (img(i, j) >= q && img(i, j) >= r)
-                    z(i, j) = img(i, j);
-                else
-                    z(i, j) = 0.f;
+                q = img(j + 1, i);
+                r = img(j - 1, i);
             }
+            // angle 45
+            else if (angle(j, i) >= 22.5f && angle(j, i) < 67.5f)
+            {
+                q = img(j - 1, i + 1);
+                r = img(j + 1, i - 1);
+            }
+            // angle 90
+            else if (angle(j, i) >= 67.5f && angle(j, i) < 112.5f)
+            {
+                q = img(j, i + 1);
+                r = img(j, i - 1);
+            }
+            // angle 135
+            else if (angle(j, i) >= 112.5f && angle(j, i) < 157.5f)
+            {
+                q = img(j - 1, i - 1);
+                r = img(j + 1, i + 1);
+            }
+
+            if (img(j, i) >= q && img(j, i) >= r)
+                z(j, i) = img(j, i);
+            else
+                z(j, i) = 0.f;
+        }
 
         return z;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    tuple<Tensor, float, float> Treshold(const Tensor& img, float lowThresholdRatio, float highThresholdRatio)
+    tuple<Tensor, float, float> Threshold(const Tensor& img, float lowThresholdRatio, float highThresholdRatio)
     {
         float highThreshold = img.Max(GlobalAxis)(0) * highThresholdRatio;
         float lowThreshold = highThreshold * lowThresholdRatio;
 
-        float weak = 25.f;
+        float weak = 100.f;
         float strong = 255.f;
 
         return make_tuple(img.Map([&](float x) { return x >= highThreshold ? strong : (x < lowThreshold ? 0.f : weak); }), weak, strong);
@@ -865,36 +865,36 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Hysteresis(Tensor& img, float weak, float strong)
     {
-        uint32_t m = img.Width(), n = img.Height();
+        uint32_t m = img.Height(), n = img.Width();
 
         for (uint32_t i = 1; i < m - 1; ++i)
-            for (uint32_t j = 1; j < n - 1; ++j)
+        for (uint32_t j = 1; j < n - 1; ++j)
+        {
+            if (img(j, i) == weak)
             {
-                if (img(i, j) == weak)
+                if ((img(j - 1, i + 1) == strong) || (img(j, i + 1) == strong) || (img(j + 1, i + 1) == strong)
+                    || (img(j - 1, i) == strong) || (img(j + 1, i) == strong)
+                    || (img(j - 1, i - 1) == strong) || (img(j, i - 1) == strong) || (img(j + 1, i - 1) == strong))
                 {
-                    if ((img(i + 1, j - 1) == strong) || (img(i + 1, j) == strong) || (img(i + 1, j + 1) == strong)
-                        || (img(i, j - 1) == strong) || (img(i, j + 1) == strong)
-                        || (img(i - 1, j - 1) == strong) || (img(i - 1, j) == strong) || (img(i - 1, j + 1) == strong))
-                    {
-                        img(i, j) = strong;
-                    }
-                    else
-                        img(i, j) = 0.f;
+                    img(j, i) = strong;
                 }
+                else
+                    img(j, i) = 0.f;
             }
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////
     Tensor CannyEdgeDetection(Tensor& img)
     {
         Tensor output = img.ToGrayScale();
-
-        Tensor blurred = output.Conv2D(GaussianFilter(5, 1.4f), 1, 2, NCHW);
+        auto blurred = output.Conv2D(GaussianFilter(5, 1.4f), 1, 2, NCHW);
         Tensor g, theta;
         SobelFilters(blurred, g, theta);
-        g.SaveAsImage("__.png", false);
-
-        return output;
+        auto nonMaxImg = NonMaxSuppression(g, theta);
+        auto thresholdImgData = Threshold(nonMaxImg, 0.09f, 0.17f);
+        Hysteresis(get<0>(thresholdImgData), 100);
+        return get<0>(thresholdImgData);
     }
 
     //////////////////////////////////////////////////////////////////////////
