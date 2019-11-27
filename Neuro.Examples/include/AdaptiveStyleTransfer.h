@@ -318,7 +318,7 @@ public:
             auto styleMean = mean(styleFeat, _01Axes);
             auto styleStd = std_deviation(styleFeat, styleMean, _01Axes);
 
-            auto normContentFeat = instance_norm(contentFeat, styleStd, styleMean, 0.00001f, training);
+            auto normContentFeat = instance_norm(contentFeat, styleStd, styleMean, 0.00001f);
             return { add(multiply(normContentFeat, m_Alpha), multiply(contentFeat, add(negative(m_Alpha), 1))) };
         }
 

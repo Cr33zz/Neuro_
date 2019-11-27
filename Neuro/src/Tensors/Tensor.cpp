@@ -406,6 +406,26 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::ToRGB() const
+    {
+        NEURO_ASSERT(Depth() == 1, "Expected 1 color channels.");
+        NEURO_ASSERT(Batch() == 1, "Batches are not supported.");
+        SyncToHost();
+        Tensor output(Shape(Width(), Height(), 3));
+
+        uint32_t i = 0;
+        for (uint32_t h = 0; h < Height(); ++h)
+        for (uint32_t w = 0; w < Width(); ++w, ++i)
+        {
+            output(w, h, 0) = Values()[i];
+            output(w, h, 1) = Values()[i];
+            output(w, h, 2) = Values()[i];
+        }
+
+        return output;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void Tensor::MatMul(bool transposeT, const Tensor& t, Tensor& result) const
 	{
         NEURO_ASSERT(!transposeT, "");
@@ -1664,9 +1684,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::DropoutGradient(const Tensor& outputGradient, const Tensor& savedMask, Tensor& inputGradient) const
+    void Tensor::DropoutGradient(const Tensor& outputGradient, float prob, Tensor& savedMask, Tensor& inputGradient) const
     {
-        Op()->DropoutGradient(outputGradient, savedMask, inputGradient);
+        Op()->DropoutGradient(outputGradient, prob, savedMask, inputGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////

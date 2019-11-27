@@ -75,6 +75,7 @@ namespace Neuro
         // Converts to NHWC assuming the data is in NCHW format. Shape remains unchanged.
         Tensor ToNHWC() const;
         Tensor ToGrayScale() const;
+        Tensor ToRGB() const;
 	
 	private:
         void MatMul(bool transposeT, const Tensor& t, Tensor& result) const;
@@ -226,7 +227,7 @@ namespace Neuro
         void InstanceNormGradient(const Tensor& input, const Tensor& gamma, float epsilon, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const;
         
         void Dropout(float prob, Tensor& saveMask, Tensor& output) const;
-        void DropoutGradient(const Tensor& outputGradient, const Tensor& savedMask, Tensor& inputGradient) const;
+        void DropoutGradient(const Tensor& outputGradient, float prob, Tensor& savedMask, Tensor& inputGradient) const;
 
         string ToString() const;
         bool SameDimensionsExceptBatches(const Tensor& t) const;

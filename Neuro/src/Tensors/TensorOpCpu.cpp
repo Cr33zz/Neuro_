@@ -1094,7 +1094,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::DropoutGradient(const Tensor& outputGradient, const Tensor& savedMask, Tensor& inputGradient)
+    void TensorOpCpu::DropoutGradient(const Tensor& outputGradient, float prob, Tensor& savedMask, Tensor& inputGradient)
     {
         outputGradient.CopyToHost();
         savedMask.CopyToHost();
