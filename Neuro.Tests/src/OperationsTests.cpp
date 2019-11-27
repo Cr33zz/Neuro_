@@ -16,8 +16,7 @@ namespace NeuroTests
             auto beta = Variable(gamma.GetShape());
             auto runningMean = Variable(zeros(gamma.GetShape()));
             auto runningVar = Variable(ones(gamma.GetShape()));
-            auto training = Constant(1.f);
-            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new BatchNormalizeOp(&x, &gamma, &beta, &runningMean, &runningVar, 0.9f, 0.00001f, &training)).get(), false, {0,0,0,1,1,1}));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new BatchNormalizeOp(&x, &gamma, &beta, &runningMean, &runningVar, 0.9f, 0.00001f)).get(), false, {0,0,0,1,1,1}));
         }
 
         TEST_METHOD(InstanceNormalize)
@@ -25,8 +24,7 @@ namespace NeuroTests
             auto x = Variable(Shape(3, 4, 5, 2));
             auto gamma = Variable(Shape(1, 1, 5, 2));
             auto beta = Variable(gamma.GetShape());
-            auto training = Constant(1.f);
-            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new InstanceNormalizeOp(&x, &gamma, &beta, 0.00001f, &training)).get(), false, { 0,0,0,1 }));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new InstanceNormalizeOp(&x, &gamma, &beta, 0.00001f)).get(), false, { 0,0,0,1 }));
         }
 
         TEST_METHOD(BatchNormalize_Spatial)
@@ -36,8 +34,7 @@ namespace NeuroTests
             auto beta = Variable(gamma.GetShape());
             auto runningMean = Variable(zeros(gamma.GetShape()));
             auto runningVar = Variable(ones(gamma.GetShape()));
-            auto training = Constant(1.f);
-            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new BatchNormalizeOp(&x, &gamma, &beta, &runningMean, &runningVar, 0.9f, 0.00001f, &training)).get(), false, { 0,0,0,1,1,1 }));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new BatchNormalizeOp(&x, &gamma, &beta, &runningMean, &runningVar, 0.9f, 0.00001f)).get(), false, { 0,0,0,1,1,1 }));
         }
 
         TEST_METHOD(Conv2d)
@@ -192,6 +189,12 @@ namespace NeuroTests
             Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new DivideOp(&x, 7.f)).get()));
         }
 
+        TEST_METHOD(Dropout)
+        {
+            auto x = Variable(Shape(2, 3, 4, 2));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new DropoutOp(&x, 0.2f)).get()));
+        }
+
         TEST_METHOD(MatMul)
         {
             auto x = Variable(Shape(4, 3, 4, 2));
@@ -314,17 +317,11 @@ namespace NeuroTests
         {
             float DERIVATIVE_EPSILON = 1e-4f;
 
-            GlobalRngSeed(101);
-
             for (auto inputNode : op->InputNodes())
                 inputNode->Output().FillWithRand(-1, onlyPositiveInputs ? 0.f : -1.f, 1.f);
 
-            float GRAD_VALUE = 2.f;
-
+            GlobalRngSeed(101);
             auto output = op->Compute(true);
-            /*vector<Tensor> tmpOutputGrad = { Tensor(output.GetShape()) };
-            tensor_ptr_vec_t outputGradient = { &tmpOutputGrad[0] };
-            outputGradient[0]->FillWithValue(GRAD_VALUE);*/
             Tensor outputGrad(output.GetShape());
             outputGrad.FillWithRand(-1, -2, 2);
 

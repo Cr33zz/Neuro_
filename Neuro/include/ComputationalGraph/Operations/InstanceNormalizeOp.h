@@ -7,7 +7,7 @@ namespace Neuro
     class InstanceNormalizeOp : public Operation
     {
     public:
-        InstanceNormalizeOp(TensorLike* x, TensorLike* gamma, TensorLike* beta, float epsilon, TensorLike* training, const string& name = "");
+        InstanceNormalizeOp(TensorLike* x, TensorLike* gamma, TensorLike* beta, float epsilon, const string& name = "");
 
     protected:
         virtual void ComputeInternal() override;
@@ -22,8 +22,8 @@ namespace Neuro
         Tensor m_SaveInvVar;
     };
 
-    static Operation* instance_norm(TensorLike* x, TensorLike* gamma, TensorLike* beta, float epsilon, TensorLike* training, const string& name = "")
+    static Operation* instance_norm(TensorLike* x, TensorLike* gamma, TensorLike* beta, float epsilon, const string& name = "")
     {
-        return new InstanceNormalizeOp(x, gamma, beta, epsilon, training, name);
+        return new InstanceNormalizeOp(x, gamma, beta, epsilon, name);
     }
 }

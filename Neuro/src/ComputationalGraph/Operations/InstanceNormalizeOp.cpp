@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    InstanceNormalizeOp::InstanceNormalizeOp(TensorLike* x, TensorLike* gamma, TensorLike* beta, float epsilon, TensorLike* training, const string& name)
-        : Operation({ x, gamma, beta, training }, name.empty() ? "instance_normalize" : name), m_Epsilon(epsilon)
+    InstanceNormalizeOp::InstanceNormalizeOp(TensorLike* x, TensorLike* gamma, TensorLike* beta, float epsilon, const string& name)
+        : Operation({ x, gamma, beta }, name.empty() ? "instance_normalize" : name), m_Epsilon(epsilon)
     {
         m_Output.Resize(x->GetShape());
     }

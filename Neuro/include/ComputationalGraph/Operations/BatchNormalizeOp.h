@@ -7,7 +7,7 @@ namespace Neuro
     class BatchNormalizeOp : public Operation
     {
     public:
-        BatchNormalizeOp(TensorLike* x, TensorLike* gamma, TensorLike* beta, TensorLike* runningMean, TensorLike* runningVar, float momentum, float epsilon, TensorLike* training, const string& name = "");
+        BatchNormalizeOp(TensorLike* x, TensorLike* gamma, TensorLike* beta, TensorLike* runningMean, TensorLike* runningVar, float momentum, float epsilon, const string& name = "");
 
     protected:
         virtual void ComputeInternal() override;
@@ -25,8 +25,8 @@ namespace Neuro
         Tensor m_SaveInvVar;
     };
 
-    static Operation* batch_norm(TensorLike* x, TensorLike* gamma, TensorLike* beta, TensorLike* runningMean, TensorLike* runningVar, float momentum, float epsilon, TensorLike* training, const string& name = "")
+    static Operation* batch_norm(TensorLike* x, TensorLike* gamma, TensorLike* beta, TensorLike* runningMean, TensorLike* runningVar, float momentum, float epsilon, const string& name = "")
     {
-        return new BatchNormalizeOp(x, gamma, beta, runningMean, runningVar, momentum, epsilon, training, name);
+        return new BatchNormalizeOp(x, gamma, beta, runningMean, runningVar, momentum, epsilon, name);
     }
 }

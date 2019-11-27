@@ -32,6 +32,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<TensorLike*> InstanceNormalization::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
     {
-        return { instance_norm(inputs[0], m_Gamma, m_Beta, m_Epsilon, training) };
+        return { instance_norm(inputs[0], m_Gamma, m_Beta, m_Epsilon) };
     }
 }
