@@ -22,43 +22,49 @@ public:
 
         cout << "Example: Pix2Pix" << endl;
 
-        auto trainFiles = LoadFilesList("f:/!TrainingData/maps/train", false, true);
+        auto trainFiles = LoadFilesList("f:/!TrainingData/flowers", false, true);
 
         Tensor inImages(Shape::From(IMG_SHAPE, (uint32_t)trainFiles.size()));
         Tensor outImages(Shape::From(IMG_SHAPE, (uint32_t)trainFiles.size()));
 
         // pre-process training data
-        {
-            Tensor t1(IMG_SHAPE), t2(IMG_SHAPE);
-            tensor_ptr_vec_t output{ &t1, &t2 };
-            for (size_t i = 0; i < trainFiles.size(); ++i)
-            {
-                auto& filename = trainFiles[i];
-                auto img = LoadImage(filename, IMG_SHAPE.Width() * 2 * 1, IMG_SHAPE.Height() * 1, IMG_SHAPE.Width() * 2, IMG_SHAPE.Height());
+        //{
+        //    Tensor t1(IMG_SHAPE), t2(IMG_SHAPE);
+        //    tensor_ptr_vec_t output{ &t1, &t2 };
+        //    for (size_t i = 0; i < trainFiles.size(); ++i)
+        //    {
+        //        auto& filename = trainFiles[i];
 
-                t1 = CannyEdgeDetection(img).Sub(127.5f).Div(127.5f);
-                t2 = img.Sub(127.5f).Div(127.5f);
-                //actual pre-process
-                //img.Split(WidthAxis, output);
+        //        auto img = LoadImage(filename, IMG_SHAPE.Width(), IMG_SHAPE.Height());
+        //        t1 = CannyEdgeDetection(img).ToRGB();
+        //        t2 = img;
+        //        
+        //        //auto img = LoadImage(filename, IMG_SHAPE.Width() * 2 * 1, IMG_SHAPE.Height() * 1, IMG_SHAPE.Width() * 2, IMG_SHAPE.Height());
+        //        //actual pre-process
+        //        //img.Split(WidthAxis, output);
 
-                t1.CopyBatchTo(0, i, inImages);
-                t2.CopyBatchTo(0, i, outImages);
-                /*t1.SaveAsImage("1.jpg", false);
-                t2.SaveAsImage("2.jpg", false);*/
-            }
-            inImages.SaveAsH5("inImages.h5");
-            outImages.SaveAsH5("outImages.h5");
-        }
+        //        t1.CopyBatchTo(0, (uint32_t)i, inImages);
+        //        t2.CopyBatchTo(0, (uint32_t)i, outImages);
+        //    }
+
+        //    inImages.SaveAsImage("__in.jpg", false);
+        //    outImages.SaveAsImage("__out.jpg", false);
+
+        //    inImages.Sub(127.5f).Div(127.5f);
+        //    outImages.Sub(127.5f).Div(127.5f);
+        //    inImages.SaveAsH5("inImages.h5");
+        //    outImages.SaveAsH5("outImages.h5");
+        //}
         // load pre-processed data
-        /*{
+        {
             inImages.LoadFromH5("inImages.h5");
             outImages.LoadFromH5("outImages.h5");
-        }*/
+        }
 
         auto gModel = CreateGenerator(IMG_SHAPE);
-        //cout << "Generator" << endl << gModel->Summary();
+        cout << "Generator" << endl << gModel->Summary();
         auto dModel = CreateDiscriminator(IMG_SHAPE);
-        //cout << "Discriminator" << endl << dModel->Summary();
+        cout << "Discriminator" << endl << dModel->Summary();
 
         auto inSrc = new Input(IMG_SHAPE);
         auto genOut = gModel->Call(inSrc->Outputs());
@@ -115,14 +121,14 @@ public:
 
             // perform step of training discriminator to distinguish fake from real images
             dModel->SetTrainable(true);
-            float dRealLoss = get<0>(dModel->TrainOnBatch({ condImages, expectedImages }, real));
-            float dFakeLoss = get<0>(dModel->TrainOnBatch({ condImages, fakeImages }, fake));
+            float dRealLoss = get<0>(dModel->TrainOnBatch({ &condImages, &expectedImages }, { &real }));
+            float dFakeLoss = get<0>(dModel->TrainOnBatch({ &condImages, &fakeImages }, { &fake }));
 
         //    noise.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
 
             // perform step of training generator to generate more real images (the more discriminator is confident that a particular image is fake the more generator will learn)
             dModel->SetTrainable(false);
-            float ganLoss = get<0>(ganModel->TrainOnBatch(condImages, { real, expectedImages }));
+            float ganLoss = get<0>(ganModel->TrainOnBatch({ &condImages }, { &real, &expectedImages }));
 
         //    stringstream extString;
         //    extString << setprecision(4) << fixed << " - real_l: " << dRealLoss << " - fake_l: " << dFakeLoss << " - gan_l: " << ganLoss;
@@ -130,7 +136,7 @@ public:
 
         //    if (i % 50 == 0)
         //        gModel->Predict(testNoise)[0]->Map([](float x) { return x * 127.5f + 127.5f; }).Reshaped(Shape(m_ImageShape.Width(), m_ImageShape.Height(), m_ImageShape.Depth(), -1)).SaveAsImage(Name() + "_e" + PadLeft(to_string(e), 4, '0') + "_b" + PadLeft(to_string(i), 4, '0') + ".png", false);
-        //}
+        }
 
         ganModel->SaveWeights("pix2pix.h5");
     }
