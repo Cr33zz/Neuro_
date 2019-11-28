@@ -25,7 +25,7 @@ __global__ void pad2D(int outputLen, const float* __restrict input, int inputStr
 {
     int inputHeight = inputStride2 / inputStride1;
     int outputHeight = outputStride2 / outputStride1;
-    int outputDepth = outputStride3 / (outputStride1 * outputStride2);
+    int outputDepth = outputStride3 / outputStride2;
 
     for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < outputLen; i += gridDim.x * blockDim.x)
     {

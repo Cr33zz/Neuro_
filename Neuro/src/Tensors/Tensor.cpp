@@ -1331,13 +1331,13 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::Pad2D(int left, int right, int top, int bottom, float value, Tensor& output) const
+    void Tensor::Pad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, Tensor& output) const
     {
         Op()->Pad2D(*this, left, right, top, bottom, value, output);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor Tensor::Pad2D(int left, int right, int top, int bottom, float value) const
+    Tensor Tensor::Pad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value) const
     {
         Tensor output(Shape(Width() + left + right, Height() + top + bottom, Depth(), Batch()));
         Pad2D(left, right, top, bottom, value, output);

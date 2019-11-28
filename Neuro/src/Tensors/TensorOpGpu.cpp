@@ -45,7 +45,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::DeallocateWorkspace(void* ptr)
     {
-        CUDA_CHECK(DeviceMemoryManager::Default().ScheduleFree(ptr));
+        DeviceMemoryManager::Default().ScheduleFree(ptr);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -627,7 +627,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Pad2D(const Tensor& input, int left, int right, int top, int bottom, float value, Tensor& output) const
+    void TensorOpGpu::Pad2D(const Tensor& input, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, Tensor& output) const
     {
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();

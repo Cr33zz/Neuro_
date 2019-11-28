@@ -33,7 +33,7 @@ namespace Neuro
         virtual void Inverse(float alpha, const Tensor& input, Tensor& output) const;
         virtual void Clip(const Tensor& input, float min, float max, Tensor& output) const;
         virtual void Transpose(const Tensor& input, Tensor& output) const;
-        virtual void Pad2D(const Tensor& input, int left, int right, int top, int bottom, float value, Tensor& output) const;
+        virtual void Pad2D(const Tensor& input, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, Tensor& output) const;
         virtual void Conv2D(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& output) const;
         virtual void Conv2DBiasActivation(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, const Tensor& bias, EActivation activation, float activationAlpha, Tensor& output);
         virtual void Conv2DBiasGradient(const Tensor& gradient, Tensor& biasGradient);
