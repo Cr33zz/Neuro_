@@ -6,6 +6,7 @@ namespace Neuro
 
 	struct CudaKernels
 	{
+        static void Pad2D(const dim3& blocks, const dim3& threads, int outputLen, const float* inputDev, int inputStride1, int inputStride2, int inputStride3, int left, int right, int top, int bottom, float value, float* __restrict outputDev, int outputStride1, int outputStride2, int outputStride3);
         static void UpSample2D(const dim3& blocks, const dim3& threads, const float* inputDev, int inputWidth, int inputHeight, int inputDepth, int inputBatch, int scale, float* outputDev);
         static void UpSample2DGradient(const dim3& blocks, const dim3& threads, const float* outputGradientDev, int scale, float* inputGradientDev, int inputWidth, int inputHeight, int inputDepth, int inputBatch);
         static void LeakyReLU(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float alpha, float* outputDev);
@@ -26,7 +27,7 @@ namespace Neuro
         static void Div(const dim3& blocks, const dim3& threads, int len, float alpha, const float* t1, float beta, const float* t2, float* outputDev);
         static void DivBroadcast(const dim3& blocks, const dim3& threads, float alpha, const float* t1Dev, int t1Width, int t1Height, int t1Depth, int t1Batch, float beta, const float* t2Dev, int t2Width, int t2Height, int t2Depth, int t2Batch, float* outputDev, int outputWidth, int outputHeight, int outputDepth, int outputBatch);
         static void Sum(const dim3& blocks, const dim3& threads, const float* inputDev, int inputWidth, int inputHeight, int inputDepth, int inputBatch, int axis, float* outputDev);
-        static void AdamStep(const dim3& blocks, const dim3& threads, int inputLen, float* parameterDev, const float* gradientDev, float* mGradDev, float* vGradDev, /*float batchSize, */float lr, float beta1, float beta2, float epsilon);
-        static void SgdStep(const dim3& blocks, const dim3& threads, int inputLen, float* parameterDev, const float* gradientDev, /*float batchSize, */float lr);
+        static void AdamStep(const dim3& blocks, const dim3& threads, int inputLen, float* parameterDev, const float* gradientDev, float* mGradDev, float* vGradDev, float lr, float beta1, float beta2, float epsilon);
+        static void SgdStep(const dim3& blocks, const dim3& threads, int inputLen, float* parameterDev, const float* gradientDev, float lr);
 	};
 }

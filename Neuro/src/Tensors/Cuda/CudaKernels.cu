@@ -21,6 +21,27 @@ __device__ void getDims(int width, int height, int depth, int& dim0, int& dim0di
     dim0dim1dim2 = width * height * depth;
 }
 
+__global__ void pad2D(int outputLen, const float* __restrict input, int inputStride1, int inputStride2, int inputStride3, int left, int right, int top, int bottom, float value, float* __restrict output, int outputStride1, int outputStride2, int outputStride3)
+{
+    int inputHeight = inputStride2 / inputStride1;
+    int outputHeight = outputStride2 / outputStride1;
+    int outputDepth = outputStride3 / (outputStride1 * outputStride2);
+
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < outputLen; i += gridDim.x * blockDim.x)
+    {
+        float v = value;
+        int w = i % outputStride1;
+        int h = (i / outputStride1) % outputHeight;
+        int d = (i / outputStride2) % outputDepth;
+        int n = i / outputStride3;
+
+        if (w >= left && h >= top && w < inputStride1 + left && h < inputHeight + top)
+            v = input[getIndex(w - left, h - top, d, n, inputStride1, inputStride2, inputStride3)];
+
+        output[i] = v;
+    }
+}
+
 __global__ void upSample2D(const float* __restrict input, int inputWidth, int inputHeight, int inputDepth, int inputBatch, int scale, float* __restrict output)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -480,6 +501,11 @@ __global__ void map(int inputLen, const float* __restrict input, F f, float* __r
 
 namespace Neuro
 {
+    void CudaKernels::Pad2D(const dim3& blocks, const dim3& threads, int outputLen, const float* inputDev, int inputStride1, int inputStride2, int inputStride3, int left, int right, int top, int bottom, float value, float* __restrict outputDev, int outputStride1, int outputStride2, int outputStride3)
+    {
+        pad2D<<<blocks, threads>>>(outputLen, inputDev, inputStride1, inputStride2, inputStride3, left, right, top, bottom, value, outputDev, outputStride1, outputStride2, outputStride3);
+    }
+
     void CudaKernels::UpSample2D(const dim3& blocks, const dim3& threads, const float* inputDev, int inputWidth, int inputHeight, int inputDepth, int inputBatch, int scale, float* outputDev)
     {
         upSample2D<<<blocks, threads>>>(inputDev, inputWidth, inputHeight, inputDepth, inputBatch, scale, outputDev);
@@ -587,13 +613,13 @@ namespace Neuro
         divBroadcast<<<blocks, threads>>>(alpha, t1Dev, t1Width, t1Height, t1Depth, t1Batch, beta, t2Dev, t2Width, t2Height, t2Depth, t2Batch, outputDev, outputWidth, outputHeight, outputDepth, outputBatch);
     }
 
-    void CudaKernels::AdamStep(const dim3& blocks, const dim3& threads, int inputLen, float* parameterDev, const float* gradientDev, float* mGradDev, float* vGradDev, /*float batchSize, */float lr, float beta1, float beta2, float epsilon)
+    void CudaKernels::AdamStep(const dim3& blocks, const dim3& threads, int inputLen, float* parameterDev, const float* gradientDev, float* mGradDev, float* vGradDev, float lr, float beta1, float beta2, float epsilon)
     {
-        adamStep<<<blocks, threads>>>(inputLen, parameterDev, gradientDev, mGradDev, vGradDev, /*batchSize, */lr, beta1, beta2, epsilon);
+        adamStep<<<blocks, threads>>>(inputLen, parameterDev, gradientDev, mGradDev, vGradDev, lr, beta1, beta2, epsilon);
     }
 
-    void CudaKernels::SgdStep(const dim3& blocks, const dim3& threads, int inputLen, float* parameterDev, const float* gradientDev, /*float batchSize, */float lr)
+    void CudaKernels::SgdStep(const dim3& blocks, const dim3& threads, int inputLen, float* parameterDev, const float* gradientDev, float lr)
     {
-        sgdStep<<<blocks, threads>>>(inputLen, parameterDev, gradientDev, /*batchSize, */lr);
+        sgdStep<<<blocks, threads>>>(inputLen, parameterDev, gradientDev, lr);
     }
 }

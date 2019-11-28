@@ -21,11 +21,18 @@
 
 int main()
 {
-    Tensor::SetForcedOpMode(CPU);
+    Tensor::SetForcedOpMode(GPU);
 
-    Tensor img("e:/Dropbox/!BLOG/4.jpg", false);
+    Tensor t(Shape(2, 2));
+    t.FillWithRand();
+
+    auto t2 = t.Pad2D(2, 1, 3, 2, 10);
+
+    cout << t2.ToString();
+
+    /*Tensor img("e:/Dropbox/!BLOG/4.jpg", false);
     Tensor edges = CannyEdgeDetection(img);
-    edges.SaveAsImage("edges.png", false);
+    edges.SaveAsImage("edges.png", false);*/
 
     //const int DEPTH_IN = 64;
     //const int KERNELS_NUM = 3;

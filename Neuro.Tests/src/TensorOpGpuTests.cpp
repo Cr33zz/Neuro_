@@ -1284,6 +1284,19 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
+        TEST_METHOD(Pad2D_CompareWithCpuResult)
+        {
+            Tensor t(Shape(7, 9, 3, 5)); t.FillWithRand();
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r = t.Pad2D(3, 5, 1, 2, 7);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = t.Pad2D(3, 5, 1, 2, 7);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
         TEST_METHOD(UpSample2D_CompareWithCpuResult)
         {
             Tensor t(Shape(8, 8, 3, 30)); t.FillWithRand();

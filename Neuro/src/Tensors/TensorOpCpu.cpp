@@ -430,7 +430,27 @@ namespace Neuro
 			output(h, w, d, n) = input(w, h, d, n);
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Pad2D(const Tensor& input, int left, int right, int top, int bottom, float value, Tensor& output) const
+    {
+        input.CopyToHost();
+        output.OverrideHost();
+
+        for (uint32_t n = 0; n < output.Batch(); ++n)
+		for (uint32_t d = 0; d < output.Depth(); ++d)
+		for (uint32_t h = 0; h < output.Height(); ++h)
+		for (uint32_t w = 0; w < output.Width(); ++w)
+        {
+            float v = value;
+
+            if (w >= left && h >= top && w < input.Width() + left && h < input.Height() + top)
+                v = input(w - left, h - top, d, n);
+
+			output(w, h, d, n) = v;
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void TensorOpCpu::Map(const function<float(float)>& func, const Tensor& t, Tensor& output) const
 	{
 		t.CopyToHost();
