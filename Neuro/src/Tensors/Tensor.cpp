@@ -1331,16 +1331,30 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::Pad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, Tensor& output) const
+    void Tensor::ConstantPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, Tensor& output) const
     {
-        Op()->Pad2D(*this, left, right, top, bottom, value, output);
+        Op()->ConstantPad2D(*this, left, right, top, bottom, value, output);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor Tensor::Pad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value) const
+    Tensor Tensor::ConstantPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value) const
     {
         Tensor output(Shape(Width() + left + right, Height() + top + bottom, Depth(), Batch()));
-        Pad2D(left, right, top, bottom, value, output);
+        ConstantPad2D(left, right, top, bottom, value, output);
+        return output;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::ReflectPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& output) const
+    {
+        Op()->ReflectPad2D(*this, left, right, top, bottom, output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::ReflectPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom) const
+    {
+        Tensor output(Shape(Width() + left + right, Height() + top + bottom, Depth(), Batch()));
+        ReflectPad2D(left, right, top, bottom, output);
         return output;
     }
 

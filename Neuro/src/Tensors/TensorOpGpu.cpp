@@ -627,7 +627,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Pad2D(const Tensor& input, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, Tensor& output) const
+    void TensorOpGpu::ConstantPad2D(const Tensor& input, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, Tensor& output) const
     {
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
@@ -635,7 +635,20 @@ namespace Neuro
 
         dim3 blocks, threads;
         GetKernelRunParamsForSequence(output.Length(), blocks, threads, 128);
-        CudaKernels::Pad2D(blocks, threads, output.Length(), input.GetDevicePtr(), input.Stride(1), input.Stride(2), input.Stride(3), left, right, top, bottom, value, output.GetDevicePtr(), output.Stride(1), output.Stride(2), output.Stride(3));
+        CudaKernels::ConstantPad2D(blocks, threads, output.Length(), input.GetDevicePtr(), input.Stride(1), input.Stride(2), input.Stride(3), left, right, top, bottom, value, output.GetDevicePtr(), output.Stride(1), output.Stride(2), output.Stride(3));
+        cudaStreamSynchronize(0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::ReflectPad2D(const Tensor& input, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& output) const
+    {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
+        input.CopyToDevice();
+        output.OverrideDevice();
+
+        dim3 blocks, threads;
+        GetKernelRunParamsForSequence(output.Length(), blocks, threads, 128);
+        CudaKernels::ReflectPad2D(blocks, threads, output.Length(), input.GetDevicePtr(), input.Stride(1), input.Stride(2), input.Stride(3), left, right, top, bottom, output.GetDevicePtr(), output.Stride(1), output.Stride(2), output.Stride(3));
         cudaStreamSynchronize(0);
     }
 

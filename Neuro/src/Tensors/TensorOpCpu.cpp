@@ -431,7 +431,7 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::Pad2D(const Tensor& input, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, Tensor& output) const
+    void TensorOpCpu::ConstantPad2D(const Tensor& input, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, Tensor& output) const
     {
         input.CopyToHost();
         output.OverrideHost();
@@ -447,6 +447,36 @@ namespace Neuro
                 v = input(w - left, h - top, d, n);
 
 			output(w, h, d, n) = v;
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::ReflectPad2D(const Tensor& input, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& output) const
+    {
+        input.CopyToHost();
+        output.OverrideHost();
+
+        for (uint32_t n = 0; n < output.Batch(); ++n)
+		for (uint32_t d = 0; d < output.Depth(); ++d)
+		for (uint32_t h = 0; h < output.Height(); ++h)
+		for (uint32_t w = 0; w < output.Width(); ++w)
+        {
+            int inputW = w - left;
+            int inputH = h - top;
+
+            if (inputW < 0)
+                inputW = -inputW;
+            else if (inputW >= (int)input.Width())
+                inputW = (int)::fabs((int)input.Width() - inputW);
+            inputW %= input.Width();
+
+            if (inputH < 0)
+                inputH = -inputH;
+            else if (inputH >= (int)input.Height())
+                inputH = (int)::fabs((int)input.Height() - inputH);
+            inputH %= input.Height();
+
+            output(w, h, d, n) = input((uint32_t)inputW, (uint32_t)inputH, d, n);
         }
     }
 

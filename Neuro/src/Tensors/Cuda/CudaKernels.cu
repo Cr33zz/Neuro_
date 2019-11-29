@@ -21,7 +21,7 @@ __device__ void getDims(int width, int height, int depth, int& dim0, int& dim0di
     dim0dim1dim2 = width * height * depth;
 }
 
-__global__ void pad2D(int outputLen, const float* __restrict input, int inputStride1, int inputStride2, int inputStride3, int left, int right, int top, int bottom, float value, float* __restrict output, int outputStride1, int outputStride2, int outputStride3)
+__global__ void constantPad2D(int outputLen, const float* __restrict input, int inputStride1, int inputStride2, int inputStride3, int left, int right, int top, int bottom, float value, float* __restrict output, int outputStride1, int outputStride2, int outputStride3)
 {
     int inputHeight = inputStride2 / inputStride1;
     int outputHeight = outputStride2 / outputStride1;
@@ -42,9 +42,41 @@ __global__ void pad2D(int outputLen, const float* __restrict input, int inputStr
     }
 }
 
+__global__ void reflectPad2D(int outputLen, const float* __restrict input, int inputStride1, int inputStride2, int inputStride3, int left, int right, int top, int bottom, float* __restrict output, int outputStride1, int outputStride2, int outputStride3)
+{
+    int inputWidth = inputStride1;
+    int inputHeight = inputStride2 / inputStride1;
+    int outputHeight = outputStride2 / outputStride1;
+    int outputDepth = outputStride3 / outputStride2;
+
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < outputLen; i += gridDim.x * blockDim.x)
+    {
+        int w = i % outputStride1;
+        int h = (i / outputStride1) % outputHeight;
+        int d = (i / outputStride2) % outputDepth;
+        int n = i / outputStride3;
+
+        int inputW = w - left;
+        int inputH = h - top;
+
+        if (inputW < 0)
+            inputW = -inputW;
+        else if (inputW >= inputWidth)
+            inputW = abs(inputWidth - inputW);
+        inputW %= inputWidth;
+
+        if (inputH < 0)
+            inputH = -inputH;
+        else if (inputH >= inputHeight)
+            inputH = abs(inputHeight - inputH);
+        inputH %= inputHeight;
+
+        output[i] = input[getIndex(inputW, inputH, d, n, inputStride1, inputStride2, inputStride3)];
+    }
+}
+
 __global__ void pad2DGrad(int inputGradLen, const float* __restrict outputGrad, int outputGradStride1, int outputGradStride2, int outputGradStride3, int left, int right, int top, int bottom, float* __restrict inputGrad, int inputGradStride1, int inputGradStride2, int inputGradStride3)
 {
-    int outputGradHeight = outputGradStride2 / outputGradStride1;
     int inputGradHeight = inputGradStride2 / inputGradStride1;
     int inputGradDepth = inputGradStride3 / inputGradStride2;
 
@@ -518,9 +550,14 @@ __global__ void map(int inputLen, const float* __restrict input, F f, float* __r
 
 namespace Neuro
 {
-    void CudaKernels::Pad2D(const dim3& blocks, const dim3& threads, int outputLen, const float* inputDev, int inputStride1, int inputStride2, int inputStride3, int left, int right, int top, int bottom, float value, float* __restrict outputDev, int outputStride1, int outputStride2, int outputStride3)
+    void CudaKernels::ConstantPad2D(const dim3& blocks, const dim3& threads, int outputLen, const float* inputDev, int inputStride1, int inputStride2, int inputStride3, int left, int right, int top, int bottom, float value, float* __restrict outputDev, int outputStride1, int outputStride2, int outputStride3)
     {
-        pad2D<<<blocks, threads>>>(outputLen, inputDev, inputStride1, inputStride2, inputStride3, left, right, top, bottom, value, outputDev, outputStride1, outputStride2, outputStride3);
+        constantPad2D<<<blocks, threads>>>(outputLen, inputDev, inputStride1, inputStride2, inputStride3, left, right, top, bottom, value, outputDev, outputStride1, outputStride2, outputStride3);
+    }
+
+    void CudaKernels::ReflectPad2D(const dim3& blocks, const dim3& threads, int outputLen, const float* inputDev, int inputStride1, int inputStride2, int inputStride3, int left, int right, int top, int bottom, float* __restrict outputDev, int outputStride1, int outputStride2, int outputStride3)
+    {
+        reflectPad2D<<<blocks, threads>>>(outputLen, inputDev, inputStride1, inputStride2, inputStride3, left, right, top, bottom, outputDev, outputStride1, outputStride2, outputStride3);
     }
 
     void CudaKernels::Pad2DGradient(const dim3& blocks, const dim3& threads, int inputGradLen, const float* outputGradDev, int outputGradStride1, int outputGradStride2, int outputGradStride3, int left, int right, int top, int bottom, float* inputGradDev, int inputGradStride1, int inputGradStride2, int inputGradStride3)

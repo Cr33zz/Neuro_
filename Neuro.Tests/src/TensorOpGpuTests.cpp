@@ -1284,15 +1284,28 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
-        TEST_METHOD(Pad2D_CompareWithCpuResult)
+        TEST_METHOD(ConstantPad2D_CompareWithCpuResult)
         {
             Tensor t(Shape(7, 9, 3, 5)); t.FillWithRand();
 
             Tensor::SetForcedOpMode(CPU);
-            NEURO_PROFILE("CPU", Tensor r = t.Pad2D(3, 5, 1, 2, 7);)
+            NEURO_PROFILE("CPU", Tensor r = t.ConstantPad2D(3, 5, 1, 2, 7);)
 
             Tensor::SetForcedOpMode(GPU);
-            NEURO_PROFILE("GPU", Tensor r2 = t.Pad2D(3, 5, 1, 2, 7);)
+            NEURO_PROFILE("GPU", Tensor r2 = t.ConstantPad2D(3, 5, 1, 2, 7);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(ReflectPad2D_CompareWithCpuResult)
+        {
+            Tensor t(Shape(7, 9, 3, 5)); t.FillWithRand();
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r = t.ReflectPad2D(3, 5, 1, 2);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = t.ReflectPad2D(3, 5, 1, 2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -1300,7 +1313,7 @@ namespace NeuroTests
         TEST_METHOD(Pad2DGradient_CompareWithCpuResult)
         {
             Tensor input(Shape(28, 28, 3, 30)); input.FillWithRand(15);
-            Tensor output = input.Pad2D(3, 5, 1, 2, 7);
+            Tensor output = input.ConstantPad2D(3, 5, 1, 2, 7);
             Tensor outputGradient(output.GetShape()); outputGradient.FillWithRand();
 
             Tensor::SetForcedOpMode(CPU);

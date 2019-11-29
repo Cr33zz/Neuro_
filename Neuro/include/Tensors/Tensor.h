@@ -197,8 +197,10 @@ namespace Neuro
         pair<Tensor, Tensor> Standardized(EAxis axis, Tensor& result, Tensor* mean = nullptr, Tensor* invVariance = nullptr) const;
         Tensor Standardized(EAxis axis, Tensor* mean = nullptr, Tensor* invVariance = nullptr) const;
 
-        void Pad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, Tensor& output) const;
-        Tensor Pad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value) const;
+        void ConstantPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, Tensor& output) const;
+        Tensor ConstantPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value) const;
+        void ReflectPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& output) const;
+        Tensor ReflectPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom) const;
         void Pad2DGradient(const Tensor& gradient, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& inputsGradient) const;
 
         void Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& output) const;

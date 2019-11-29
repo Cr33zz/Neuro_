@@ -12,6 +12,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<TensorLike*> Padding2D::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
     {
-        return { pad2d(inputs[0], m_Left, m_Right, m_Top, m_Bottom, m_Value) };
+        return { constant_pad2d(inputs[0], m_Left, m_Right, m_Top, m_Bottom, m_Value) };
     }
 }
