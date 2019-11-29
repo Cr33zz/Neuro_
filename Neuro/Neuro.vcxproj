@@ -200,6 +200,7 @@
     <ClInclude Include="include\ComputationalGraph\Operations\LeakyReLUOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\MeanSquaredErrorOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\MergeOp.h" />
+    <ClInclude Include="include\ComputationalGraph\Operations\Pad2dOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\Pool2dOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\ReshapeOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\StandardDeviationOp.h" />
@@ -261,6 +262,7 @@
     <ClInclude Include="include\Layers\Lambda.h" />
     <ClInclude Include="include\Layers\LayerBase.h" />
     <ClInclude Include="include\Layers\Merge.h" />
+    <ClInclude Include="include\Layers\Padding2D.h" />
     <ClInclude Include="include\Layers\Pooling2D.h" />
     <ClInclude Include="include\Layers\Reshape.h" />
     <ClInclude Include="include\Layers\SingleLayer.h" />
@@ -315,6 +317,7 @@
     <ClCompile Include="src\ComputationalGraph\Operations\InstanceNormalizeOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\LeakyReLUOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\MergeOp.cpp" />
+    <ClCompile Include="src\ComputationalGraph\Operations\Pad2dOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\Pool2dOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\ReshapeOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\SwapRedBlueChannelsOp.cpp" />
@@ -365,6 +368,7 @@
     <ClCompile Include="src\Layers\InstanceNormalization.cpp" />
     <ClCompile Include="src\Layers\LayerBase.cpp" />
     <ClCompile Include="src\Layers\Merge.cpp" />
+    <ClCompile Include="src\Layers\Padding2D.cpp" />
     <ClCompile Include="src\Layers\Pooling2D.cpp" />
     <ClCompile Include="src\Layers\Reshape.cpp" />
     <ClCompile Include="src\Layers\SingleLayer.cpp" />
