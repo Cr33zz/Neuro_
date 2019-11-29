@@ -29,6 +29,7 @@
 #include "ComputationalGraph/Operations/MergeOp.h"
 #include "ComputationalGraph/Operations/MultiplyOp.h"
 #include "ComputationalGraph/Operations/NegativeOp.h"
+#include "ComputationalGraph/Operations/Pad2dOp.h"
 #include "ComputationalGraph/Operations/PowOp.h"
 #include "ComputationalGraph/Operations/Pool2dOp.h"
 #include "ComputationalGraph/Operations/ReLUOp.h"

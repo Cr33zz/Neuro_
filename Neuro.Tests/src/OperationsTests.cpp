@@ -246,6 +246,12 @@ namespace NeuroTests
             Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new SumOp(&x, BatchAxis)).get()));
         }
 
+        TEST_METHOD(Pad2d)
+        {
+            auto x = Variable(Shape(2, 3, 4, 2));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new Pad2dOp(&x, 3, 5, 1, 2, 7.f)).get()));
+        }
+
         TEST_METHOD(Pow)
         {
             auto x = Variable(Shape(2, 3, 4, 2));

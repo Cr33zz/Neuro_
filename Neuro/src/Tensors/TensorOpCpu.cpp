@@ -453,7 +453,14 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::Pad2DGradient(const Tensor& gradient, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& inputsGradient) const
     {
-        //tbi
+        gradient.CopyToHost();
+        inputsGradient.OverrideHost();
+
+        for (uint32_t n = 0; n < inputsGradient.Batch(); ++n)
+		for (uint32_t d = 0; d < inputsGradient.Depth(); ++d)
+		for (uint32_t h = 0; h < inputsGradient.Height(); ++h)
+		for (uint32_t w = 0; w < inputsGradient.Width(); ++w)
+            inputsGradient(w, h, d, n) = gradient(w + left, h + top, d, n);
     }
 
     //////////////////////////////////////////////////////////////////////////

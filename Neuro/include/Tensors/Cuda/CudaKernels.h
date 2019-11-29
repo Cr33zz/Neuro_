@@ -7,6 +7,7 @@ namespace Neuro
 	struct CudaKernels
 	{
         static void Pad2D(const dim3& blocks, const dim3& threads, int outputLen, const float* inputDev, int inputStride1, int inputStride2, int inputStride3, int left, int right, int top, int bottom, float value, float* __restrict outputDev, int outputStride1, int outputStride2, int outputStride3);
+        static void Pad2DGradient(const dim3& blocks, const dim3& threads, int inputGradLen, const float* outputGradDev, int outputGradStride1, int outputGradStride2, int outputGradStride3, int left, int right, int top, int bottom, float* inputGradDev, int inputGradStride1, int inputGradStride2, int inputGradStride3);
         static void UpSample2D(const dim3& blocks, const dim3& threads, const float* inputDev, int inputWidth, int inputHeight, int inputDepth, int inputBatch, int scale, float* outputDev);
         static void UpSample2DGradient(const dim3& blocks, const dim3& threads, const float* outputGradientDev, int scale, float* inputGradientDev, int inputWidth, int inputHeight, int inputDepth, int inputBatch);
         static void LeakyReLU(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float alpha, float* outputDev);

@@ -648,7 +648,7 @@ namespace Neuro
 
         dim3 blocks, threads;
         GetKernelRunParamsForSequence(gradient.Length(), blocks, threads, 128);
-        //CudaKernels::Pad2DGradient(blocks, threads, gradient.Length(), gradient.GetDevicePtr(), input.Stride(1), input.Stride(2), input.Stride(3), left, right, top, bottom, value, output.GetDevicePtr(), output.Stride(1), output.Stride(2), output.Stride(3));
+        CudaKernels::Pad2DGradient(blocks, threads, inputsGradient.Length(), gradient.GetDevicePtr(), gradient.Stride(1), gradient.Stride(2), gradient.Stride(3), left, right, top, bottom, inputsGradient.GetDevicePtr(), inputsGradient.Stride(1), inputsGradient.Stride(2), inputsGradient.Stride(3));
         cudaStreamSynchronize(0);
     }
 

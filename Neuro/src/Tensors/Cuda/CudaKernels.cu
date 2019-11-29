@@ -42,24 +42,20 @@ __global__ void pad2D(int outputLen, const float* __restrict input, int inputStr
     }
 }
 
-__global__ void pad2DGrad(int outputLen, const float* __restrict outputGrad, int inputStride1, int inputStride2, int inputStride3, int left, int right, int top, int bottom, float* __restrict inputGrad, int outputStride1, int outputStride2, int outputStride3)
+__global__ void pad2DGrad(int inputGradLen, const float* __restrict outputGrad, int outputGradStride1, int outputGradStride2, int outputGradStride3, int left, int right, int top, int bottom, float* __restrict inputGrad, int inputGradStride1, int inputGradStride2, int inputGradStride3)
 {
-    int inputHeight = inputStride2 / inputStride1;
-    int outputHeight = outputStride2 / outputStride1;
-    int outputDepth = outputStride3 / outputStride2;
+    int outputGradHeight = outputGradStride2 / outputGradStride1;
+    int inputGradHeight = inputGradStride2 / inputGradStride1;
+    int inputGradDepth = inputGradStride3 / inputGradStride2;
 
-    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < outputLen; i += gridDim.x * blockDim.x)
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < inputGradLen; i += gridDim.x * blockDim.x)
     {
-        float v = value;
-        int w = i % outputStride1;
-        int h = (i / outputStride1) % outputHeight;
-        int d = (i / outputStride2) % outputDepth;
-        int n = i / outputStride3;
+        int w = i % inputGradStride1;
+        int h = (i / inputGradStride1) % inputGradHeight;
+        int d = (i / inputGradStride2) % inputGradDepth;
+        int n = i / inputGradStride3;
 
-        if (w >= left && h >= top && w < inputStride1 + left && h < inputHeight + top)
-            v = input[getIndex(w - left, h - top, d, n, inputStride1, inputStride2, inputStride3)];
-
-        output[i] = v;
+        inputGrad[i] = outputGrad[getIndex(w + left, h + top, d, n, outputGradStride1, outputGradStride2, outputGradStride3)];
     }
 }
 
@@ -525,6 +521,11 @@ namespace Neuro
     void CudaKernels::Pad2D(const dim3& blocks, const dim3& threads, int outputLen, const float* inputDev, int inputStride1, int inputStride2, int inputStride3, int left, int right, int top, int bottom, float value, float* __restrict outputDev, int outputStride1, int outputStride2, int outputStride3)
     {
         pad2D<<<blocks, threads>>>(outputLen, inputDev, inputStride1, inputStride2, inputStride3, left, right, top, bottom, value, outputDev, outputStride1, outputStride2, outputStride3);
+    }
+
+    void CudaKernels::Pad2DGradient(const dim3& blocks, const dim3& threads, int inputGradLen, const float* outputGradDev, int outputGradStride1, int outputGradStride2, int outputGradStride3, int left, int right, int top, int bottom, float* inputGradDev, int inputGradStride1, int inputGradStride2, int inputGradStride3)
+    {
+        pad2DGrad << <blocks, threads >> > (inputGradLen, outputGradDev, outputGradStride1, outputGradStride2, outputGradStride3, left, right, top, bottom, inputGradDev, inputGradStride1, inputGradStride2, inputGradStride3);
     }
 
     void CudaKernels::UpSample2D(const dim3& blocks, const dim3& threads, const float* inputDev, int inputWidth, int inputHeight, int inputDepth, int inputBatch, int scale, float* outputDev)
