@@ -37,6 +37,7 @@ namespace Neuro
         virtual void Mean(const Tensor& input, EAxis axis, Tensor& output) const override;
         virtual void Transpose(const Tensor& input, Tensor& output) const override;
         virtual void Pad2D(const Tensor& input, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, Tensor& output) const override;
+        virtual void Pad2DGradient(const Tensor& gradient, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& inputsGradient) const override;
         virtual void Conv2D(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& output) const override;
         virtual void Conv2DBiasActivation(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, const Tensor& bias, EActivation activation, float activationAlpha, Tensor& output) override;
         virtual void Conv2DBiasGradient(const Tensor& gradient, Tensor& inputsGradient) override;

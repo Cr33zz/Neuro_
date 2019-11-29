@@ -42,6 +42,27 @@ __global__ void pad2D(int outputLen, const float* __restrict input, int inputStr
     }
 }
 
+__global__ void pad2DGrad(int outputLen, const float* __restrict outputGrad, int inputStride1, int inputStride2, int inputStride3, int left, int right, int top, int bottom, float* __restrict inputGrad, int outputStride1, int outputStride2, int outputStride3)
+{
+    int inputHeight = inputStride2 / inputStride1;
+    int outputHeight = outputStride2 / outputStride1;
+    int outputDepth = outputStride3 / outputStride2;
+
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < outputLen; i += gridDim.x * blockDim.x)
+    {
+        float v = value;
+        int w = i % outputStride1;
+        int h = (i / outputStride1) % outputHeight;
+        int d = (i / outputStride2) % outputDepth;
+        int n = i / outputStride3;
+
+        if (w >= left && h >= top && w < inputStride1 + left && h < inputHeight + top)
+            v = input[getIndex(w - left, h - top, d, n, inputStride1, inputStride2, inputStride3)];
+
+        output[i] = v;
+    }
+}
+
 __global__ void upSample2D(const float* __restrict input, int inputWidth, int inputHeight, int inputDepth, int inputBatch, int scale, float* __restrict output)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;

@@ -1345,6 +1345,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void Tensor::Pad2DGradient(const Tensor& gradient, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& inputsGradient) const
+    {
+        Op()->Pad2DGradient(gradient, left, right, top, bottom, inputsGradient);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     Tensor Tensor::ArgMax(EAxis axis) const
 	{
         Tensor maxIndex(Shape(1));

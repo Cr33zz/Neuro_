@@ -451,6 +451,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Pad2DGradient(const Tensor& gradient, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& inputsGradient) const
+    {
+        //tbi
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void TensorOpCpu::Map(const function<float(float)>& func, const Tensor& t, Tensor& output) const
 	{
 		t.CopyToHost();

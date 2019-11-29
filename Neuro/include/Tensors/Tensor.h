@@ -199,6 +199,7 @@ namespace Neuro
 
         void Pad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, Tensor& output) const;
         Tensor Pad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value) const;
+        void Pad2DGradient(const Tensor& gradient, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& inputsGradient) const;
 
         void Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& output) const;
         Tensor Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat) const;
