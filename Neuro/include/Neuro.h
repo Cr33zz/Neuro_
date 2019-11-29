@@ -18,6 +18,7 @@
 #include "Layers/BatchNormalization.h"
 #include "Layers/InstanceNormalization.h"
 #include "Layers/Input.h"
+#include "Layers/Padding2D.h"
 #include "Layers/Pooling2D.h"
 #include "Layers/UpSampling2D.h"
 #include "Layers/Concatenate.h"
