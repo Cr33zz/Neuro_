@@ -55,8 +55,8 @@ namespace Neuro
             m_AllocSize = other.m_AllocSize;
             m_Size = other.m_Size;
             m_DataRefCount = m_DeviceDataRefCount = 0;
-            FreeOnHost();
             FreeOnDevice(true, true);
+            FreeOnHost();
             ChangeType(other.m_Type);
             if (other.m_DataPtr)
             {
