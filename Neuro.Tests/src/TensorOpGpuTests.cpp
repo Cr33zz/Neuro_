@@ -1312,8 +1312,8 @@ namespace NeuroTests
 
         TEST_METHOD(Pad2DGradient_CompareWithCpuResult)
         {
-            Tensor input(Shape(28, 28, 3, 30)); input.FillWithRand(15);
-            Tensor output = input.ConstantPad2D(3, 5, 1, 2, 7);
+            Tensor input(Shape(2, 3, 4, 2)); input.FillWithRand(15);
+            Tensor output = input.ReflectPad2D(3, 5, 1, 2);
             Tensor outputGradient(output.GetShape()); outputGradient.FillWithRand();
 
             Tensor::SetForcedOpMode(CPU);

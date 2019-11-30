@@ -237,6 +237,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     tensor_ptr_vec_t ModelBase::Predict(const const_tensor_ptr_vec_t& inputs)
     {
+        NVTXProfile p((string("Predict ") + Name()).c_str(), 0xFFC0C0C0);
         if (!m_Predicter)
         {
             vector<Placeholder*> inputs;
@@ -257,6 +258,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     tensor_ptr_vec_t ModelBase::Eval(const vector<TensorLike*>& fetches, const map<Placeholder*, const Tensor*>& feeds)
     {
+        NVTXProfile p((string("Eval ") + Name()).c_str(), 0xFFC0C0C0);
         size_t fetchesHash = Session::GetFetchesHash(fetches);
 
         auto predicter = m_EvalPredicters[fetchesHash];
@@ -1057,6 +1059,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     tuple<float, float> ModelBase::TrainOnBatch(const const_tensor_ptr_vec_t& inputs, const const_tensor_ptr_vec_t& outputs)
     {
+        NVTXProfile p((string("Train on batch ") + Name()).c_str(), 0xFFC0C0C0);
         float loss, acc;
         TrainStep(inputs, outputs, &loss, &acc);
         return make_tuple(loss, acc);

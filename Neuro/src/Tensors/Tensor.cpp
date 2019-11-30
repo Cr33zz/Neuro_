@@ -932,6 +932,7 @@ namespace Neuro
     template <int W, int H, int D, int N>
     void ConcatTemplate(const const_tensor_ptr_vec_t& inputs, Tensor& output)
     {
+        output.OverrideHost();
         auto& shape = inputs[0]->GetShape();
         const uint32_t width = shape.Width();
         const uint32_t height = shape.Height();
@@ -952,28 +953,28 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Concat(EAxis axis, const const_tensor_ptr_vec_t& inputs, Tensor& result)
+	void Tensor::Concat(EAxis axis, const const_tensor_ptr_vec_t& inputs, Tensor& output)
 	{
-        result.OverrideHost();
-
-        if (axis == BatchAxis)
+        if (axis == BatchAxis || axis == DepthAxis)
         {
+            NEURO_ASSERT(axis != BatchAxis || output.Batch() == (uint32_t)inputs.size(), "Invalid output batch dimension, expected " << inputs.size());
+            NEURO_ASSERT(axis != DepthAxis || output.Depth() == ((uint32_t)inputs.size() * inputs[0]->Depth()), "Invalid output depth dimension, expected " << (uint32_t)inputs.size() * inputs[0]->Depth());
             uint32_t elementsCopied = 0;
             for (uint32_t i = 0; i < inputs.size(); ++i)
             {
-                inputs[i]->CopyToHost();
-                copy(inputs[i]->m_Storage.Data(), inputs[i]->m_Storage.DataEnd(), result.m_Storage.Data() + elementsCopied);
+                NEURO_ASSERT(inputs[i]->Batch() == 1, "");
+                inputs[i]->CopyTo(0, output, elementsCopied, inputs[i]->Length());
                 elementsCopied += inputs[i]->Length();
             }
+            return;
         }
-        else if (axis == WidthAxis)
-            ConcatTemplate<1, 0, 0, 0>(inputs, result);
-        else if (axis == HeightAxis)
-            ConcatTemplate<0, 1, 0, 0>(inputs, result);
-        else if (axis == DepthAxis)
-            ConcatTemplate<0, 0, 1, 0>(inputs, result);
-        else
-            assert(false); // not supported
+
+        if (axis == WidthAxis)
+            return ConcatTemplate<1, 0, 0, 0>(inputs, output);
+        if (axis == HeightAxis)
+            return ConcatTemplate<0, 1, 0, 0>(inputs, output);
+        
+        NEURO_ASSERT(false, "Unsupported axis.");
 	}
 
     //////////////////////////////////////////////////////////////////////////

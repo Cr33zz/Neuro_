@@ -146,7 +146,7 @@ namespace Neuro
         // In case number of tensors is smaller than forcedDepth, first tensor will be repeated to account for missing tensors
         static Tensor MergeIntoDepth(const vector<Tensor>& tensors, uint32_t forcedDepth = 0);
 
-        static void Concat(EAxis axis, const const_tensor_ptr_vec_t& inputs, Tensor& result);
+        static void Concat(EAxis axis, const const_tensor_ptr_vec_t& inputs, Tensor& output);
         // This is reverse Concat operation
         void Split(EAxis axis, tensor_ptr_vec_t& outputs) const;
 
