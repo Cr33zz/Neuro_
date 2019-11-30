@@ -31,7 +31,10 @@ public:
         //{
         //    Tensor t1(IMG_SHAPE), t2(IMG_SHAPE);
         //    tensor_ptr_vec_t output{ &t1, &t2 };
-        //    for (size_t i = 0; i < trainFiles.size(); ++i)
+
+        //    cout << "Pre-processing training data" << endl;
+        //    Tqdm progress(trainFiles.size(), 0);
+        //    for (size_t i = 0; i < trainFiles.size(); ++i, progress.NextStep())
         //    {
         //        auto& filename = trainFiles[i];
 
@@ -42,16 +45,13 @@ public:
         //        //auto img = LoadImage(filename, IMG_SHAPE.Width() * 2 * 1, IMG_SHAPE.Height() * 1, IMG_SHAPE.Width() * 2, IMG_SHAPE.Height());
         //        //actual pre-process
         //        //img.Split(WidthAxis, output);
-
-        //        t1.CopyBatchTo(0, (uint32_t)i, inImages);
-        //        t2.CopyBatchTo(0, (uint32_t)i, outImages);
+        //        t1.Sub(127.5f).Div(127.5f).CopyBatchTo(0, (uint32_t)i, inImages);
+        //        t2.Sub(127.5f).Div(127.5f).CopyBatchTo(0, (uint32_t)i, outImages);
         //    }
 
-        //    inImages.SaveAsImage("__in.jpg", false);
-        //    outImages.SaveAsImage("__out.jpg", false);
+        //    /*inImages.SaveAsImage("__in.jpg", false);
+        //    outImages.SaveAsImage("__out.jpg", false);*/
 
-        //    inImages.Sub(127.5f).Div(127.5f);
-        //    outImages.Sub(127.5f).Div(127.5f);
         //    inImages.SaveAsH5("inImages.h5");
         //    outImages.SaveAsH5("outImages.h5");
         //}
@@ -60,6 +60,8 @@ public:
             inImages.LoadFromH5("inImages.h5");
             outImages.LoadFromH5("outImages.h5");
         }
+
+        //inImages.Add(1.f).Mul(127.5f).SaveAsImage("_in.jpg", false);
 
         auto gModel = CreateGenerator(IMG_SHAPE);
         cout << "Generator" << endl << gModel->Summary();
@@ -74,32 +76,15 @@ public:
         ganModel->Optimize(new Adam(0.0002f, 0.5f), { new BinaryCrossEntropy(), new MeanAbsoluteError() }, { 1.f, 100.f });
         //cout << "GAN" << endl << ganModel->Summary();
 
-        //Tensor trainingData[2];
-
-        //LoadImages(images);
-        //m_ImageShape = Shape(images.Width(), images.Height(), images.Depth());
-        //images.Map([](float x) { return (x - 127.5f) / 127.5f; }, images);
-        //images.Reshape(Shape::From(dModel->InputShapesAt(-1)[0], images.Batch()));
-        //images.Name("images");
-
         const uint32_t BATCH_SIZE = 1;
-        const uint32_t STEPS = 100000;
-
-
-
-        //Tensor testNoise(Shape::From(gModel->InputShapesAt(-1)[0], 100), "test_noise"); testNoise.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
+        //const uint32_t STEPS = 100000;
+        const uint32_t STEPS = 1;
 
         Tensor condImages(Shape::From(gModel->InputShapesAt(-1)[0], BATCH_SIZE), "cond_image");
         Tensor expectedImages(Shape::From(gModel->OutputShapesAt(-1)[0], BATCH_SIZE), "output_image");
 
-        Tensor real(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE), "real"); real.FillWithValue(1.f);
-        Tensor fake(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE), "fake"); fake.FillWithValue(0.f);
-
-        //Tensor noiseHalf(Shape::From(gModel->InputShapesAt(-1)[0], BATCH_SIZE / 2), "noise_half");
-        //Tensor realHalf(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE / 2), "real_half"); realHalf.FillWithValue(1.f);
-        //Tensor fakeHalf(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE / 2), "fake_half"); fakeHalf.FillWithValue(0.f);
-
-        //float totalGanLoss = 0.f;
+        Tensor real(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE), "real"); real.One();
+        Tensor fake(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE), "fake"); fake.Zero();
 
         Tqdm progress(STEPS, 0);
         progress.ShowEta(true).ShowElapsed(false).ShowPercent(false);
@@ -113,29 +98,27 @@ public:
             outImages.GetBatches(batchesIdx, expectedImages);
 
             // generate fake images from condition
-            Tensor fakeImages = *gModel->Predict(condImages)[0];
-        //    fakeImages.Name("fake_images");
-        //    // grab random batch of real images
-        //    Tensor realImages = images.GetRandomBatches(BATCH_SIZE / 2);
-        //    realImages.Name("real_images");
+            const Tensor* fakeImages = gModel->Predict(condImages)[0];
+            /*Tensor tmp(Shape::From(fakeImages->GetShape(), 3));
+            Tensor::Concat(BatchAxis, { &condImages, fakeImages, &expectedImages }, tmp);
+            condImages.Add(1.f).Mul(127.5f).SaveAsImage("_cnd.jpg", false);
+            tmp.Add(1.f).Mul(127.5f).SaveAsImage("_gen.jpg", false);*/
 
             // perform step of training discriminator to distinguish fake from real images
             dModel->SetTrainable(true);
             float dRealLoss = get<0>(dModel->TrainOnBatch({ &condImages, &expectedImages }, { &real }));
-            float dFakeLoss = get<0>(dModel->TrainOnBatch({ &condImages, &fakeImages }, { &fake }));
-
-        //    noise.FillWithFunc([]() { return Normal::NextSingle(0, 1); });
+            float dFakeLoss = get<0>(dModel->TrainOnBatch({ &condImages, fakeImages }, { &fake }));
 
             // perform step of training generator to generate more real images (the more discriminator is confident that a particular image is fake the more generator will learn)
             dModel->SetTrainable(false);
             float ganLoss = get<0>(ganModel->TrainOnBatch({ &condImages }, { &real, &expectedImages }));
 
-        //    stringstream extString;
-        //    extString << setprecision(4) << fixed << " - real_l: " << dRealLoss << " - fake_l: " << dFakeLoss << " - gan_l: " << ganLoss;
-        //    progress.SetExtraString(extString.str());
+            stringstream extString;
+            extString << setprecision(4) << fixed << " - real_l: " << dRealLoss << " - fake_l: " << dFakeLoss << " - gan_l: " << ganLoss;
+            progress.SetExtraString(extString.str());
 
-        //    if (i % 50 == 0)
-        //        gModel->Predict(testNoise)[0]->Map([](float x) { return x * 127.5f + 127.5f; }).Reshaped(Shape(m_ImageShape.Width(), m_ImageShape.Height(), m_ImageShape.Depth(), -1)).SaveAsImage(Name() + "_e" + PadLeft(to_string(e), 4, '0') + "_b" + PadLeft(to_string(i), 4, '0') + ".png", false);
+            /*if (i % 50 == 0)
+                gModel->Predict(testNoise)[0]->Map([](float x) { return x * 127.5f + 127.5f; }).Reshaped(Shape(m_ImageShape.Width(), m_ImageShape.Height(), m_ImageShape.Depth(), -1)).SaveAsImage(Name() + "_e" + PadLeft(to_string(e), 4, '0') + "_b" + PadLeft(to_string(i), 4, '0') + ".png", false);*/
         }
 
         ganModel->SaveWeights("pix2pix.h5");
@@ -159,9 +142,9 @@ public:
         {
             InitializerBase* init = new Normal(0.f, 0.02f);
 
-            //auto g = (new ZeroPadding2D(2, 1, 2, 1))->Call(input);
-            //g = (new Conv2DTranspose(filtersNum, 4, 2))->KernelInitializer(init)->Call(g);
-            auto g = (new Conv2DTranspose(filtersNum, 4, 2))->KernelInitializer(init)->Call(input);
+            auto g = (new UpSampling2D(2))->Call(input);
+            g = (new ZeroPadding2D(2, 1, 2, 1))->Call(g);
+            g = (new Conv2D(filtersNum, 4))->KernelInitializer(init)->Call(g);
             g = (new BatchNormalization())->Call(g);
             if (dropout)
                 g = (new Dropout(0.5f))->Call(g);
@@ -195,8 +178,9 @@ public:
         auto d6 = decoderBlock(d5[0], e2[0], 128, false);
         auto d7 = decoderBlock(d6[0], e1[0], 64, false);
         /// output
-        auto g = (new ZeroPadding2D(2, 1, 2, 1))->Call(d7);
-        g = (new Conv2DTranspose(3, 4, 2))->KernelInitializer(init)->Call(g);
+        auto g = (new UpSampling2D(2))->Call(d7);
+        g = (new ZeroPadding2D(2, 1, 2, 1))->Call(g);
+        g = (new Conv2D(3, 4))->KernelInitializer(init)->Call(g);
         auto outImage = (new Activation(new Tanh()))->Call(g);
 
         auto model = new Flow({ inImage->Outputs()[0] }, outImage);
@@ -229,12 +213,12 @@ public:
         d = (new Conv2D(512, 4, 2))->KernelInitializer(init)->Call(d);
         d = (new BatchNormalization())->Call(d);
         d = (new Activation(new LeakyReLU(0.2f)))->Call(d);
-        d = (new ZeroPadding2D(1, 0, 1, 0))->Call(d);
+        d = (new ZeroPadding2D(2, 1, 2, 1))->Call(d);
         d = (new Conv2D(512, 4, 1))->KernelInitializer(init)->Call(d);
         d = (new BatchNormalization())->Call(d);
         d = (new Activation(new LeakyReLU(0.2f)))->Call(d);
         // patch output
-        d = (new ZeroPadding2D(1, 0, 1, 0))->Call(d);
+        d = (new ZeroPadding2D(2, 1, 2, 1))->Call(d);
         d = (new Conv2D(1, 4, 1))->KernelInitializer(init)->Call(d);
         auto patchOut = (new Activation(new Sigmoid()))->Call(d);
 
