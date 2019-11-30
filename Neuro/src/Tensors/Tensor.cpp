@@ -152,7 +152,7 @@ namespace Neuro
         const uint32_t TENSOR_WIDTH = Width();
         const uint32_t TENSOR_HEIGHT = Height();
         const uint32_t IMG_COLS = (uint32_t)ceil(::sqrt((float)Batch()));
-        const uint32_t IMG_ROWS = (uint32_t)ceil(Batch() / IMG_COLS);
+        const uint32_t IMG_ROWS = (uint32_t)ceil((float)Batch() / IMG_COLS);
         const uint32_t IMG_WIDTH = IMG_COLS * TENSOR_WIDTH;
         const uint32_t IMG_HEIGHT = IMG_ROWS * TENSOR_HEIGHT;
         const bool GRAYSCALE = (Depth() == 1);
@@ -333,7 +333,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
 	void Tensor::Zero()
 	{
-        NEURO_ASSERT(m_Storage.Location() != None, "");
+        if (m_Storage.Location() == None)
+            OverrideHost();
+        
         if (m_Storage.Location() == Host)
             g_OpCpu->Zero(*this);
         else
@@ -343,7 +345,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::One()
     {
-        NEURO_ASSERT(m_Storage.Location() != None, "");
+        if (m_Storage.Location() == None)
+            OverrideHost();
+
         if (m_Storage.Location() == Host)
             g_OpCpu->One(*this);
         else
@@ -936,7 +940,8 @@ namespace Neuro
 
         for (uint32_t i = 0; i < (uint32_t)inputs.size(); ++i)
         {
-            auto inputValues = inputs[0]->Values();
+            inputs[i]->CopyToHost();
+            auto inputValues = inputs[i]->Values();
             size_t j = 0;
             for (uint32_t n = 0; n < batch; ++n)
             for (uint32_t d = 0; d < depth; ++d)
@@ -962,17 +967,11 @@ namespace Neuro
             }
         }
         else if (axis == WidthAxis)
-        {
             ConcatTemplate<1, 0, 0, 0>(inputs, result);
-        }
         else if (axis == HeightAxis)
-        {
             ConcatTemplate<0, 1, 0, 0>(inputs, result);
-        }
         else if (axis == DepthAxis)
-        {
             ConcatTemplate<0, 0, 1, 0>(inputs, result);
-        }
         else
             assert(false); // not supported
 	}
