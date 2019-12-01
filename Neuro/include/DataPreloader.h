@@ -15,7 +15,8 @@ namespace Neuro
     struct ILoader
     {
         virtual ~ILoader() {}
-        virtual void operator()(Tensor& dest) = 0;
+        // Loads tensor(s) starting at loadIdx. Returns number of tensors loaded.
+        virtual size_t operator()(vector<Tensor>& dest, size_t loadIdx) = 0;
     };
 
     class DataPreloader

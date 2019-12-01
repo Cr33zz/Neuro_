@@ -99,7 +99,7 @@ namespace Neuro
     {
         ImageLoader(const vector<string>& files, uint32_t batch_size, uint32_t upScaleFactor = 1) : m_Files(files), m_BatchSize(batch_size), m_UpScaleFactor(upScaleFactor) {}
 
-        void operator()(Tensor& dest);
+        virtual size_t operator()(vector<Tensor>& dest, size_t loadIdx) override;
 
         vector<string> m_Files;
         uint32_t m_BatchSize;

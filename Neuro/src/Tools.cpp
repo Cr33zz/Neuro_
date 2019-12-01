@@ -104,7 +104,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-	std::string ToLower(const string& str)
+	string ToLower(const string& str)
 	{
 		string result = str;
 
@@ -214,7 +214,7 @@ namespace Neuro
         assert(stream);
         auto size = stream.tellg();
         unique_ptr<char[]> buffer(new char[size]);
-        stream.seekg(0, std::ios::beg);
+        stream.seekg(0, ios::beg);
         stream.read(buffer.get(), size);
         stream.close();
         if (length)
@@ -946,15 +946,36 @@ namespace Neuro
         if (m_ShowStep)
             m_Stream << ' ' << right << setw(to_string(m_MaxIterations).length()) << m_Iteration << "/" << m_MaxIterations;
 
+        auto dhms = [](uint32_t seconds)
+        {
+            int consumed = 0;
+            auto days = (seconds - consumed) / (24 * 60 * 60); consumed += days * (24 * 60 * 60);
+            auto hours = (seconds - consumed) / (60 * 60); consumed += hours * (60 * 60);
+            auto minutes = (seconds - consumed) / 60; consumed += minutes * 60;
+            seconds = seconds - consumed;
+
+            string result = "";
+            if (days > 0)
+                result += to_string(days) + "d";
+            if (hours > 0)
+                result += to_string(hours) + "h";
+            if (minutes > 0)
+                result += to_string(minutes) + "m";
+            if (seconds > 0)
+                result += to_string(seconds) + "s";
+
+            return result;
+        };
+
         if (m_Iteration > 0)
         {
             float averageTimePerStep = m_Timer.ElapsedMilliseconds() / (float)m_Iteration;
 
             if (m_ShowEta && m_Iteration < (int)m_MaxIterations)
-                m_Stream << " - eta: " << fixed << setprecision(2) << averageTimePerStep * (m_MaxIterations - m_Iteration) * 0.001f << "s";
+                m_Stream << " - eta: " << dhms((uint32_t)(averageTimePerStep * (m_MaxIterations - m_Iteration) / 1000.f));
 
             if (m_ShowElapsed)
-                m_Stream << " - elap: " << m_Timer.ElapsedMilliseconds() * 0.001f << "s";
+                m_Stream << " - elap: " << dhms((uint32_t)m_Timer.ElapsedSeconds());
 
             if (m_ShowIterTime)
                 m_Stream << " - iter: " << (int)averageTimePerStep << "ms";
@@ -1002,12 +1023,14 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void ImageLoader::operator()(Tensor& dest)
+    size_t ImageLoader::operator()(vector<Tensor>& dest, size_t loadIdx)
     {
-        dest.ResizeBatch(m_BatchSize);
-        dest.OverrideHost();
-        for (uint32_t j = 0; j < dest.Batch(); ++j)
-            LoadImage(m_Files[GlobalRng().Next((int)m_Files.size())], dest.Values() + j * dest.BatchLength(), dest.Width() * m_UpScaleFactor, dest.Height() * m_UpScaleFactor, dest.Width(), dest.Height());
-        dest.CopyToDevice();
+        auto& x = dest[loadIdx];
+        x.ResizeBatch(m_BatchSize);
+        x.OverrideHost();
+        for (uint32_t j = 0; j < x.Batch(); ++j)
+            LoadImage(m_Files[GlobalRng().Next((int)m_Files.size())], x.Values() + j * x.BatchLength(), x.Width() * m_UpScaleFactor, x.Height() * m_UpScaleFactor, x.Width(), x.Height());
+        x.CopyToDevice();
+        return 1;
     }
 }

@@ -85,8 +85,11 @@ namespace Neuro
             {
                 NVTXProfile p("Loading data", 0xFF93FF72);
                 // load data
+                size_t loadIdx = 0;
                 for (size_t i = 0; i < m_Loaders.size(); ++i)
-                    (*m_Loaders[i])((*data)[i]);
+                    loadIdx += (*m_Loaders[i])(*data, loadIdx);
+
+                NEURO_ASSERT(loadIdx == data->size(), "Number or loaded items (" << loadIdx << ") doesn't match number of destinations (" << data->size() << ").");
             }
 
             {
