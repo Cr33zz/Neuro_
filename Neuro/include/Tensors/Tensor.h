@@ -108,8 +108,10 @@ namespace Neuro
         Tensor Negated() const;
         void Inversed(float alpha, Tensor& result) const;
         Tensor Inversed(float alpha = 1.f) const;
-        void Clipped(float min, float max, Tensor& result) const;
-        Tensor Clipped(float min, float max) const;
+        void Clip(float min, float max, Tensor& result) const;
+        Tensor Clip(float min, float max) const;
+        void ClipGradient(const Tensor& input, float min, float max, const Tensor& outputGradient, Tensor& inputGradient) const;
+
         Tensor DiagFlat() const;
 
         Tensor Pow(float power) const;

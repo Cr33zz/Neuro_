@@ -203,6 +203,18 @@ __global__ void absGrad(int inputLen, const float* __restrict input, const float
         inputGrad[i] = sign(input[i]) * outputGrad[i];
 }
 
+__global__ void clip(int inputLen, const float* __restrict input, float min, float max, float* __restrict output)
+{
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < inputLen; i += gridDim.x * blockDim.x)
+        output[i] = input[i] < min ? min : (input[i] > max ? max : input[i]);
+}
+
+__global__ void clipGrad(int inputLen, const float* __restrict input, float min, float max, const float* __restrict outputGrad, float* __restrict inputGrad)
+{
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < inputLen; i += gridDim.x * blockDim.x)
+        inputGrad[i] = (input[i] >= min && input[i] <= max) ? outputGrad[i] : 0;
+}
+
 __global__ void negate(int inputLen, const float* __restrict input, float* __restrict output)
 {
     for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < inputLen; i += gridDim.x * blockDim.x)
@@ -603,6 +615,16 @@ namespace Neuro
         powGrad<<<blocks, threads>>>(inputLen, inputDev, power, outputGradientDev, inputGradientDev);
     }
 
+    void CudaKernels::Clip(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float min, float max, float* outputDev)
+    {
+        clip<<<blocks, threads>>>(inputLen, inputDev, min, max, outputDev);
+    }
+
+    void CudaKernels::ClipGradient(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float min, float max, const float* outputGradientDev, float* inputGradientDev)
+    {
+        clipGrad<<<blocks, threads>>>(inputLen, inputDev, min, max, outputGradientDev, inputGradientDev);
+    }
+    
     void CudaKernels::Abs(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float* outputDev)
     {
         abs<<<blocks, threads>>>(inputLen, inputDev, outputDev);

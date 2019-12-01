@@ -398,7 +398,7 @@ namespace NeuroTests
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
             auto t = Tensor(Shape(2, 3, 4, 5)); t.FillWithRange((float)t.GetShape().Length, 0.5f);
-            auto result = t.Clipped(-0.1f, 0.1f);
+            auto result = t.Clip(-0.1f, 0.1f);
 
             for (uint32_t i = 0; i < t.GetShape().Length; ++i)
                 Assert::AreEqual((double)result.GetFlat(i), 0.1, 1e-7);
@@ -409,7 +409,7 @@ namespace NeuroTests
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
             auto t = Tensor(Shape(2, 3, 4, 5)); t.FillWithRange(-(float)t.GetShape().Length, 0.5f);
-            auto result = t.Clipped(-0.1f, 0.1f);
+            auto result = t.Clip(-0.1f, 0.1f);
 
             for (uint32_t i = 0; i < t.GetShape().Length; ++i)
                 Assert::AreEqual(result.GetFlat(i), -0.1f, 1e-7f);

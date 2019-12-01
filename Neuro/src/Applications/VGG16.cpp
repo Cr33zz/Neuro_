@@ -31,7 +31,7 @@ namespace Neuro
             SwapChannels(image);
 
         if (clipValues)
-            image.Clipped(0, 255, image);
+            image.Clip(0, 255, image);
     }
 
     //////////////////////////////////////////////////////////////////////////

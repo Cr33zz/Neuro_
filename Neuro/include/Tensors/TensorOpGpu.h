@@ -33,6 +33,7 @@ namespace Neuro
         virtual void Negate(const Tensor& input, Tensor& output) const override;
         virtual void Inverse(float alpha, const Tensor& input, Tensor& output) const override;
         virtual void Clip(const Tensor& input, float min, float max, Tensor& output) const override;
+        virtual void ClipGradient(const Tensor& input, float min, float max, const Tensor& outputGradient, Tensor& inputGradient) const override;
         virtual void AbsSum(const Tensor& input, EAxis axis, Tensor& output) const override;
         virtual void Sum(const Tensor& input, EAxis axis, Tensor& output) const override;
         virtual void Mean(const Tensor& input, EAxis axis, Tensor& output) const override;

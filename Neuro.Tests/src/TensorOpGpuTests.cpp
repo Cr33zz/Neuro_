@@ -898,13 +898,29 @@ namespace NeuroTests
             Tensor t(Shape(10, 20, 30, 40)); t.FillWithRand(-1, -10, 10);
 
             Tensor::SetForcedOpMode(CPU);
-            NEURO_PROFILE("CPU", Tensor r = t.Clipped(0, 1);)
+            NEURO_PROFILE("CPU", Tensor r = t.Clip(0, 1);)
 
             Tensor::SetForcedOpMode(GPU);
-            NEURO_PROFILE("GPU", Tensor r2 = t.Clipped(0, 1);)
+            NEURO_PROFILE("GPU", Tensor r2 = t.Clip(0, 1);)
 
             for (uint32_t i = 0; i < r.Length(); ++i)
                 Assert::AreEqual(r.Values()[i], r2.Values()[i], 0.00001f);
+        }
+
+        TEST_METHOD(ClipGradient_CompareWithCpuResult)
+        {
+            Tensor t(Shape(10, 20, 30, 40)); t.FillWithRand(-1, -10, 10);
+            Tensor gradient(t.GetShape()); gradient.FillWithRand(13);            
+
+            Tensor::SetForcedOpMode(CPU);
+            Tensor inputGrad(t.GetShape());
+            NEURO_PROFILE("CPU", t.ClipGradient(t, 0.f, 1.f, gradient, inputGrad);)
+
+            Tensor::SetForcedOpMode(GPU);
+            Tensor inputGrad2(t.GetShape());
+            NEURO_PROFILE("GPU", t.ClipGradient(t, 0.f, 1.f, gradient, inputGrad2);)
+
+            Assert::IsTrue(inputGrad.Equals(inputGrad2));
         }
 
         TEST_METHOD(Pow_CompareWithCpuResult)

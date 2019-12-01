@@ -13,13 +13,13 @@ namespace Neuro
     void ClipOp::ComputeInternal()
     {
         m_Output.ResizeBatch(m_Inputs[0]->Batch());
-        m_Inputs[0]->Clipped(m_Min, m_Max, m_Output);
+        m_Inputs[0]->Clip(m_Min, m_Max, m_Output);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void ClipOp::ComputeGradientInternal(const Tensor& grad)
     {
         if (m_InputNodes[0]->CareAboutGradient())
-            grad.Map([&](float g, float x) {return (x >= m_Min && x <= m_Max) ? g : 0; }, *m_Inputs[0], m_InputsGrads[0]);
+            grad.ClipGradient(*m_Inputs[0], m_Min, m_Max, grad, m_InputsGrads[0]);
     }
 }

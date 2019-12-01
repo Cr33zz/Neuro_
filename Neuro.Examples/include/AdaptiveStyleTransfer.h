@@ -226,7 +226,7 @@ public:
 
                 auto genImage = *results[0];
                 VGG16::SwapChannels(genImage);
-                genImage.Clipped(0, 255).SaveAsImage("adaptive_" + to_string(i) + "_output.png", false);
+                genImage.Clip(0, 255).SaveAsImage("adaptive_" + to_string(i) + "_output.png", false);
 
                 float loss = (*results[1])(0);
                 if (minLoss <= 0 || loss < minLoss)

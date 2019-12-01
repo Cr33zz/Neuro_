@@ -537,30 +537,23 @@ namespace Neuro
         input.CopyToDevice();
         output.OverrideDevice();
 
-        void* clipValPtr;
-        DeviceMemoryManager::Default().Allocate(&clipValPtr, sizeof(float), "clip_value_tmp_tensor");
+        dim3 blocks, threads;
+        GetKernelRunParamsForSequence(input.Length(), blocks, threads, 128);
+        CudaKernels::Clip(blocks, threads, input.Length(), input.GetDevicePtr(), min, max, output.GetDevicePtr());
+        cudaStreamSynchronize(0);
+    }
 
-        cudnnOpTensorDescriptor_t minDesc; cudnnCreateOpTensorDescriptor(&minDesc);
-        cudnnOpTensorDescriptor_t maxDesc; cudnnCreateOpTensorDescriptor(&maxDesc);
-        cudnnTensorDescriptor_t inputDesc; cudnnCreateTensorDescriptor(&inputDesc);
-        cudnnTensorDescriptor_t clipValDesc; cudnnCreateTensorDescriptor(&clipValDesc);
-        cudnnTensorDescriptor_t outputDesc; cudnnCreateTensorDescriptor(&outputDesc);
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::ClipGradient(const Tensor& input, float min, float max, const Tensor& outputGradient, Tensor& inputGradient) const
+    {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
+        input.CopyToDevice();
+        outputGradient.CopyToDevice();
+        inputGradient.OverrideDevice();
 
-        cudnnSetOpTensorDescriptor(minDesc, CUDNN_OP_TENSOR_MIN, CUDNN_DATA_FLOAT, CUDNN_PROPAGATE_NAN);
-        cudnnSetOpTensorDescriptor(maxDesc, CUDNN_OP_TENSOR_MAX, CUDNN_DATA_FLOAT, CUDNN_PROPAGATE_NAN);
-        cudnnSetTensor4dDescriptor(inputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
-        cudnnSetTensor4dDescriptor(clipValDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, 1, 1, 1, 1);
-        cudnnSetTensor4dDescriptor(outputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, output.GetShape().Dimensions[3], output.GetShape().Dimensions[2], output.GetShape().Dimensions[1], output.GetShape().Dimensions[0]);
-
-        float alpha = 1, beta = 1, beta2 = 0;
-        // run min op with max value
-        CUDA_CHECK(cudnnSetTensor(s_CudnnHandle, clipValDesc, clipValPtr, &max));
-        CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, minDesc, &alpha, inputDesc, input.GetDevicePtr(), &beta, clipValDesc, clipValPtr, &beta2, outputDesc, output.GetDevicePtr()));
-        // run max op with min value
-        CUDA_CHECK(cudnnSetTensor(s_CudnnHandle, clipValDesc, clipValPtr, &min));
-        CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, maxDesc, &alpha, outputDesc, output.GetDevicePtr(), &beta, clipValDesc, clipValPtr, &beta2, outputDesc, output.GetDevicePtr()));
-
-        CUDA_CHECK(cudaLaunchHostFunc(0, DeallocateWorkspace, clipValPtr));
+        dim3 blocks, threads;
+        GetKernelRunParamsForSequence(input.Length(), blocks, threads, 128);
+        CudaKernels::ClipGradient(blocks, threads, input.Length(), input.GetDevicePtr(), min, max, outputGradient.GetDevicePtr(), inputGradient.GetDevicePtr());
         cudaStreamSynchronize(0);
     }
 

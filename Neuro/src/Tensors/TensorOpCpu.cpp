@@ -418,6 +418,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::ClipGradient(const Tensor& input, float min, float max, const Tensor& outputGradient, Tensor& inputGradient) const
+    {
+        outputGradient.Map([&](float g, float x) {return (x >= min && x <= max) ? g : 0; }, input, inputGradient);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void TensorOpCpu::Transpose(const Tensor& input, Tensor& output) const
 	{
 		input.CopyToHost();

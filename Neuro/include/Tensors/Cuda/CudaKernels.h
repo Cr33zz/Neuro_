@@ -15,6 +15,8 @@ namespace Neuro
         static void LeakyReLUGradient(const dim3& blocks, const dim3& threads, int inputLen, const float* outputDev, const float* outputGradientDev, float alpha, float* inputGradientDev);
         static void Pow(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float power, float* outputDev);
         static void PowGradient(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float power, const float* outputGradientDev, float* inputGradientDev);
+        static void Clip(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float min, float max, float* outputDev);
+        static void ClipGradient(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float min, float max, const float* outputGradientDev, float* inputGradientDev);
         static void Abs(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float* outputDev);
         static void AbsGradient(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, const float* outputGradientDev, float* inputGradientDev);
         static void Negate(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float* outputDev);

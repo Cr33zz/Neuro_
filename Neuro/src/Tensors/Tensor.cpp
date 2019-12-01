@@ -627,20 +627,26 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Clipped(float min, float max, Tensor& result) const
+	void Tensor::Clip(float min, float max, Tensor& result) const
 	{
         Op()->Clip(*this, min, max, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::Clipped(float min, float max) const
+	Tensor Tensor::Clip(float min, float max) const
 	{
 		Tensor result(m_Shape);
-		Clipped(min, max, result);
+		Clip(min, max, result);
 		return result;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::ClipGradient(const Tensor& input, float min, float max, const Tensor& outputGradient, Tensor& inputGradient) const
+    {
+        Op()->ClipGradient(input, min, max, outputGradient, inputGradient);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::DiagFlat() const
 	{
         CopyToHost();
