@@ -1079,51 +1079,76 @@ namespace NeuroTests
                 Assert::AreEqual((double)result.GetFlat(i), (double)t.GetFlat(i) * other.GetFlat(i), 1e-7);
         }
 
-        TEST_METHOD(Concat)
+        TEST_METHOD(Concat_Depth)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
-            auto t1 = new Tensor(Shape(2, 2, 1, 2)); t1->FillWithRange();
-            auto t2 = new Tensor(Shape(2, 2, 1, 2)); t2->FillWithRange(8);
-            const_tensor_ptr_vec_t inputs = { t1, t2 };
+            Tensor t1(Shape(2, 2, 1, 2)); t1.FillWithRange();
+            Tensor t2(Shape(2, 2, 1, 2)); t2.FillWithRange(8);
             
-            int outputLen = 0;
-            for (auto input : inputs)
-                outputLen += input->BatchLength();
+            auto result = Tensor(Shape(2, 2, t1.Depth() + t2.Depth(), 2));
 
-            auto result = Tensor(Shape(1, outputLen, 1, 2));
-
-            Tensor::Concat(_012Axes, inputs, result);
+            Tensor::Concat(DepthAxis, { &t1, &t2 }, result);
 
             auto correct = Tensor({0,1,2,3,8,9,10,11,4,5,6,7,12,13,14,15}, result.GetShape());
 
             Assert::IsTrue(result.Equals(correct));
-
-            DeleteContainer(inputs);
         }
 
-        TEST_METHOD(Split)
+        TEST_METHOD(Split_Depth)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
 
             auto t1 = Tensor(Shape(2, 2, 1, 2));
             auto t2 = Tensor(Shape(2, 2, 1, 2));
-            tensor_ptr_vec_t inputs = { &t1, &t2 };
 
-            int outputLen = 0;
-            for (auto input : inputs)
-                outputLen += input->BatchLength();
+            auto concated = Tensor({ 0,1,2,3,8,9,10,11,4,5,6,7,12,13,14,15 }, Shape(2, 2, 2, 2));
 
-            auto concated = Tensor({ 0, 1, 2, 3, 8, 9, 10, 11, 4, 5, 6, 7, 12, 13, 14, 15 }, Shape(1, outputLen, 1, 2));
-
-            concated.Split(_012Axes, inputs);
+            tensor_ptr_vec_t outputs{ &t1, &t2 };
+            concated.Split(DepthAxis, outputs);
 
             auto correct1 = Tensor(Shape(2, 2, 1, 2)); correct1.FillWithRange();
             auto correct2 = Tensor(Shape(2, 2, 1, 2)); correct2.FillWithRange(8);
-            vector<Tensor> correctInputs = { correct1, correct2 };
+            vector<Tensor> correctOutputs = { correct1, correct2 };
 
-            for (uint32_t i = 0; i < inputs.size(); ++i)
-                Assert::IsTrue(inputs[i]->Equals(correctInputs[i]));
+            for (uint32_t i = 0; i < outputs.size(); ++i)
+                Assert::IsTrue(outputs[i]->Equals(correctOutputs[i]));
+        }
+
+        TEST_METHOD(Concat_Batch)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            Tensor t1(Shape(2, 2, 1, 1)); t1.FillWithRange();
+            Tensor t2(Shape(2, 2, 1, 1)); t2.FillWithRange(8);
+
+            auto result = Tensor(Shape(2, 2, 1, 2));
+
+            Tensor::Concat(BatchAxis, { &t1, &t2 }, result);
+
+            auto correct = Tensor({ 0,1,2,3,8,9,10,11 }, result.GetShape());
+
+            Assert::IsTrue(result.Equals(correct));
+        }
+
+        TEST_METHOD(Split_Batch)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t1 = Tensor(Shape(2, 2, 1, 1));
+            auto t2 = Tensor(Shape(2, 2, 1, 1));
+            
+            auto concated = Tensor({ 0,1,2,3,8,9,10,11 }, Shape(2,2,1,2));
+
+            tensor_ptr_vec_t outputs{ &t1, &t2 };
+            concated.Split(BatchAxis, outputs);
+
+            auto correct1 = Tensor(Shape(2, 2, 1, 1)); correct1.FillWithRange();
+            auto correct2 = Tensor(Shape(2, 2, 1, 1)); correct2.FillWithRange(8);
+            vector<Tensor> correctOutputs = { correct1, correct2 };
+
+            for (uint32_t i = 0; i < outputs.size(); ++i)
+                Assert::IsTrue(outputs[i]->Equals(correctOutputs[i]));
         }
 
         TEST_METHOD(ToNCHW)

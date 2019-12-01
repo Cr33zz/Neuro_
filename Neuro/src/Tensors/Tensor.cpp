@@ -955,16 +955,31 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Concat(EAxis axis, const const_tensor_ptr_vec_t& inputs, Tensor& output)
 	{
-        if (axis == BatchAxis || axis == DepthAxis)
+        if (axis == BatchAxis)
         {
-            NEURO_ASSERT(axis != BatchAxis || output.Batch() == (uint32_t)inputs.size(), "Invalid output batch dimension, expected " << inputs.size());
-            NEURO_ASSERT(axis != DepthAxis || output.Depth() == ((uint32_t)inputs.size() * inputs[0]->Depth()), "Invalid output depth dimension, expected " << (uint32_t)inputs.size() * inputs[0]->Depth());
+            NEURO_ASSERT(output.Batch() == (uint32_t)inputs.size(), "Invalid output batch dimension, expected " << inputs.size());
             uint32_t elementsCopied = 0;
             for (uint32_t i = 0; i < inputs.size(); ++i)
             {
                 NEURO_ASSERT(inputs[i]->Batch() == 1, "");
                 inputs[i]->CopyTo(0, output, elementsCopied, inputs[i]->Length());
                 elementsCopied += inputs[i]->Length();
+            }
+            return;
+        }
+
+        if (axis == DepthAxis)
+        {
+            for (uint32_t n = 0; n < output.Batch(); ++n)
+            {
+                uint32_t elementsCopied = 0;
+                for (uint32_t i = 0; i < inputs.size(); ++i)
+                {
+                    NEURO_ASSERT(inputs[i]->Batch() == output.Batch(), "");
+                    inputs[i]->CopyTo(n * inputs[i]->BatchLength(), output, n * output.BatchLength() + elementsCopied, inputs[i]->BatchLength());
+                    elementsCopied += inputs[i]->Stride(3);
+                }
+                NEURO_ASSERT(output.BatchLength() == elementsCopied, "Invalid output depth dimension, expected " << elementsCopied);
             }
             return;
         }
@@ -981,6 +996,7 @@ namespace Neuro
     template <int W, int H, int D, int N>
     void SplitTemplate(const Tensor& input, tensor_ptr_vec_t& outputs)
     {
+        input.SyncToHost();
         auto& shape = outputs[0]->GetShape();
         const uint32_t width = shape.Width();
         const uint32_t height = shape.Height();
@@ -989,6 +1005,7 @@ namespace Neuro
 
         for (uint32_t i = 0; i < (uint32_t)outputs.size(); ++i)
         {
+            outputs[i]->OverrideHost();
             auto outputValues = outputs[i]->Values();
             size_t j = 0;
             for (uint32_t n = 0; n < batch; ++n)
@@ -1002,34 +1019,43 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Split(EAxis axis, tensor_ptr_vec_t& outputs) const
 	{
-		CopyToHost();
-
         if (axis == BatchAxis)
         {
+            NEURO_ASSERT(Batch() == (uint32_t)outputs.size(), "Invalid batch dimension, expected " << outputs.size());
             uint32_t elementsCopied = 0;
             uint32_t singleOutputLen = Length() / (uint32_t)outputs.size();
 
             for (uint32_t i = 0; i < outputs.size(); ++i)
             {
-                outputs[i]->OverrideHost();
-                copy(m_Storage.Data() + elementsCopied, m_Storage.Data() + elementsCopied + singleOutputLen, outputs[i]->m_Storage.Data());
+                NEURO_ASSERT(outputs[i]->Batch() == 1, "");
+                CopyTo(elementsCopied, *outputs[i], 0, singleOutputLen);
                 elementsCopied += singleOutputLen;
             }
+            return;
         }
-        else if (axis == WidthAxis)
+
+        if (axis == DepthAxis)
         {
-            SplitTemplate<1, 0, 0, 0>(*this, outputs);
+            for (uint32_t n = 0; n < Batch(); ++n)
+            {
+                uint32_t elementsCopied = 0;
+                for (uint32_t i = 0; i < outputs.size(); ++i)
+                {
+                    NEURO_ASSERT(outputs[i]->Batch() == Batch(), "");
+                    CopyTo(n * BatchLength() + elementsCopied, *outputs[i], n * outputs[i]->BatchLength(), outputs[i]->BatchLength());
+                    elementsCopied += outputs[i]->BatchLength();
+                }
+                NEURO_ASSERT(BatchLength() == elementsCopied, "Invalid depth dimension, expected " << elementsCopied);
+            }
+            return;
         }
-        else if (axis == HeightAxis)
-        {
-            SplitTemplate<0, 1, 0, 0>(*this, outputs);
-        }
-        else if (axis == DepthAxis)
-        {
-            SplitTemplate<0, 0, 1, 0>(*this, outputs);
-        }
-        else
-            assert(false); // not supported yet
+        
+        if (axis == WidthAxis)
+            return SplitTemplate<1, 0, 0, 0>(*this, outputs);
+        if (axis == HeightAxis)
+            return SplitTemplate<0, 1, 0, 0>(*this, outputs);
+        
+        NEURO_ASSERT(false, "Unsupported axis.");
 	}
 
 	//////////////////////////////////////////////////////////////////////////

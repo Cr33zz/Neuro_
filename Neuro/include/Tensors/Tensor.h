@@ -245,23 +245,6 @@ namespace Neuro
         static Shape GetConvOutputShape(const Shape& inputShape, uint32_t kernelsNum, uint32_t kernelWidth, uint32_t kernelHeight, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat);
         static Shape GetConvTransposeOutputShape(const Shape& inputShape, uint32_t outputDepth, uint32_t kernelWidth, uint32_t kernelHeight, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat);
 
-        //internal void Serialize(XmlElement parentElem, string name)
-        //{
-        //    XmlElement elem = parentElem.OwnerDocument.CreateElement(name);
-        //    XmlAttribute shapeAttrib = parentElem.OwnerDocument.CreateAttribute("shape");
-        //    shapeAttrib.Value = string.Join(",", Shape.Dimensions);
-        //    elem.Attributes.Append(shapeAttrib);
-        //    elem.InnerText = string.Join(",", Values);
-        //    //elem.InnerText = $"\n{this.ToString()}\n";
-        //    parentElem.AppendChild(elem);
-        //}
-
-        //internal void Deserialize(XmlElement elem)
-        //{
-        //    Shape = Shape.From(elem.GetAttribute("shape").Split(',').Select(w => int.Parse(w)).ToArray());
-        //    Values = elem.InnerText.Split(',').Select(w => float.Parse(w)).ToArray();
-        //}
-
         void SaveBin(ostream& stream) const;
         void LoadBin(istream& stream);
 
