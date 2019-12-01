@@ -1,6 +1,7 @@
 ﻿#include "CppUnitTest.h"
 #include "Neuro.h"
 #include "Tensors/TensorOpCpu.h"
+#include "Tensors/TensorOpGpu.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace Neuro;
@@ -114,6 +115,64 @@ namespace NeuroTests
             NEURO_PROFILE("GPU", Tensor r2(output.GetShape()); output.EluGradient(output, outputGrad, 0.5f, r2);)
 
             Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(LeakyReLU_CompareWithCpuResult)
+        {
+            Tensor input(Shape(8, 9, 3, 3)); input.FillWithRand();
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r(input.GetShape()); input.LeakyReLU(0.5f, r);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2(input.GetShape()); input.LeakyReLU(0.5f, r2);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(LeakyReLUGradient_CompareWithCpuResult)
+        {
+            Tensor output(Shape(8, 9, 3, 3)); output.FillWithRand();
+            Tensor outputGrad(Shape(8, 9, 3, 3)); outputGrad.FillWithRand();
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r(output.GetShape()); output.LeakyReLUGradient(output, outputGrad, 0.5f, r);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2(output.GetShape()); output.LeakyReLUGradient(output, outputGrad, 0.5f, r2);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(Dropout_CompareWithCpuResult)
+        {
+            Tensor input(Shape(8, 9, 3, 2)); input.FillWithRand();
+            Tensor mask(input.GetShape());
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r(input.GetShape()); input.Dropout(0.3f, mask, r);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2(input.GetShape()); static_cast<TensorOpGpu*>(Tensor::ActiveOp())->DropoutNoRand(input, 0.3f, mask, r2);)
+            
+            Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(DropoutGradient_CompareWithCpuResult)
+        {
+            Tensor input(Shape(8, 9, 3, 2)); input.FillWithRand();
+            Tensor mask(input.GetShape()); mask.FillWithRand(7, 0.f, 1.f);
+            Tensor output(input.GetShape()); input.Dropout(0.3f, mask, output);
+
+            Tensor outputGrad(input.GetShape()); outputGrad.FillWithRand();
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor inputGrad(input.GetShape()); output.DropoutGradient(outputGrad, 0.3f, mask, inputGrad);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor inputGrad2(input.GetShape()); output.DropoutGradient(outputGrad, 0.3f, mask, inputGrad2);)
+
+            Assert::IsTrue(inputGrad.Equals(inputGrad2));
         }
 
         TEST_METHOD(Sigmoid_CompareWithCpuResult)

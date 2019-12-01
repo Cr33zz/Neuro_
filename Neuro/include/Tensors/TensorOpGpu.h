@@ -2,6 +2,7 @@
 #include <cuda.h>
 #include <cudnn.h>
 #include <cublas.h>
+#include <curand.h>
 
 #include "Types.h"
 #include "Tensors/TensorOpMultiCpu.h"
@@ -51,8 +52,9 @@ namespace Neuro
         virtual void BatchNormalization(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor* runningMean, const Tensor* runningVar, Tensor& output) const override;
         virtual void BatchNormalizationTrain(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor* runningMean, Tensor* runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& output) const override;
         virtual void BatchNormalizationGradient(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, float epsilon, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const override;
-        virtual void Dropout(const Tensor& input, float prob, Tensor& saveMask, Tensor& output);
-        virtual void DropoutGradient(const Tensor& outputGradient, float prob, Tensor& savedMask, Tensor& inputGradient);
+        virtual void Dropout(const Tensor& input, float prob, Tensor& saveMask, Tensor& output) const override;
+        void DropoutNoRand(const Tensor& input, float prob, Tensor& saveMask, Tensor& output) const;
+        virtual void DropoutGradient(const Tensor& outputGradient, float prob, const Tensor& savedMask, Tensor& inputGradient) const override;
         virtual void Sigmoid(const Tensor& input, Tensor& output) const override;
         virtual void SigmoidGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const override;
         virtual void Tanh(const Tensor& input, Tensor& output) const override;
@@ -92,5 +94,6 @@ namespace Neuro
         static cudaDeviceProp s_CudaDevProp;
         static cublasHandle_t s_CublasHandle;
         static cudnnHandle_t s_CudnnHandle;
+        static curandGenerator_t s_CurandGenerator;
     };
 }

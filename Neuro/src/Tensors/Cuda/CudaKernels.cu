@@ -1,4 +1,5 @@
 #include <cuda_runtime.h>
+#include <curand_kernel.h>
 #include <device_launch_parameters.h>
 
 #include "Tensors/Cuda/CudaKernels.h"
@@ -19,6 +20,21 @@ __device__ void getDims(int width, int height, int depth, int& dim0, int& dim0di
     dim0 = width;
     dim0dim1 = width * height;
     dim0dim1dim2 = width * height * depth;
+}
+
+__global__ void dropout(int inputLen, const float* __restrict input, float prob, float* __restrict mask, float* __restrict output)
+{
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < inputLen; i += gridDim.x * blockDim.x)
+    {
+        mask[i] = (mask[i] < prob ? 0.f : 1.f) / prob;
+        output[i] = input[i] * mask[i];
+    }
+}
+
+__global__ void dropoutGrad(int inputLen, const float* __restrict outputGrad, const float* __restrict mask, float* __restrict inputGrad)
+{
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < inputLen; i += gridDim.x * blockDim.x)
+        inputGrad[i] = outputGrad[i] * mask[i];
 }
 
 __global__ void constantPad2D(int outputLen, const float* __restrict input, int inputStride1, int inputStride2, int inputStride3, int left, int right, int top, int bottom, float value, float* __restrict output, int outputStride1, int outputStride2, int outputStride3)
@@ -145,27 +161,14 @@ __global__ void upSample2DGrad(const float* __restrict outputGrad, int scale, fl
 
 __global__ void leakyRelu(int inputLen, const float* __restrict input, float alpha, float* __restrict output)
 {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < inputLen)
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < inputLen; i += gridDim.x * blockDim.x)
         output[i] = input[i] > 0 ? input[i] : (alpha * input[i]);
 }
 
 __global__ void leakyReluGrad(int inputLen, const float* __restrict output, const float* __restrict outputGrad, float alpha, float* __restrict inputGrad)
 {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < inputLen)
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < inputLen; i += gridDim.x * blockDim.x)
         inputGrad[i] = (output[i] > 0 ? 1 : alpha) * outputGrad[i];
-}
-
-__global__ void mul(int inputLen, const float* __restrict input, float v, float* __restrict output, int subLen)
-{
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    
-    int maxN = i * subLen + subLen;
-    if (maxN > inputLen)
-        maxN = inputLen;
-    for (int n = i * subLen; n < maxN; ++n)
-        output[n] = input[n] * v;
 }
 
 __global__ void pow(int inputLen, const float* __restrict input, float power, float* __restrict output)
@@ -680,5 +683,15 @@ namespace Neuro
     void CudaKernels::SgdStep(const dim3& blocks, const dim3& threads, int inputLen, float* parameterDev, const float* gradientDev, float lr)
     {
         sgdStep<<<blocks, threads>>>(inputLen, parameterDev, gradientDev, lr);
+    }
+
+    void CudaKernels::Dropout(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float prob, float* maskDev, float* outputDev)
+    {
+        dropout<<<blocks, threads>>>(inputLen, inputDev, prob, maskDev, outputDev);
+    }
+
+    void CudaKernels::DropoutGradient(const dim3& blocks, const dim3& threads, int inputLen, const float* outputGradDev, const float* maskDev, float* inputGradDev)
+    {
+        dropoutGrad<<<blocks, threads>>>(inputLen, outputGradDev, maskDev, inputGradDev);
     }
 }

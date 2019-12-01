@@ -233,7 +233,7 @@ namespace Neuro
         void InstanceNormGradient(const Tensor& input, const Tensor& gamma, float epsilon, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const;
         
         void Dropout(float prob, Tensor& saveMask, Tensor& output) const;
-        void DropoutGradient(const Tensor& outputGradient, float prob, Tensor& savedMask, Tensor& inputGradient) const;
+        void DropoutGradient(const Tensor& outputGradient, float prob, const Tensor& savedMask, Tensor& inputGradient) const;
 
         string ToString() const;
         bool SameDimensionsExceptBatches(const Tensor& t) const;

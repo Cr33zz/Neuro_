@@ -1718,7 +1718,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::DropoutGradient(const Tensor& outputGradient, float prob, Tensor& savedMask, Tensor& inputGradient) const
+    void Tensor::DropoutGradient(const Tensor& outputGradient, float prob, const Tensor& savedMask, Tensor& inputGradient) const
     {
         Op()->DropoutGradient(outputGradient, prob, savedMask, inputGradient);
     }

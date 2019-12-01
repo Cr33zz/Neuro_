@@ -14,6 +14,7 @@ namespace Neuro
     cudaDeviceProp TensorOpGpu::s_CudaDevProp;
     cublasHandle_t TensorOpGpu::s_CublasHandle = nullptr;
     cudnnHandle_t TensorOpGpu::s_CudnnHandle = nullptr;
+    curandGenerator_t TensorOpGpu::s_CurandGenerator = nullptr;
 
     //////////////////////////////////////////////////////////////////////////
     TensorOpGpu::TensorOpGpu()
@@ -30,6 +31,7 @@ namespace Neuro
                 cublasCreate_v2(&s_CublasHandle);
                 cudnnCreate(&s_CudnnHandle);
                 cudaGetDeviceProperties(&s_CudaDevProp, 0);
+                curandCreateGenerator(&s_CurandGenerator, CURAND_RNG_PSEUDO_DEFAULT);
 
                 //cudnnSetCallback(CUDNN_SEV_INFO_EN, nullptr, CudnnLog);
                 size_t freeBytes, totalBytes;
@@ -1159,72 +1161,47 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::Dropout(const Tensor& input, float prob, Tensor& saveMask, Tensor& output)
+    void TensorOpGpu::Dropout(const Tensor& input, float prob, Tensor& saveMask, Tensor& output) const
     {
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
-        output.OverrideDevice();
-        prob = 1 - prob;
-
-        cudnnTensorDescriptor_t inputOutputDesc; cudnnCreateTensorDescriptor(&inputOutputDesc);
-        cudnnDropoutDescriptor_t dropoutDesc; cudnnCreateDropoutDescriptor(&dropoutDesc);
-
-        cudnnSetTensor4dDescriptor(inputOutputDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, input.GetShape().Dimensions[3], input.GetShape().Dimensions[2], input.GetShape().Dimensions[1], input.GetShape().Dimensions[0]);
-
-        size_t statesSize;
-        CUDA_CHECK(cudnnDropoutGetStatesSize(s_CudnnHandle, &statesSize));
-        size_t reserveSpaceSize;
-        CUDA_CHECK(cudnnDropoutGetReserveSpaceSize(inputOutputDesc, &reserveSpaceSize));
-        size_t reserveSpaceOffset = (size_t)ceil(statesSize / 4.f);
-
-        saveMask.Resize(Shape((uint32_t)(ceil(statesSize / 4.f) + ceil(reserveSpaceSize / 4.f))));
-        NEURO_ASSERT(saveMask.TryDeviceAllocate(), "");
         saveMask.OverrideDevice();
+        output.OverrideDevice();
 
-        cudnnSetDropoutDescriptor(dropoutDesc, s_CudnnHandle, prob, saveMask.GetDevicePtr(), statesSize, 0);
+        NEURO_ASSERT(saveMask.Length() == input.Length(), "Mismatched mask and input length.");
+        
+        curandGenerateUniform(s_CurandGenerator, saveMask.GetDevicePtr(), saveMask.Length());        
 
-        CUDA_CHECK(cudnnDropoutForward(
-            s_CudnnHandle,
-            dropoutDesc,
-            inputOutputDesc,
-            input.GetDevicePtr(),
-            inputOutputDesc,
-            output.GetDevicePtr(),
-            saveMask.GetDevicePtr() + reserveSpaceOffset,
-            reserveSpaceSize));
+        dim3 blocks, threads;
+        GetKernelRunParamsForSequence(input.Length(), blocks, threads, 128);
+        CudaKernels::Dropout(blocks, threads, input.Length(), input.GetDevicePtr(), prob, saveMask.GetDevicePtr(), output.GetDevicePtr());
+        cudaStreamSynchronize(0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::DropoutNoRand(const Tensor& input, float prob, Tensor& saveMask, Tensor& output) const
+    {
+        input.CopyToDevice();
+        saveMask.CopyToDevice();
+        output.OverrideDevice();
+
+        dim3 blocks, threads;
+        GetKernelRunParamsForSequence(input.Length(), blocks, threads, 128);
+        CudaKernels::Dropout(blocks, threads, input.Length(), input.GetDevicePtr(), prob, saveMask.GetDevicePtr(), output.GetDevicePtr());
         cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::DropoutGradient(const Tensor& outputGradient, float prob, Tensor& savedMask, Tensor& inputGradient)
+    void TensorOpGpu::DropoutGradient(const Tensor& outputGradient, float prob, const Tensor& savedMask, Tensor& inputGradient) const
     {
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         outputGradient.CopyToDevice();
+        savedMask.CopyToDevice();
         inputGradient.OverrideDevice();
-        inputGradient.Zero();
 
-        cudnnTensorDescriptor_t inputOutputGradDesc; cudnnCreateTensorDescriptor(&inputOutputGradDesc);
-        cudnnDropoutDescriptor_t dropoutDesc; cudnnCreateDropoutDescriptor(&dropoutDesc);
-
-        cudnnSetTensor4dDescriptor(inputOutputGradDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, outputGradient.GetShape().Dimensions[3], outputGradient.GetShape().Dimensions[2], outputGradient.GetShape().Dimensions[1], outputGradient.GetShape().Dimensions[0]);
-        
-        size_t statesSize;
-        CUDA_CHECK(cudnnDropoutGetStatesSize(s_CudnnHandle, &statesSize));
-        size_t reserveSpaceSize;
-        CUDA_CHECK(cudnnDropoutGetReserveSpaceSize(inputOutputGradDesc, &reserveSpaceSize));
-        size_t reserveSpaceOffset = (size_t)ceil(statesSize / 4.f);
-
-        cudnnSetDropoutDescriptor(dropoutDesc, s_CudnnHandle, prob, savedMask.GetDevicePtr(), statesSize, 0);
-
-        CUDA_CHECK(cudnnDropoutBackward(
-            s_CudnnHandle,
-            dropoutDesc,
-            inputOutputGradDesc,
-            outputGradient.GetDevicePtr(),
-            inputOutputGradDesc,
-            inputGradient.GetDevicePtr(),
-            savedMask.GetDevicePtr() + reserveSpaceOffset,
-            reserveSpaceSize));
+        dim3 blocks, threads;
+        GetKernelRunParamsForSequence(inputGradient.Length(), blocks, threads, 128);
+        CudaKernels::DropoutGradient(blocks, threads, inputGradient.Length(), outputGradient.GetDevicePtr(), savedMask.GetDevicePtr(), inputGradient.GetDevicePtr());
         cudaStreamSynchronize(0);
     }
 
@@ -1280,11 +1257,11 @@ namespace Neuro
     void TensorOpGpu::LeakyReLU(const Tensor& input, float alpha, Tensor& output) const
     {
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
-        dim3 blocks, threads;
-        GetKernelRunParams(input.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
         input.CopyToDevice();
         output.OverrideDevice();
 
+        dim3 blocks, threads;
+        GetKernelRunParamsForSequence(input.Length(), blocks, threads, 128);
         CudaKernels::LeakyReLU(blocks, threads, input.Length(), input.GetDevicePtr(), alpha, output.GetDevicePtr());
         cudaStreamSynchronize(0);
     }
@@ -1293,13 +1270,12 @@ namespace Neuro
     void TensorOpGpu::LeakyReLUGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const
     {
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
-        dim3 blocks, threads;
-        GetKernelRunParams(output.Length(), blocks, threads, s_CudaDevProp.maxThreadsPerBlock);
         output.CopyToDevice();
         outputGradient.CopyToDevice();
         inputGradient.OverrideDevice();
-        inputGradient.Zero();
-
+        
+        dim3 blocks, threads;
+        GetKernelRunParamsForSequence(output.Length(), blocks, threads, 128);
         CudaKernels::LeakyReLUGradient(blocks, threads, output.Length(), output.GetDevicePtr(), outputGradient.GetDevicePtr(), alpha, inputGradient.GetDevicePtr());
         cudaStreamSynchronize(0);
     }

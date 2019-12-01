@@ -1119,7 +1119,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::Dropout(const Tensor& input, float prob, Tensor& saveMask, Tensor& output)
+    void TensorOpCpu::Dropout(const Tensor& input, float prob, Tensor& saveMask, Tensor& output) const
     {
         input.CopyToHost();
         saveMask.OverrideHost();
@@ -1130,12 +1130,11 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::DropoutGradient(const Tensor& outputGradient, float prob, Tensor& savedMask, Tensor& inputGradient)
+    void TensorOpCpu::DropoutGradient(const Tensor& outputGradient, float prob, const Tensor& savedMask, Tensor& inputGradient) const
     {
         outputGradient.CopyToHost();
         savedMask.CopyToHost();
         inputGradient.OverrideHost();
-        inputGradient.Zero();
 
         outputGradient.MulElem(savedMask, inputGradient);
     }
