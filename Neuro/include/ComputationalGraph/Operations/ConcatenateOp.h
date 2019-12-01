@@ -13,6 +13,8 @@ namespace Neuro
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
 
+        virtual bool ForceAllocInputGradNode(size_t index) const override;
+
     private:
         EAxis m_Axis;
     };

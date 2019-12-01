@@ -45,5 +45,4 @@ namespace Neuro
         // we cannot compute input gradient per input separately so if any input needs gradient we have to allocate them all
         return m_InputNodes[0]->CareAboutGradient() || m_InputNodes[1]->CareAboutGradient() || m_InputNodes[2]->CareAboutGradient();
     }
-
 }

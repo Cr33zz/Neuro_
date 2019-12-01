@@ -50,4 +50,21 @@ namespace Neuro
         if (anyInputCareAboutGrad)
             grad.Split(m_Axis, m_InputsGradsPtrs);
     }
+
+    //////////////////////////////////////////////////////////////////////////
+    bool ConcatenateOp::ForceAllocInputGradNode(size_t index) const
+    {
+        bool anyInputCareAboutGrad = false;
+        for (auto inputNode : m_InputNodes)
+        {
+            if (inputNode->CareAboutGradient())
+            {
+                anyInputCareAboutGrad = true;
+                break;
+            }
+        }
+
+        // we cannot compute input gradient per input separately so if any input needs gradient we have to allocate them all
+        return anyInputCareAboutGrad;
+    }
 }
