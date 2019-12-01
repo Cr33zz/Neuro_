@@ -13,56 +13,56 @@ using namespace Neuro;
 class Pix2Pix
 {
 public:
+    struct Pix2PixImageLoader : public ImageLoader
+    {
+        Pix2PixImageLoader(const vector<string>& files, uint32_t batchSize, uint32_t upScaleFactor = 1) :ImageLoader(files, batchSize, upScaleFactor) {}
+
+        virtual size_t operator()(vector<Tensor>& dest, size_t loadIdx) override
+        {
+            auto& cndImg = dest[loadIdx];
+            auto& outImg = dest[loadIdx + 1];
+            cndImg.ResizeBatch(m_BatchSize);
+            cndImg.OverrideHost();
+            outImg.ResizeBatch(m_BatchSize);
+            outImg.OverrideHost();
+
+            for (uint32_t n = 0; n < m_BatchSize; ++n)
+            {
+                auto img = LoadImage(m_Files[GlobalRng().Next((int)m_Files.size())], cndImg.Width() * m_UpScaleFactor, cndImg.Height() * m_UpScaleFactor, cndImg.Width(), cndImg.Height());
+                auto edges = CannyEdgeDetection(img).ToRGB();
+                
+                edges.Sub(127.5f).Div(127.5f).CopyBatchTo(0, (uint32_t)n, cndImg);
+                img.Sub(127.5f).Div(127.5f).CopyBatchTo(0, (uint32_t)n, outImg);                
+            }
+
+            cndImg.CopyToDevice();
+            outImg.CopyToDevice();
+            return 2;
+        }
+    };
+
     void Run()
     {
         Tensor::SetDefaultOpMode(GPU);
         //GlobalRngSeed(1337);
 
-        Shape IMG_SHAPE = Shape(256, 256, 3);
+        const Shape IMG_SHAPE = Shape(256, 256, 3);
+        const uint32_t BATCH_SIZE = 1;
+        const uint32_t STEPS = 100000;
+        //const uint32_t STEPS = 6;
 
         cout << "Example: Pix2Pix" << endl;
 
         auto trainFiles = LoadFilesList("f:/!TrainingData/flowers", false, true);
 
-        Tensor inImages(Shape::From(IMG_SHAPE, (uint32_t)trainFiles.size()));
-        Tensor outImages(Shape::From(IMG_SHAPE, (uint32_t)trainFiles.size()));
+        Tensor condImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "cond_image");
+        Tensor expectedImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "output_image");
 
-        // pre-process training data
-        //{
-        //    Tensor t1(IMG_SHAPE), t2(IMG_SHAPE);
-        //    tensor_ptr_vec_t output{ &t1, &t2 };
+        // setup data preloader
+        Pix2PixImageLoader loader(trainFiles, BATCH_SIZE, 2);
+        DataPreloader preloader({ &condImages, &expectedImages }, { &loader }, 5);
 
-        //    cout << "Pre-processing training data" << endl;
-        //    Tqdm progress(trainFiles.size(), 0);
-        //    for (size_t i = 0; i < trainFiles.size(); ++i, progress.NextStep())
-        //    {
-        //        auto& filename = trainFiles[i];
-
-        //        auto img = LoadImage(filename, IMG_SHAPE.Width(), IMG_SHAPE.Height());
-        //        t1 = CannyEdgeDetection(img).ToRGB();
-        //        t2 = img;
-        //        
-        //        //auto img = LoadImage(filename, IMG_SHAPE.Width() * 2 * 1, IMG_SHAPE.Height() * 1, IMG_SHAPE.Width() * 2, IMG_SHAPE.Height());
-        //        //actual pre-process
-        //        //img.Split(WidthAxis, output);
-        //        t1.Sub(127.5f).Div(127.5f).CopyBatchTo(0, (uint32_t)i, inImages);
-        //        t2.Sub(127.5f).Div(127.5f).CopyBatchTo(0, (uint32_t)i, outImages);
-        //    }
-
-        //    /*inImages.SaveAsImage("__in.jpg", false);
-        //    outImages.SaveAsImage("__out.jpg", false);*/
-
-        //    inImages.SaveAsH5("inImages.h5");
-        //    outImages.SaveAsH5("outImages.h5");
-        //}
-        // load pre-processed data
-        {
-            inImages.LoadFromH5("inImages.h5");
-            outImages.LoadFromH5("outImages.h5");
-        }
-
-        //inImages.Add(1.f).Mul(127.5f).SaveAsImage("_in.jpg", false);
-
+        // setup models
         auto gModel = CreateGenerator(IMG_SHAPE);
         //cout << "Generator" << endl << gModel->Summary();
         auto dModel = CreateDiscriminator(IMG_SHAPE);
@@ -76,13 +76,6 @@ public:
         ganModel->Optimize(new Adam(0.0002f, 0.5f), { new BinaryCrossEntropy(), new MeanAbsoluteError() }, { 1.f, 100.f });
         ganModel->LoadWeights("pix2pix.h5", false, true);
 
-        const uint32_t BATCH_SIZE = 1;
-        const uint32_t STEPS = 100000;
-        //const uint32_t STEPS = 6;
-
-        Tensor condImages(Shape::From(gModel->InputShapesAt(-1)[0], BATCH_SIZE), "cond_image");
-        Tensor expectedImages(Shape::From(gModel->OutputShapesAt(-1)[0], BATCH_SIZE), "output_image");
-
         Tensor real(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE), "real"); real.One();
         Tensor fake(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE), "fake"); fake.Zero();
 
@@ -90,30 +83,20 @@ public:
         progress.ShowEta(true).ShowElapsed(false).ShowPercent(false);
         for (uint32_t i = 0; i < STEPS; ++i, progress.NextStep())
         {
-            //select random batch indices
-            vector<uint32_t> batchesIdx(BATCH_SIZE);
-            generate(batchesIdx.begin(), batchesIdx.end(), [&]() { return (uint32_t)GlobalRng().Next(inImages.Batch()); });
-
-            inImages.GetBatches(batchesIdx, condImages);
-            outImages.GetBatches(batchesIdx, expectedImages);
+            //load next conditional and expected images
+            preloader.Load();
 
             // generate fake images from condition
             Tensor fakeImages = *gModel->Predict(condImages)[0];
-
-            //Debug::LogAllOutputs(true);
-            //Debug::LogAllGrads(true);
 
             // perform step of training discriminator to distinguish fake from real images
             dModel->SetTrainable(true);
             float dRealLoss = get<0>(dModel->TrainOnBatch({ &condImages, &expectedImages }, { &real }));
             float dFakeLoss = get<0>(dModel->TrainOnBatch({ &condImages, &fakeImages }, { &fake }));
 
-            // perform step of training generator to generate more real images (the more discriminator is confident that a particular image is fake the more generator will learn)
+            // perform step of training generator to generate more real images
             dModel->SetTrainable(false);
             float ganLoss = get<0>(ganModel->TrainOnBatch({ &condImages }, { &real, &expectedImages }));
-
-            //Debug::LogAllOutputs(false);
-            //Debug::LogAllGrads(false);
 
             stringstream extString;
             extString << setprecision(4) << fixed << " - real_l: " << dRealLoss << " - fake_l: " << dFakeLoss << " - gan_l: " << ganLoss;

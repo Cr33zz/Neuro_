@@ -97,7 +97,7 @@ namespace Neuro
 
     struct ImageLoader : public ILoader
     {
-        ImageLoader(const vector<string>& files, uint32_t batch_size, uint32_t upScaleFactor = 1) : m_Files(files), m_BatchSize(batch_size), m_UpScaleFactor(upScaleFactor) {}
+        ImageLoader(const vector<string>& files, uint32_t batchSize, uint32_t upScaleFactor = 1) : m_Files(files), m_BatchSize(batchSize), m_UpScaleFactor(upScaleFactor) {}
 
         virtual size_t operator()(vector<Tensor>& dest, size_t loadIdx) override;
 

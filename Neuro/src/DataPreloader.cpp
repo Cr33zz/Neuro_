@@ -9,7 +9,6 @@ namespace Neuro
     DataPreloader::DataPreloader(const vector<Tensor*>& destination, const vector<ILoader*>& loaders, size_t capacity)
         : m_Destination(destination), m_Loaders(loaders)
     {
-        NEURO_ASSERT(destination.size() == loaders.size(), "");
         for (size_t i = 0; i < capacity; ++i)
         {
             vector<Tensor>* data = new vector<Tensor>(destination.size());
