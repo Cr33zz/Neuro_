@@ -437,6 +437,24 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Transpose(const Tensor& input, const vector<EAxis>& permutation, Tensor& output) const
+	{
+		input.SyncToHost();
+        output.OverrideHost();
+
+        const auto& inputShape = input.GetShape();
+
+        for (uint32_t n = 0; n < output.Batch(); ++n)
+        for (uint32_t d = 0; d < output.Depth(); ++d)
+        for (uint32_t h = 0; h < output.Height(); ++h)
+        for (uint32_t w = 0; w < output.Width(); ++w)
+        {
+            int inIndex = w * inputShape.Stride[permutation[0]] + h * inputShape.Stride[permutation[1]] + d * inputShape.Stride[permutation[2]] + n * inputShape.Stride[permutation[3]];
+            output(w, h, d, n) = input.Values()[inIndex];
+        }
+	}
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::ConstantPad2D(const Tensor& input, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, Tensor& output) const
     {
         input.CopyToHost();

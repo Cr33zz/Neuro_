@@ -37,6 +37,24 @@ __global__ void dropoutGrad(int inputLen, const float* __restrict outputGrad, co
         inputGrad[i] = outputGrad[i] * mask[i];
 }
 
+__global__ void transpose(int inputLen, const float* __restrict input, int axis0, int axis1, int axis2, int axis3, int stride0, int stride1, int stride2, int stride3, float* __restrict output, int outputStride1, int outputStride2, int outputStride3)
+{
+    int stride[4] = { stride0, stride1, stride2, stride3 };
+    int outputHeight = outputStride2 / outputStride1;
+    int outputDepth = outputStride3 / outputStride2;
+
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < inputLen; i += gridDim.x * blockDim.x)
+    {
+        int w = i % outputStride1;
+        int h = (i / outputStride1) % outputHeight;
+        int d = (i / outputStride2) % outputDepth;
+        int n = i / outputStride3;
+
+        int index = w * stride[axis0] + h * stride[axis1] + d * stride[axis2] + n * stride[axis3];
+        output[i] = input[index];
+    }
+}
+
 __global__ void constantPad2D(int outputLen, const float* __restrict input, int inputStride1, int inputStride2, int inputStride3, int left, int right, int top, int bottom, float value, float* __restrict output, int outputStride1, int outputStride2, int outputStride3)
 {
     int inputHeight = inputStride2 / inputStride1;
@@ -715,5 +733,10 @@ namespace Neuro
     void CudaKernels::DropoutGradient(const dim3& blocks, const dim3& threads, int inputLen, const float* outputGradDev, const float* maskDev, float* inputGradDev)
     {
         dropoutGrad<<<blocks, threads>>>(inputLen, outputGradDev, maskDev, inputGradDev);
+    }
+
+    void CudaKernels::Transpose(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, int axis0, int axis1, int axis2, int axis3, int stride0, int stride1, int stride2, int stride3, float* outputDev, int outputStride1, int outputStride2, int outputStride3)
+    {
+        transpose<<<blocks, threads>>>(inputLen, inputDev, axis0, axis1, axis2, axis3, stride0, stride1, stride2, stride3, outputDev, outputStride1, outputStride2, outputStride3);
     }
 }

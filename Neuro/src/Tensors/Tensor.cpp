@@ -1453,42 +1453,30 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::Transposed() const
 	{
-		Tensor result(Shape(Height(), Width(), Depth(), Batch()));
-		Transpose(result);
-		return result;
+		Tensor output(Shape(Height(), Width(), Depth(), Batch()));
+		Transpose(output);
+		return output;
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor Tensor::Transposed(const vector<EAxis>& axes) const
+    Tensor Tensor::Transposed(const vector<EAxis>& permutation) const
     {
-        Tensor result;
-        Transpose(axes, result);
-        return result;
+        Tensor output(Shape(m_Shape.Dimensions[permutation[0]], m_Shape.Dimensions[permutation[1]], m_Shape.Dimensions[permutation[2]], m_Shape.Dimensions[permutation[3]]));
+        Transpose(permutation, output);
+        return output;
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::Transpose(const vector<EAxis>& axes, Tensor& result) const
+    void Tensor::Transpose(const vector<EAxis>& permutation, Tensor& output) const
     {
-        result.OverrideHost();
-
-        vector<EAxis> permutation = FillUpTranposeAxis(axes);
-
-        result.Resize(Shape(m_Shape.Dimensions[permutation[0]], m_Shape.Dimensions[permutation[1]], m_Shape.Dimensions[permutation[2]], m_Shape.Dimensions[permutation[3]]));
-
-        for (uint32_t n = 0; n < result.Batch(); ++n)
-        for (uint32_t d = 0; d < result.Depth(); ++d)
-        for (uint32_t h = 0; h < result.Height(); ++h)
-        for (uint32_t w = 0; w < result.Width(); ++w)
-        {
-            int inIndex = w * m_Shape.Stride[permutation[0]] + h * m_Shape.Stride[permutation[1]] + d * m_Shape.Stride[permutation[2]] + n * m_Shape.Stride[permutation[3]];
-            result(w, h, d, n) = m_Storage.Data()[inIndex];
-        }
+        NEURO_ASSERT(permutation.size() == 4, "Invalid number of axes in permutation, expected 4, found " << permutation.size());
+        Op()->Transpose(*this, permutation, output);
     }
 
     //////////////////////////////////////////////////////////////////////////
-	void Tensor::Transpose(Tensor& result) const
+	void Tensor::Transpose(Tensor& output) const
 	{
-		Op()->Transpose(*this, result);
+		Op()->Transpose(*this, output);
 	}
 
     //////////////////////////////////////////////////////////////////////////

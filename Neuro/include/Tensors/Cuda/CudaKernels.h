@@ -35,5 +35,6 @@ namespace Neuro
         static void SgdStep(const dim3& blocks, const dim3& threads, int inputLen, float* parameterDev, const float* gradientDev, float lr);
         static void Dropout(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float prob, float* maskDev, float* outputDev);
         static void DropoutGradient(const dim3& blocks, const dim3& threads, int inputLen, const float* outputGradDev, const float* maskDev, float* inputGradDev);
+        static void Transpose(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, int axis0, int axis1, int axis2, int axis3, int stride0, int stride1, int stride2, int stride3, float* outputDev, int outputStride1, int outputStride2, int outputStride3);
 	};
 }

@@ -622,6 +622,19 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::Transpose(const Tensor& input, const vector<EAxis>& permutation, Tensor& output) const
+    {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
+        input.CopyToDevice();
+        output.OverrideDevice();
+
+        dim3 blocks, threads;
+        GetKernelRunParamsForSequence(input.Length(), blocks, threads, 128);
+        CudaKernels::Transpose(blocks, threads, input.Length(), input.GetDevicePtr(), permutation[0], permutation[1], permutation[2], permutation[3], input.Stride(0), input.Stride(1), input.Stride(2), input.Stride(3), output.GetDevicePtr(), output.Stride(1), output.Stride(2), output.Stride(3));
+        cudaStreamSynchronize(0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::ConstantPad2D(const Tensor& input, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, Tensor& output) const
     {
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);

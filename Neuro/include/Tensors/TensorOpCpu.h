@@ -34,6 +34,7 @@ namespace Neuro
         virtual void Clip(const Tensor& input, float min, float max, Tensor& output) const;
         virtual void ClipGradient(const Tensor& input, float min, float max, const Tensor& outputGradient, Tensor& inputGradient) const;
         virtual void Transpose(const Tensor& input, Tensor& output) const;
+        virtual void Transpose(const Tensor& input, const vector<EAxis>& permutation, Tensor& output) const;
         virtual void ConstantPad2D(const Tensor& input, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, Tensor& output) const;
         virtual void ReflectPad2D(const Tensor& input, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& output) const;
         virtual void Pad2DGradient(const Tensor& gradient, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& inputsGradient) const;

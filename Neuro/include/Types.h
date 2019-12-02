@@ -113,6 +113,12 @@ namespace Neuro
         _012Axes, // reduces width, height and depth dimensions to size 1, equivalent to axis (0, 1, 2)
         _013Axes, // reduces width, height and batch dimensions to size 1, equivalent to axis (0, 1, 3)
         _123Axes, // reduces height depth and batch dimensions to size 1, equivalent to axis (1, 2, 3)
+
+        NoneAxis = GlobalAxis,
+        _0Axis = WidthAxis,
+        _1Axis = HeightAxis,
+        _2Axis = DepthAxis,
+        _3Axis = BatchAxis,
     };
 
     enum EMetric

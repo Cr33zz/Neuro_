@@ -163,11 +163,11 @@ namespace Neuro
         static vector<EAxis> FillUpTranposeAxis(const vector<EAxis>& axes);
         
         // Axis specifies new order of axis (dimensions) using input tensor axis nomenclature
-        Tensor Transposed(const vector<EAxis>& axes) const;
-        void Transpose(const vector<EAxis>& axes, Tensor& result) const;
+        Tensor Transposed(const vector<EAxis>& permutation) const;
+        void Transpose(const vector<EAxis>& permutation, Tensor& output) const;
 
         Tensor Transposed() const;
-        void Transpose(Tensor& result) const;
+        void Transpose(Tensor& output) const;
 
         // Generates a new tensor with given dimensions and populate it with this tensor's values in index order.
         // One of dimensions can be -1, in that case it will be calculated based on remaining dimensions.
