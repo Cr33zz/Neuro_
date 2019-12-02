@@ -64,9 +64,9 @@ public:
 
         // setup models
         auto gModel = CreateGenerator(IMG_SHAPE);
-        //cout << "Generator" << endl << gModel->Summary();
+        cout << "Generator" << endl << gModel->Summary();
         auto dModel = CreateDiscriminator(IMG_SHAPE);
-        //cout << "Discriminator" << endl << dModel->Summary();
+        cout << "Discriminator" << endl << dModel->Summary();
 
         auto inSrc = new Input(IMG_SHAPE);
         auto genOut = gModel->Call(inSrc->Outputs());
@@ -118,8 +118,8 @@ public:
     {
         auto encoderBlock = [](TensorLike* input, uint32_t filtersNum, bool batchNorm = true)
         {
-            auto g = (new ZeroPadding2D(2, 1, 2, 1))->Call(input);
-            g = (new Conv2D(filtersNum, 4, 2))->Call(g);
+            //auto g = (new ZeroPadding2D(1, 1, 1, 1))->Call(input);
+            auto g = (new Conv2D(filtersNum, 3, 2, Tensor::GetPadding(Same, 3)))->Call(input);
             if (batchNorm)
                 g = (new BatchNormalization())->Call(g);
             g = (new Activation(new LeakyReLU(0.2f)))->Call(g);
@@ -129,8 +129,8 @@ public:
         auto decoderBlock = [](TensorLike* input, TensorLike* skipInput, uint32_t filtersNum, bool dropout = true)
         {
             auto g = (new UpSampling2D(2))->Call(input);
-            g = (new ZeroPadding2D(2, 1, 2, 1))->Call(g);
-            g = (new Conv2D(filtersNum, 4))->Call(g);
+            //g = (new ZeroPadding2D(2, 2, 2, 2))->Call(g);
+            g = (new Conv2D(filtersNum, 3, 1, Tensor::GetPadding(Same, 3)))->Call(g);
             g = (new BatchNormalization())->Call(g);
             if (dropout)
                 g = (new Dropout(0.5f))->Call(g);
@@ -150,8 +150,8 @@ public:
         auto e6 = encoderBlock(e5[0], 512);
         auto e7 = encoderBlock(e6[0], 512);
         /// bottleneck
-        auto b = (new ZeroPadding2D(2, 1, 2, 1))->Call(e7);
-        b = (new Conv2D(512, 4, 2))->Call(b);
+        //auto b = (new ZeroPadding2D(2, 2, 2, 2))->Call(e7);
+        auto b = (new Conv2D(512, 3, 2, Tensor::GetPadding(Same, 3)))->Call(e7);
         b = (new Activation(new ReLU()))->Call(b);
         /// decoder
         auto d1 = decoderBlock(b[0], e7[0], 512);
@@ -163,8 +163,8 @@ public:
         auto d7 = decoderBlock(d6[0], e1[0], 64, false);
         /// output
         auto g = (new UpSampling2D(2))->Call(d7);
-        g = (new ZeroPadding2D(2, 1, 2, 1))->Call(g);
-        g = (new Conv2D(3, 4))->Call(g);
+        //g = (new ZeroPadding2D(2, 2, 2, 2))->Call(g);
+        g = (new Conv2D(3, 3, 1, Tensor::GetPadding(Same, 3)))->Call(g);
         auto outImage = (new Activation(new Tanh()))->Call(g);
 
         auto model = new Flow({ inImage->Outputs()[0] }, outImage);
@@ -178,30 +178,30 @@ public:
 
         auto merged = (new Concatenate(DepthAxis))->Call({ inSrcImage->Outputs()[0], inTargetImage->Outputs()[0] });
         // 64
-        auto d = (new ZeroPadding2D(2, 1, 2, 1))->Call(merged);
-        d = (new Conv2D(64, 4, 2, 0, new LeakyReLU(0.2f)))->Call(d);
+        //auto d = (new ZeroPadding2D(2, 2, 2, 2))->Call(merged);
+        auto d = (new Conv2D(64, 3, 2, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)))->Call(merged);
         // 128
-        d = (new ZeroPadding2D(2, 1, 2, 1))->Call(d);
-        d = (new Conv2D(128, 4, 2))->Call(d);
+        //d = (new ZeroPadding2D(2, 2, 2, 2))->Call(d);
+        d = (new Conv2D(128, 3, 2, Tensor::GetPadding(Same, 3)))->Call(d);
         d = (new BatchNormalization())->Call(d);
         d = (new Activation(new LeakyReLU(0.2f)))->Call(d);
         // 256
-        d = (new ZeroPadding2D(2, 1, 2, 1))->Call(d);
-        d = (new Conv2D(256, 4, 2))->Call(d);
+        //d = (new ZeroPadding2D(2, 2, 2, 2))->Call(d);
+        d = (new Conv2D(256, 3, 2, Tensor::GetPadding(Same, 3)))->Call(d);
         d = (new BatchNormalization())->Call(d);
         d = (new Activation(new LeakyReLU(0.2f)))->Call(d);
         // 512
-        d = (new ZeroPadding2D(2, 1, 2, 1))->Call(d);
-        d = (new Conv2D(512, 4, 2))->Call(d);
+        //d = (new ZeroPadding2D(2, 2, 2, 2))->Call(d);
+        d = (new Conv2D(512, 3, 2, Tensor::GetPadding(Same, 3)))->Call(d);
         d = (new BatchNormalization())->Call(d);
         d = (new Activation(new LeakyReLU(0.2f)))->Call(d);
-        d = (new ZeroPadding2D(2, 1, 2, 1))->Call(d);
-        d = (new Conv2D(512, 4, 1))->Call(d);
+        //d = (new ZeroPadding2D(2, 2, 2, 2))->Call(d);
+        d = (new Conv2D(512, 3, 1, Tensor::GetPadding(Same, 3)))->Call(d);
         d = (new BatchNormalization())->Call(d);
         d = (new Activation(new LeakyReLU(0.2f)))->Call(d);
         // patch output
-        d = (new ZeroPadding2D(2, 1, 2, 1))->Call(d);
-        d = (new Conv2D(1, 4, 1))->Call(d);
+        //d = (new ZeroPadding2D(2, 2, 2, 2))->Call(d);
+        d = (new Conv2D(1, 3, 1, Tensor::GetPadding(Same, 3)))->Call(d);
         auto patchOut = (new Activation(new Sigmoid()))->Call(d);
 
         auto model = new Flow({ inSrcImage->Outputs()[0], inTargetImage->Outputs()[0] }, patchOut);
