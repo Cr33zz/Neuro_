@@ -65,7 +65,7 @@ public:
         // setup models
         auto gModel = CreateGenerator(IMG_SHAPE);
         cout << "Generator" << endl << gModel->Summary();
-        auto dModel = CreateDiscriminator(IMG_SHAPE);
+        auto dModel = CreatePatchDiscriminator(IMG_SHAPE);
         cout << "Discriminator" << endl << dModel->Summary();
 
         auto inSrc = new Input(IMG_SHAPE);
@@ -171,42 +171,89 @@ public:
         return model;
     }
     
-    ModelBase* CreateDiscriminator(const Shape& imgShape)
+    ModelBase* CreatePatchDiscriminator(const Shape& patchShape, size_t nbPatches, bool useMiniBatchDiscrimination = true)
     {
-        auto inSrcImage = new Input(imgShape);
-        auto inTargetImage = new Input(imgShape);
+        NEURO_ASSERT(patchShape.Width() == patchShape.Height(), "");
+        uint32_t stride = 2;
+        auto inputLayer = new Input(patchShape);
 
-        auto merged = (new Concatenate(DepthAxis))->Call({ inSrcImage->Outputs()[0], inTargetImage->Outputs()[0] });
-        // 64
-        //auto d = (new ZeroPadding2D(2, 2, 2, 2))->Call(merged);
-        auto d = (new Conv2D(64, 3, 2, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)))->Call(merged);
-        // 128
-        //d = (new ZeroPadding2D(2, 2, 2, 2))->Call(d);
-        d = (new Conv2D(128, 3, 2, Tensor::GetPadding(Same, 3)))->Call(d);
-        d = (new BatchNormalization())->Call(d);
-        d = (new Activation(new LeakyReLU(0.2f)))->Call(d);
-        // 256
-        //d = (new ZeroPadding2D(2, 2, 2, 2))->Call(d);
-        d = (new Conv2D(256, 3, 2, Tensor::GetPadding(Same, 3)))->Call(d);
-        d = (new BatchNormalization())->Call(d);
-        d = (new Activation(new LeakyReLU(0.2f)))->Call(d);
-        // 512
-        //d = (new ZeroPadding2D(2, 2, 2, 2))->Call(d);
-        d = (new Conv2D(512, 3, 2, Tensor::GetPadding(Same, 3)))->Call(d);
-        d = (new BatchNormalization())->Call(d);
-        d = (new Activation(new LeakyReLU(0.2f)))->Call(d);
-        //d = (new ZeroPadding2D(2, 2, 2, 2))->Call(d);
-        d = (new Conv2D(512, 3, 1, Tensor::GetPadding(Same, 3)))->Call(d);
-        d = (new BatchNormalization())->Call(d);
-        d = (new Activation(new LeakyReLU(0.2f)))->Call(d);
-        // patch output
-        //d = (new ZeroPadding2D(2, 2, 2, 2))->Call(d);
-        d = (new Conv2D(1, 3, 1, Tensor::GetPadding(Same, 3)))->Call(d);
-        auto patchOut = (new Activation(new Sigmoid()))->Call(d);
+        uint32_t filtersStart = 64;
+        size_t nbConv = int(floor(::log(patchShape.Width()) / ::log(2)));
+        vector<uint32_t> filtersList(nbConv);
+        for (int i = 0; i < nbConv; ++i)
+            filtersList[i] = filtersStart * min(8, ::pow(2, i));
 
-        auto model = new Flow({ inSrcImage->Outputs()[0], inTargetImage->Outputs()[0] }, patchOut);
-        auto opt = new Adam(0.0002f, 0.5f);
-        model->Optimize(opt, new BinaryCrossEntropy(), { 0.5f });
+        auto discOut = (new Conv2D(filtersList[0], 3, stride, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)))->Call(inputLayer->Outputs());
+
+        for (uint32_t i = 1; i < filtersList.size(); ++i)
+        {
+            uint32_t filters = filtersList[i];
+            discOut = (new Conv2D(filters, 3, stride, Tensor::GetPadding(Same, 3)))->Call(discOut);
+            discOut = (new BatchNormalization())->Call(discOut);
+            discOut = (new Activation(new LeakyReLU(0.2f)))->Call(discOut);
+        }
+
+        auto xFlat = (new Flatten())->Call(discOut);
+        auto x = (new Dense(2, new Softmax()))->Call(xFlat);
+
+        // this is single patch processing model
+        auto patchGan = new Flow(inputLayer->Outputs(), { x[0], xFlat[0] });
+
+        // generate final model for processing all patches
+        vector<TensorLike*> inputList(nbPatches);
+        for (size_t i = 0; i < nbPatches; ++i)
+            inputList[i] = (new Input(patchShape, "patch_input_" + i))->Outputs()[0];
+
+        vector<TensorLike*> xList;
+        vector<TensorLike*> xFlatList;
+
+        for (auto& patch : inputList)
+        {
+            auto output = patchGan->Call(patch);
+            xList.push_back(output[0]);
+            xFlatList.push_back(output[1]);
+        }
+
+        TensorLike* xMerged;
+
+        if (xList.size() > 1)
+            xMerged = (new Concatenate(DepthAxis))->Call(xList)[0];
+        else
+            xMerged = xList[0];
+
+        if (useMiniBatchDiscrimination)
+        {
+            static auto minb_disc = [](const vector<TensorLike*>& inputNodes)
+            {
+                /*diffs = K.expand_dims(x, 3) - K.expand_dims(K.permute_dimensions(x, [1, 2, 0]), 0)
+                auto abs_diffs = K.sum(K.abs(diffs), 2)
+                x = sum(exp(-abs_diffs), 2);
+                return { x };*/
+            };
+
+            TensorLike* xFlatMerged;
+
+            if (xFlatList.size() > 1)
+                xFlatMerged = (new Concatenate(DepthAxis))->Call(xFlatList)[0];
+            else
+                xFlatMerged = xFlatList[0];
+
+            uint32_t num_kernels = 100;
+            uint32_t dim_per_kernel = 5;
+
+            auto m = (new Dense(num_kernels * dim_per_kernel))->UseBias(false);
+            auto mbd = new Lambda(minb_disc);
+
+            auto x_mbd = m->Call(xFlatMerged)[0];
+            x_mbd = (new Reshape((num_kernels, dim_per_kernel)))->Call(x_mbd)[0];
+            x_mbd = mbd->Call(x_mbd)[0]
+            xMerged = (new Concatenate(DepthAxis))->Call({ x, x_mbd })[0];
+        }
+
+        auto xOut = (new Dense(2, new Softmax()))->Call(xMerged);
+
+        auto model = new Flow(inputList, xOut);
+        model->Optimize(new Adam(0.0002f, 0.5f), new BinaryCrossEntropy(), { 0.5f });
         return model;
     }
 };
