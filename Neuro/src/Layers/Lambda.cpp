@@ -1,4 +1,16 @@
-﻿namespace Neuro
-{
+#include "Layers/Lambda.h"
 
+namespace Neuro
+{
+    //////////////////////////////////////////////////////////////////////////
+    Lambda::Lambda(lambdaFunc lambda, const string& name)
+        : SingleLayer(__FUNCTION__, Shape(), nullptr, name), m_Lambda(lambda)
+    {
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    vector<TensorLike*> Lambda::InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training)
+    {
+        return m_Lambda(inputNodes);
+    }
 }

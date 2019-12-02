@@ -366,6 +366,7 @@
     <ClCompile Include="src\Layers\Flatten.cpp" />
     <ClCompile Include="src\Layers\Input.cpp" />
     <ClCompile Include="src\Layers\InstanceNormalization.cpp" />
+    <ClCompile Include="src\Layers\Lambda.cpp" />
     <ClCompile Include="src\Layers\LayerBase.cpp" />
     <ClCompile Include="src\Layers\Merge.cpp" />
     <ClCompile Include="src\Layers\Padding2D.cpp" />

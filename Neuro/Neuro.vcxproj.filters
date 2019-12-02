@@ -711,6 +711,7 @@
     </ClCompile>
     <ClCompile Include="src\Layers\Padding2D.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\Pad2dOp.cpp" />
+    <ClCompile Include="src\Layers\Lambda.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\Tensors\Cuda\CudaKernels.cu">

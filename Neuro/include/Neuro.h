@@ -14,6 +14,7 @@
 #include "Layers/Dense.h"
 #include "Layers/Flatten.h"
 #include "Layers/Reshape.h"
+#include "Layers/Lambda.h"
 #include "Layers/Dropout.h"
 #include "Layers/BatchNormalization.h"
 #include "Layers/InstanceNormalization.h"
