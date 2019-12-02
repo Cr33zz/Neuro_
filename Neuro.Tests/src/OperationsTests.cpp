@@ -285,7 +285,13 @@ namespace NeuroTests
         TEST_METHOD(Transpose)
         {
             auto x = Variable(Shape(2, 3, 4, 2));
-            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new TransposeOp(&x)).get()));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new TransposeOp(&x, { _1Axis, _0Axis })).get()));
+        }
+
+        TEST_METHOD(Transpose_2103)
+        {
+            auto x = Variable(Shape(2, 3, 4, 2));
+            Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new TransposeOp(&x, { _2Axis, _1Axis, _0Axis, _3Axis })).get()));
         }
 
         TEST_METHOD(TanH)

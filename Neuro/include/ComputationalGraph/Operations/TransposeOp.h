@@ -17,7 +17,7 @@ namespace Neuro
         vector<EAxis> m_Permutation;
     };
 
-    static Operation* transpose(TensorLike* x, const vector<EAxis>& axes, const string& name = "")
+    static Operation* transpose(TensorLike* x, const vector<EAxis>& axes = { _1Axis, _0Axis }, const string& name = "")
     {
         return new TransposeOp(x, axes, name);
     }

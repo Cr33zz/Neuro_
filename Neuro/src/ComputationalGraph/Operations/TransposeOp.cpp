@@ -15,7 +15,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TransposeOp::ComputeInternal()
     {
-        m_Output.ResizeBatch(m_Inputs[0]->Batch());
+        auto& shape = m_Inputs[0]->GetShape();
+        m_Output.Resize(Shape(shape.Dimensions[m_Permutation[0]], shape.Dimensions[m_Permutation[1]], shape.Dimensions[m_Permutation[2]], shape.Dimensions[m_Permutation[3]]));
         m_Inputs[0]->Transpose(m_Permutation, m_Output);
     }
 
