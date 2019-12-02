@@ -19,12 +19,14 @@ namespace Neuro
     Reshape::Reshape(const string& constructorName, const Shape& shape, const string& name)
         : SingleLayer(constructorName, shape, nullptr, name), m_Shape(shape)
     {
+        NEURO_ASSERT(shape.Batch() == 1, "");
     }
 
     //////////////////////////////////////////////////////////////////////////
     Reshape::Reshape(const string& constructorName, const Shape& inputShape, const Shape& shape, const string& name)
         : SingleLayer(constructorName, inputShape, nullptr, name), m_Shape(shape)
     {
+        NEURO_ASSERT(shape.Batch() == 1, "");
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -36,6 +38,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     vector<TensorLike*> Reshape::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
     {
-        return { reshape(inputs[0], m_Shape) };
+        return { batch_reshape(inputs[0], m_Shape) };
     }
 }
