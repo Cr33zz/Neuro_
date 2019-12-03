@@ -31,6 +31,8 @@ namespace Neuro
     {
         if (m_Axis == BatchAxis)
             m_Output.ResizeBatch((uint32_t)m_Inputs.size());
+        else
+            m_Output.ResizeBatch(m_Inputs[0]->Batch());
         Tensor::Concat(m_Axis, m_Inputs, m_Output);
     }
 
