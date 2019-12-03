@@ -1024,7 +1024,7 @@ namespace Neuro
 
         for (size_t i = 0; i < inputTensors.size(); ++i)
         {
-            assert(inputTensors[i]->m_Metadata);
+            NEURO_ASSERT(inputTensors[i]->m_Metadata, "Input tensor has no metadata, most likely it is a raw tensor not being an output of any layer.");
             ProcessLayer(inputTensors[i]->m_Metadata->layer, visited);
         }
         
@@ -1035,13 +1035,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::TrainStep(const const_tensor_ptr_vec_t& inputs, const const_tensor_ptr_vec_t& outputs, float* loss, float* acc)
     {
-        /*assert(ModelInputLayers().size() == inputs.size());
-        for (auto i = 0; i < inputs.size(); ++i)
-            assert(ModelInputLayers()[i]->InputShape().EqualsIgnoreBatch(inputs[i]->GetShape()));
-        assert(ModelOutputLayers().size() == outputs.size());
-        for (auto i = 0; i < outputs.size(); ++i)
-            assert(ModelOutputLayers()[i]->OutputShape().EqualsIgnoreBatch(outputs[i]->GetShape()));*/
-
         auto results = m_Trainer->Train(inputs, outputs);
 
         if (loss)
