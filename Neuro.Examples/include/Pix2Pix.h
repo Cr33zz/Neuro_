@@ -43,19 +43,19 @@ public:
 
     void Run()
     {
-        Tensor::SetDefaultOpMode(GPU);
+        Tensor::SetForcedOpMode(GPU);
         //GlobalRngSeed(1337);
 
         const Shape IMG_SHAPE(256, 256, 3);
-        const Shape PATCH_SHAPE(64, 64, 3);
-        const size_t PATCHES_NUM = 16;
-        const uint32_t BATCH_SIZE = 1;
+        const uint32_t PATCH_SIZE = 64;
+        const uint32_t BATCH_SIZE = 32;
         const uint32_t STEPS = 100000;
         //const uint32_t STEPS = 6;
 
         cout << "Example: Pix2Pix" << endl;
 
-        auto trainFiles = LoadFilesList("f:/!TrainingData/flowers", false, true);
+        auto trainFiles = LoadFilesList("e:/Downloads/flowers", false, true);
+        //auto trainFiles = LoadFilesList("f:/!TrainingData/flowers", false, true);
 
         Tensor condImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "cond_image");
         Tensor expectedImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "output_image");
@@ -67,30 +67,26 @@ public:
         // setup models
         auto gModel = CreateGenerator(IMG_SHAPE);
         cout << "Generator" << endl << gModel->Summary();
-        auto dModel = CreatePatchDiscriminator(PATCH_SHAPE, PATCHES_NUM);
+        auto dModel = CreatePatchDiscriminator(IMG_SHAPE, PATCH_SIZE);
         //cout << "Discriminator" << endl << dModel->Summary();
 
         auto inSrc = new Input(IMG_SHAPE);
         auto genOut = gModel->Call(inSrc->Outputs());
-
-        // generate patches
-        vector<TensorLike*> patches;
-
-        for (int y = 0; y < ::sqrt(PATCHES_NUM); ++y)
-        for (int x = 0; x < ::sqrt(PATCHES_NUM); ++x)
-        {
-            auto patch = (new Lambda([&](const vector<TensorLike*>& inputNodes)->vector<TensorLike*> { return { sub_tensor2d(inSrc->Outputs()[0], PATCH_SHAPE.Width(), PATCH_SHAPE.Height(), PATCH_SHAPE.Width() * x, PATCH_SHAPE.Height() * y) }; }))->Call(inSrc->Outputs())[0];
-            patches.push_back(patch);
-        }
-
-        auto disOut = dModel->Call(patches);
+        auto disOut = dModel->Call(genOut[0]);
 
         auto ganModel = new Flow(inSrc->Outputs(), { disOut[0], genOut[0] }, "pix2pix");
         ganModel->Optimize(new Adam(0.0001f), { new BinaryCrossEntropy(), new MeanAbsoluteError() }, { 1.f, 100.f });
         ganModel->LoadWeights("pix2pix.h5", false, true);
 
-        Tensor real(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE), "real"); real.One();
-        Tensor fake(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE), "fake"); fake.Zero();
+        Tensor one(Shape(1, BATCH_SIZE)); one.One();
+
+        // labels consist of two values [fake_prob, real_prob]
+        Tensor fakeLabels(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE), "fake_labels"); fakeLabels.Zero();
+        one.FuseSubTensor2D(0, 0, fakeLabels); // generate [1, 0] batch
+        Tensor realLabels(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE), "real_lables"); realLabels.Zero();
+        one.FuseSubTensor2D(1, 0, realLabels);
+
+        size_t discriminatorTrainingSource = 1;
 
         Tqdm progress(STEPS, 0);
         progress.ShowEta(true).ShowElapsed(false).ShowPercent(false);
@@ -99,29 +95,37 @@ public:
             //load next conditional and expected images
             preloader.Load();
 
-            // generate fake images from condition
-            Tensor fakeImages = *gModel->Predict(condImages)[0];
-
             // perform step of training discriminator to distinguish fake from real images
             dModel->SetTrainable(true);
-            float dRealLoss = get<0>(dModel->TrainOnBatch({ &condImages, &expectedImages }, { &real }));
-            float dFakeLoss = get<0>(dModel->TrainOnBatch({ &condImages, &fakeImages }, { &fake }));
 
+            float dLoss;
+            if (discriminatorTrainingSource & 1)
+            {
+                dLoss = get<0>(dModel->TrainOnBatch({ &condImages, &expectedImages }, { &realLabels }));
+            }
+            else
+            {
+                // generate fake images from condition
+                Tensor fakeImages = *gModel->Predict(condImages)[0];
+                dLoss = get<0>(dModel->TrainOnBatch({ &condImages, &fakeImages }, { &fakeLabels }));
+
+                if (discriminatorTrainingSource % 100 == 0)
+                {
+                    ganModel->SaveWeights("pix2pix.h5");
+                    Tensor tmp(Shape::From(fakeImages.GetShape(), 3));
+                    Tensor::Concat(WidthAxis, { &condImages, &fakeImages, &expectedImages }, tmp);
+                    tmp.Add(1.f).Mul(127.5f).SaveAsImage("pix2pix_s" + PadLeft(to_string(i), 4, '0') + ".jpg", false);
+                }
+            }
+            ++discriminatorTrainingSource;
+            
             // perform step of training generator to generate more real images
             dModel->SetTrainable(false);
-            float ganLoss = get<0>(ganModel->TrainOnBatch({ &condImages }, { &real, &expectedImages }));
+            float ganLoss = get<0>(ganModel->TrainOnBatch({ &condImages }, { &realLabels, &expectedImages }));
 
             stringstream extString;
-            extString << setprecision(4) << fixed << " - real_l: " << dRealLoss << " - fake_l: " << dFakeLoss << " - gan_l: " << ganLoss;
+            extString << setprecision(4) << fixed << " - disc_l: " << dLoss << " - gan_l: " << ganLoss;
             progress.SetExtraString(extString.str());
-
-            if (i % 100 == 0)
-            {
-                ganModel->SaveWeights("pix2pix.h5");
-                Tensor tmp(Shape::From(fakeImages.GetShape(), 3));
-                Tensor::Concat(BatchAxis, { &condImages, &fakeImages, &expectedImages }, tmp);
-                tmp.Add(1.f).Mul(127.5f).SaveAsImage("pix2pix_s" + PadLeft(to_string(i), 4, '0') + ".jpg", false);
-            }
         }
 
         ganModel->SaveWeights("pix2pix.h5");
@@ -184,19 +188,22 @@ public:
         return model;
     }
     
-    ModelBase* CreatePatchDiscriminator(const Shape& patchShape, size_t nbPatches, bool useMiniBatchDiscrimination = true)
+    ModelBase* CreatePatchDiscriminator(const Shape& imgShape, uint32_t patchSize, bool useMiniBatchDiscrimination = true)
     {
-        NEURO_ASSERT(patchShape.Width() == patchShape.Height(), "");
+        NEURO_ASSERT(imgShape.Width() == imgShape.Height(), "Input image must be square.");
+        NEURO_ASSERT(imgShape.Width() % patchSize == 0, "Input image size is not divisible by patch size.");
+
+        size_t nbPatches = ::pow(imgShape.Width() / patchSize, 2);
         uint32_t stride = 2;
-        auto inputLayer = new Input(patchShape);
+        auto patchInput = new Input(Shape(patchSize, patchSize, imgShape.Depth()));
 
         uint32_t filtersStart = 64;
-        size_t nbConv = int(floor(::log(patchShape.Width()) / ::log(2)));
+        size_t nbConv = int(floor(::log(patchSize) / ::log(2)));
         vector<uint32_t> filtersList(nbConv);
         for (int i = 0; i < nbConv; ++i)
             filtersList[i] = filtersStart * (uint32_t)min(8, ::pow(2, i));
 
-        auto discOut = (new Conv2D(filtersList[0], 3, stride, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)))->Call(inputLayer->Outputs());
+        auto discOut = (new Conv2D(filtersList[0], 3, stride, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)))->Call(patchInput->Outputs());
 
         for (uint32_t i = 1; i < filtersList.size(); ++i)
         {
@@ -210,19 +217,27 @@ public:
         auto x = (new Dense(2, new Softmax()))->Call(xFlat);
 
         // this is single patch processing model
-        auto patchGan = new Flow(inputLayer->Outputs(), { x[0], xFlat[0] });
+        auto patchDisc = new Flow(patchInput->Outputs(), { x[0], xFlat[0] });
 
         // generate final model for processing all patches
-        vector<TensorLike*> inputList(nbPatches);
-        for (size_t i = 0; i < nbPatches; ++i)
-            inputList[i] = (new Input(patchShape, "patch_input_" + i))->Outputs()[0];
+        auto imgInput = new Input(imgShape);
+
+        // generate patches
+        vector<TensorLike*> patches;
+
+        for (int y = 0; y < ::sqrt(nbPatches); ++y)
+        for (int x = 0; x < ::sqrt(nbPatches); ++x)
+        {
+            auto patch = (new Lambda([&](const vector<TensorLike*>& inputNodes)->vector<TensorLike*> { return { sub_tensor2d(inputNodes[0], patchSize, patchSize, patchSize * x, patchSize * y) }; }))->Call(imgInput->Outputs())[0];
+            patches.push_back(patch);
+        }
 
         vector<TensorLike*> xList;
         vector<TensorLike*> xFlatList;
 
-        for (auto& patch : inputList)
+        for (auto& patch : patches)
         {
-            auto output = patchGan->Call(patch);
+            auto output = patchDisc->Call(patch);
             xList.push_back(output[0]);
             xFlatList.push_back(output[1]);
         }
@@ -259,18 +274,18 @@ public:
             else
                 xFlatMerged = xFlatList[0];
 
-            uint32_t num_kernels = 100;
-            uint32_t dim_per_kernel = 5;
+            uint32_t numKernels = 100;
+            uint32_t dimPerKernel = 5;
 
-            auto x_mbd = (new Dense(num_kernels * dim_per_kernel))->UseBias(false)->Call(xFlatMerged)[0];
-            x_mbd = (new Reshape(Shape(dim_per_kernel, num_kernels)))->Call(x_mbd)[0];
+            auto x_mbd = (new Dense(numKernels * dimPerKernel))->UseBias(false)->Call(xFlatMerged)[0];
+            x_mbd = (new Reshape(Shape(dimPerKernel, numKernels)))->Call(x_mbd)[0];
             x_mbd = (new Lambda(minb_disc))->Call(x_mbd)[0];
             xMerged = (new Concatenate(WidthAxis))->Call({ xMerged, x_mbd })[0];
         }
 
         auto xOut = (new Dense(2, new Softmax()))->Call(xMerged);
 
-        auto model = new Flow(inputList, xOut);
+        auto model = new Flow(imgInput->Outputs(), xOut);
         model->Optimize(new Adam(0.0001f), new BinaryCrossEntropy());
         return model;
     }
