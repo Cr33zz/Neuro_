@@ -1003,7 +1003,25 @@ namespace Neuro
         }
 
         if (axis == WidthAxis)
-            return ConcatTemplate<1, 0, 0, 0>(inputs, output);
+        {
+            for (uint32_t n = 0; n < output.Batch(); ++n)
+            for (uint32_t d = 0; d < output.Depth(); ++d)
+            for (uint32_t h = 0; h < output.Height(); ++h)
+            {
+                uint32_t elementsCopied = 0;
+                for (uint32_t i = 0; i < inputs.size(); ++i)
+                {
+                    NEURO_ASSERT(inputs[i]->Batch() == output.Batch(), "");
+                    uint32_t inOffset = n * inputs[i]->Stride(3) + d * inputs[i]->Stride(2) + h * inputs[i]->Stride(1);
+                    uint32_t outOffset = n * output.Stride(3) + d * output.Stride(2) + h * output.Stride(1);
+                    inputs[i]->CopyTo(inOffset, output, outOffset + elementsCopied, inputs[i]->Width());
+                    elementsCopied += inputs[i]->Width();
+                }
+                NEURO_ASSERT(output.Width() == elementsCopied, "Invalid output width dimension, expected " << elementsCopied);
+            }
+            return;
+        }
+
         if (axis == HeightAxis)
             return ConcatTemplate<0, 1, 0, 0>(inputs, output);
         
@@ -1067,9 +1085,27 @@ namespace Neuro
             }
             return;
         }
-        
+
         if (axis == WidthAxis)
-            return SplitTemplate<1, 0, 0, 0>(*this, outputs);
+        {
+            for (uint32_t n = 0; n < Batch(); ++n)
+            for (uint32_t d = 0; d < Depth(); ++d)
+            for (uint32_t h = 0; h < Height(); ++h)
+            {
+                uint32_t elementsCopied = 0;
+                for (uint32_t i = 0; i < outputs.size(); ++i)
+                {
+                    NEURO_ASSERT(outputs[i]->Batch() == Batch(), "");
+                    uint32_t outOffset = n * outputs[i]->Stride(3) + d * outputs[i]->Stride(2) + h * outputs[i]->Stride(1);
+                    uint32_t offset = n * Stride(3) + d * Stride(2) + h * Stride(1);
+                    CopyTo(offset + elementsCopied, *outputs[i], outOffset, outputs[i]->Width());
+                    elementsCopied += outputs[i]->Width();
+                }
+                NEURO_ASSERT(Width() == elementsCopied, "Invalid output width dimension, expected " << elementsCopied);
+            }
+            return;
+        }
+        
         if (axis == HeightAxis)
             return SplitTemplate<0, 1, 0, 0>(*this, outputs);
         

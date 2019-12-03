@@ -1079,6 +1079,42 @@ namespace NeuroTests
                 Assert::AreEqual((double)result.GetFlat(i), (double)t.GetFlat(i) * other.GetFlat(i), 1e-7);
         }
 
+        TEST_METHOD(Concat_Width)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            Tensor t1(Shape(2, 2, 1, 2)); t1.FillWithRange();
+            Tensor t2(Shape(2, 2, 1, 2)); t2.FillWithRange(8);
+
+            auto result = Tensor(Shape(t1.Width() + t2.Width(), 2, 1, 2));
+
+            Tensor::Concat(WidthAxis, { &t1, &t2 }, result);
+
+            auto correct = Tensor({ 0,1,8,9,2,3,10,11,4,5,12,13,6,7,14,15 }, result.GetShape());
+
+            Assert::IsTrue(result.Equals(correct));
+        }
+
+        TEST_METHOD(Split_Width)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            auto t1 = Tensor(Shape(2, 2, 1, 2));
+            auto t2 = Tensor(Shape(2, 2, 1, 2));
+
+            auto concated = Tensor({ 0,1,8,9,2,3,10,11,4,5,12,13,6,7,14,15 }, Shape(4, 2, 1, 2));
+
+            tensor_ptr_vec_t outputs{ &t1, &t2 };
+            concated.Split(WidthAxis, outputs);
+
+            auto correct1 = Tensor(Shape(2, 2, 1, 2)); correct1.FillWithRange();
+            auto correct2 = Tensor(Shape(2, 2, 1, 2)); correct2.FillWithRange(8);
+            vector<Tensor> correctOutputs = { correct1, correct2 };
+
+            for (uint32_t i = 0; i < outputs.size(); ++i)
+                Assert::IsTrue(outputs[i]->Equals(correctOutputs[i]));
+        }
+
         TEST_METHOD(Concat_Depth)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
