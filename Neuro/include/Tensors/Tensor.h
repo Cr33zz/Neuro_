@@ -112,6 +112,9 @@ namespace Neuro
         Tensor Clip(float min, float max) const;
         void ClipGradient(const Tensor& input, float min, float max, const Tensor& outputGradient, Tensor& inputGradient) const;
 
+        void ExtractSubTensor2D(uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const;
+        void FuseSubTensor2D(uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const;
+
         Tensor DiagFlat() const;
 
         Tensor Pow(float power) const;
@@ -163,10 +166,10 @@ namespace Neuro
         static vector<EAxis> FillUpTranposeAxis(const vector<EAxis>& axes);
         
         // Axis specifies new order of axis (dimensions) using input tensor axis nomenclature
-        Tensor Transposed(const vector<EAxis>& permutation) const;
+        Tensor Transpose(const vector<EAxis>& permutation) const;
         void Transpose(const vector<EAxis>& permutation, Tensor& output) const;
 
-        Tensor Transposed() const;
+        Tensor Transpose() const;
         void Transpose(Tensor& output) const;
 
         // Generates a new tensor with given dimensions and populate it with this tensor's values in index order.

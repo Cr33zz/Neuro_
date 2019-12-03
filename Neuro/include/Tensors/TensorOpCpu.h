@@ -66,8 +66,9 @@ namespace Neuro
         virtual void LeakyReLUGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const;
         virtual void Softmax(const Tensor& input, Tensor& output) const;
         virtual void SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const;
-
-        virtual void AdamStep(Tensor& parameter, const Tensor& gradient, Tensor& mGrad, Tensor& vGrad, /*float batchSize, */float lr, float beta1, float beta2, float epsilon) const;
-        virtual void SgdStep(Tensor& parameter, const Tensor& gradient, /*float batchSize, */float lr) const;
+        virtual void ExtractSubTensor2D(const Tensor& input, uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const;
+        virtual void FuseSubTensor2D(const Tensor& input, uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const;
+        virtual void AdamStep(Tensor& parameter, const Tensor& gradient, Tensor& mGrad, Tensor& vGrad, float lr, float beta1, float beta2, float epsilon) const;
+        virtual void SgdStep(Tensor& parameter, const Tensor& gradient, float lr) const;
 	};
 }

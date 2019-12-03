@@ -626,7 +626,7 @@ namespace Neuro
                 if (is_keras && (!params[i].transAxesKeras.empty() || params[i].reshapeKeras))
                 {
                     if (!params[i].transAxesKeras.empty())
-                        params[i].param->Output() = w->Transposed(params[i].transAxesKeras);
+                        params[i].param->Output() = w->Transpose(params[i].transAxesKeras);
                     if (params[i].reshapeKeras)
                         params[i].param->Output() = w->Reshaped(params[i].param->Output().GetShape());
                     params[i].param->Output().Name(kerasParam.Name());

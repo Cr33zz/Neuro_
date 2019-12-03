@@ -647,6 +647,18 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void Tensor::ExtractSubTensor2D(uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const
+    {
+        Op()->ExtractSubTensor2D(*this, widthOffset, heightOffset, output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::FuseSubTensor2D(uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const
+    {
+        Op()->FuseSubTensor2D(*this, widthOffset, heightOffset, output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::DiagFlat() const
 	{
         CopyToHost();
@@ -1451,7 +1463,7 @@ namespace Neuro
     }
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::Transposed() const
+	Tensor Tensor::Transpose() const
 	{
 		Tensor output(Shape(Height(), Width(), Depth(), Batch()));
 		Transpose(output);
@@ -1459,7 +1471,7 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor Tensor::Transposed(const vector<EAxis>& permutation) const
+    Tensor Tensor::Transpose(const vector<EAxis>& permutation) const
     {
         Tensor output(Shape(m_Shape.Dimensions[permutation[0]], m_Shape.Dimensions[permutation[1]], m_Shape.Dimensions[permutation[2]], m_Shape.Dimensions[permutation[3]]));
         Transpose(permutation, output);

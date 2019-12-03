@@ -78,7 +78,7 @@ public:
 
         for (int y = 0; y < ::sqrt(PATCHES_NUM); ++y)
         for (int x = 0; x < ::sqrt(PATCHES_NUM); ++x)
-            patches.push_back(sub_tensor(inSrc->Outputs()[0], PATCH_SHAPE.Width() * x, PATCH_SHAPE.Height() * y));
+            patches.push_back(sub_tensor2d(inSrc->Outputs()[0], PATCH_SHAPE.Width(), PATCH_SHAPE.Height(), PATCH_SHAPE.Width() * x, PATCH_SHAPE.Height() * y));
 
         auto disOut = dModel->Call(patches);
 

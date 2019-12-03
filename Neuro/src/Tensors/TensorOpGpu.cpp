@@ -1351,6 +1351,32 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::ExtractSubTensor2D(const Tensor& input, uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const
+    {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
+        input.CopyToDevice();
+        output.OverrideDevice();
+
+        dim3 blocks, threads;
+        GetKernelRunParamsForSequence(output.Length(), blocks, threads, 128);
+        CudaKernels::ExtractSubTensor2D(blocks, threads, output.Length(), input.GetDevicePtr(), input.Stride(1), input.Stride(2), input.Stride(3), widthOffset, heightOffset, output.GetDevicePtr(), output.Stride(1), output.Stride(2), output.Stride(3));
+        cudaStreamSynchronize(0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::FuseSubTensor2D(const Tensor& input, uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const
+    {
+        NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
+        input.CopyToDevice();
+        output.CopyToDevice();
+
+        dim3 blocks, threads;
+        GetKernelRunParamsForSequence(input.Length(), blocks, threads, 128);
+        CudaKernels::FuseSubTensor2D(blocks, threads, input.Length(), input.GetDevicePtr(), input.Stride(1), input.Stride(2), input.Stride(3), widthOffset, heightOffset, output.GetDevicePtr(), output.Stride(1), output.Stride(2), output.Stride(3));
+        cudaStreamSynchronize(0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Reduce(const Tensor& input, cudnnReduceTensorOp_t reductionOp, Tensor& output) const
     {
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);

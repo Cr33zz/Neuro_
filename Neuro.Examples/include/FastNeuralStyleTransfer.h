@@ -146,7 +146,7 @@ public:
             Tensor* x = targetStyleFeatures[i];
             uint32_t featureMapSize = x->Width() * x->Height();
             auto features = x->Reshaped(Shape(featureMapSize, x->Depth()));
-            targetStyleGrams.push_back(new Constant(features.MatMul(features.Transposed()).Div((float)features.GetShape().Length), "style_" + to_string(i) + "_gram"));
+            targetStyleGrams.push_back(new Constant(features.MatMul(features.Transpose()).Div((float)features.GetShape().Length), "style_" + to_string(i) + "_gram"));
             ///targetStyleGrams.push_back(new Constant(features.Mul(features.Transposed()).Div((float)featureMapSize), "style_" + to_string(i) + "_gram"));
         }
 

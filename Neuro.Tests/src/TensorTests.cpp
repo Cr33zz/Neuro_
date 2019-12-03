@@ -746,7 +746,7 @@ namespace NeuroTests
 
             auto t = Tensor(Shape(2, 3, 1, 2)); t.FillWithRange(1);
 
-            auto result = t.Transposed();
+            auto result = t.Transpose();
             auto correct = Tensor({ 1, 3, 5, 2, 4, 6, 7, 9, 11, 8, 10, 12 }, Shape(3, 2, 1, 2));
 
             Assert::IsTrue(result.Equals(correct));

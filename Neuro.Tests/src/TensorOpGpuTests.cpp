@@ -981,6 +981,62 @@ namespace NeuroTests
             Assert::IsTrue(inputGrad.Equals(inputGrad2));
         }
 
+        TEST_METHOD(ExtractSubTensor2D_CompareWithCpuResult)
+        {
+            Tensor t(Shape(10, 20, 3, 4)); t.FillWithRand();
+
+            Tensor::SetForcedOpMode(CPU);
+            Tensor r(Shape(3, 5, 3, 4));
+            NEURO_PROFILE("CPU", t.ExtractSubTensor2D(2, 4, r);)
+
+            Tensor::SetForcedOpMode(GPU);
+            Tensor r2(Shape(3, 5, 3, 4));
+            NEURO_PROFILE("GPU", t.ExtractSubTensor2D(2, 4, r2);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(FuseSubTensor2D_CompareWithCpuResult)
+        {
+            Tensor t(Shape(3, 5, 3, 4)); t.FillWithRand();
+            Tensor r(Shape(10, 20, 3, 4)); r.FillWithRand();
+            Tensor r2(r);
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", t.FuseSubTensor2D(2, 4, r);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", t.FuseSubTensor2D(2, 4, r2);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(Transpose_CompareWithCpuResult)
+        {
+            Tensor t(Shape(10, 20, 3, 4)); t.FillWithRand();
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r = t.Transpose();)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = t.Transpose();)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
+        TEST_METHOD(Transpose_2103_CompareWithCpuResult)
+        {
+            Tensor t(Shape(10, 20, 3, 4)); t.FillWithRand();
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r = t.Transpose({_2Axis, _1Axis, _0Axis, _3Axis});)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = t.Transpose({_2Axis, _1Axis, _0Axis, _3Axis});)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
         TEST_METHOD(Abs_CompareWithCpuResult)
         {
             Tensor t(Shape(10, 20, 30, 40)); t.FillWithRand();

@@ -204,6 +204,7 @@
     <ClInclude Include="include\ComputationalGraph\Operations\Pool2dOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\ReshapeOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\StandardDeviationOp.h" />
+    <ClInclude Include="include\ComputationalGraph\Operations\SubTensor2dOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\SwapRedBlueChannelsOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\TransposeOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\UpSample2dOp.h" />
@@ -320,6 +321,7 @@
     <ClCompile Include="src\ComputationalGraph\Operations\Pad2dOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\Pool2dOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\ReshapeOp.cpp" />
+    <ClCompile Include="src\ComputationalGraph\Operations\SubTensor2dOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\SwapRedBlueChannelsOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\TransposeOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\UpSample2dOp.cpp" />

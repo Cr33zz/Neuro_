@@ -655,9 +655,35 @@ namespace Neuro
         inputGradient.Zero();
 
 		Tensor outputReshaped = output.Reshaped(Shape(1, Shape::Auto, 1, output.Batch()));
-		Tensor jacob = outputReshaped.DiagFlat().Sub(outputReshaped.MatMul(outputReshaped.Transposed()));
+		Tensor jacob = outputReshaped.DiagFlat().Sub(outputReshaped.MatMul(outputReshaped.Transpose()));
         outputGradient.MatMul(jacob, inputGradient);
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::ExtractSubTensor2D(const Tensor& input, uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const
+    {
+        input.SyncToHost();
+        output.OverrideHost();
+
+        for (uint32_t n = 0; n < output.Batch(); ++n)
+		for (uint32_t d = 0; d < output.Depth(); ++d)
+		for (uint32_t h = 0; h < output.Height(); ++h)
+		for (uint32_t w = 0; w < output.Width(); ++w)
+			output(w, h, d, n) = input(w + widthOffset, h + heightOffset, d, n);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::FuseSubTensor2D(const Tensor& input, uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const
+    {
+        input.SyncToHost();
+        output.CopyToHost();
+
+        for (uint32_t n = 0; n < input.Batch(); ++n)
+		for (uint32_t d = 0; d < input.Depth(); ++d)
+		for (uint32_t h = 0; h < input.Height(); ++h)
+		for (uint32_t w = 0; w < input.Width(); ++w)
+			output(w + widthOffset, h + heightOffset, d, n) = input(w, h, d, n);
+    }
 
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::AdamStep(Tensor& parameter, const Tensor& gradient, Tensor& mGrad, Tensor& vGrad, /*float batchSize, */float lr, float beta1, float beta2, float epsilon) const

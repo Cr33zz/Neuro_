@@ -413,6 +413,7 @@
     </ClInclude>
     <ClInclude Include="include\Layers\Padding2D.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\Pad2dOp.h" />
+    <ClInclude Include="include\ComputationalGraph\Operations\SubTensor2dOp.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -712,6 +713,7 @@
     <ClCompile Include="src\Layers\Padding2D.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\Pad2dOp.cpp" />
     <ClCompile Include="src\Layers\Lambda.cpp" />
+    <ClCompile Include="src\ComputationalGraph\Operations\SubTensor2dOp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\Tensors\Cuda\CudaKernels.cu">
