@@ -3,7 +3,7 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    Lambda::Lambda(lambdaFunc lambda, const string& name)
+    Lambda::Lambda(const lambdaFunc& lambda, const string& name)
         : SingleLayer(__FUNCTION__, Shape(), nullptr, name), m_Lambda(lambda)
     {
     }

@@ -68,7 +68,7 @@ public:
         auto gModel = CreateGenerator(IMG_SHAPE);
         cout << "Generator" << endl << gModel->Summary();
         auto dModel = CreatePatchDiscriminator(PATCH_SHAPE, PATCHES_NUM);
-        cout << "Discriminator" << endl << dModel->Summary();
+        //cout << "Discriminator" << endl << dModel->Summary();
 
         auto inSrc = new Input(IMG_SHAPE);
         auto genOut = gModel->Call(inSrc->Outputs());
@@ -78,7 +78,10 @@ public:
 
         for (int y = 0; y < ::sqrt(PATCHES_NUM); ++y)
         for (int x = 0; x < ::sqrt(PATCHES_NUM); ++x)
-            patches.push_back(sub_tensor2d(inSrc->Outputs()[0], PATCH_SHAPE.Width(), PATCH_SHAPE.Height(), PATCH_SHAPE.Width() * x, PATCH_SHAPE.Height() * y));
+        {
+            auto patch = (new Lambda([&](const vector<TensorLike*>& inputNodes)->vector<TensorLike*> { return { sub_tensor2d(inSrc->Outputs()[0], PATCH_SHAPE.Width(), PATCH_SHAPE.Height(), PATCH_SHAPE.Width() * x, PATCH_SHAPE.Height() * y) }; }))->Call(inSrc->Outputs())[0];
+            patches.push_back(patch);
+        }
 
         auto disOut = dModel->Call(patches);
 

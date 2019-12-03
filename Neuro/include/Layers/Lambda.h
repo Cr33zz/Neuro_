@@ -4,12 +4,12 @@
 
 namespace Neuro
 {
-    typedef vector<TensorLike*> (*lambdaFunc)(const vector<TensorLike*>&);
+    typedef function<vector<TensorLike*>(const vector<TensorLike*>&)> lambdaFunc;
 
     class Lambda : public SingleLayer
     {
     public:
-        Lambda(lambdaFunc lambda, const string& name = "");
+        Lambda(const lambdaFunc& lambda, const string& name = "");
 
     protected:
         virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override;
