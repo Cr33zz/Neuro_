@@ -33,7 +33,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> Merge::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
+    vector<TensorLike*> Merge::InternalCall(const vector<TensorLike*>& inputs)
     {
         TensorLike* output = nullptr;
         switch (m_MergeMode)

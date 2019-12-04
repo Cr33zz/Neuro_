@@ -18,7 +18,7 @@ namespace Neuro
 
 		virtual LayerBase* GetCloneInstance() const override;
 
-        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override;
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes) override;
 
     private:
         void InitInput(TensorLike* input);

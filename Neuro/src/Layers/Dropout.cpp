@@ -23,7 +23,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> Dropout::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
+    vector<TensorLike*> Dropout::InternalCall(const vector<TensorLike*>& inputs)
     {
         return { dropout(inputs[0], m_Prob) };
     }

@@ -33,7 +33,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> UpSampling2D::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
+    vector<TensorLike*> UpSampling2D::InternalCall(const vector<TensorLike*>& inputs)
     {
         return { upsample2d(inputs[0], m_ScaleFactor) };
     }

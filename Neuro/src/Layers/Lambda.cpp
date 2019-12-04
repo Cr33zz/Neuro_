@@ -9,7 +9,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> Lambda::InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training)
+    vector<TensorLike*> Lambda::InternalCall(const vector<TensorLike*>& inputNodes)
     {
         return m_Lambda(inputNodes);
     }

@@ -27,7 +27,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> Activation::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
+    vector<TensorLike*> Activation::InternalCall(const vector<TensorLike*>& inputs)
     {
         NEURO_ASSERT(m_Activation, "Activation is required.");
         return { m_Activation->Build(inputs[0]) };

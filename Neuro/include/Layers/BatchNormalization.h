@@ -24,7 +24,7 @@ namespace Neuro
         BatchNormalization(const string& constructorName, const Shape& inputShape, const string& name = "");
 
         virtual void Build(const vector<Shape>& inputShapes) override;
-        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs, TensorLike* training) override;
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs) override;
 
     protected:
         Variable* m_Gamma;

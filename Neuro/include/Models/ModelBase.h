@@ -71,7 +71,7 @@ namespace Neuro
 
         void InitGraph(const vector<TensorLike*>& inputs, const vector<TensorLike*>& outputs);
 
-        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs, TensorLike* training) override;
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs) override;
 
         vector<LayerBase*> m_Layers;
         vector<node*> m_LayerNodes;
@@ -81,8 +81,6 @@ namespace Neuro
         vector<TensorLike::metadata*> m_InputCoords;
         vector<LayerBase*> m_OutputLayers;
         vector<TensorLike::metadata*> m_OutputCoords;
-
-        Placeholder* m_TrainingPlaceholder = nullptr;
 
         bool m_GraphNetwork = false;
 

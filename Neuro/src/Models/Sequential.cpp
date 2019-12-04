@@ -67,7 +67,7 @@ namespace Neuro
                 if (firstLayer->ExpectedInputShape().IsValid())
                 {
                     auto inputLayer = new Input(firstLayer->ExpectedInputShape(), "input");
-                    layer->Call(inputLayer->Outputs(), m_TrainingPlaceholder);
+                    layer->Call(inputLayer->Outputs());
                     setInputs = true;
                 }
             }
@@ -81,7 +81,7 @@ namespace Neuro
         }
         else if (!m_Outputs.empty())
         {
-            auto outputs = layer->Call(m_Outputs, m_TrainingPlaceholder);
+            auto outputs = layer->Call(m_Outputs);
 
             NEURO_ASSERT(outputs.size() == 1, "All layers in a Sequential model should have a single output tensor. For multi-output layers, use Flow.");
             m_Outputs = outputs;
@@ -102,7 +102,7 @@ namespace Neuro
             m_Inputs = x;
 
             for (auto layer : m_Layers)
-                x = layer->Call(x, m_TrainingPlaceholder);
+                x = layer->Call(x);
 
             m_Outputs = x;
         }

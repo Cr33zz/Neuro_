@@ -56,7 +56,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> Pooling2D::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
+    vector<TensorLike*> Pooling2D::InternalCall(const vector<TensorLike*>& inputs)
     {
         return { pool2d(inputs[0], m_FilterSize, m_Stride, m_Padding, m_Mode, m_DataFormat) };
     }

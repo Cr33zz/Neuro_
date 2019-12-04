@@ -14,6 +14,6 @@ namespace Neuro
 
     protected:
         virtual void Build(const vector<Shape>& inputShapes) override;
-        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs, TensorLike* training) override;
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs) override;
     };
 }

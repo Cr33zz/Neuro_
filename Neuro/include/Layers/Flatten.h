@@ -14,6 +14,6 @@ namespace Neuro
 	protected:
 		virtual LayerBase* GetCloneInstance() const override;
 
-        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs, TensorLike* training) override;
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs) override;
     };
 }

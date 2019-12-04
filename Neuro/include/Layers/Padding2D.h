@@ -25,7 +25,7 @@ namespace Neuro
 
     protected:
         ConstantPadding2D(const string& constructorName, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, const string& name = "");
-        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs, TensorLike* training) override;
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs) override;
 
     private:
         float m_Value;
@@ -43,6 +43,6 @@ namespace Neuro
         ReflectPadding2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, const string& name = "");
 
     protected:
-        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs, TensorLike* training) override;
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs) override;
     };
 }

@@ -37,7 +37,6 @@ namespace Neuro
         : LayerBase(constructorName, Shape(), name)
     {
         NameScope scope(name);
-        m_TrainingPlaceholder = new Placeholder(Shape(1), "training_phase");
 
         // output shape will be established when layers are added
         if (seed > 0)
@@ -137,7 +136,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> ModelBase::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
+    vector<TensorLike*> ModelBase::InternalCall(const vector<TensorLike*>& inputs)
     {
         NEURO_ASSERT(inputs.size() == m_Inputs.size(), "Number of inputs doesn't match. Expected " << m_Inputs.size() << " received " << inputs.size());
 
@@ -147,7 +146,7 @@ namespace Neuro
         for (size_t i = 0; i < m_InputLayers.size(); ++i)
         {
             auto layer = m_InputLayers[i];
-            outputsPerLayer[layer] = layer->Call(inputs[i], training);
+            outputsPerLayer[layer] = layer->Call(inputs[i]);
         }
 
         for (size_t i = 0; i < m_Layers.size(); ++i)
@@ -167,7 +166,7 @@ namespace Neuro
                 layerInputs.insert(layerInputs.end(), inboundLayerOutputs.begin(), inboundLayerOutputs.end());
             }
 
-            outputsPerLayer[layer] = layer->Call(layerInputs, training);
+            outputsPerLayer[layer] = layer->Call(layerInputs);
         }
 
         // gather outputs from output layers
@@ -242,7 +241,7 @@ namespace Neuro
         {
             vector<Placeholder*> inputs;
             for_each(m_Inputs.begin(), m_Inputs.end(), [&](TensorLike* input) { inputs.push_back(static_cast<Placeholder*>(input)); });
-            m_Predicter = new Predicter(inputs, m_Outputs, m_TrainingPlaceholder);
+            m_Predicter = new Predicter(inputs, m_Outputs);
         }
 
         return m_Predicter->Predict(inputs);
@@ -267,7 +266,7 @@ namespace Neuro
         {
             vector<TensorLike*> outputs;
             for_each(fetches.begin(), fetches.end(), [&](TensorLike* output) { outputs.push_back(output); });
-            predicter = m_EvalPredicters[fetchesHash] = new Predicter({}, outputs, m_TrainingPlaceholder);
+            predicter = m_EvalPredicters[fetchesHash] = new Predicter({}, outputs);
         }
 
         return predicter->Eval(feeds);
@@ -365,7 +364,7 @@ namespace Neuro
         vector<Placeholder*> inputs;
         for_each(m_Inputs.begin(), m_Inputs.end(), [&](TensorLike* input) { inputs.push_back(static_cast<Placeholder*>(input)); });
 
-        m_Trainer = new Trainer(inputs, targets, fetches, m_TrainingPlaceholder);
+        m_Trainer = new Trainer(inputs, targets, fetches);
     }
 
     //////////////////////////////////////////////////////////////////////////

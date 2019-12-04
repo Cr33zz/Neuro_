@@ -57,10 +57,10 @@ namespace Neuro
         //virtual Shape ComputeOutputShape(const vector<Shape>& inputShapes) = 0;
         virtual bool CheckInputCompatibility(const vector<TensorLike*>& inputNodes) { return true; }
 
-        const vector<TensorLike*>& Call(TensorLike* input, TensorLike* training = nullptr, const string& name = "");
-        const vector<TensorLike*>& Call(const vector<TensorLike*>& inputs, TensorLike* training = nullptr, const string& name = "");
-        const vector<TensorLike*>& operator()(const vector<TensorLike*>& inputs, TensorLike* training = nullptr, const string& name = "");
-        const vector<TensorLike*>& operator()(TensorLike* input, TensorLike* training = nullptr, const string& name = "");
+        const vector<TensorLike*>& Call(TensorLike* input, const string& name = "");
+        const vector<TensorLike*>& Call(const vector<TensorLike*>& inputs, const string& name = "");
+        const vector<TensorLike*>& operator()(const vector<TensorLike*>& inputs, const string& name = "");
+        const vector<TensorLike*>& operator()(TensorLike* input, const string& name = "");
 
 	protected:
         LayerBase(const string& constructorName, const Shape& expectedInputShape, const string& name = "");
@@ -71,7 +71,7 @@ namespace Neuro
         virtual void Build(const vector<Shape>& inputShapes = {}) {}
 
         // Creates internal chain of operations based on input tensors and returns output tensors
-        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs, TensorLike* training);
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs);
 
         virtual LayerBase* GetCloneInstance() const { return nullptr; }
         virtual void OnClone(const LayerBase& source);

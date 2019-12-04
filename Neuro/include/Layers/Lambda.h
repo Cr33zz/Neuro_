@@ -12,7 +12,7 @@ namespace Neuro
         Lambda(const lambdaFunc& lambda, const string& name = "");
 
     protected:
-        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override;
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes) override;
 
     private:
         lambdaFunc m_Lambda;

@@ -28,7 +28,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> ConstantPadding2D::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
+    vector<TensorLike*> ConstantPadding2D::InternalCall(const vector<TensorLike*>& inputs)
     {
         return { constant_pad2d(inputs[0], m_Left, m_Right, m_Top, m_Bottom, m_Value) };
     }
@@ -46,7 +46,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> ReflectPadding2D::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
+    vector<TensorLike*> ReflectPadding2D::InternalCall(const vector<TensorLike*>& inputs)
     {
         return { reflect_pad2d(inputs[0], m_Left, m_Right, m_Top, m_Bottom) };
     }

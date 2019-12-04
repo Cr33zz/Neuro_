@@ -23,7 +23,7 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> LayerBase::InternalCall(const vector<TensorLike*>& inputs, TensorLike* training)
+    vector<TensorLike*> LayerBase::InternalCall(const vector<TensorLike*>& inputs)
     {
         return inputs;
     }
@@ -177,7 +177,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const vector<TensorLike*>& LayerBase::Call(const vector<TensorLike*>& inputs, TensorLike* training, const string& name)
+    const vector<TensorLike*>& LayerBase::Call(const vector<TensorLike*>& inputs, const string& name)
     {
         NameScope scope(name.empty() ? Name() : name);
 
@@ -190,7 +190,7 @@ namespace Neuro
             m_Built = true;
         }
 
-        auto outputs = InternalCall(inputs, training);
+        auto outputs = InternalCall(inputs);
 
         AddInboundNode(inputs, outputs, inputShapes, CollectShapes(outputs));
 
@@ -198,22 +198,22 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const vector<TensorLike*>& LayerBase::Call(TensorLike* input, TensorLike* training, const string& name)
+    const vector<TensorLike*>& LayerBase::Call(TensorLike* input, const string& name)
     {
         vector<TensorLike*> inputs{ input };
-        return Call(inputs, training, name);
+        return Call(inputs, name);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const vector<TensorLike*>& LayerBase::operator()(const vector<TensorLike*>& inputs, TensorLike* training, const string& name)
+    const vector<TensorLike*>& LayerBase::operator()(const vector<TensorLike*>& inputs, const string& name)
     {
-        return Call(inputs, training, name);
+        return Call(inputs, name);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    const vector<TensorLike*>& LayerBase::operator()(TensorLike* input, TensorLike* training, const string& name)
+    const vector<TensorLike*>& LayerBase::operator()(TensorLike* input, const string& name)
     {
-        return Call(input, training, name);
+        return Call(input, name);
     }
 
     //////////////////////////////////////////////////////////////////////////

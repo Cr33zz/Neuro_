@@ -28,7 +28,7 @@ namespace Neuro
         SingleLayer() {}
 
         virtual void OnClone(const LayerBase& source) override;
-        //virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override;
+        //virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes) override;
 
         ActivationBase* m_Activation;
     };

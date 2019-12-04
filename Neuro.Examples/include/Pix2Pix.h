@@ -48,14 +48,14 @@ public:
 
         const Shape IMG_SHAPE(256, 256, 3);
         const uint32_t PATCH_SIZE = 64;
-        const uint32_t BATCH_SIZE = 32;
+        const uint32_t BATCH_SIZE = 16;
         const uint32_t STEPS = 100000;
         //const uint32_t STEPS = 6;
 
         cout << "Example: Pix2Pix" << endl;
 
-        auto trainFiles = LoadFilesList("e:/Downloads/flowers", false, true);
-        //auto trainFiles = LoadFilesList("f:/!TrainingData/flowers", false, true);
+        //auto trainFiles = LoadFilesList("e:/Downloads/flowers", false, true);
+        auto trainFiles = LoadFilesList("f:/!TrainingData/flowers", false, true);
 
         Tensor condImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "cond_image");
         Tensor expectedImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "output_image");
@@ -71,8 +71,8 @@ public:
         //cout << "Discriminator" << endl << dModel->Summary();
 
         auto inSrc = new Input(IMG_SHAPE);
-        auto genOut = gModel->Call(inSrc->Outputs());
-        auto disOut = dModel->Call(genOut[0]);
+        auto genOut = gModel->Call(inSrc->Outputs(), "generator");
+        auto disOut = dModel->Call(genOut[0], "discriminator");
 
         auto ganModel = new Flow(inSrc->Outputs(), { disOut[0], genOut[0] }, "pix2pix");
         ganModel->Optimize(new Adam(0.0001f), { new BinaryCrossEntropy(), new MeanAbsoluteError() }, { 1.f, 100.f });
@@ -193,7 +193,7 @@ public:
         NEURO_ASSERT(imgShape.Width() == imgShape.Height(), "Input image must be square.");
         NEURO_ASSERT(imgShape.Width() % patchSize == 0, "Input image size is not divisible by patch size.");
 
-        size_t nbPatches = ::pow(imgShape.Width() / patchSize, 2);
+        size_t nbPatches = (size_t)::pow(imgShape.Width() / patchSize, 2);
         uint32_t stride = 2;
         auto patchInput = new Input(Shape(patchSize, patchSize, imgShape.Depth()));
 
@@ -228,16 +228,18 @@ public:
         for (int y = 0; y < ::sqrt(nbPatches); ++y)
         for (int x = 0; x < ::sqrt(nbPatches); ++x)
         {
-            auto patch = (new Lambda([&](const vector<TensorLike*>& inputNodes)->vector<TensorLike*> { return { sub_tensor2d(inputNodes[0], patchSize, patchSize, patchSize * x, patchSize * y) }; }))->Call(imgInput->Outputs())[0];
+            static auto patchExtract = [=](const vector<TensorLike*>& inputNodes)->vector<TensorLike*> { return { sub_tensor2d(inputNodes[0], patchSize, patchSize, patchSize * x, patchSize * y) }; };
+
+            auto patch = (new Lambda(patchExtract))->Call(imgInput->Outputs())[0];
             patches.push_back(patch);
         }
 
         vector<TensorLike*> xList;
         vector<TensorLike*> xFlatList;
 
-        for (auto& patch : patches)
+        for (size_t i = 0; i < patches.size(); ++i)
         {
-            auto output = patchDisc->Call(patch);
+            auto output = patchDisc->Call(patches[i], "patch_disc_" + i);
             xList.push_back(output[0]);
             xFlatList.push_back(output[1]);
         }

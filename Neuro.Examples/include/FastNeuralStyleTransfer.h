@@ -135,7 +135,7 @@ public:
         VGG16::PreprocessImage(styleImage, NCHW);
         
         auto styleInput = new Placeholder(styleImage.GetShape(), "style_input");
-        auto styleFeaturesNet = vggFeaturesModel(styleInput, nullptr, "target_style_features");
+        auto styleFeaturesNet = vggFeaturesModel(styleInput, "target_style_features");
 
         auto targetStyleFeatures = Session::Default()->Run(styleFeaturesNet, { { styleInput, &styleImage } });
         targetStyleFeatures.erase(targetStyleFeatures.begin());
@@ -153,7 +153,6 @@ public:
         cout << "Building computational graph...\n";
 
         // generate final computational graph
-        auto training = new Placeholder(Shape(1), "training");
         auto input = new Placeholder(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), "input");
         auto inputPre = VGG16::Preprocess(input, NCHW);
 
@@ -163,14 +162,14 @@ public:
         auto stylizedContentPre = VGG16::Preprocess(stylizedContent, NCHW);
 #else
         //auto stylizedContent = CreateTransformerNet(inputPre, training);
-        auto generator = CreateGeneratorModel(IMAGE_WIDTH, IMAGE_HEIGHT, training);
+        auto generator = CreateGeneratorModel(IMAGE_WIDTH, IMAGE_HEIGHT);
         generator->LoadWeights(string(STYLE) + "_weights.h5", false, true);
-        auto stylizedContentPre = (*generator)(inputPre, training)[0];
+        auto stylizedContentPre = (*generator)(inputPre)[0];
 #endif
-        auto stylizedFeatures = vggFeaturesModel(stylizedContentPre, nullptr, "generated_features");
+        auto stylizedFeatures = vggFeaturesModel(stylizedContentPre, "generated_features");
 
         // compute content loss from first output...
-        auto targetContentFeatures = vggFeaturesModel(inputPre, nullptr, "target_content_features")[0];
+        auto targetContentFeatures = vggFeaturesModel(inputPre, "target_content_features")[0];
         auto contentLoss = ContentLoss(targetContentFeatures, stylizedFeatures[0]);
         auto weightedContentLoss = multiply(contentLoss, CONTENT_WEIGHT);
         stylizedFeatures.erase(stylizedFeatures.begin());
@@ -212,13 +211,13 @@ public:
 #endif
                 
             auto results = Session::Default()->Run(MergeVectors({ vector<TensorLike*>{ stylizedContentPre, totalLoss, weightedContentLoss, weightedStyleLoss, minimize }, styleLosses }),
-                                                    { /*{ input, &contentBatch },*/ { training, &trainingOn } });
+                                                    { /*{ input, &contentBatch },*/ });
 
             if (i % DETAILS_ITER == 0)
             {
 #if !defined(SLOW) && !defined(FAST_SINGLE_CONTENT)
                 auto results = Session::Default()->Run({ stylizedContentPre, totalLoss, weightedContentLoss, weightedStyleLoss },
-                                                        { { input, &testImage }, { training, &trainingOff } });
+                                                        { { input, &testImage } });
 #endif
 
                 float loss = (*results[1])(0);
@@ -265,9 +264,9 @@ public:
         Tensor testImage = LoadImage(TEST_FILE);*/
         auto input = new Placeholder(testContent.GetShape(), "input");
         auto inputPre = VGG16::Preprocess(input, NCHW);
-        auto generator = CreateGeneratorModel(testContent.GetShape().Width(), testContent.GetShape().Height(), new Constant(0));
+        auto generator = CreateGeneratorModel(testContent.GetShape().Width(), testContent.GetShape().Height());
         generator->LoadWeights(string("data/") + STYLE + "_weights.h5", false, true);
-        auto stylizedContentPre = (*generator)(inputPre, new Constant(0))[0];
+        auto stylizedContentPre = (*generator)(inputPre)[0];
 
         auto results = Session::Default()->Run({ stylizedContentPre }, { { input, &testContent } });
         auto genImage = *results[0];
@@ -275,15 +274,15 @@ public:
         genImage.SaveAsImage(string(STYLE) + "_test_output.png", false);
     }
 
-    TensorLike* CreateTransformerNet(TensorLike* input, TensorLike* training);
+    TensorLike* CreateTransformerNet(TensorLike* input);
 
-    ModelBase* CreateGeneratorModel(uint32_t width, uint32_t height, TensorLike* training);
+    ModelBase* CreateGeneratorModel(uint32_t width, uint32_t height);
 
     class OutputScale : public LayerBase
     {
     public:
         OutputScale(const string& name = "") : LayerBase(__FUNCTION__, Shape(), name) {}
     protected:
-        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override { return { multiply(inputNodes[0], 150.f) }; }
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes) override { return { multiply(inputNodes[0], 150.f) }; }
     };
 };

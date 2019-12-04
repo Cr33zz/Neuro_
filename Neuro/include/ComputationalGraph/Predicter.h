@@ -13,14 +13,13 @@ namespace Neuro
     class Predicter
     {
     public:
-        Predicter(const vector<Placeholder*>& inputPlaceholders, const vector<TensorLike*>& outputOps, Placeholder* trainingPlaceholder);
+        Predicter(const vector<Placeholder*>& inputPlaceholders, const vector<TensorLike*>& outputOps);
 
         tensor_ptr_vec_t Predict(const const_tensor_ptr_vec_t& inputs);
         tensor_ptr_vec_t Eval(const map<Placeholder*, const Tensor*>& feeds);
 
     private:
         vector<Placeholder*> m_InputPlaceholders;
-        Placeholder* m_TrainingPlaceholder;
         vector<TensorLike*> m_OutputOps;
         map<Placeholder*, const Tensor*> m_Feeds;
 

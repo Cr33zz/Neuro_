@@ -65,8 +65,6 @@ public:
 
         auto trainAlpha = Tensor({ ALPHA }, Shape(1), "training_alpha");
         auto testAlpha = Tensor({ TEST_ALPHA }, Shape(1), "testing_alpha");
-        auto trainingOn = Tensor({ 1 }, Shape(1), "training_on");
-        auto trainingOff = Tensor({ 0 }, Shape(1), "training_off");
 
         //Tensor testContent = LoadImage("data/contents/chicago.jpg", IMAGE_WIDTH, IMAGE_HEIGHT);
         Tensor testContent(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3, BATCH_SIZE));
@@ -99,7 +97,6 @@ public:
 
         cout << "Building computational graph...\n";
 
-        auto training = new Placeholder(Shape(1), "training");
         auto content = new Placeholder(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), "input_content");
         auto style = new Placeholder(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3), "input_style");
         auto alpha = new Placeholder(Tensor({ ALPHA }, Shape(1)), "alpha");
@@ -107,9 +104,9 @@ public:
         auto contentPre = VGG16::Preprocess(content, NCHW);
         auto stylePre = VGG16::Preprocess(style, NCHW);
 
-        auto styleFeat = vggEncoder(stylePre, nullptr, "style_features");
+        auto styleFeat = vggEncoder(stylePre, "style_features");
 
-        auto generator = CreateGeneratorModel(contentPre, styleFeat.back(), alpha, vggEncoder, training);
+        auto generator = CreateGeneratorModel(contentPre, styleFeat.back(), alpha, vggEncoder);
         //generator->LoadWeights("decoder.h5", false, true);
         generator->LoadWeights("adaptive_weights.h5", false, true);
 
@@ -117,7 +114,7 @@ public:
         auto adaptiveFeat = generator->Outputs()[1];
 
         auto stylizedPre = VGG16::Preprocess(stylized, NCHW, false); // generator is outputting in BGR format already
-        auto stylizedFeat = vggEncoder(stylizedPre, nullptr, "stylized_features");
+        auto stylizedFeat = vggEncoder(stylizedPre, "stylized_features");
 
         // compute content loss
         auto contentLoss = mean(square(sub(adaptiveFeat, stylizedFeat.back())), GlobalAxis, "content_loss");
@@ -220,7 +217,7 @@ public:
                 styleBatch.SaveAsImage("_s_batch_" + to_string(i) + ".jpg", false);*/
 
                 auto results = Session::Default()->Run({ stylized, totalLoss, weightedContentLoss, weightedStyleLoss },
-                    { { content, &testContent }, { style, &testStyle }, { alpha, &testAlpha }, { training, &trainingOff } });
+                    { { content, &testContent }, { style, &testStyle }, { alpha, &testAlpha } });
 
                 NVTXProfile p("Details summary", 0xFFC0C0C0);
 
@@ -244,7 +241,7 @@ public:
             styleBatch.SaveAsImage("_s_batch_" + to_string(i) + ".jpg", false);*/
 
             auto results = Session::Default()->Run({ weightedContentLoss, weightedStyleLoss, minimize },
-                { /*{ content, &contentBatch }, { style, &styleBatch },*/ { alpha, &trainAlpha }, { training, &trainingOn } });
+                { /*{ content, &contentBatch }, { style, &styleBatch },*/ { alpha, &trainAlpha } });
 
             cout << fixed << setprecision(4) << "Step: " << i << " Content: " << (*results[0])(0) << " Style: " << (*results[1])(0) << " Step: " << p.ToString() << endl;
         }
@@ -282,7 +279,7 @@ public:
         
         // pre-compute style content features
         VGG16::PreprocessImage(styleImage, NCHW);
-        auto styleFeatModel = vggEncoder(style, nullptr, "style_features");
+        auto styleFeatModel = vggEncoder(style, "style_features");
 
         auto results = Session::Default()->Run({ styleFeatModel.back() }, { { style, &styleImage } });
         auto styleData = *(results[0]);
@@ -290,7 +287,7 @@ public:
         // build the actual generator
         auto styleContentFeatures = new Placeholder(styleData);
 
-        auto generator = CreateGeneratorModel(contentPre, styleContentFeatures, alpha, vggEncoder, new Constant(0));
+        auto generator = CreateGeneratorModel(contentPre, styleContentFeatures, alpha, vggEncoder);
         generator->LoadWeights("data/adaptive_weights.h5", false, true);
 
         auto stylized = clip(swap_red_blue_channels(generator->Outputs()[0]), 0, 255);
@@ -310,7 +307,7 @@ public:
     public:
         AdaIN(TensorLike* alpha, const string& name = "") : LayerBase(__FUNCTION__, Shape(), name), m_Alpha(alpha) {}
     protected:
-        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes, TensorLike* training) override
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputNodes) override
         { 
             auto contentFeat = inputNodes[0];
             auto styleFeat = inputNodes[1];
@@ -325,5 +322,5 @@ public:
         TensorLike* m_Alpha;
     };
 
-    ModelBase* CreateGeneratorModel(TensorLike* contentPre, TensorLike* stylePre, TensorLike* alpha, Flow& vggEncoder, TensorLike* training);
+    ModelBase* CreateGeneratorModel(TensorLike* contentPre, TensorLike* stylePre, TensorLike* alpha, Flow& vggEncoder);
 };

@@ -1,7 +1,7 @@
 #include "AdaptiveStyleTransfer.h"
 
 //////////////////////////////////////////////////////////////////////////
-ModelBase* AdaptiveStyleTransfer::CreateGeneratorModel(TensorLike* contentPre, TensorLike* styleContentFeat, TensorLike* alpha, Flow& vggEncoder, TensorLike* training)
+ModelBase* AdaptiveStyleTransfer::CreateGeneratorModel(TensorLike* contentPre, TensorLike* styleContentFeat, TensorLike* alpha, Flow& vggEncoder)
 {
     NameScope scope("generator");
 
@@ -10,11 +10,11 @@ ModelBase* AdaptiveStyleTransfer::CreateGeneratorModel(TensorLike* contentPre, T
 
     // encoder
 
-    auto contentFeat = vggEncoder(inputContent->Outputs(), nullptr, "content_features").back();
+    auto contentFeat = vggEncoder(inputContent->Outputs(), "content_features").back();
 
     // adaptive instance normalization
 
-    auto adaInFeat = (new AdaIN(alpha))->Call({ contentFeat, inputStyle->Outputs()[0] }, training, "ada_in")[0];
+    auto adaInFeat = (new AdaIN(alpha))->Call({ contentFeat, inputStyle->Outputs()[0] }, "ada_in")[0];
 
     // decoder
 

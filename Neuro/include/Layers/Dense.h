@@ -34,7 +34,7 @@ namespace Neuro
 		virtual void OnClone(const LayerBase& source) override;
 
         virtual void Build(const vector<Shape>& inputShapes) override;
-        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs, TensorLike* training) override;
+        virtual vector<TensorLike*> InternalCall(const vector<TensorLike*>& inputs) override;
 
 	private:
         uint32_t m_Units;
