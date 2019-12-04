@@ -126,10 +126,10 @@ namespace Neuro
         m_Layers.clear();
         m_LayerNodes.clear();
 
-        //MapGraphNetwork(m_Inputs, m_Outputs);
-        unordered_set<LayerBase*> visited;
+        MapGraphNetwork(m_Inputs, m_Outputs);
+        /*unordered_set<LayerBase*> visited;
         for (auto layer : m_OutputLayers)
-            ProcessLayer(layer, visited);
+            ProcessLayer(layer, visited);*/
 
         // we have to add new inbound node because sequential model can be shared in its current state before adding more layers
         new node(this, {}, {}, {}, m_Inputs, m_Outputs, CollectShapes(m_Inputs), CollectShapes(m_Outputs));
@@ -140,44 +140,46 @@ namespace Neuro
     {
         NEURO_ASSERT(inputs.size() == m_Inputs.size(), "Number of inputs doesn't match. Expected " << m_Inputs.size() << " received " << inputs.size());
 
-        map<LayerBase*, vector<TensorLike*>> outputsPerLayer;
+        auto outputs = RunInternalGraph(inputs);
 
-        // all input layers are single tensor placeholders
-        for (size_t i = 0; i < m_InputLayers.size(); ++i)
-        {
-            auto layer = m_InputLayers[i];
-            outputsPerLayer[layer] = layer->Call(inputs[i]);
-        }
+        //map<LayerBase*, vector<TensorLike*>> outputsPerLayer;
 
-        for (size_t i = 0; i < m_Layers.size(); ++i)
-        {
-            auto layer = m_Layers[i];
+        //// all input layers are single tensor placeholders
+        //for (size_t i = 0; i < m_InputLayers.size(); ++i)
+        //{
+        //    auto layer = m_InputLayers[i];
+        //    outputsPerLayer[layer] = layer->Call(inputs[i]);
+        //}
 
-            if (find(m_InputLayers.begin(), m_InputLayers.end(), layer) != m_InputLayers.end())
-                continue; // we already called input layers
+        //for (size_t i = 0; i < m_Layers.size(); ++i)
+        //{
+        //    auto layer = m_Layers[i];
 
-            auto inboundNode = m_LayerNodes[i];
+        //    if (find(m_InputLayers.begin(), m_InputLayers.end(), layer) != m_InputLayers.end())
+        //        continue; // we already called input layers
 
-            // gather inputs from inbound layers and call
-            vector<TensorLike*> layerInputs;
-            for (size_t n = 0; n < inboundNode->inbound_layers.size(); ++n)
-            {
-                auto inboundLayer = inboundNode->inbound_layers[n];
-                auto& inboundLayerOutput = outputsPerLayer[inboundLayer][inboundNode->tensor_indices[n]];
-                layerInputs.push_back(inboundLayerOutput);
-            }
+        //    auto inboundNode = m_LayerNodes[i];
 
-            outputsPerLayer[layer] = layer->Call(layerInputs);
-        }
+        //    // gather inputs from inbound layers and call
+        //    vector<TensorLike*> layerInputs;
+        //    for (size_t n = 0; n < inboundNode->inbound_layers.size(); ++n)
+        //    {
+        //        auto inboundLayer = inboundNode->inbound_layers[n];
+        //        auto& inboundLayerOutput = outputsPerLayer[inboundLayer][inboundNode->tensor_indices[n]];
+        //        layerInputs.push_back(inboundLayerOutput);
+        //    }
 
-        // gather outputs from output layers
-        vector<TensorLike*> outputs;
-        for (auto layer : m_OutputLayers)
-        {
-            NEURO_ASSERT(outputsPerLayer.find(layer) != outputsPerLayer.end(), "Output layer '" << layer->Name() << "' was not called.");
-            auto& layerOutputs = outputsPerLayer[layer];
-            outputs.insert(outputs.end(), layerOutputs.begin(), layerOutputs.end());
-        }
+        //    outputsPerLayer[layer] = layer->Call(layerInputs);
+        //}
+
+        //// gather outputs from output layers
+        //vector<TensorLike*> outputs;
+        //for (auto layer : m_OutputLayers)
+        //{
+        //    NEURO_ASSERT(outputsPerLayer.find(layer) != outputsPerLayer.end(), "Output layer '" << layer->Name() << "' was not called.");
+        //    auto& layerOutputs = outputsPerLayer[layer];
+        //    outputs.insert(outputs.end(), layerOutputs.begin(), layerOutputs.end());
+        //}
 
         // destroy metadata in output tensors because this model will 'claim' their 'ownership'
         for_each(outputs.begin(), outputs.end(), [](TensorLike* output) { delete output->m_Metadata; output->m_Metadata = nullptr; });
@@ -883,12 +885,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void ModelBase::MapGraphNetwork(const vector<TensorLike*>& inputs, const vector<TensorLike*>& outputs)
     {
-        auto makeNodeKey = [](const string& layerName, int nodeIndex)
-        {
-            return layerName + "_ib-" + to_string(nodeIndex);
-        };
-
-        unordered_set<string> networkNodes; // ids of all nodes relevant to the Network
         map<node*, int> nodes_depths; // dict{ node: depth value }
         map<LayerBase*, int> layers_depths;  // dict{ layer: depth value }
         map<LayerBase*, int> layer_indices;  // dict{ layer: index in traversal }
@@ -906,10 +902,6 @@ namespace Neuro
             // Don't repeat work for shared subgraphs
             if (finishedNodes.find(node) != finishedNodes.end())
                 return;
-
-            //auto node_key = _make_node_key(layer.name, node_index)
-            // Update network_nodes.
-            //network_nodes.add(node_key)
 
             // Store the traversal order for layer sorting.
             if (layer_indices.find(layer) == layer_indices.end())
@@ -946,6 +938,8 @@ namespace Neuro
             int depth = 0;
             if (nodes_depths.find(node) == nodes_depths.end())
                 nodes_depths[node] = 0;
+            else
+                depth = nodes_depths[node];
 
             // Update the depth of the corresponding layer
             int previous_depth = layers_depths[node->outbound_layer];
@@ -971,45 +965,108 @@ namespace Neuro
         }
         
         // Build a dict{ depth: list of nodes with this depth }
-        map<int, vector<node*>> nodes_by_depth;
+        m_NodesByDepth.clear();
         for (auto entry : nodes_depths)
         {
             auto node = entry.first;
             auto depth = entry.second;
 
-            nodes_by_depth[depth].push_back(node);
+            m_NodesByDepth[depth].push_back(node);
         }
 
         // Build a dict{ depth: list of layers with this depth }
-        map<int, vector<LayerBase*>> layers_by_depth;
+        m_LayersByDepth.clear();
         for (auto entry : layers_depths)
         {
             auto layer = entry.first;
             auto depth = entry.second;
 
-            layers_by_depth[depth].push_back(layer);
+            m_LayersByDepth[depth].push_back(layer);
         }
 
         // Get sorted list of layer depths.
         vector<int> depth_keys;
-        for_each(layers_by_depth.begin(), layers_by_depth.end(), [&](const pair<int, vector<LayerBase*>>& entry) { depth_keys.push_back(entry.first); });
+        depth_keys.reserve(m_NodesByDepth.size());
+        for_each(m_LayersByDepth.begin(), m_LayersByDepth.end(), [&](const pair<int, vector<LayerBase*>>& entry) { depth_keys.push_back(entry.first); });
         reverse(depth_keys.begin(), depth_keys.end());
 
-        // Set self.layers and self._layers_by_depth.
-        /*    layers = []
+        // Set layers and layers_by_depth.
+        m_Layers.clear();
         for (auto depth : depth_keys)
         {
-            layers_for_depth = layers_by_depth[depth]
+            auto layers_for_depth = m_LayersByDepth[depth];
             // Network.layers needs to have a deterministic order :
             // here we order them by traversal order.
-            layers_for_depth.sort(key = lambda x : layer_indices[x])
-            layers.extend(layers_for_depth)
+            sort(layers_for_depth.begin(), layers_for_depth.end(), [&](LayerBase* a, LayerBase* b) { return layer_indices[a] > layer_indices[b]; });
+            m_Layers.insert(m_Layers.end(), layers_for_depth.begin(), layers_for_depth.end());
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    vector<TensorLike*> ModelBase::RunInternalGraph(const vector<TensorLike*>& inputs)
+    {
+        NEURO_ASSERT(m_Inputs.size() == inputs.size(), "Mismatched number of inputs.");
+
+        // Dictionary mapping reference tensors to tuples
+        // (computed tensor, compute mask)
+        // we assume a 1:1 mapping from tensor to mask
+        // TODO: raise exception when a `.compute_mask()` call
+        // does not return a list the same size as `call`
+        map<TensorLike*, TensorLike*> tensor_map;
+        for (size_t i = 0; i < m_Inputs.size(); ++i)
+            tensor_map[m_Inputs[i]] = inputs[i];
+
+        vector<int> depth_keys;
+        depth_keys.reserve(m_NodesByDepth.size());
+        for_each(m_LayersByDepth.begin(), m_LayersByDepth.end(), [&](const pair<int, vector<LayerBase*>>& entry) { depth_keys.push_back(entry.first); });
+        reverse(depth_keys.begin(), depth_keys.end());
+
+        for (auto depth : depth_keys)
+        {
+            const auto& nodes = m_NodesByDepth[depth];
+            for (auto node : nodes)
+            {
+                // This is always a single layer, never a list.
+                auto layer = node->outbound_layer;
+                auto& reference_input_tensors = node->input_tensors;
+                auto& reference_output_tensors = node->output_tensors;
+
+                // If all previous input tensors are available in tensor_map,
+                // then call node.inbound_layer on them.
+                vector<TensorLike*> computed_data;  // List of tuples (input, mask).
+                for (auto x : reference_input_tensors)
+                {
+                    if (tensor_map.find(x) != tensor_map.end())
+                        computed_data.push_back(tensor_map[x]);
+                }
+
+                if (computed_data.size() == reference_input_tensors.size())
+                {
+                    auto output_tensors = layer->Call(computed_data);
+
+                    // Update tensor_map.
+                    for (size_t i = 0; i < reference_output_tensors.size(); ++i)
+                        tensor_map[reference_output_tensors[i]] = output_tensors[i];
+                }
+            }
         }
 
-            // Get sorted list of node depths.
-            depth_keys = list(nodes_by_depth.keys())
-            depth_keys.sort(reverse = True)
-        */
+        vector<TensorLike*> output_tensors;
+        //output_shapes = []
+        for (auto x : m_Outputs)
+        {
+            NEURO_ASSERT(tensor_map.find(x) != tensor_map.end(), "Could not compute output " << x->Name());
+            auto tensor = tensor_map[x];
+
+            /*if hasattr(tensor, '_keras_shape') and output_shapes is not None:
+                shape = tensor._keras_shape
+                output_shapes.append(shape)
+            else:
+                output_shapes = None*/
+            output_tensors.push_back(tensor);
+        }
+
+        return output_tensors;
     }
 
     //////////////////////////////////////////////////////////////////////////

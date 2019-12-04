@@ -21,14 +21,33 @@
 
 int main()
 {
-    Tensor::SetForcedOpMode(GPU);
+    Tensor::SetForcedOpMode(CPU);
 
-    Tensor t(Shape(2, 2));
-    t.FillWithRand();
+    auto inPatch = new Input(Shape(4, 4));
+    auto procPatch = (new Activation(new Sigmoid()))->Call(inPatch->Outputs());
+    auto procPatchAux = (new UpSampling2D(3))->Call(inPatch->Outputs());
+    auto patchModel = new Flow(inPatch->Outputs(), { procPatchAux[0], procPatch[0] }, "patch_model");
 
-    auto t2 = t.Pad2D(2, 1, 3, 2, 10);
+    auto in = new Input(Shape(4, 4));
 
-    cout << t2.ToString();
+    vector<TensorLike*> intermed;
+    int i = 0;
+    for (int y = 0; y < 2; ++y)
+    for (int x = 0; x < 2; ++x, ++i)
+    {
+        static auto patchExtract = [=](const vector<TensorLike*>& inputNodes)->vector<TensorLike*> { return { sub_tensor2d(inputNodes[0], 2, 2, 2 * x, 2 * y) }; };
+        auto patch = (new Lambda(patchExtract))->Call(in->Outputs())[0];
+        auto patchProcessor = patchModel->Call(patch, "patch_proc_" + i);
+        intermed.push_back(patchProcessor[1]);
+    }
+
+    auto out = (new Concatenate(DepthAxis))->Call(intermed);
+    auto model = new Flow(in->Outputs(), out);
+
+    auto imgInput = new Input(Shape(4,4));
+    auto x = model->Call(imgInput->Outputs());
+
+    cout << "aaaa";
 
     /*Tensor img("e:/Dropbox/!BLOG/4.jpg", false);
     Tensor edges = CannyEdgeDetection(img);
