@@ -160,10 +160,11 @@ namespace Neuro
 
             // gather inputs from inbound layers and call
             vector<TensorLike*> layerInputs;
-            for (auto inboundLayer : inboundNode->inbound_layers)
+            for (size_t n = 0; n < inboundNode->inbound_layers.size(); ++n)
             {
-                auto& inboundLayerOutputs = outputsPerLayer[inboundLayer];
-                layerInputs.insert(layerInputs.end(), inboundLayerOutputs.begin(), inboundLayerOutputs.end());
+                auto inboundLayer = inboundNode->inbound_layers[n];
+                auto& inboundLayerOutput = outputsPerLayer[inboundLayer][inboundNode->tensor_indices[n]];
+                layerInputs.push_back(inboundLayerOutput);
             }
 
             outputsPerLayer[layer] = layer->Call(layerInputs);
