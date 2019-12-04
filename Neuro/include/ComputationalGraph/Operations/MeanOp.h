@@ -10,6 +10,7 @@ namespace Neuro
         MeanOp(TensorLike* x, EAxis axis = GlobalAxis, const string& name = "");
 
     protected:
+        virtual void UpdateOutputShape() override;
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
 

@@ -6,7 +6,13 @@ namespace Neuro
     BatchNormalizeOp::BatchNormalizeOp(TensorLike* x, TensorLike* gamma, TensorLike* beta, TensorLike* runningMean, TensorLike* runningVar, float momentum, float epsilon, const string& name)
         : Operation({ x, gamma, beta, runningMean, runningVar }, name.empty() ? "batch_normalize" : name), m_Epsilon(epsilon), m_Momentum(momentum)
     {
-        m_Output.Resize(x->GetShape());
+        UpdateOutputShape();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void BatchNormalizeOp::UpdateOutputShape()
+    {
+        m_Output.Resize(m_InputNodes[0]->GetShape());
     }
 
     //////////////////////////////////////////////////////////////////////////

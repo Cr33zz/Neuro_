@@ -6,7 +6,7 @@ namespace Neuro
     TanHOp::TanHOp(TensorLike* x, const string& name)
         : Operation({ x }, name.empty() ? "tanh" : name)
     {
-        m_Output.Resize(x->GetShape());
+        UpdateOutputShape();
     }
 
     //////////////////////////////////////////////////////////////////////////

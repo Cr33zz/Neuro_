@@ -10,6 +10,7 @@ namespace Neuro
         TransposeOp(TensorLike* x, const vector<EAxis>& axes, const string& name = "");
 
     protected:
+        virtual void UpdateOutputShape() override;
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
 

@@ -6,7 +6,7 @@ namespace Neuro
     IdentityOp::IdentityOp(TensorLike* x, const string& name)
         : Operation({ x }, name.empty() ? "identity" : name)
     {
-        m_Output.Resize(x->GetShape());
+        UpdateOutputShape();
     }
 
     //////////////////////////////////////////////////////////////////////////

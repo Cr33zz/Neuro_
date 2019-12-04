@@ -6,6 +6,12 @@ namespace Neuro
     AccuracyOp::AccuracyOp(TensorLike* target, TensorLike* output, const string& name)
         : Operation({ target, output }, name.empty() ? "accuracy" : name)
     {
+        UpdateOutputShape();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void AccuracyOp::UpdateOutputShape()
+    {
         m_Output.Resize(Shape(1));
     }
 
@@ -30,6 +36,12 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     BinaryAccuracyOp::BinaryAccuracyOp(TensorLike* target, TensorLike* output, const string& name)
         : Operation({ target, output }, name.empty() ? "binary_accuracy" : name)
+    {
+        UpdateOutputShape();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void BinaryAccuracyOp::UpdateOutputShape()
     {
         m_Output.Resize(Shape(1));
     }

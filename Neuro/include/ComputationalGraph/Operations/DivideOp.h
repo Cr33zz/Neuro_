@@ -11,6 +11,7 @@ namespace Neuro
         DivideOp(TensorLike* x, float val, const string& name = "");
 
     protected:
+        virtual void UpdateOutputShape() override;
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
 

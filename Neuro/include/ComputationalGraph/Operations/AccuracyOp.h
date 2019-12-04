@@ -10,6 +10,7 @@ namespace Neuro
         AccuracyOp(TensorLike* target, TensorLike* output, const string& name = "");
 
     protected:
+        virtual void UpdateOutputShape() override;
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override { assert(false); }
     };
@@ -20,6 +21,7 @@ namespace Neuro
         BinaryAccuracyOp(TensorLike* target, TensorLike* output, const string& name = "");
 
     protected:
+        virtual void UpdateOutputShape() override;
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override { assert(false); }
     };

@@ -6,7 +6,14 @@ namespace Neuro
     UpSample2dOp::UpSample2dOp(TensorLike* x, int scaleFactor, const string& name)
         : Operation({ x }, name.empty() ? "upsample2d" : name), m_ScaleFactor(scaleFactor)
     {
-        m_Output.Resize(Shape(x->GetShape().Width() * m_ScaleFactor, x->GetShape().Height() * m_ScaleFactor, x->GetShape().Depth()));
+        UpdateOutputShape();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void UpSample2dOp::UpdateOutputShape()
+    {
+        const auto& shape = m_InputNodes[0]->GetShape();
+        m_Output.Resize(Shape(shape.Width() * m_ScaleFactor, shape.Height() * m_ScaleFactor, shape.Depth(), shape.Batch()));
     }
 
     //////////////////////////////////////////////////////////////////////////

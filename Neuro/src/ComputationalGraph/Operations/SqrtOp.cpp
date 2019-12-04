@@ -6,7 +6,7 @@ namespace Neuro
     SqrtOp::SqrtOp(TensorLike* x, const string& name)
         : Operation({ x }, name.empty() ? "sqrt" : name)
     {
-        m_Output.Resize(x->GetShape());
+        UpdateOutputShape();
     }
 
     //////////////////////////////////////////////////////////////////////////

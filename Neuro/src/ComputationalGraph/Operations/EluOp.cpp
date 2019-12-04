@@ -6,7 +6,7 @@ namespace Neuro
     EluOp::EluOp(TensorLike* x, float alpha, const string& name)
         : Operation({ x }, name.empty() ? "elu" : name), m_Alpha(alpha)
     {
-        m_Output.Resize(x->GetShape());
+        UpdateOutputShape();
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -6,8 +6,14 @@ namespace Neuro
     BatchFlattenOp::BatchFlattenOp(TensorLike* x, const string& name)
         : Operation({ x }, name.empty() ? "batch_flatten" : name)
     {
-        Shape shapeNoBatch = Shape::From(x->GetShape(), 1);
-        m_Output.Resize(Shape(shapeNoBatch.Length));
+        UpdateOutputShape();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void BatchFlattenOp::UpdateOutputShape()
+    {
+        const auto& shape = m_InputNodes[0]->GetShape();
+        m_Output.Resize(Shape(shape.Width() * shape.Height() * shape.Depth(), 1, 1, shape.Batch()));
     }
 
     //////////////////////////////////////////////////////////////////////////

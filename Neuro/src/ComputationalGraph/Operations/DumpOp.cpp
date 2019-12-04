@@ -9,7 +9,7 @@ namespace Neuro
     DumpOp::DumpOp(TensorLike* x, const string& name)
         : Operation({ x }, name.empty() ? x->Name() : name)
     {
-        m_Output.Resize(x->GetShape());
+        UpdateOutputShape();
     }
 
     //////////////////////////////////////////////////////////////////////////

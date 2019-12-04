@@ -6,7 +6,7 @@ namespace Neuro
     AbsOp::AbsOp(TensorLike* x, const string& name)
         : Operation({ x }, name.empty() ? "abs" : name)
     {
-        m_Output.Resize(x->GetShape());
+        UpdateOutputShape();
     }
 
     //////////////////////////////////////////////////////////////////////////

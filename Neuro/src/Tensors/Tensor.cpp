@@ -430,14 +430,14 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-	void Tensor::MatMul(bool transposeT, const Tensor& t, Tensor& result) const
+	void Tensor::MatMul(bool transposeT, const Tensor& t, Tensor& output) const
 	{
-        NEURO_ASSERT(!transposeT, "");
-		assert((!transposeT && Width() == t.Height()) || (transposeT && Width() == t.Width()));
-		assert(t.Depth() == Depth());
-        assert(result.Batch() == max(Batch(), t.Batch()));
+        NEURO_ASSERT(!transposeT, "Fused tranpose and matmul not supported.");
+        NEURO_ASSERT((!transposeT && Width() == t.Height()) || (transposeT && Width() == t.Width()), "");
+		NEURO_ASSERT(t.Depth() == Depth(), "Depths must match.");
+        NEURO_ASSERT(output.Batch() == max(Batch(), t.Batch()), "Output batch size doesn't match maximum of input tensors' batch sizes.");
 
-		Op()->MatMul(false, transposeT, *this, t, result);
+		Op()->MatMul(false, transposeT, *this, t, output);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -1806,10 +1806,10 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     bool Tensor::SameDimensionsOrOne(const Tensor& t) const
     {
-        return (Width() == 1 || Width() == t.Width()) &&
-               (Height() == 1 || Height() == t.Height()) &&
-               (Depth() == 1 || Depth() == t.Depth()) &&
-               (Batch() == 1 || Batch() == t.Batch());
+        return (t.Width() == 1 || Width() == t.Width()) &&
+               (t.Height() == 1 || Height() == t.Height()) &&
+               (t.Depth() == 1 || Depth() == t.Depth()) &&
+               (t.Batch() == 1 || Batch() == t.Batch());
     }
 
     //////////////////////////////////////////////////////////////////////////

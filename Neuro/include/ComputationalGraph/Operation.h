@@ -33,6 +33,7 @@ namespace Neuro
     protected:
         Operation(const vector<TensorLike*>& inputNodes, const string& name);
 
+        virtual void UpdateOutputShape();
         virtual void ComputeInternal() = 0;
         virtual void ComputeGradientInternal(const Tensor& grad) = 0;
 

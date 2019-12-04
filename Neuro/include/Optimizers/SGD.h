@@ -23,8 +23,9 @@ namespace Neuro
             MinimizationOperation(const vector<TensorLike*>& losses, const vector<Variable*>& vars, float lr);
             virtual bool IsTrainingOp() const override { return true; }
         protected:
-            virtual void ComputeInternal();
-            virtual void ComputeGradientInternal(const Tensor& grad) {}
+            virtual void UpdateOutputShape() override {}
+            virtual void ComputeInternal() override;
+            virtual void ComputeGradientInternal(const Tensor& grad) override {}
 
         private:
             float m_LearningRate;

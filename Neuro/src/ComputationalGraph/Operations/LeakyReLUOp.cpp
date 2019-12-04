@@ -6,7 +6,7 @@ namespace Neuro
     LeakyReLUOp::LeakyReLUOp(TensorLike* x, float alpha, const string& name)
         : Operation({ x }, name.empty() ? "leaky_relu" : name), m_Alpha(alpha)
     {
-        m_Output.Resize(x->GetShape());
+        UpdateOutputShape();
     }
 
     //////////////////////////////////////////////////////////////////////////

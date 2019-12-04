@@ -6,7 +6,7 @@ namespace Neuro
     ExpOp::ExpOp(TensorLike* x, const string& name)
         : Operation({ x }, name.empty() ? "exp" : name)
     {
-        m_Output.Resize(x->GetShape());
+        UpdateOutputShape();
     }
 
     //////////////////////////////////////////////////////////////////////////

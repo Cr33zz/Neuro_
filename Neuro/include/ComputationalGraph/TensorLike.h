@@ -50,6 +50,7 @@ namespace Neuro
         virtual bool ForcePreloadInputNode(size_t index) const { return false; }
 
         // This is relevant only for operations
+        bool UndeterminedOutputShape() const { return m_UndeterminedOutputShape; }
         void SetAlwaysOffload(bool enabled) { m_AlwaysOffload = enabled; }
         void SetFetched(bool fetched) { m_Fetched = fetched; }
 
@@ -72,6 +73,11 @@ namespace Neuro
         Tensor m_Output;
         Tensor m_OutputGrad;
         string m_Name;
+        // Normally batch size doesn't matter for output of operations in a graph; however, some operations (ie. transpose) 
+        // can move it around, potentially causing validation/computation issues because initially batch size is unknown.
+        // When output shape of any input is undetermined, operation will update it just before computing it's own output.
+        // Undetermined output shape is causing all operations using it to be also undetermined.
+        bool m_UndeterminedOutputShape : 1;
         bool m_AlwaysOffload : 1;
         bool m_Fetched : 1;
 

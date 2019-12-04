@@ -7,7 +7,7 @@ namespace Neuro
         : Operation({ x, p }, name.empty() ? "pow" : name)
     {
         assert(p->GetShape().Length == 1);
-        m_Output.Resize(x->GetShape());
+        UpdateOutputShape();
     }
 
     //////////////////////////////////////////////////////////////////////////

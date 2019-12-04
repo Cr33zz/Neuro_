@@ -18,6 +18,7 @@ namespace Neuro
         {
             inputNode->m_Consumers.push_back(this);
             m_CareAboutGradient |= inputNode->CareAboutGradient();
+            m_UndeterminedOutputShape |= inputNode->UndeterminedOutputShape();
             m_Inputs.push_back(inputNode->OutputPtr());
         }
 
@@ -53,6 +54,9 @@ namespace Neuro
         m_Output.IncRef();
         m_InputsManuallyConsumed = false;
         m_Training = training;
+
+        if (UndeterminedOutputShape())
+            UpdateOutputShape();
 
         ComputeInternal();
 
@@ -127,5 +131,12 @@ namespace Neuro
         }
         
         NEURO_ASSERT(false, "Unknown node consumed our input O_o");
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Operation::UpdateOutputShape()
+    {
+        NEURO_ASSERT(m_InputNodes.size() == 1, "Impossible to update output shape when having multiple input nodes.");
+        m_Output.Resize(m_InputNodes[0]->GetShape());
     }
 }

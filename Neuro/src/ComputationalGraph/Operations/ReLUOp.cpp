@@ -6,7 +6,7 @@ namespace Neuro
     ReLUOp::ReLUOp(TensorLike* x, const string& name)
         : Operation({ x }, name.empty() ? "relu" : name)
     {
-        m_Output.Resize(x->GetShape());
+        UpdateOutputShape();
     }
 
     //////////////////////////////////////////////////////////////////////////

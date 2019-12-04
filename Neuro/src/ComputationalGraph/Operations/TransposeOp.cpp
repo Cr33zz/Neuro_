@@ -6,9 +6,16 @@ namespace Neuro
     TransposeOp::TransposeOp(TensorLike* x, const vector<EAxis>& axes, const string& name)
         : Operation({ x }, name.empty() ? "transpose" : name)
     {
+        m_UndeterminedOutputShape = true;
         m_Permutation = Tensor::FillUpTranposeAxis(axes);
 
-        auto& shape = x->GetShape();
+        UpdateOutputShape();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void TransposeOp::UpdateOutputShape()
+    {
+        const auto& shape = m_InputNodes[0]->GetShape();
         m_Output.Resize(Shape(shape.Dimensions[m_Permutation[0]], shape.Dimensions[m_Permutation[1]], shape.Dimensions[m_Permutation[2]], shape.Dimensions[m_Permutation[3]]));
     }
 

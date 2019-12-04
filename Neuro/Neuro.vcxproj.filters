@@ -704,9 +704,6 @@
     <ClCompile Include="src\DataPreloader.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\ComputationalGraph\Operations\TotalVariationOp.cpp">
-      <Filter>src\ComputationalGraph\Operations</Filter>
-    </ClCompile>
     <ClCompile Include="src\ComputationalGraph\Operations\AbsOp.cpp">
       <Filter>src\ComputationalGraph\Operations</Filter>
     </ClCompile>

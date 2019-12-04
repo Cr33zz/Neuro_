@@ -6,7 +6,7 @@ namespace Neuro
     SigmoidOp::SigmoidOp(TensorLike* x, const string& name)
         : Operation({ x }, name.empty() ? "sigmoid" : name)
     {
-        m_Output.Resize(x->GetShape());
+        UpdateOutputShape();
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -8,7 +8,7 @@ namespace Neuro
     {
         m_Mask.Resize(x->GetShape());
         m_Mask.Name(Name() + "/mask");
-        m_Output.Resize(x->GetShape());
+        UpdateOutputShape();
     }
 
     //////////////////////////////////////////////////////////////////////////

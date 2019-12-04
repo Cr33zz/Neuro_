@@ -6,8 +6,14 @@ namespace Neuro
     BatchReshapeOp::BatchReshapeOp(TensorLike* x, const Shape& shape, const string& name)
         : Operation({ x }, name.empty() ? "batch_reshape" : name), m_Shape(shape)
     {
-        NEURO_ASSERT(shape.Batch() == 1, "");
-        m_Output.Resize(shape);
+        NEURO_ASSERT(m_Shape.Batch() == 1, "");
+        UpdateOutputShape();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void BatchReshapeOp::UpdateOutputShape()
+    {
+        m_Output.Resize(m_Shape);
     }
 
     //////////////////////////////////////////////////////////////////////////

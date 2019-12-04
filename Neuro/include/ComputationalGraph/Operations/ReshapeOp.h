@@ -10,6 +10,7 @@ namespace Neuro
         ReshapeOp(TensorLike* x, const Shape& shape, const string& name = "");
 
     protected:
+        virtual void UpdateOutputShape() override;
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
 

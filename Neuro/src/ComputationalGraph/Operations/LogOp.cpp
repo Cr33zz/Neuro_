@@ -6,7 +6,7 @@ namespace Neuro
     LogOp::LogOp(TensorLike* x, const string& name)
         : Operation({ x }, name.empty() ? "log" : name)
     {
-        m_Output.Resize(x->GetShape());
+        UpdateOutputShape();
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -6,7 +6,16 @@ namespace Neuro
     SubTensor2dOp::SubTensor2dOp(TensorLike* x, uint32_t width, uint32_t height, uint32_t widthOffset, uint32_t heightOffset, const string& name)
         : Operation({ x }, name.empty() ? "sub_tensor2d" : name), m_Width(width), m_Height(height), m_WidthOffset(widthOffset), m_HeightOffset(heightOffset)
     {
-        m_Output.Resize(Shape(width, height, x->GetShape().Depth()));
+        UpdateOutputShape();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void SubTensor2dOp::UpdateOutputShape()
+    {
+        NEURO_ASSERT(m_Width > 0, "");
+        NEURO_ASSERT(m_Height > 0, "");
+        const auto& shape = m_InputNodes[0]->GetShape();
+        m_Output.Resize(Shape(m_Width, m_Height, shape.Depth(), shape.Batch()));
     }
 
     //////////////////////////////////////////////////////////////////////////

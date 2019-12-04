@@ -6,7 +6,16 @@ namespace Neuro
     Conv2dBiasActivationOp::Conv2dBiasActivationOp(TensorLike* x, TensorLike* kernels, uint32_t stride, uint32_t padding, TensorLike* bias, EActivation activation, float activationAlpha, const string& name)
         : Operation({ x, kernels, bias }, name.empty() ? "conv2d_bias_activation" : name), m_Stride(stride), m_Padding(padding), m_Activation(activation), m_ActivationAlpha(activationAlpha)
     {
-        m_Output.Resize(Tensor::GetConvOutputShape(x->GetShape(), kernels->GetShape().Batch(), kernels->GetShape().Width(), kernels->GetShape().Height(), m_Stride, m_Padding, m_Padding, NCHW));
+        UpdateOutputShape();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Conv2dBiasActivationOp::UpdateOutputShape()
+    {
+        auto x = m_InputNodes[0];
+        auto kernels = m_InputNodes[1];
+        const auto& shape = x->GetShape();
+        m_Output.Resize(Shape::From(Tensor::GetConvOutputShape(x->GetShape(), kernels->GetShape().Batch(), kernels->GetShape().Width(), kernels->GetShape().Height(), m_Stride, m_Padding, m_Padding, NCHW), shape.Batch()));
     }
 
     //////////////////////////////////////////////////////////////////////////

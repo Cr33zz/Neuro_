@@ -6,7 +6,7 @@ namespace Neuro
     NegativeOp::NegativeOp(TensorLike* x, const string& name)
         : Operation({ x }, name.empty() ? "negative" : name)
     {
-        m_Output.Resize(x->GetShape());
+        UpdateOutputShape();
     }
 
     //////////////////////////////////////////////////////////////////////////

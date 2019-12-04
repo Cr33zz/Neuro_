@@ -6,7 +6,16 @@ namespace Neuro
     Conv2dOp::Conv2dOp(TensorLike* x, TensorLike* kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, const string& name)
         : Operation({ x, kernels }, name.empty() ? "conv2d" : name), m_Stride(stride), m_Padding(padding), m_DataFormat(dataFormat)
     {
-        m_Output.Resize(Tensor::GetConvOutputShape(x->GetShape(), kernels->GetShape().Batch(), kernels->GetShape().Width(), kernels->GetShape().Height(), m_Stride, m_Padding, m_Padding, m_DataFormat));
+        UpdateOutputShape();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Conv2dOp::UpdateOutputShape()
+    {
+        auto x = m_InputNodes[0];
+        auto kernels = m_InputNodes[1];
+        const auto& shape = x->GetShape();
+        m_Output.Resize(Shape::From(Tensor::GetConvOutputShape(x->GetShape(), kernels->GetShape().Batch(), kernels->GetShape().Width(), kernels->GetShape().Height(), m_Stride, m_Padding, m_Padding, m_DataFormat), shape.Batch()));
     }
 
     //////////////////////////////////////////////////////////////////////////

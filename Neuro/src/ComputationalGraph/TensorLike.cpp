@@ -25,7 +25,7 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     TensorLike::TensorLike(const string& name)
-        : m_AlwaysOffload(false), m_Fetched(false)
+        : m_UndeterminedOutputShape(false), m_AlwaysOffload(false), m_Fetched(false)
     {
         m_Name = NameScope::Name() + name;
         m_Graph = Graph::Default();

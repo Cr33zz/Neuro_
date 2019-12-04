@@ -6,7 +6,13 @@ namespace Neuro
     MeanOp::MeanOp(TensorLike* x, EAxis axis, const string& name)
         : Operation({ x }, name.empty() ? "mean" : name), m_Axis(axis)
     {
-        Shape inputShape = x->GetShape();
+        UpdateOutputShape();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void MeanOp::UpdateOutputShape()
+    {
+        Shape inputShape = m_InputNodes[0]->GetShape();
         if (m_Axis == GlobalAxis)
             m_Output.Resize(Shape(1, 1, 1, 1));
         else if (m_Axis == WidthAxis)
@@ -20,7 +26,7 @@ namespace Neuro
         else if (m_Axis == _01Axes)
             m_Output.Resize(Shape(1, 1, inputShape.Depth(), inputShape.Batch()));
         else
-            assert(false);
+            NEURO_ASSERT(false, "Unsupported axis.");
     }
 
     //////////////////////////////////////////////////////////////////////////

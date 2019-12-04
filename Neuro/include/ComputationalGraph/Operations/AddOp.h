@@ -11,7 +11,8 @@ namespace Neuro
         AddOp(TensorLike* x, float val, const string& name = "");
 
     protected:
-        virtual void ComputeInternal() override;        
+        virtual void UpdateOutputShape() override;
+        virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
 
     private:

@@ -6,22 +6,30 @@ namespace Neuro
     ConcatenateOp::ConcatenateOp(const vector<TensorLike*>& xs, EAxis axis, const string& name)
         : Operation(xs, name.empty() ? "concatenate" : name), m_Axis(axis)
     {
-        auto sumDims = [&](const vector<TensorLike*>& xs, size_t dim)
+        UpdateOutputShape();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void ConcatenateOp::UpdateOutputShape()
+    {
+        auto sumDims = [](const vector<TensorLike*>& inputs, size_t dim)
         {
             uint32_t sum = 0;
-            for (auto x : xs)
+            for (auto x : inputs)
                 sum += x->GetShape().Len(dim);
             return sum;
         };
 
+        const auto& shape = m_InputNodes[0]->GetShape();
+
         if (m_Axis == WidthAxis)
-            m_Output.Resize(Shape(sumDims(xs, 0), xs[0]->GetShape().Height(), xs[0]->GetShape().Depth()));
+            m_Output.Resize(Shape(sumDims(m_InputNodes, 0), shape.Height(), shape.Depth(), shape.Batch()));
         else if (m_Axis == HeightAxis)
-            m_Output.Resize(Shape(xs[0]->GetShape().Width(), sumDims(xs, 1), xs[0]->GetShape().Depth()));
+            m_Output.Resize(Shape(shape.Width(), sumDims(m_InputNodes, 1), shape.Depth(), shape.Batch()));
         else if (m_Axis == DepthAxis)
-            m_Output.Resize(Shape(xs[0]->GetShape().Width(), xs[0]->GetShape().Height(), sumDims(xs, 2)));
+            m_Output.Resize(Shape(shape.Width(), shape.Height(), sumDims(m_InputNodes, 2), shape.Batch()));
         else if (m_Axis == BatchAxis)
-            m_Output.Resize(Shape(xs[0]->GetShape().Width(), xs[0]->GetShape().Height(), xs[0]->GetShape().Depth()));
+            m_Output.Resize(Shape(shape.Width(), shape.Height(), shape.Depth(), (uint32_t)m_InputNodes.size()));
         else
             assert(false);
     }

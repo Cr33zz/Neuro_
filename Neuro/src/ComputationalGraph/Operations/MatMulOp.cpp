@@ -7,12 +7,22 @@ namespace Neuro
     MatMulOp::MatMulOp(TensorLike* a, TensorLike* b, const string& name)
         : Operation({ a, b }, name.empty() ? "matmul" : name)
     {
-        m_Output.Resize(Shape(b->GetShape().Width(), a->GetShape().Height(), a->GetShape().Depth()));
+        UpdateOutputShape();
 
         m_MulTempA.Name(m_Name + "/tmp_matmul_0");
         m_MulTempB.Name(m_Name + "/tmp_matmul_1");
         m_TransTempA.Name(m_Name + "/tmp_trans_0");
         m_TransTempB.Name(m_Name + "/tmp_trans_1");
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void MatMulOp::UpdateOutputShape()
+    {
+        const Shape& aShape = m_InputNodes[0]->GetShape();
+        const Shape& bShape = m_InputNodes[1]->GetShape();
+        NEURO_ASSERT(aShape.Width() == bShape.Height(), "");
+        NEURO_ASSERT(aShape.Depth() == bShape.Depth(), "Depths mismatch.");
+        m_Output.Resize(Shape(bShape.Width(), aShape.Height(), aShape.Depth(), max(aShape.Batch(), bShape.Batch())));
     }
 
     //////////////////////////////////////////////////////////////////////////

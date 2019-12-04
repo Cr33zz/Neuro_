@@ -6,13 +6,18 @@ namespace Neuro
     ReshapeOp::ReshapeOp(TensorLike* x, const Shape& shape, const string& name)
         : Operation({ x }, name.empty() ? "reshape" : name), m_Shape(shape)
     {
-        m_Output.Resize(shape);
+        UpdateOutputShape();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void ReshapeOp::UpdateOutputShape()
+    {
+        m_Output.Resize(m_Shape);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void ReshapeOp::ComputeInternal()
     {
-        m_Output.ResizeBatch(m_Inputs[0]->Batch());
         m_Inputs[0]->CopyTo(m_Output);
     }
 

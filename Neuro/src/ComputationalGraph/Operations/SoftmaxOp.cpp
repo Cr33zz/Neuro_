@@ -6,7 +6,7 @@ namespace Neuro
     SoftmaxOp::SoftmaxOp(TensorLike* x, const string& name)
         : Operation({ x }, name.empty() ? "softmax" : name)
     {
-        m_Output.Resize(x->GetShape());
+        UpdateOutputShape();
     }
 
     //////////////////////////////////////////////////////////////////////////

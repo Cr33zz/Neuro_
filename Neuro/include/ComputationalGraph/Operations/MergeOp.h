@@ -10,6 +10,7 @@ namespace Neuro
         MergeOp(const vector<TensorLike*>& xs, EMergeMode mode, const string& name = "");
 
     protected:
+        virtual void UpdateOutputShape() override;
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
 

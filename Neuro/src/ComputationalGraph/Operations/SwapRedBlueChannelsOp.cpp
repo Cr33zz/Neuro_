@@ -6,8 +6,14 @@ namespace Neuro
     SwapRedBlueChannelsOp::SwapRedBlueChannelsOp(TensorLike* x, const string& name)
         : Operation({ x }, name.empty() ? "swap_red_blue_channels" : name)
     {
-        NEURO_ASSERT(x->GetShape().Depth() == 3, "Input tensor must have 3 channels.");
-        m_Output.Resize(x->GetShape());
+        UpdateOutputShape();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void SwapRedBlueChannelsOp::UpdateOutputShape()
+    {
+        NEURO_ASSERT(m_InputNodes[0]->GetShape().Depth() == 3, "Input tensor must have 3 channels.");
+        __super::UpdateOutputShape();
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -10,6 +10,7 @@ namespace Neuro
         Pad2dOp(TensorLike* x, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, const string& name = "");
 
     protected:
+        virtual void UpdateOutputShape() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
 
         uint32_t m_Left;
