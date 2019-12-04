@@ -140,46 +140,52 @@ namespace Neuro
     {
         NEURO_ASSERT(inputs.size() == m_Inputs.size(), "Number of inputs doesn't match. Expected " << m_Inputs.size() << " received " << inputs.size());
 
-        auto outputs = RunInternalGraph(inputs);
+        // Dictionary mapping reference tensors to computed tensor
+        map<TensorLike*, TensorLike*> tensor_map;
+        for (size_t i = 0; i < m_Inputs.size(); ++i)
+            tensor_map[m_Inputs[i]] = inputs[i];
 
-        //map<LayerBase*, vector<TensorLike*>> outputsPerLayer;
+        vector<int> depth_keys;
+        depth_keys.reserve(m_NodesByDepth.size());
+        for_each(m_LayersByDepth.begin(), m_LayersByDepth.end(), [&](const pair<int, vector<LayerBase*>>& entry) { depth_keys.push_back(entry.first); });
+        reverse(depth_keys.begin(), depth_keys.end());
 
-        //// all input layers are single tensor placeholders
-        //for (size_t i = 0; i < m_InputLayers.size(); ++i)
-        //{
-        //    auto layer = m_InputLayers[i];
-        //    outputsPerLayer[layer] = layer->Call(inputs[i]);
-        //}
+        for (auto depth : depth_keys)
+        {
+            const auto& nodes = m_NodesByDepth[depth];
+            for (auto node : nodes)
+            {
+                auto layer = node->outbound_layer;
+                auto& reference_input_tensors = node->input_tensors;
+                auto& reference_output_tensors = node->output_tensors;
 
-        //for (size_t i = 0; i < m_Layers.size(); ++i)
-        //{
-        //    auto layer = m_Layers[i];
+                // If all previous input tensors are available in tensor_map, then call node.outbound_layer on them.
+                vector<TensorLike*> computed_data;
+                for (auto x : reference_input_tensors)
+                {
+                    if (tensor_map.find(x) != tensor_map.end())
+                        computed_data.push_back(tensor_map[x]);
+                }
 
-        //    if (find(m_InputLayers.begin(), m_InputLayers.end(), layer) != m_InputLayers.end())
-        //        continue; // we already called input layers
+                if (computed_data.size() == reference_input_tensors.size())
+                {
+                    auto output_tensors = layer->Call(computed_data);
 
-        //    auto inboundNode = m_LayerNodes[i];
+                    // Update tensor_map.
+                    for (size_t i = 0; i < reference_output_tensors.size(); ++i)
+                        tensor_map[reference_output_tensors[i]] = output_tensors[i];
+                }
+            }
+        }
 
-        //    // gather inputs from inbound layers and call
-        //    vector<TensorLike*> layerInputs;
-        //    for (size_t n = 0; n < inboundNode->inbound_layers.size(); ++n)
-        //    {
-        //        auto inboundLayer = inboundNode->inbound_layers[n];
-        //        auto& inboundLayerOutput = outputsPerLayer[inboundLayer][inboundNode->tensor_indices[n]];
-        //        layerInputs.push_back(inboundLayerOutput);
-        //    }
+        vector<TensorLike*> outputs;
+        for (auto x : m_Outputs)
+        {
+            NEURO_ASSERT(tensor_map.find(x) != tensor_map.end(), "Could not compute output " << x->Name());
+            auto tensor = tensor_map[x];
 
-        //    outputsPerLayer[layer] = layer->Call(layerInputs);
-        //}
-
-        //// gather outputs from output layers
-        //vector<TensorLike*> outputs;
-        //for (auto layer : m_OutputLayers)
-        //{
-        //    NEURO_ASSERT(outputsPerLayer.find(layer) != outputsPerLayer.end(), "Output layer '" << layer->Name() << "' was not called.");
-        //    auto& layerOutputs = outputsPerLayer[layer];
-        //    outputs.insert(outputs.end(), layerOutputs.begin(), layerOutputs.end());
-        //}
+            outputs.push_back(tensor);
+        }
 
         // destroy metadata in output tensors because this model will 'claim' their 'ownership'
         for_each(outputs.begin(), outputs.end(), [](TensorLike* output) { delete output->m_Metadata; output->m_Metadata = nullptr; });
@@ -1000,73 +1006,6 @@ namespace Neuro
             sort(layers_for_depth.begin(), layers_for_depth.end(), [&](LayerBase* a, LayerBase* b) { return layer_indices[a] > layer_indices[b]; });
             m_Layers.insert(m_Layers.end(), layers_for_depth.begin(), layers_for_depth.end());
         }
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    vector<TensorLike*> ModelBase::RunInternalGraph(const vector<TensorLike*>& inputs)
-    {
-        NEURO_ASSERT(m_Inputs.size() == inputs.size(), "Mismatched number of inputs.");
-
-        // Dictionary mapping reference tensors to tuples
-        // (computed tensor, compute mask)
-        // we assume a 1:1 mapping from tensor to mask
-        // TODO: raise exception when a `.compute_mask()` call
-        // does not return a list the same size as `call`
-        map<TensorLike*, TensorLike*> tensor_map;
-        for (size_t i = 0; i < m_Inputs.size(); ++i)
-            tensor_map[m_Inputs[i]] = inputs[i];
-
-        vector<int> depth_keys;
-        depth_keys.reserve(m_NodesByDepth.size());
-        for_each(m_LayersByDepth.begin(), m_LayersByDepth.end(), [&](const pair<int, vector<LayerBase*>>& entry) { depth_keys.push_back(entry.first); });
-        reverse(depth_keys.begin(), depth_keys.end());
-
-        for (auto depth : depth_keys)
-        {
-            const auto& nodes = m_NodesByDepth[depth];
-            for (auto node : nodes)
-            {
-                // This is always a single layer, never a list.
-                auto layer = node->outbound_layer;
-                auto& reference_input_tensors = node->input_tensors;
-                auto& reference_output_tensors = node->output_tensors;
-
-                // If all previous input tensors are available in tensor_map,
-                // then call node.inbound_layer on them.
-                vector<TensorLike*> computed_data;  // List of tuples (input, mask).
-                for (auto x : reference_input_tensors)
-                {
-                    if (tensor_map.find(x) != tensor_map.end())
-                        computed_data.push_back(tensor_map[x]);
-                }
-
-                if (computed_data.size() == reference_input_tensors.size())
-                {
-                    auto output_tensors = layer->Call(computed_data);
-
-                    // Update tensor_map.
-                    for (size_t i = 0; i < reference_output_tensors.size(); ++i)
-                        tensor_map[reference_output_tensors[i]] = output_tensors[i];
-                }
-            }
-        }
-
-        vector<TensorLike*> output_tensors;
-        //output_shapes = []
-        for (auto x : m_Outputs)
-        {
-            NEURO_ASSERT(tensor_map.find(x) != tensor_map.end(), "Could not compute output " << x->Name());
-            auto tensor = tensor_map[x];
-
-            /*if hasattr(tensor, '_keras_shape') and output_shapes is not None:
-                shape = tensor._keras_shape
-                output_shapes.append(shape)
-            else:
-                output_shapes = None*/
-            output_tensors.push_back(tensor);
-        }
-
-        return output_tensors;
     }
 
     //////////////////////////////////////////////////////////////////////////

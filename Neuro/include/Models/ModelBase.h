@@ -90,7 +90,6 @@ namespace Neuro
 
     private:
         void MapGraphNetwork(const vector<TensorLike*>& inputs, const vector<TensorLike*>& outputs);
-        vector<TensorLike*> RunInternalGraph(const vector<TensorLike*>& inputs);
         void ProcessLayer(LayerBase* layer, unordered_set<LayerBase*>& visited);
 
         // This is vectorized gradient descent
