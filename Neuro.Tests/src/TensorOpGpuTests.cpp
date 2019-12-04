@@ -434,8 +434,8 @@ namespace NeuroTests
 
         TEST_METHOD(Add_Broadcast_CompareWithCpuResult)
         {
-            Tensor t1(Shape(20, 30, 40, 50)); t1.FillWithRand();
-            Tensor t2(Shape(2, 3, 4, 2)); t2.FillWithRand();
+            Tensor t1(Shape(20, 30, 40, 1)); t1.FillWithRand();
+            Tensor t2(Shape(1, 3, 4, 50)); t2.FillWithRand();
 
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t1.Add(t2);)
