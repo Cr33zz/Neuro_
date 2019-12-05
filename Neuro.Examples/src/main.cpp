@@ -21,7 +21,7 @@
 
 int main()
 {
-    Tensor::SetForcedOpMode(CPU);
+    /*Tensor::SetForcedOpMode(CPU);
 
     auto inPatch = new Input(Shape(4, 4));
     auto procPatch = (new Activation(new Sigmoid()))->Call(inPatch->Outputs());
@@ -45,9 +45,9 @@ int main()
     auto model = new Flow(in->Outputs(), out);
 
     auto imgInput = new Input(Shape(4,4));
-    auto x = model->Call(imgInput->Outputs());
+    auto x = model->Call(imgInput->Outputs());*/
 
-    cout << "aaaa";
+    //cout << "aaaa";
 
     /*Tensor img("e:/Dropbox/!BLOG/4.jpg", false);
     Tensor edges = CannyEdgeDetection(img);

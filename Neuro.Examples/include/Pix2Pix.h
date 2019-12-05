@@ -48,7 +48,7 @@ public:
 
         const Shape IMG_SHAPE(256, 256, 3);
         const uint32_t PATCH_SIZE = 64;
-        const uint32_t BATCH_SIZE = 16;
+        const uint32_t BATCH_SIZE = 1;
         const uint32_t STEPS = 100000;
         //const uint32_t STEPS = 6;
 
@@ -61,13 +61,13 @@ public:
         Tensor expectedImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "output_image");
 
         // setup data preloader
-        Pix2PixImageLoader loader(trainFiles, BATCH_SIZE, 2);
+        Pix2PixImageLoader loader(trainFiles, BATCH_SIZE, 1);
         DataPreloader preloader({ &condImages, &expectedImages }, { &loader }, 5);
 
         // setup models
         auto gModel = CreateGenerator(IMG_SHAPE);
         cout << "Generator" << endl << gModel->Summary();
-        auto dModel = CreatePatchDiscriminator(IMG_SHAPE, PATCH_SIZE);
+        auto dModel = CreatePatchDiscriminator(IMG_SHAPE, PATCH_SIZE, BATCH_SIZE > 1);
         //cout << "Discriminator" << endl << dModel->Summary();
 
         auto inSrc = new Input(IMG_SHAPE);
@@ -109,10 +109,10 @@ public:
                 Tensor fakeImages = *gModel->Predict(condImages)[0];
                 dLoss = get<0>(dModel->TrainOnBatch({ &condImages, &fakeImages }, { &fakeLabels }));
 
-                if (discriminatorTrainingSource % 100 == 0)
+                if (discriminatorTrainingSource % 10 == 0)
                 {
                     ganModel->SaveWeights("pix2pix.h5");
-                    Tensor tmp(Shape::From(fakeImages.GetShape(), 3));
+                    Tensor tmp(Shape(IMG_SHAPE.Width() * 3, IMG_SHAPE.Height(), IMG_SHAPE.Depth(), BATCH_SIZE));
                     Tensor::Concat(WidthAxis, { &condImages, &fakeImages, &expectedImages }, tmp);
                     tmp.Add(1.f).Mul(127.5f).SaveAsImage("pix2pix_s" + PadLeft(to_string(i), 4, '0') + ".jpg", false);
                 }
