@@ -20,6 +20,8 @@ namespace Neuro
 
         BatchNormalization* SetMomentum(float momentum);
 
+        virtual void SetTrainable(bool trainable) override;
+
     protected:
         BatchNormalization(const string& constructorName, const Shape& inputShape, const string& name = "");
 

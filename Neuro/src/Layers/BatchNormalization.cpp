@@ -72,6 +72,15 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void BatchNormalization::SetTrainable(bool trainable)
+    {
+        m_Trainable = trainable;
+
+        m_Gamma->SetTrainable(trainable);
+        m_Beta->SetTrainable(trainable);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void BatchNormalization::Build(const vector<Shape>& inputShapes)
     {
         NEURO_ASSERT(inputShapes.size() == 1, "Dense layer accepts single input.");
