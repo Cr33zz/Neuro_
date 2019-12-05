@@ -178,8 +178,6 @@ namespace Neuro
             AllocateOnHost();
         if (wasAllocatedOnDevice)
             AllocateOnDevice();
-            
-        m_DataLocation = Host;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -537,7 +535,10 @@ namespace Neuro
         }
 
         if (m_DataLocation == Device)
+        {
+            NEURO_ASSERT(m_DeviceDataPtr, "Data location is 'Device' but device data pointer is null.");
             return;
+        }
 
         NVTXProfile p((string(__FUNCTION__) + " " + m_Name).c_str(), 0xFFB200FF);
 
@@ -565,7 +566,10 @@ namespace Neuro
         }
 
         if (m_DataLocation == Host)
+        {
+            NEURO_ASSERT(m_DataPtr, "Data location is 'Host' but data pointer is null.");
             return;
+        }
 
         NVTXProfile p((string(__FUNCTION__) + " " + m_Name).c_str(), 0xFFB200FF);
 
@@ -597,7 +601,10 @@ namespace Neuro
     void Storage::SyncToHost() const
     {
         if (m_DataLocation == Host)
+        {
+            NEURO_ASSERT(m_DataPtr, "Data location is 'Host' but data pointer is null.");
             return;
+        }
 
         NVTXProfile p((string(__FUNCTION__) + " " + m_Name).c_str(), 0xFFB200FF);
 
@@ -612,7 +619,10 @@ namespace Neuro
     void Storage::OverrideHost()
     {
         if (m_DataLocation == Host)
+        {
+            NEURO_ASSERT(m_DataPtr, "Data location is 'Host' but data pointer is null.");
             return;
+        }
 
         if (!m_DataPtr)
             AllocateOnHost();
@@ -624,7 +634,10 @@ namespace Neuro
     void Storage::OverrideDevice()
     {
         if (m_DataLocation == Device)
+        {
+            NEURO_ASSERT(m_DeviceDataPtr, "Data location is 'Device' but device data pointer is null.");
             return;
+        }
 
         if (!m_DataPtr)
             AllocateOnHost();
@@ -741,4 +754,17 @@ namespace Neuro
         CUDA_CHECK(cudaMemcpy(destDevPtr, srcDevPtr, sizeInBytes, cudaMemcpyDeviceToDevice));
     }
 
+    //////////////////////////////////////////////////////////////////////////
+    void Storage::CopyWithinHost(void* destPtr) const
+    {
+        CopyWithinHost(destPtr, m_DataPtr, SizeInBytes());
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Storage::CopyWithinHost(void* destPtr, const void* srcPtr, size_t sizeInBytes) const
+    {
+        NEURO_ASSERT(srcPtr, "Invalid pointer.");
+        NEURO_ASSERT(destPtr, "Invalid destination pointer.");
+        memcpy(destPtr, srcPtr, sizeInBytes);
+    }
 }

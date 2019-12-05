@@ -1772,6 +1772,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    EBatchNormMode GetBatchNormMode(const Shape& inputShape)
+    {
+        return inputShape.Depth() > 1 ? Spatial : PerActivation;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void Tensor::BatchNorm(const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor* runningMean, const Tensor* runningVar, Tensor& result) const
     {
         NEURO_ASSERT((runningMean && runningVar) || (!runningMean && !runningVar), "Both running mean and var must be present or absent at the same time.");
@@ -1782,7 +1788,11 @@ namespace Neuro
     void Tensor::BatchNormTrain(const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor* runningMean, Tensor* runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const
     {
         NEURO_ASSERT((runningMean && runningVar) || (!runningMean && !runningVar), "Both running mean and var must be present or absent at the same time.");
-        Op()->BatchNormalizationTrain(*this, m_Shape.Depth() > 1 ? Spatial : PerActivation, gamma, beta, momentum, epsilon, runningMean, runningVar, saveMean, saveInvVariance, result);
+        auto mode = GetBatchNormMode(m_Shape);
+        //NEURO_ASSERT(mode != PerActivation || m_Shape.Batch() > 1, "Batch size must be greater than 1 when using 'PerActivation' batch normalization mode.");
+        //NEURO_ASSERT(mode != Spatial || (m_Shape.Width() * m_Shape.Height() * m_Shape.Batch()) > 1, "W*H*N must be greater than 1 when using 'Spatial' batch normalization mode.");
+
+        Op()->BatchNormalizationTrain(*this, mode, gamma, beta, momentum, epsilon, runningMean, runningVar, saveMean, saveInvVariance, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1989,10 +1999,10 @@ namespace Neuro
 		CopyToHost();
         target.OverrideHost();
 
-		if (tau <= 0)
-            memcpy(target.m_Storage.Data(), m_Storage.Data(), m_Storage.SizeInBytes());
-		else
-			Map([&](float v1, float v2) { return v1 * tau + v2 * (1 - tau); }, target, target);
+        if (tau <= 0)
+            m_Storage.CopyWithinHost(target.Values());
+        else
+            Add(tau, 1 - tau, target, target);
 	}
 
     //////////////////////////////////////////////////////////////////////////
