@@ -282,6 +282,36 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    bool Tensor::Validate() const
+    {
+        if (!m_Storage.AllocSizeInBytes() || !m_Storage.IsHostAllocated())
+            return true;
+
+        //NEURO_ASSERT(m_Storage.AllocSizeInBytes(), "");
+        //NEURO_ASSERT(m_Storage.IsHostAllocated(), "Not allocated on host.");
+
+        const float* data = m_Storage.DataUnsafe();
+
+        SyncToHost();
+        for (uint32_t i = 0; i < Length(); ++i)
+        {
+            float v = data[i];
+            if (isnan(v))
+            {
+                NEURO_ASSERT(isnan(v), "NaN value detected at index " << i << " in '" << m_Name << "'");
+                return false;
+            }
+            if (isinf(v))
+            {
+                NEURO_ASSERT(isinf(v), "Inf value detected at index " << i << " in '" << m_Name << "'");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     Tensor& Tensor::FillWithRand(int seed, float min, float max, uint32_t offset)
 	{
 		OverrideHost();

@@ -137,6 +137,9 @@ public:
 
         //GlobalRngSeed(1337);
 
+        Debug::LogAllGrads();
+        Debug::LogAllOutputs();
+
         const Shape IMG_SHAPE(256, 256, 3);
         const uint32_t PATCH_SIZE = 64;
         const uint32_t BATCH_SIZE = 1;
@@ -273,7 +276,7 @@ public:
         auto x = (new Dense(2, new Softmax()))->Call(xFlat);
 
         // this is single patch processing model
-        auto patchDisc = new Flow(patchInput->Outputs(), { x[0], xFlat[0] });
+        auto patchDisc = new Flow(patchInput->Outputs(), { x[0], xFlat[0] }, "patch_disc");
 
         // generate final model for processing all patches
         auto imgInput = new Input(imgShape);
@@ -295,7 +298,7 @@ public:
 
         for (size_t i = 0; i < patches.size(); ++i)
         {
-            auto output = patchDisc->Call(patches[i], "patch_disc_" + i);
+            auto output = patchDisc->Call(patches[i], "patch_disc_" + to_string(i));
             xList.push_back(output[0]);
             xFlatList.push_back(output[1]);
         }
@@ -343,7 +346,7 @@ public:
 
         auto xOut = (new Dense(2, new Softmax()))->Call(xMerged);
 
-        auto model = new Flow(imgInput->Outputs(), xOut);
+        auto model = new Flow(imgInput->Outputs(), xOut, "disc");
         model->Optimize(new Adam(0.0001f), new BinaryCrossEntropy());
         return model;
     }
