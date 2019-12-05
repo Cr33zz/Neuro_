@@ -131,6 +131,62 @@ public:
         ganModel->SaveWeights("pix2pix.h5");
     }
 
+    void RunDiscriminatorTrainTest()
+    {
+        Tensor::SetDefaultOpMode(GPU);
+
+        //GlobalRngSeed(1337);
+
+        const Shape IMG_SHAPE(256, 256, 3);
+        const uint32_t PATCH_SIZE = 64;
+        const uint32_t BATCH_SIZE = 1;
+        const uint32_t EPOCHS = 30;
+
+        auto trainFiles = LoadFilesList("e:/Downloads/flowers", false, true);
+
+        Tensor condImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "cond_image");
+        Tensor expectedImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "output_image");
+
+        // setup data preloader
+        Pix2PixImageLoader loader(trainFiles, BATCH_SIZE, 1);
+        DataPreloader preloader({ &condImages, &expectedImages }, { &loader }, 5);
+
+        // setup models
+        auto gModel = CreateGenerator(IMG_SHAPE);
+        //cout << "Generator" << endl << gModel->Summary();
+        auto dModel = CreatePatchDiscriminator(IMG_SHAPE, PATCH_SIZE, BATCH_SIZE > 1);
+        //cout << "Discriminator" << endl << dModel->Summary();
+
+        auto inSrc = new Input(IMG_SHAPE);
+        auto genOut = gModel->Call(inSrc->Outputs(), "generator");
+        auto disOut = dModel->Call(genOut[0], "discriminator");
+
+        Tensor one(Shape(1, BATCH_SIZE)); one.One();
+
+        // labels consist of two values [fake_prob, real_prob]
+        Tensor fakeLabels(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE), "fake_labels"); fakeLabels.Zero();
+        one.FuseSubTensor2D(0, 0, fakeLabels); // generate [1, 0] batch
+        Tensor realLabels(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE), "real_lables"); realLabels.Zero();
+        one.FuseSubTensor2D(1, 0, realLabels);
+
+        for (uint32_t e = 1; e <= EPOCHS; ++e)
+        {
+            preloader.Load();
+
+            // generate fake images from condition
+            Tensor fakeImages = *gModel->Predict(condImages)[0];
+            /*Tensor fakeImages(Shape::From(dModel->InputShapesAt(-1)[0], BATCH_SIZE)); fakeImages.FillWithFunc([]() { return Uniform::NextSingle(-1, 1); });
+            Tensor realImages = images.GetRandomBatches(BATCH_SIZE);*/
+
+            auto realTrainData = dModel->TrainOnBatch({ &condImages, &expectedImages }, { &realLabels });
+            auto fakeTrainData = dModel->TrainOnBatch({ &condImages, &fakeImages }, { &fakeLabels });
+
+            cout << ">" << e << setprecision(4) << fixed << " loss=" << (get<0>(realTrainData) + get<0>(fakeTrainData)) * 0.5f << " real=" << round(get<1>(realTrainData) * 100) << "% fake=" << round(get<1>(fakeTrainData) * 100) << "%" << endl;
+        }
+
+        cin.get();
+    }
+
     ModelBase* CreateGenerator(const Shape& imgShape)
     {
         auto encoderBlock = [](TensorLike* input, uint32_t filtersNum, bool batchNorm = true)

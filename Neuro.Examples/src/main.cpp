@@ -108,7 +108,8 @@ int main()
     //FastNeuralStyleTransfer().Run();
     //AdaptiveStyleTransfer().Run();
     //AdaptiveStyleTransfer().Test();
-    Pix2Pix().Run();
+    //Pix2Pix().Run();
+    Pix2Pix().RunDiscriminatorTrainTest();
 
     return 0;
 }
