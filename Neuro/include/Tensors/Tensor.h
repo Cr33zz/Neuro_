@@ -58,7 +58,7 @@ namespace Neuro
         const float* Values() const;
         void SetStorageType(int type);
 
-        void SaveAsImage(const string& imageFile, bool denormalize) const;
+        void SaveAsImage(const string& imageFile, bool denormalize, uint32_t maxCols = 0) const;
         void SaveAsH5(const string& h5File) const;
         void LoadFromH5(const string& h5File);
 

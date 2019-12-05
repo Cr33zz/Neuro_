@@ -142,7 +142,7 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::SaveAsImage(const string& imageFile, bool denormalize) const
+    void Tensor::SaveAsImage(const string& imageFile, bool denormalize, uint32_t maxCols) const
     {
         ImageLibInit();
 
@@ -151,7 +151,7 @@ namespace Neuro
 
         const uint32_t TENSOR_WIDTH = Width();
         const uint32_t TENSOR_HEIGHT = Height();
-        const uint32_t IMG_COLS = (uint32_t)ceil(::sqrt((float)Batch()));
+        const uint32_t IMG_COLS = min((uint32_t)ceil(::sqrt((float)Batch())), maxCols == 0 ? numeric_limits<uint32_t>().max() : maxCols);
         const uint32_t IMG_ROWS = (uint32_t)ceil((float)Batch() / IMG_COLS);
         const uint32_t IMG_WIDTH = IMG_COLS * TENSOR_WIDTH;
         const uint32_t IMG_HEIGHT = IMG_ROWS * TENSOR_HEIGHT;
