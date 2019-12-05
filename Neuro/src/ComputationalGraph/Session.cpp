@@ -107,8 +107,7 @@ namespace Neuro
                 {
                     for (size_t i = 0; i < op->Inputs().size(); ++i)
                     {
-                        if (op->Name() == "patch_disc_0/batchnormalization_18/batch_normalize")
-                            op->Inputs()[i]->Validate();
+                        //op->Inputs()[i]->Validate();
                         op->Inputs()[i]->DebugDumpValues(node->Name() + "_input" + to_string(i) + "_step" + to_string(Debug::GetStep()) + ".log");
                     }
                 }

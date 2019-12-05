@@ -66,13 +66,6 @@ namespace Neuro
             m_TransTempA.TryDeviceAllocate();
             a.Transpose(m_TransTempA);
 
-            if (Name() == "patch_disc_1/dense_1/matmul")
-            {
-                a.DebugDumpValues("a.log");
-                m_TransTempA.DebugDumpValues("a_trans.log");
-                cout << "xxx";
-            }
-
             if (m_InputsGrads[1].Batch() == grad.Batch())
                 m_TransTempA.MatMul(grad, m_InputsGrads[1]);
             else
