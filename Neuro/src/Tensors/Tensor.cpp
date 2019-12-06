@@ -2014,14 +2014,14 @@ namespace Neuro
         if (target.IsOnDevice()) // target is more important
         {
             CopyToDevice();
-            m_Storage.CopyWithinDevice(target.GetDevicePtr() + targetOffset * sizeof(float), GetDevicePtr() + offset * sizeof(float), elementsNum * sizeof(float));
+            m_Storage.CopyWithinDevice(target.GetDevicePtr() + targetOffset, GetDevicePtr() + offset, elementsNum * sizeof(float));
             return;
         }
 
         CopyToHost();
         target.CopyToHost(true);
 
-        m_Storage.CopyWithinHost(target.Values() + targetOffset * sizeof(float), Values() + offset * sizeof(float), elementsNum * sizeof(float));
+        m_Storage.CopyWithinHost(target.Values() + targetOffset, Values() + offset, elementsNum * sizeof(float));
     }
 
 	//////////////////////////////////////////////////////////////////////////
