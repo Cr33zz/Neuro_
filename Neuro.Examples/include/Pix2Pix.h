@@ -136,7 +136,7 @@ public:
     {
         Tensor::SetDefaultOpMode(GPU);
 
-        GlobalRngSeed(1337);
+        GlobalRngSeed(1338);
 
         //Debug::LogAllGrads();
         //Debug::LogAllOutputs();
@@ -151,10 +151,6 @@ public:
 
         Tensor condImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "cond_image");
         Tensor expectedImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "output_image");
-
-        // setup data preloader
-        Pix2PixImageLoader loader(trainFiles, BATCH_SIZE, 1);
-        DataPreloader preloader({ &condImages, &expectedImages }, { &loader }, 5);
 
         // setup models
         auto gModel = CreateGenerator(IMG_SHAPE);
@@ -173,6 +169,12 @@ public:
         one.FuseSubTensor2D(0, 0, fakeLabels); // generate [1, 0] batch
         Tensor realLabels(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE), "real_lables"); realLabels.Zero();
         one.FuseSubTensor2D(1, 0, realLabels);
+
+        Graph::Default()->InitVariables();
+
+        // setup data preloader
+        Pix2PixImageLoader loader(trainFiles, BATCH_SIZE, 1);
+        DataPreloader preloader({ &condImages, &expectedImages }, { &loader }, 5);
 
         for (uint32_t e = 1; e <= EPOCHS; ++e)
         {
