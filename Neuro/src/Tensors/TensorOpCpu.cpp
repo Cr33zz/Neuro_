@@ -1112,32 +1112,35 @@ namespace Neuro
             m = (float)(input.Width() * input.Height());
         }
 
-        input.Mean(axis, saveMean);
-        Tensor xMu = input - saveMean;
-        Tensor var = mean(sqr(xMu), axis);
-        Tensor varSqrt = sqrt(var + epsilon);
-        varSqrt.Inversed(1.f, saveInvVariance);
-        Tensor xNorm = xMu * saveInvVariance;
-        xNorm.MulElem(gamma).Add(beta, output);
-
-        if (runningMean)
-            runningMean->Add(1 - momentum, momentum, saveMean, *runningMean);
-
-        if (runningVar)
+        if (m == 1)
         {
-            Tensor tempVar = var * m / (m - 1); // according to the original BN paper
-            runningVar->Add(1 - momentum, momentum, tempVar, *runningVar);
+            // cannot normalize single values so just copy input to output
+            input.CopyTo(output);
+        }
+        else
+        {
+            input.Mean(axis, saveMean);
+            Tensor xMu = input - saveMean;
+            Tensor var = mean(sqr(xMu), axis);
+            Tensor varSqrt = sqrt(var + epsilon);
+            varSqrt.Inversed(1.f, saveInvVariance);
+            Tensor xNorm = xMu * saveInvVariance;
+            xNorm.MulElem(gamma).Add(beta, output);
+
+            if (runningMean)
+                runningMean->Add(1 - momentum, momentum, saveMean, *runningMean);
+
+            if (runningVar)
+            {
+                Tensor tempVar = var * (m / (m - 1)); // according to the original BN paper
+                runningVar->Add(1 - momentum, momentum, tempVar, *runningVar);
+            }
         }
     }
 
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::BatchNormalizationGradient(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, float epsilon, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const
     {
-        gammaGradient.Zero();
-        betaGradient.Zero();
-        inputGradient.OverrideHost();
-        inputGradient.Zero();
-
         EAxis axis;
         float m;
 
@@ -1157,15 +1160,24 @@ namespace Neuro
             m = (float)(input.Width() * input.Height());
         }
 
-        Tensor xMu = input - savedMean;
-        Tensor xNorm = xMu * savedInvVariance;
-        Tensor dxNorm = outputGradient * gamma;
-        Tensor dVar = sum(dxNorm * xMu, axis) * -.5f * pow(savedInvVariance, 3);
-        Tensor dMu = sum(dxNorm * -savedInvVariance, axis) + dVar * mean(xMu * -2.f, axis);
+        if (m == 1)
+        {
+            outputGradient.CopyTo(inputGradient);
+            gammaGradient.Zero();
+            betaGradient.Zero();
+        }
+        else
+        {
+            Tensor xMu = input - savedMean;
+            Tensor xNorm = xMu * savedInvVariance;
+            Tensor dxNorm = outputGradient * gamma;
+            Tensor dVar = sum(dxNorm * xMu, axis) * -.5f * pow(savedInvVariance, 3);
+            Tensor dMu = sum(dxNorm * -savedInvVariance, axis) + dVar * mean(xMu * -2.f, axis);
 
-        inputGradient = (dxNorm * savedInvVariance) + (dVar * xMu * 2.f / m) + (dMu / m);
-        gammaGradient = sum(outputGradient * xNorm, axis);
-        betaGradient = sum(outputGradient, axis);
+            inputGradient = (dxNorm * savedInvVariance) + (dVar * xMu * 2.f / m) + (dMu / m);
+            gammaGradient = sum(outputGradient * xNorm, axis);
+            betaGradient = sum(outputGradient, axis);
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////

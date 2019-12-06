@@ -1026,7 +1026,13 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::BatchNormalizationTrain(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor* runningMean, Tensor* runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& output) const
     {
+        const auto& inputShape = input.GetShape();
+
         if (mode == Instance)
+            return __super::BatchNormalizationTrain(input, mode, gamma, beta, momentum, epsilon, runningMean, runningVar, saveMean, saveInvVariance, output);
+        if (mode == Spatial && (inputShape.Width() * inputShape.Height() * inputShape.Batch()) == 1) //edge case is handled gracefully in hand-made implementation
+            return __super::BatchNormalizationTrain(input, mode, gamma, beta, momentum, epsilon, runningMean, runningVar, saveMean, saveInvVariance, output);
+        if (mode == PerActivation && inputShape.Batch() == 1) //edge case is handled gracefully in hand-made implementation
             return __super::BatchNormalizationTrain(input, mode, gamma, beta, momentum, epsilon, runningMean, runningVar, saveMean, saveInvVariance, output);
 
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
@@ -1072,7 +1078,13 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::BatchNormalizationGradient(const Tensor& input, EBatchNormMode mode, const Tensor& gamma, float epsilon, const Tensor& outputGradient, const Tensor& savedMean, const Tensor& savedInvVariance, Tensor& gammaGradient, Tensor& betaGradient, bool trainable, Tensor& inputGradient) const
     {
+        const auto& inputShape = input.GetShape();
+
         if (mode == Instance)
+            return __super::BatchNormalizationGradient(input, mode, gamma, epsilon, outputGradient, savedMean, savedInvVariance, gammaGradient, betaGradient, trainable, inputGradient);
+        if (mode == Spatial && (inputShape.Width() * inputShape.Height() * inputShape.Batch()) == 1) //edge case is handled gracefully in hand-made implementation
+            return __super::BatchNormalizationGradient(input, mode, gamma, epsilon, outputGradient, savedMean, savedInvVariance, gammaGradient, betaGradient, trainable, inputGradient);
+        if (mode == PerActivation && inputShape.Batch() == 1) //edge case is handled gracefully in hand-made implementation
             return __super::BatchNormalizationGradient(input, mode, gamma, epsilon, outputGradient, savedMean, savedInvVariance, gammaGradient, betaGradient, trainable, inputGradient);
 
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
