@@ -6,8 +6,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    DataPreloader::DataPreloader(const vector<Tensor*>& destination, const vector<ILoader*>& loaders, size_t capacity)
-        : m_Destination(destination), m_Loaders(loaders)
+    DataPreloader::DataPreloader(const vector<Tensor*>& destination, const vector<ILoader*>& loaders, size_t capacity, bool threadedMode)
+        : m_Destination(destination), m_Loaders(loaders), m_ThreadedMode(threadedMode)
     {
         for (size_t i = 0; i < capacity; ++i)
         {
@@ -17,7 +17,8 @@ namespace Neuro
             m_Pending.push_back(data);
         }
 
-        m_PreloaderThread = thread(&DataPreloader::Preload, this);
+        if (m_ThreadedMode)
+            m_PreloaderThread = thread(&DataPreloader::PreloadFunc, this);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -25,12 +26,16 @@ namespace Neuro
     {
         m_Stop = true;
         m_PendingCond.notify_all();
-        m_PreloaderThread.join();
+        if (m_ThreadedMode)
+            m_PreloaderThread.join();
     }
 
     //////////////////////////////////////////////////////////////////////////
     void DataPreloader::Load()
     {
+        if (!m_ThreadedMode)
+            Preload();
+
         vector<Tensor>* data = nullptr;
         {
             NVTXProfile p("Waiting for available data", 0xFF93FF72);
@@ -62,41 +67,47 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void DataPreloader::Preload()
     {
+        vector<Tensor>* data = nullptr;
+
+        {
+            NVTXProfile p("Waiting for pending data", 0xFF93FF72);
+            unique_lock<mutex> pendingLocker(m_PendingMtx);
+            m_PendingCond.wait(pendingLocker, [this]() {return !m_Pending.empty() || m_Stop; });
+
+            if (m_Stop)
+                return;
+
+            data = m_Pending.front();
+            m_Pending.pop_front();
+        }
+
+        {
+            NVTXProfile p("Loading data", 0xFF93FF72);
+            // load data
+            size_t loadIdx = 0;
+            for (size_t i = 0; i < m_Loaders.size(); ++i)
+                loadIdx += (*m_Loaders[i])(*data, loadIdx);
+
+            NEURO_ASSERT(loadIdx == data->size(), "Number or loaded items (" << loadIdx << ") doesn't match number of destinations (" << data->size() << ").");
+        }
+
+        {
+            NVTXProfile p("Waiting for available data lock", 0xFF93FF72);
+            unique_lock<mutex> availableLocker(m_AvailableMtx);
+            m_Available.push_back(data);
+        }
+        m_AvailableCond.notify_all();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void DataPreloader::PreloadFunc()
+    {
         while (true)
         {
             if (m_Stop)
                 return;
 
-            vector<Tensor>* data = nullptr;
-
-            {
-                NVTXProfile p("Waiting for pending data", 0xFF93FF72);
-                unique_lock<mutex> pendingLocker(m_PendingMtx);
-                m_PendingCond.wait(pendingLocker, [this]() {return !m_Pending.empty() || m_Stop; });
-
-                if (m_Stop)
-                    return;
-
-                data = m_Pending.front();
-                m_Pending.pop_front();
-            }
-
-            {
-                NVTXProfile p("Loading data", 0xFF93FF72);
-                // load data
-                size_t loadIdx = 0;
-                for (size_t i = 0; i < m_Loaders.size(); ++i)
-                    loadIdx += (*m_Loaders[i])(*data, loadIdx);
-
-                NEURO_ASSERT(loadIdx == data->size(), "Number or loaded items (" << loadIdx << ") doesn't match number of destinations (" << data->size() << ").");
-            }
-
-            {
-                NVTXProfile p("Waiting for available data lock", 0xFF93FF72);
-                unique_lock<mutex> availableLocker(m_AvailableMtx);
-                m_Available.push_back(data);
-            }
-            m_AvailableCond.notify_all();
+            Preload();
         }
     }
 

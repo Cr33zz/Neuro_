@@ -22,7 +22,7 @@ namespace Neuro
     class DataPreloader
     {
     public:
-        DataPreloader(const vector<Tensor*>& destination, const vector<ILoader*>& loaders, size_t capacity);
+        DataPreloader(const vector<Tensor*>& destination, const vector<ILoader*>& loaders, size_t capacity, bool threadedMode = true);
         ~DataPreloader();
 
         // This function will copy first available tensors to the destination tensors
@@ -30,7 +30,9 @@ namespace Neuro
 
     private:
         void Preload();
+        void PreloadFunc();
 
+        bool m_ThreadedMode = false;
         bool m_Stop = false;
         thread m_PreloaderThread;
 
