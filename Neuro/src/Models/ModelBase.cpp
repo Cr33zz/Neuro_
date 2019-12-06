@@ -1035,8 +1035,8 @@ namespace Neuro
 
         if (loss)
             *loss = (*results[m_Metrics[Loss].second])(0) / (float)outputs.size();
-        if (acc && (m_TrackedMetrics & Accuracy))
-            *acc = (*results[m_Metrics[Accuracy].second])(0);
+        if (acc)
+            *acc = (m_TrackedMetrics & Accuracy) ? (*results[m_Metrics[Accuracy].second])(0) : 0;
     }
 
     //////////////////////////////////////////////////////////////////////////
