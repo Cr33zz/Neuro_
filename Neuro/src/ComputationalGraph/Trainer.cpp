@@ -27,8 +27,11 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     tensor_ptr_vec_t Trainer::Train(const const_tensor_ptr_vec_t& inputs, const const_tensor_ptr_vec_t& outputs)
     {
+        NEURO_ASSERT(inputs.size() == m_InputPlaceholders.size(), "Mismatched number of inputs, expected " << m_InputPlaceholders.size() << " received " << inputs.size() << ".");
         for (size_t i = 0; i < m_InputPlaceholders.size(); ++i)
             m_Feeds[m_InputPlaceholders[i]] = inputs[i];
+
+        NEURO_ASSERT(outputs.size() == m_TargetPlaceholders.size(), "Mismatched number of outputs, expected " << m_TargetPlaceholders.size() << " received " << outputs.size() << ".");
         for (size_t i = 0; i < m_TargetPlaceholders.size(); ++i)
             m_Feeds[m_TargetPlaceholders[i]] = outputs[i];
 

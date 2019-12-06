@@ -24,6 +24,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     tensor_ptr_vec_t Predicter::Predict(const const_tensor_ptr_vec_t& inputs)
     {
+        NEURO_ASSERT(inputs.size() == m_InputPlaceholders.size(), "Mismatched number of inputs, expected " << m_InputPlaceholders.size() << " received " << inputs.size() << ".");
         for (size_t i = 0; i < m_InputPlaceholders.size(); ++i)
             m_Feeds[m_InputPlaceholders[i]] = inputs[i];
 
