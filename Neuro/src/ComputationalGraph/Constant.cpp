@@ -4,9 +4,11 @@
 
 namespace Neuro
 {
+    int Constant::s_NameId = 0;
+
     //////////////////////////////////////////////////////////////////////////
     Constant::Constant(const Tensor& value, const string& name)
-        : TensorLike(name)
+        : TensorLike(name == "" ? ("const_" + to_string(++s_NameId)) : name)
     {
         m_Output.Resize(value.GetShape());
         m_Output.SetStorageType(ST_KeepDevMem);

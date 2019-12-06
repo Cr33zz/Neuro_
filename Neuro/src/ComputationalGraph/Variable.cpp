@@ -4,9 +4,11 @@
 
 namespace Neuro
 {
+    int Variable::s_NameId = 0;
+
     //////////////////////////////////////////////////////////////////////////
     Variable::Variable(const Tensor& initValue, const string& name)
-        : TensorLike(name)
+        : TensorLike(name == "" ? ("const_" + to_string(++s_NameId)) : name)
     {
         m_Output.Resize(initValue.GetShape());
         m_Output.SetStorageType(ST_KeepDevMem);

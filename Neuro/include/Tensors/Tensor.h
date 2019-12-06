@@ -300,10 +300,10 @@ namespace Neuro
         //void ScheduleOffload() const;
         void Offload(bool force) const;
         void Prefetch() const;
-        void ResetDeviceRef(size_t n = 0);
+        void ResetDeviceRef(size_t n = 0) const;
         void IncDeviceRef(size_t n = 1);
         void DecDeviceRef(size_t n = 1);
-        void ResetRef(size_t n = 0);
+        void ResetRef(size_t n = 0) const;
         void IncRef(size_t n = 1);
         void DecRef(size_t n = 1);
         void ReleaseData();

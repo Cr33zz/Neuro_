@@ -63,11 +63,11 @@ public:
         auto trainFiles = LoadFilesList("f:/!TrainingData/flowers", false, true);
 
         Tensor condImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "cond_image");
-        Tensor expectedImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "output_image");
+        Tensor realImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "output_image");
 
         // setup data preloader
         Pix2PixImageLoader loader(trainFiles, BATCH_SIZE, 1);
-        DataPreloader preloader({ &condImages, &expectedImages }, { &loader }, 5);
+        DataPreloader preloader({ &condImages, &realImages }, { &loader }, 5);
 
         // setup models
         auto gModel = CreateGenerator(IMG_SHAPE);
@@ -106,19 +106,19 @@ public:
             float dLoss;
             if (discriminatorTrainingSource & 1)
             {
-                dLoss = get<0>(dModel->TrainOnBatch({ &condImages, &expectedImages }, { &realLabels }));
+                dLoss = get<0>(dModel->TrainOnBatch({ &realImages }, { &realLabels }));
             }
             else
             {
                 // generate fake images from condition
                 Tensor fakeImages = *gModel->Predict(condImages)[0];
-                dLoss = get<0>(dModel->TrainOnBatch({ &condImages, &fakeImages }, { &fakeLabels }));
+                dLoss = get<0>(dModel->TrainOnBatch({ &fakeImages }, { &fakeLabels }));
 
                 if (discriminatorTrainingSource % 10 == 0)
                 {
                     ganModel->SaveWeights("pix2pix.h5");
                     Tensor tmp(Shape(IMG_SHAPE.Width() * 3, IMG_SHAPE.Height(), IMG_SHAPE.Depth(), BATCH_SIZE));
-                    Tensor::Concat(WidthAxis, { &condImages, &fakeImages, &expectedImages }, tmp);
+                    Tensor::Concat(WidthAxis, { &condImages, &fakeImages, &realImages }, tmp);
                     tmp.Add(1.f).Mul(127.5f).SaveAsImage("pix2pix_s" + PadLeft(to_string(i), 4, '0') + ".jpg", false);
                 }
             }
@@ -126,7 +126,7 @@ public:
             
             // perform step of training generator to generate more real images
             dModel->SetTrainable(false);
-            float ganLoss = get<0>(ganModel->TrainOnBatch({ &condImages }, { &realLabels, &expectedImages }));
+            float ganLoss = get<0>(ganModel->TrainOnBatch({ &condImages }, { &realLabels, &realImages }));
 
             stringstream extString;
             extString << setprecision(4) << fixed << " - disc_l: " << dLoss << " - gan_l: " << ganLoss;
@@ -147,15 +147,15 @@ public:
         //Debug::LogAllOutputs();
 
         const Shape IMG_SHAPE(256, 256, 3);
-        const uint32_t PATCH_SIZE = 64;
-        const uint32_t BATCH_SIZE = 1;
-        const uint32_t EPOCHS = 50;
+        const uint32_t PATCH_SIZE = 256;
+        const uint32_t BATCH_SIZE = 4;
+        const uint32_t EPOCHS = 150;
 
         //auto trainFiles = LoadFilesList("f:/!TrainingData/flowers", false, true);
         auto trainFiles = LoadFilesList("e:/Downloads/flowers", false, true);
 
         Tensor condImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "cond_image");
-        Tensor expectedImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "output_image");
+        Tensor realImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "output_image");
 
         // setup models
         auto gModel = CreateGenerator(IMG_SHAPE);
@@ -177,7 +177,7 @@ public:
 
         // setup data preloader
         Pix2PixImageLoader loader(trainFiles, BATCH_SIZE, 1, 1337);
-        DataPreloader preloader({ &condImages, &expectedImages }, { &loader }, 5);
+        DataPreloader preloader({ &condImages, &realImages }, { &loader }, 5, false);
 
         for (uint32_t e = 1; e <= EPOCHS; ++e)
         {
@@ -185,9 +185,10 @@ public:
 
             // generate fake images from condition
             //Tensor fakeImages = *gModel->Predict(condImages)[0];
-            Tensor fakeImages(Shape::From(dModel->InputShapesAt(-1)[0], BATCH_SIZE)); fakeImages.FillWithFunc([]() { return Uniform::NextSingle(-1, 1); });
+            Tensor fakeImages(Shape::From(IMG_SHAPE, BATCH_SIZE));
+            fakeImages.FillWithFunc([]() { return Uniform::NextSingle(-1, 1); });
 
-            auto realTrainData = dModel->TrainOnBatch({ &expectedImages }, { &realLabels });
+            auto realTrainData = dModel->TrainOnBatch({ &realImages }, { &realLabels });
             //cout << get<0>(realTrainData) << endl;
             auto fakeTrainData = dModel->TrainOnBatch({ &fakeImages }, { &fakeLabels });
             //cout << get<0>(fakeTrainData) << endl;

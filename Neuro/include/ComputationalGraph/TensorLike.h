@@ -18,8 +18,10 @@ namespace Neuro
 
         const Shape& GetShape() const { return m_Output.GetShape(); }
 
-        Tensor& Output() { return m_Output; }
-        Tensor* OutputPtr() { return &m_Output; }
+        const Tensor& Output() const { return m_Output; }
+        Tensor& Output();
+        const Tensor* OutputPtr() const { return &m_Output; }
+        Tensor* OutputPtr();
 
         Tensor& OutputGrad() { return m_OutputGrad; }
         Tensor* OutputGradPtr() { return &m_OutputGrad; }

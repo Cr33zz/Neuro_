@@ -30,5 +30,7 @@ namespace Neuro
         bool m_Trainable = true;
         bool m_Initialized = false;
         InitializerBase* m_Initializer = nullptr;
+    
+        static int s_NameId;
     };
 }

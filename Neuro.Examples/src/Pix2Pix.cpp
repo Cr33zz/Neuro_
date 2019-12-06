@@ -159,6 +159,6 @@ ModelBase* Pix2Pix::CreatePatchDiscriminator(const Shape& imgShape, uint32_t pat
     auto xOut = (new Dense(2, new Softmax()))->Call(xMerged);
 
     auto model = new Flow(imgInput->Outputs(), xOut, "disc");
-    model->Optimize(new Adam(0.0001f), new BinaryCrossEntropy(), {}, Loss | Accuracy);
+    model->Optimize(new Adam(0.0001f), new BinaryCrossEntropy(), {}, All);
     return model;
 }

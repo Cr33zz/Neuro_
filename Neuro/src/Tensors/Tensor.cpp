@@ -2008,17 +2008,20 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::CopyTo(size_t offset, Tensor& target, size_t targetOffset, size_t elementsNum) const
     {
+        NEURO_ASSERT(offset + elementsNum <= Length(), "Trying to copy from outside of source.");
+        NEURO_ASSERT(targetOffset + elementsNum <= target.Length(), "Trying to copy to outside of destination.");
+
         if (target.IsOnDevice()) // target is more important
         {
             CopyToDevice();
-            m_Storage.CopyWithinDevice(target.GetDevicePtr() + targetOffset, GetDevicePtr() + offset, elementsNum * sizeof(float));
+            m_Storage.CopyWithinDevice(target.GetDevicePtr() + targetOffset * sizeof(float), GetDevicePtr() + offset * sizeof(float), elementsNum * sizeof(float));
             return;
         }
 
         CopyToHost();
         target.CopyToHost(true);
 
-        memcpy(target.m_Storage.Data() + targetOffset, m_Storage.Data() + offset, elementsNum * sizeof(float));
+        m_Storage.CopyWithinHost(target.Values() + targetOffset * sizeof(float), Values() + offset * sizeof(float), elementsNum * sizeof(float));
     }
 
 	//////////////////////////////////////////////////////////////////////////
@@ -2431,7 +2434,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::ResetDeviceRef(size_t n)
+    void Tensor::ResetDeviceRef(size_t n) const
     {
         m_Storage.ResetDeviceRef(n);
     }
@@ -2449,7 +2452,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::ResetRef(size_t n)
+    void Tensor::ResetRef(size_t n) const
     {
         m_Storage.ResetRef(n);
     }

@@ -15,5 +15,8 @@ namespace Neuro
         explicit Constant(float value, const string& name = "");
 
         virtual bool IsConst() const { return true; }
+
+    private:
+        static int s_NameId;
     };
 }

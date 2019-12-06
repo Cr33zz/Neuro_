@@ -4,6 +4,21 @@
 
 namespace Neuro
 {
+
+    //////////////////////////////////////////////////////////////////////////
+    Neuro::Tensor& TensorLike::Output()
+    {
+        //NEURO_ASSERT(!IsConst(), "");
+        return m_Output;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Neuro::Tensor* TensorLike::OutputPtr()
+    {
+        //NEURO_ASSERT(!IsConst(), "");
+        return &m_Output;
+    }
+
     //////////////////////////////////////////////////////////////////////////
     void TensorLike::Preload()
     {

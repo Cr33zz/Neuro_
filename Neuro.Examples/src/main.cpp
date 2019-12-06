@@ -102,8 +102,9 @@ int main()
     //ConvAutoencoderNetwork().Run();
     //GAN().Run();
     //DeepConvGAN().Run();
-    //CifarGAN().RunDiscriminatorTrainTest();
+    //DeepConvGAN().RunDiscriminatorTrainTest();
     //CifarGAN().Run();
+    //CifarGAN().RunDiscriminatorTrainTest();
     //NeuralStyleTransfer().Run();
     //FastNeuralStyleTransfer().Run();
     //AdaptiveStyleTransfer().Run();

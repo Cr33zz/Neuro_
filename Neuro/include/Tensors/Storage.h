@@ -59,11 +59,11 @@ namespace Neuro
         void OverrideHost();
         void OverrideDevice();
 
-        void ResetDeviceRef(size_t n);
+        void ResetDeviceRef(size_t n) const;
         void IncDeviceRef(size_t n) const;
         void DecDeviceRef(size_t n);
 
-        void ResetRef(size_t n);
+        void ResetRef(size_t n) const;
         void IncRef(size_t n) const;
         void DecRef(size_t n);
 

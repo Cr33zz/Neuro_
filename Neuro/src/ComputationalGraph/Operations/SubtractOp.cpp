@@ -30,6 +30,11 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void SubtractOp::ComputeInternal()
     {
+        if (m_Name == "disc/loss/cross_entropy/1-yTrue")
+        {
+            m_Inputs[0]->DebugDumpValues("xxx.log");
+            cout << "xxx";
+        }
         m_Output.ResizeBatch(max(m_Inputs[0]->Batch(), m_Inputs[1]->Batch()));
         return m_Inputs[0]->Sub(*m_Inputs[1], m_Output);
     }
@@ -37,6 +42,11 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void SubtractOp::ComputeGradientInternal(const Tensor& grad)
     {
+        if (m_Name == "disc/loss/cross_entropy/1-yTrue")
+        {
+            cout << "xxx";
+        }
+
         auto progressGrad = [](Tensor& inputGrad, const Tensor& grad)
         {
             auto& gShape = grad.GetShape();
