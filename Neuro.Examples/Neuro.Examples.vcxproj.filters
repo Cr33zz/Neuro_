@@ -30,6 +30,9 @@
     <ClCompile Include="src\AdaptiveStyleTransfer.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Pix2Pix.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\IrisNetwork.h">

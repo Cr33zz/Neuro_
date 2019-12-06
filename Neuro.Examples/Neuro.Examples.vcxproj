@@ -212,6 +212,7 @@
     <ClCompile Include="src\GAN.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\NeuralStyleTransfer.cpp" />
+    <ClCompile Include="src\Pix2Pix.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\AdaptiveStyleTransfer.h" />
