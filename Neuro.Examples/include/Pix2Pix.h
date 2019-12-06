@@ -131,21 +131,23 @@ public:
         ganModel->SaveWeights("pix2pix.h5");
     }
 
+    //////////////////////////////////////////////////////////////////////////
     void RunDiscriminatorTrainTest()
     {
         Tensor::SetDefaultOpMode(GPU);
 
-        //GlobalRngSeed(1337);
+        GlobalRngSeed(1337);
 
-        Debug::LogAllGrads();
-        Debug::LogAllOutputs();
+        //Debug::LogAllGrads();
+        //Debug::LogAllOutputs();
 
         const Shape IMG_SHAPE(256, 256, 3);
         const uint32_t PATCH_SIZE = 64;
-        const uint32_t BATCH_SIZE = 1;
+        const uint32_t BATCH_SIZE = 4;
         const uint32_t EPOCHS = 30;
 
-        auto trainFiles = LoadFilesList("e:/Downloads/flowers", false, true);
+        auto trainFiles = LoadFilesList("f:/!TrainingData/flowers", false, true);
+        //auto trainFiles = LoadFilesList("e:/Downloads/flowers", false, true);
 
         Tensor condImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "cond_image");
         Tensor expectedImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "output_image");
@@ -177,11 +179,11 @@ public:
             preloader.Load();
 
             // generate fake images from condition
-            Tensor fakeImages = *gModel->Predict(condImages)[0];
-            /*Tensor fakeImages(Shape::From(dModel->InputShapesAt(-1)[0], BATCH_SIZE)); fakeImages.FillWithFunc([]() { return Uniform::NextSingle(-1, 1); });
-            Tensor realImages = images.GetRandomBatches(BATCH_SIZE);*/
+            //Tensor fakeImages = *gModel->Predict(condImages)[0];
+            Tensor fakeImages(Shape::From(dModel->InputShapesAt(-1)[0], BATCH_SIZE)); fakeImages.FillWithFunc([]() { return Uniform::NextSingle(-1, 1); });
 
             auto realTrainData = dModel->TrainOnBatch({ &condImages, &expectedImages }, { &realLabels });
+            //auto realTrainData = make_tuple(0.f, 0.f);
             auto fakeTrainData = dModel->TrainOnBatch({ &condImages, &fakeImages }, { &fakeLabels });
 
             cout << ">" << e << setprecision(4) << fixed << " loss=" << (get<0>(realTrainData) + get<0>(fakeTrainData)) * 0.5f << " real=" << round(get<1>(realTrainData) * 100) << "% fake=" << round(get<1>(fakeTrainData) * 100) << "%" << endl;
@@ -190,6 +192,7 @@ public:
         cin.get();
     }
 
+    //////////////////////////////////////////////////////////////////////////
     ModelBase* CreateGenerator(const Shape& imgShape)
     {
         auto encoderBlock = [](TensorLike* input, uint32_t filtersNum, bool batchNorm = true)
@@ -247,6 +250,7 @@ public:
         return model;
     }
     
+    //////////////////////////////////////////////////////////////////////////
     ModelBase* CreatePatchDiscriminator(const Shape& imgShape, uint32_t patchSize, bool useMiniBatchDiscrimination = true)
     {
         NEURO_ASSERT(imgShape.Width() == imgShape.Height(), "Input image must be square.");
@@ -347,7 +351,7 @@ public:
         auto xOut = (new Dense(2, new Softmax()))->Call(xMerged);
 
         auto model = new Flow(imgInput->Outputs(), xOut, "disc");
-        model->Optimize(new Adam(0.0001f), new BinaryCrossEntropy());
+        model->Optimize(new Adam(0.0001f), new BinaryCrossEntropy(), {}, Loss|Accuracy);
         return model;
     }
 };
