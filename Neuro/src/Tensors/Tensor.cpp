@@ -493,6 +493,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::MulElem(const Tensor& t, Tensor& result) const
 	{
+        NEURO_ASSERT(Shape(max(Width(), t.Width()), max(Height(), t.Height()), max(Depth(), t.Depth()), max(Batch(), t.Batch())) == result.GetShape(), "Output shape doesn't match input shape.");
 		Op()->Mul(1.f, *this, 1.f, t, result);
 	}
 
@@ -507,6 +508,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Mul(float v, Tensor& result) const
 	{
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
         Op()->Mul(*this, v, result);
 	}
 
@@ -527,12 +529,14 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
 	void Tensor::Div(const Tensor& t, Tensor& result) const
 	{
+        NEURO_ASSERT(Shape(max(Width(), t.Width()), max(Height(), t.Height()), max(Depth(), t.Depth()), max(Batch(), t.Batch())) == result.GetShape(), "Output shape doesn't match input shape.");
         Op()->Div(1.f, *this, 1.f, t, result);
 	}
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Div(float alpha, float beta, const Tensor& t, Tensor& result) const
     {
+        NEURO_ASSERT(Shape(max(Width(), t.Width()), max(Height(), t.Height()), max(Depth(), t.Depth()), max(Batch(), t.Batch())) == result.GetShape(), "Output shape doesn't match input shape.");
         Op()->Div(alpha, *this, beta, t, result);
     }
 
@@ -561,6 +565,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Add(float alpha, float beta, const Tensor& t, Tensor& result) const
 	{
+        NEURO_ASSERT(Shape(max(Width(), t.Width()), max(Height(), t.Height()), max(Depth(), t.Depth()), max(Batch(), t.Batch())) == result.GetShape(), "Output shape doesn't match input shape.");
 		Op()->Add(alpha, *this, beta, t, result);
 	}
 
@@ -589,6 +594,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Add(float v, Tensor& result) const
 	{
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
         Op()->Add(*this, v, result);
 	}
 
@@ -603,6 +609,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
 	void Tensor::Sub(const Tensor& t, Tensor& result) const
 	{
+        NEURO_ASSERT(Shape(max(Width(), t.Width()), max(Height(), t.Height()), max(Depth(), t.Depth()), max(Batch(), t.Batch())) == result.GetShape(), "Output shape doesn't match input shape.");
 		Op()->Sub(*this, t, result);
 	}
 
@@ -617,6 +624,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Sub(float v, Tensor& result) const
 	{
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
         Add(-v, result);
 	}
 
@@ -631,6 +639,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Negated(Tensor& result) const
 	{
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
         Op()->Negate(*this, result);
 	}
 
@@ -645,6 +654,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Inversed(float alpha, Tensor& result) const
     {
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
         Op()->Inverse(alpha, *this, result);
     }
 
@@ -659,6 +669,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Clip(float min, float max, Tensor& result) const
 	{
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
         Op()->Clip(*this, min, max, result);
 	}
 
@@ -673,18 +684,23 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::ClipGradient(const Tensor& input, float min, float max, const Tensor& outputGradient, Tensor& inputGradient) const
     {
+        NEURO_ASSERT(input.GetShape() == inputGradient.GetShape(), "Input gradient shape doesn't match input shape.");
         Op()->ClipGradient(input, min, max, outputGradient, inputGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::ExtractSubTensor2D(uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const
     {
+        NEURO_ASSERT(widthOffset + output.Width() <= Width(), "");
+        NEURO_ASSERT(heightOffset + output.Height() <= Height(), "");
         Op()->ExtractSubTensor2D(*this, widthOffset, heightOffset, output);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::FuseSubTensor2D(uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const
     {
+        NEURO_ASSERT(widthOffset + Width() <= output.Width(), "");
+        NEURO_ASSERT(heightOffset + Height() <= output.Height(), "");
         Op()->FuseSubTensor2D(*this, widthOffset, heightOffset, output);
     }
 
@@ -714,12 +730,14 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Pow(float power, Tensor& result) const
     {
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
         Op()->Pow(*this, power, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::PowGradient(const Tensor& input, float power, const Tensor& outputGradient, Tensor& inputGradient) const
     {
+        NEURO_ASSERT(input.GetShape() == inputGradient.GetShape(), "Input gradient shape doesn't match input shape."); 
         Op()->PowGradient(input, power, outputGradient, inputGradient);
     }
 
@@ -734,12 +752,14 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Abs(Tensor& result) const
     {
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
         Op()->Abs(*this, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::AbsGradient(const Tensor& input, const Tensor& outputGradient, Tensor& inputGradient) const
     {
+        NEURO_ASSERT(input.GetShape() == inputGradient.GetShape(), "Input gradient shape doesn't match input shape.");
         Op()->AbsGradient(input, outputGradient, inputGradient);
     }
 
@@ -754,6 +774,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Sqrt(Tensor& output) const
     {
+        NEURO_ASSERT(m_Shape == output.GetShape(), "Output shape doesn't match input shape.");
         Op()->Sqrt(*this, output);
     }
 
@@ -768,12 +789,14 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Log(Tensor& output) const
     {
+        NEURO_ASSERT(m_Shape == output.GetShape(), "Output shape doesn't match input shape.");
         Op()->Log(*this, output);
     }
 
     //////////////////////////////////////////////////////////////////////////
 	void Tensor::Map(const function<float(float)>& func, Tensor& result) const
 	{
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
 		Op()->Map(func, *this, result);
 	}
 
@@ -788,6 +811,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Map(const function<float(float, float)>& func, const Tensor& other, Tensor& result) const
 	{
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
 		Op()->Map(func, *this, other, result);
 	}
 
@@ -840,6 +864,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::AbsSum(EAxis axis, Tensor& output) const
     {
+        NEURO_ASSERT(m_Shape == output.GetShape(), "Output shape doesn't match input shape.");
         Op()->AbsSum(*this, axis, output);
     }
 
@@ -1236,7 +1261,7 @@ namespace Neuro
         CopyToHost();
         result.OverrideHost();
 
-        assert(result.GetShape() == GetShape());
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
             
         /*if (axis == Sample)
         {
@@ -1443,6 +1468,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::ConstantPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, Tensor& output) const
     {
+        NEURO_ASSERT(Shape(m_Shape.Width() + left + right, m_Shape.Height() + top + bottom, m_Shape.Depth(), m_Shape.Batch()) == output.GetShape(), "Output shape doesn't match padded input shape.");
         Op()->ConstantPad2D(*this, left, right, top, bottom, value, output);
     }
 
@@ -1457,6 +1483,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::ReflectPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& output) const
     {
+        NEURO_ASSERT(Shape(m_Shape.Width() + left + right, m_Shape.Height() + top + bottom, m_Shape.Depth(), m_Shape.Batch()) == output.GetShape(), "Output shape doesn't match padded input shape.");
         Op()->ReflectPad2D(*this, left, right, top, bottom, output);
     }
 
@@ -1469,9 +1496,10 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::Pad2DGradient(const Tensor& gradient, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& inputsGradient) const
+    void Tensor::Pad2DGradient(const Tensor& gradient, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& inputGradient) const
     {
-        Op()->Pad2DGradient(gradient, left, right, top, bottom, inputsGradient);
+        NEURO_ASSERT(Shape(gradient.Width() - left - right, gradient.Height() - top - bottom, gradient.Depth(), gradient.Batch()) == inputGradient.GetShape(), "Input gradient shape doesn't match input shape.");
+        Op()->Pad2DGradient(gradient, left, right, top, bottom, inputGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1548,12 +1576,14 @@ namespace Neuro
     void Tensor::Transpose(const vector<EAxis>& permutation, Tensor& output) const
     {
         NEURO_ASSERT(permutation.size() == 4, "Invalid number of axes in permutation, expected 4, found " << permutation.size());
+        NEURO_ASSERT(Shape(m_Shape.Dimensions[permutation[0]], m_Shape.Dimensions[permutation[1]], m_Shape.Dimensions[permutation[2]], m_Shape.Dimensions[permutation[3]]) == output.GetShape(), "Output shape doesn't match input shape.");
         Op()->Transpose(*this, permutation, output);
     }
 
     //////////////////////////////////////////////////////////////////////////
 	void Tensor::Transpose(Tensor& output) const
 	{
+        NEURO_ASSERT(Shape(m_Shape.Height(), m_Shape.Width(), m_Shape.Depth(), m_Shape.Batch()) == output.GetShape(), "Output shape doesn't match input shape.");
 		Op()->Transpose(*this, output);
 	}
 
@@ -1606,12 +1636,6 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    float Tensor::Norm() const
-    {
-        return ::sqrt(Pow(2).Sum(GlobalAxis)(0));
-    }
-
-    //////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::Resized(uint32_t width, uint32_t height, uint32_t depth) const
 	{
 		uint32_t newBatchLength = width * height * depth;
@@ -1637,7 +1661,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Rotated180(Tensor& result) const
 	{
-		assert(SameDimensionsExceptBatches(result));
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
 
 		for (uint32_t n = 0; n < Batch(); ++n)
 		for (uint32_t d = 0; d < Depth(); ++d)
@@ -1657,7 +1681,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& output) const
 	{
-        assert((dataFormat == NCHW ? Depth() : Len(0)) == kernels.Depth());
+        NEURO_ASSERT(GetConvOutputShape(m_Shape, kernels.Batch(), kernels.Width(), kernels.Height(), stride, padding, padding, dataFormat) == output.GetShape(), "Output shape doesn't match input shape.");
+        NEURO_ASSERT((dataFormat == NCHW ? Depth() : Len(0)) == kernels.Depth(), "");
 		Op()->Conv2D(*this, kernels, stride, padding, padding, dataFormat, output);
 	}
 
@@ -1672,6 +1697,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Conv2DBiasActivation(const Tensor& kernels, uint32_t stride, uint32_t padding, const Tensor& bias, EActivation activation, float activationAlpha, Tensor& output) const
     {
+        NEURO_ASSERT(GetConvOutputShape(m_Shape, kernels.Batch(), kernels.Width(), kernels.Height(), stride, padding, padding, NCHW) == output.GetShape(), "Output shape doesn't match input shape.");
         Op()->Conv2DBiasActivation(*this, kernels, stride, padding, padding, bias, activation, activationAlpha, output);
     }
 
@@ -1684,9 +1710,9 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::Conv2DBiasGradient(const Tensor& gradient, Tensor& inputsGradient) const
+    void Tensor::Conv2DBiasGradient(const Tensor& gradient, Tensor& biasGradient) const
     {
-        Op()->Conv2DBiasGradient(gradient, inputsGradient);
+        Op()->Conv2DBiasGradient(gradient, biasGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1731,7 +1757,8 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Pool2D(uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t padding, EDataFormat dataFormat, Tensor& output) const
 	{
-		assert(output.Batch() == Batch());
+        NEURO_ASSERT(GetPooling2DOutputShape(GetShape(), filterSize, filterSize, stride, padding, padding, dataFormat) == output.GetShape(), "Output shape doesn't match input shape.");
+		NEURO_ASSERT(output.Batch() == Batch(), "");
         Op()->Pool2D(*this, filterSize, stride, type, padding, padding, dataFormat, output);
 	}
 
@@ -1754,6 +1781,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::UpSample2D(uint32_t scaleFactor, Tensor& output) const
     {
+        NEURO_ASSERT(Shape(Width() * scaleFactor, Height() * scaleFactor, Depth(), Batch()) == output.GetShape(), "Output shape doesn't match input shape.");
         Op()->UpSample2D(*this, scaleFactor, output);
     }
 
@@ -1768,6 +1796,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::UpSample2DGradient(const Tensor& outputGradient, uint32_t scaleFactor, Tensor& inputGradient) const
     {
+        NEURO_ASSERT(Shape(inputGradient.Width() * scaleFactor, inputGradient.Height() * scaleFactor, inputGradient.Depth(), inputGradient.Batch()) == outputGradient.GetShape(), "Input gradient shape doesn't match input shape.");
         Op()->UpSample2DGradient(outputGradient, scaleFactor, inputGradient);
     }
 
@@ -1780,6 +1809,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::BatchNorm(const Tensor& gamma, const Tensor& beta, float epsilon, const Tensor* runningMean, const Tensor* runningVar, Tensor& result) const
     {
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
         NEURO_ASSERT((runningMean && runningVar) || (!runningMean && !runningVar), "Both running mean and var must be present or absent at the same time.");
         Op()->BatchNormalization(*this, m_Shape.Depth() > 1 ? Spatial : PerActivation, gamma, beta, epsilon, runningMean, runningVar, result);
     }
@@ -1787,6 +1817,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::BatchNormTrain(const Tensor& gamma, const Tensor& beta, float momentum, float epsilon, Tensor* runningMean, Tensor* runningVar, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const
     {
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape."); 
         NEURO_ASSERT((runningMean && runningVar) || (!runningMean && !runningVar), "Both running mean and var must be present or absent at the same time.");
         auto mode = GetBatchNormMode(m_Shape);
         //NEURO_ASSERT(mode != PerActivation || m_Shape.Batch() > 1, "Batch size must be greater than 1 when using 'PerActivation' batch normalization mode.");
@@ -1804,12 +1835,14 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::InstanceNorm(const Tensor& gamma, const Tensor& beta, float epsilon, Tensor& result) const
     {
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
         Op()->BatchNormalization(*this, Instance, gamma, beta, epsilon, nullptr, nullptr, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::InstanceNormTrain(const Tensor& gamma, const Tensor& beta, float epsilon, Tensor& saveMean, Tensor& saveInvVariance, Tensor& result) const
     {
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
         Op()->BatchNormalizationTrain(*this, Instance, gamma, beta, 1.f, epsilon, nullptr, nullptr, saveMean, saveInvVariance, result);
     }
 
@@ -1822,12 +1855,14 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Dropout(float prob, Tensor& saveMask, Tensor& output) const
     {
+        NEURO_ASSERT(m_Shape == output.GetShape(), "Output shape doesn't match input shape.");
         Op()->Dropout(*this, prob, saveMask, output);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::DropoutGradient(const Tensor& outputGradient, float prob, const Tensor& savedMask, Tensor& inputGradient) const
     {
+        NEURO_ASSERT(outputGradient.GetShape() == inputGradient.GetShape(), "Input gradient shape doesn't match input shape.");
         Op()->DropoutGradient(outputGradient, prob, savedMask, inputGradient);
     }
 
@@ -2061,8 +2096,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::GetBatches(vector<uint32_t> batchIds, Tensor& result) const
     {
-        assert(SameDimensionsExceptBatches(result));
-        assert(result.Batch() == (uint32_t)batchIds.size());
+        NEURO_ASSERT(SameDimensionsExceptBatches(result), "");
+        NEURO_ASSERT(result.Batch() == (uint32_t)batchIds.size(), "");
 
         for (size_t i = 0; i < batchIds.size(); ++i)
             CopyBatchTo(batchIds[i], (uint32_t)i, result);
@@ -2071,7 +2106,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     Tensor Tensor::GetRandomBatches(uint32_t batchSize) const
     {
-        assert(batchSize <= Batch());
+        NEURO_ASSERT(batchSize <= Batch(), "");
 
         vector<uint32_t> indices(Batch());
         iota(indices.begin(), indices.end(), 0);
@@ -2296,73 +2331,85 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Sigmoid(Tensor& result) const
     {
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape."); 
         Op()->Sigmoid(*this, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::SigmoidGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const
     {
+        NEURO_ASSERT(output.GetShape() == inputGradient.GetShape(), "Input gradient shape doesn't match input shape.");
         Op()->SigmoidGradient(output, outputGradient, inputGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Tanh(Tensor& result) const
     {
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
         Op()->Tanh(*this, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::TanhGradient(const Tensor& output, const Tensor& outputGradient, Tensor& result) const
+    void Tensor::TanhGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const
     {
-        Op()->TanhGradient(output, outputGradient, result);
+        NEURO_ASSERT(output.GetShape() == inputGradient.GetShape(), "Input gradient shape doesn't match input shape.");
+        Op()->TanhGradient(output, outputGradient, inputGradient);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::ReLU(Tensor& result) const
     {
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
         Op()->ReLU(*this, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::ReLUGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const
     {
+        NEURO_ASSERT(output.GetShape() == inputGradient.GetShape(), "Input gradient shape doesn't match input shape.");
         Op()->ReLUGradient(output, outputGradient, inputGradient);
     }
 
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Elu(float alpha, Tensor& result) const
 	{
-		Op()->Elu(*this, alpha, result);
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
+        Op()->Elu(*this, alpha, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::EluGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const
 	{
-		Op()->EluGradient(output, outputGradient, alpha, inputGradient);
+        NEURO_ASSERT(output.GetShape() == inputGradient.GetShape(), "Input gradient shape doesn't match input shape.");
+        Op()->EluGradient(output, outputGradient, alpha, inputGradient);
 	}
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::LeakyReLU(float alpha, Tensor& result) const
     {
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
         Op()->LeakyReLU(*this, alpha, result);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::LeakyReLUGradient(const Tensor& output, const Tensor& outputGradient, float alpha, Tensor& inputGradient) const
     {
+        NEURO_ASSERT(output.GetShape() == inputGradient.GetShape(), "Input gradient shape doesn't match input shape.");
         Op()->LeakyReLUGradient(output, outputGradient, alpha, inputGradient);
     }
 
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::Softmax(Tensor& result) const
 	{
-		Op()->Softmax(*this, result);
+        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
+        Op()->Softmax(*this, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::SoftmaxGradient(const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient) const
 	{
-		Op()->SoftmaxGradient(output, outputGradient, inputGradient);
+        NEURO_ASSERT(output.GetShape() == inputGradient.GetShape(), "Input gradient shape doesn't match input shape.");
+        Op()->SoftmaxGradient(output, outputGradient, inputGradient);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -2488,6 +2535,18 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    const float* Tensor::DataPtrUnsafe() const
+    {
+        return m_Storage.DataUnsafe();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    const float* Tensor::DeviceDataPtrUnsafe() const
+    {
+        return m_Storage.DeviceDataUnsafe();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     const float* Tensor::GetDevicePtr() const
     {
         return m_Storage.DeviceData();
@@ -2522,6 +2581,7 @@ namespace Neuro
 
         SyncToHost();
         ofstream stream(Replace(outFile, "/", "-"));
+        stream << "h_ptr=0x" << hex << m_Storage.DataUnsafe() << endl << "d_ptr=0x" << hex << m_Storage.DeviceDataUnsafe() << endl;
         for (int i = 0; i < 4; ++i)
             stream << m_Shape.Dimensions[i] << "\n";
         stream << fixed << setprecision(6);

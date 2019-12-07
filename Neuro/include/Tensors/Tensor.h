@@ -185,8 +185,6 @@ namespace Neuro
         void Resize(uint32_t length);
         void ResizeBatch(uint32_t batch);
 
-        float Norm() const;
-
         // Create new tensor with different batch length and use current tensors values to fill the new tensor.
         // Number of batches will be the same as in source tensor.
         Tensor Resized(uint32_t width, uint32_t height = 1, uint32_t depth = 1) const;
@@ -208,13 +206,13 @@ namespace Neuro
         Tensor ConstantPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value) const;
         void ReflectPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& output) const;
         Tensor ReflectPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom) const;
-        void Pad2DGradient(const Tensor& gradient, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& inputsGradient) const;
+        void Pad2DGradient(const Tensor& gradient, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& inputGradient) const;
 
         void Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& output) const;
         Tensor Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat) const;
         void Conv2DBiasActivation(const Tensor& kernels, uint32_t stride, uint32_t padding, const Tensor& bias, EActivation activation, float activationAlpha, Tensor& output) const;
         Tensor Conv2DBiasActivation(const Tensor& kernels, uint32_t stride, uint32_t padding, const Tensor& bias, EActivation activation, float activationAlpha) const;
-        void Conv2DBiasGradient(const Tensor& gradient, Tensor& inputsGradient) const;
+        void Conv2DBiasGradient(const Tensor& gradient, Tensor& biasGradient) const;
         void Conv2DInputsGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& inputsGradient) const;
         void Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& kernelsGradient) const;
 
@@ -318,6 +316,9 @@ namespace Neuro
         bool IsOnHost() const { return m_Storage.Location() == Host; }
         bool IsOnDevice() const { return m_Storage.Location() == Device; }
         
+        const float* DataPtrUnsafe() const;
+        const float* DeviceDataPtrUnsafe() const;
+
         const float* GetDevicePtr() const;
         float* GetDevicePtr();
 
