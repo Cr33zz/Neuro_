@@ -9,6 +9,10 @@ namespace Neuro
         m_UndeterminedOutputShape = true;
         m_Permutation = Tensor::FillUpTranposeAxis(axes);
 
+        m_InvPermutation.resize(m_Permutation.size());
+        for (size_t i = 0; i < m_Permutation.size(); ++i)
+            m_InvPermutation[m_Permutation[i]] = (EAxis)i;
+
         UpdateOutputShape();
     }
 
@@ -31,6 +35,6 @@ namespace Neuro
     void TransposeOp::ComputeGradientInternal(const Tensor& grad)
     {
         if (m_InputNodes[0]->CareAboutGradient())
-            grad.Transpose(m_Permutation, m_InputsGrads[0]);
+            grad.Transpose(m_InvPermutation, m_InputsGrads[0]);
     }
 }
