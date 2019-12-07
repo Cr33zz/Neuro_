@@ -714,9 +714,6 @@ namespace Neuro
         if (!m_DataPtr)
             AllocateOnHost();
 
-        if (m_Name == "disc/loss/cross_entropy/const_3/output")
-            cout << "xxx";
-
         NEURO_ASSERT(m_DataLocation == Host, "Trying to access data that is currently located on device or unallocated.");
         return m_DataPtr;
     }
@@ -731,9 +728,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     float* Storage::DeviceData()
     {
-        if (m_Name == "disc/loss/cross_entropy/const_3/output")
-            cout << "xxx";
-
         NEURO_ASSERT(m_DeviceDataPtr, "Attempting to write to unallocated device memory.");
         NEURO_ASSERT(m_DataLocation == Device, "Attempting to write to data not located on device.");
         NEURO_ASSERT(!m_OffloadRequested || m_OffloadDone, "Attempting to write to data being offloaded from device.");
