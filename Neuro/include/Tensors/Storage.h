@@ -15,9 +15,9 @@ namespace Neuro
     {
         ST_Default = 0,
         ST_RefCounted = 1 << 1,
-        ST_DeviceRefCounted = 1 << 1,
-        ST_Offloadable = 1 << 2,
-        ST_KeepDevMem = 1 << 3,
+        ST_DeviceRefCounted = 1 << 2,
+        ST_Offloadable = 1 << 3,
+        ST_KeepDevMem = 1 << 4,
     };
 
     class Storage
@@ -71,6 +71,7 @@ namespace Neuro
         const float* DataUnsafe() const { return m_DataPtr; }
         const float* DataEnd() const { return m_DataPtr + m_Size; }
         const float* DeviceData() const;
+        const float* DeviceDataUnsafe() const { return m_DeviceDataPtr; }
         float* Data();
         float* DeviceData();
 
