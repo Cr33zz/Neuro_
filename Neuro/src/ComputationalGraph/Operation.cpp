@@ -86,7 +86,7 @@ namespace Neuro
             if (!m_InputNodes[i]->CareAboutGradient() && !ForceAllocInputGradNode(i))
                 continue;
 
-            m_InputsGrads[i].ResizeBatch(m_Inputs[i]->GetShape().Batch());
+            m_InputsGrads[i].Resize(m_Inputs[i]->GetShape());
             if (m_InputsGrads[i].TryDeviceAllocate())
                 m_InputsGrads[i].OverrideDevice();
         }
