@@ -521,7 +521,15 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Neuro::EMemStatus DeviceMemoryManager::ForceOffloadStreamSync()
+    EMemStatus DeviceMemoryManager::ForceStreamsSync()
+    {
+        ForceOffloadStreamSync();
+        ForcePreloadStreamSync();
+        return MEM_STATUS_SUCCESS;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    EMemStatus DeviceMemoryManager::ForceOffloadStreamSync()
     {
         NVTXProfile p(__FUNCTION__, 0xFFFF0000);
         CUDA_CHECK(cudaStreamSynchronize(m_OffloadStream));
@@ -529,7 +537,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Neuro::EMemStatus DeviceMemoryManager::ForcePreloadStreamSync()
+    EMemStatus DeviceMemoryManager::ForcePreloadStreamSync()
     {
         NVTXProfile p(__FUNCTION__, 0xFFFF0000);
         CUDA_CHECK(cudaStreamSynchronize(m_PreloadStream));
