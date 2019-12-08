@@ -1034,6 +1034,8 @@ namespace Neuro
             uint32_t elementsCopied = 0;
             for (uint32_t i = 0; i < inputs.size(); ++i)
             {
+                NEURO_ASSERT(inputs[i]->Width() == output.Width(), "");
+                NEURO_ASSERT(inputs[i]->Depth() == output.Depth(), "");
                 NEURO_ASSERT(inputs[i]->Batch() == 1, "");
                 inputs[i]->CopyTo(0, output, elementsCopied, inputs[i]->Length());
                 elementsCopied += inputs[i]->Length();
@@ -1048,6 +1050,8 @@ namespace Neuro
                 uint32_t elementsCopied = 0;
                 for (uint32_t i = 0; i < inputs.size(); ++i)
                 {
+                    NEURO_ASSERT(inputs[i]->Width() == output.Width(), "");
+                    NEURO_ASSERT(inputs[i]->Height() == output.Height(), "");
                     NEURO_ASSERT(inputs[i]->Batch() == output.Batch(), "");
                     inputs[i]->CopyTo(n * inputs[i]->BatchLength(), output, n * output.BatchLength() + elementsCopied, inputs[i]->BatchLength());
                     elementsCopied += inputs[i]->Stride(3);
@@ -1066,6 +1070,8 @@ namespace Neuro
                 uint32_t elementsCopied = 0;
                 for (uint32_t i = 0; i < inputs.size(); ++i)
                 {
+                    NEURO_ASSERT(inputs[i]->Height() == output.Height(), "");
+                    NEURO_ASSERT(inputs[i]->Depth() == output.Depth(), "");
                     NEURO_ASSERT(inputs[i]->Batch() == output.Batch(), "");
                     uint32_t inOffset = n * inputs[i]->Stride(3) + d * inputs[i]->Stride(2) + h * inputs[i]->Stride(1);
                     uint32_t outOffset = n * output.Stride(3) + d * output.Stride(2) + h * output.Stride(1);
@@ -1118,6 +1124,8 @@ namespace Neuro
 
             for (uint32_t i = 0; i < outputs.size(); ++i)
             {
+                NEURO_ASSERT(outputs[i]->Width() == Width(), "");
+                NEURO_ASSERT(outputs[i]->Depth() == Depth(), "");
                 NEURO_ASSERT(outputs[i]->Batch() == 1, "");
                 CopyTo(elementsCopied, *outputs[i], 0, singleOutputLen);
                 elementsCopied += singleOutputLen;
@@ -1132,6 +1140,8 @@ namespace Neuro
                 uint32_t elementsCopied = 0;
                 for (uint32_t i = 0; i < outputs.size(); ++i)
                 {
+                    NEURO_ASSERT(outputs[i]->Width() == Width(), "");
+                    NEURO_ASSERT(outputs[i]->Height() == Height(), "");
                     NEURO_ASSERT(outputs[i]->Batch() == Batch(), "");
                     CopyTo(n * BatchLength() + elementsCopied, *outputs[i], n * outputs[i]->BatchLength(), outputs[i]->BatchLength());
                     elementsCopied += outputs[i]->BatchLength();
@@ -1150,6 +1160,8 @@ namespace Neuro
                 uint32_t elementsCopied = 0;
                 for (uint32_t i = 0; i < outputs.size(); ++i)
                 {
+                    NEURO_ASSERT(outputs[i]->Height() == Height(), "");
+                    NEURO_ASSERT(outputs[i]->Depth() == Depth(), "");
                     NEURO_ASSERT(outputs[i]->Batch() == Batch(), "");
                     uint32_t outOffset = n * outputs[i]->Stride(3) + d * outputs[i]->Stride(2) + h * outputs[i]->Stride(1);
                     uint32_t offset = n * Stride(3) + d * Stride(2) + h * Stride(1);

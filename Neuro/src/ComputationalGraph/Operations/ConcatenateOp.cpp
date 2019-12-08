@@ -16,7 +16,15 @@ namespace Neuro
         {
             uint32_t sum = 0;
             for (auto x : inputs)
-                sum += x->GetShape().Len(dim);
+            {
+                for (int a = _0Axis; a <= _3Axis; ++a)
+                {
+                    if (a == dim)
+                        sum += x->GetShape().Len(dim);
+                    else
+                        NEURO_ASSERT(x->GetShape().Len(a) == inputs[0]->GetShape().Len(a), "All inputs must have the same dimensions except for the concatenated one.");
+                }
+            }
             return sum;
         };
 
