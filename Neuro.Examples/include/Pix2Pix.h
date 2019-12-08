@@ -123,6 +123,9 @@ public:
                 }
             }
             ++discriminatorTrainingSource;
+
+            // load next batch for GAN training step
+            preloader.Load();
             
             // perform step of training generator to generate more real images
             dModel->SetTrainable(false);
@@ -131,6 +134,13 @@ public:
             stringstream extString;
             extString << setprecision(4) << fixed << " - disc_l: " << dLoss << " - gan_l: " << ganLoss;
             progress.SetExtraString(extString.str());
+
+            /*if (i % 50 == 0)
+            {
+                DeviceMemoryManager::Default().ForceStreamsSync();
+                HostMemoryManager::Default().DumpMemoryState("h_mem_" + to_string(i) + ".log");
+                HostPinnedMemoryManager::Default().DumpMemoryState("hp_mem_" + to_string(i) + ".log");
+            }*/
         }
 
         ganModel->SaveWeights("pix2pix.h5");
