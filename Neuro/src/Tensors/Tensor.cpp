@@ -80,8 +80,8 @@ namespace Neuro
         if (this != &t)
         {
             m_Storage = move(t.m_Storage);
-            m_Name = t.m_Name;
-            m_Shape = t.m_Shape;
+            m_Name = move(t.m_Name);
+            m_Shape = move(t.m_Shape);
             m_Op = t.m_Op;
         }
         return *this;
@@ -2734,12 +2734,16 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     Tensor zeros(const Shape& shape)
     {
-        return Tensor(shape).FillWithValue(0);
+        Tensor tmp(shape);
+        tmp.FillWithValue(0);
+        return tmp;
     }
 
     //////////////////////////////////////////////////////////////////////////
     Tensor ones(const Shape& shape)
     {
-        return Tensor(shape).FillWithValue(1);
+        Tensor tmp(shape);
+        tmp.FillWithValue(1);
+        return tmp;
     }
 }

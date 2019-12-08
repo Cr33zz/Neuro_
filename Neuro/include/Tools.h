@@ -77,9 +77,9 @@ namespace Neuro
     Tensor GaussianFilter(uint32_t size, float sigma = 1.f);
     void SobelFilters(const Tensor& img, Tensor& g, Tensor& theta);
     Tensor NonMaxSuppression(const Tensor& img, const Tensor& theta);
-    tuple<Tensor, float, float> Threshold(const Tensor& img, float lowThresholdRatio = 0.05f, float highThresholdRatio = 0.09f);
+    Tensor Threshold(const Tensor& img, float lowThresholdRatio = 0.05f, float highThresholdRatio = 0.09f, float weak = 100.f, float strong = 255.f);
     void Hysteresis(Tensor& img, float weak, float strong = 255.f);
-    Tensor CannyEdgeDetection(Tensor& img);
+    Tensor CannyEdgeDetection(const Tensor& img);
 
     static const uint32_t NVTX_COLOR_RED = 0xFFFF0000;
     static const uint32_t NVTX_COLOR_GREEN = 0xFF00FF00;

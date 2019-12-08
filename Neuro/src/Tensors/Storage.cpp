@@ -114,6 +114,10 @@ namespace Neuro
             m_PreloadRequested = other.m_PreloadRequested;
             m_PreloadEvent = other.m_PreloadEvent;
             other.m_PreloadEvent = nullptr;
+            m_OffloadPromise = move(other.m_OffloadPromise);
+            m_OffloadFuture = move(other.m_OffloadFuture);
+            m_PreloadPromise = move(other.m_PreloadPromise);
+            m_PreloadFuture = move(other.m_PreloadFuture);
         }
         return *this;
     }

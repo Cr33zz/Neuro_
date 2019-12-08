@@ -17,7 +17,7 @@
 namespace fs = std::experimental::filesystem;
 
 #ifndef NDEBUG
-//#define CUDA_PROFILING_ENABLED
+#define CUDA_PROFILING_ENABLED
 #endif
 
 namespace Neuro
@@ -851,15 +851,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    tuple<Tensor, float, float> Threshold(const Tensor& img, float lowThresholdRatio, float highThresholdRatio)
+    Tensor Threshold(const Tensor& img, float lowThresholdRatio, float highThresholdRatio, float weak, float strong)
     {
         float highThreshold = img.Max(GlobalAxis)(0) * highThresholdRatio;
         float lowThreshold = highThreshold * lowThresholdRatio;
 
-        float weak = 100.f;
-        float strong = 255.f;
-
-        return make_tuple(img.Map([&](float x) { return x >= highThreshold ? strong : (x < lowThreshold ? 0.f : weak); }), weak, strong);
+        return img.Map([&](float x) { return x >= highThreshold ? strong : (x < lowThreshold ? 0.f : weak); });
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -885,16 +882,16 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor CannyEdgeDetection(Tensor& img)
+    Tensor CannyEdgeDetection(const Tensor& img)
     {
         Tensor output = img.ToGrayScale();
         auto blurred = output.Conv2D(GaussianFilter(5, 1.4f), 1, 2, NCHW);
         Tensor g, theta;
         SobelFilters(blurred, g, theta);
         auto nonMaxImg = NonMaxSuppression(g, theta);
-        auto thresholdImgData = Threshold(nonMaxImg, 0.09f, 0.17f);
-        Hysteresis(get<0>(thresholdImgData), 100);
-        return get<0>(thresholdImgData);
+        auto thresholdImg = Threshold(nonMaxImg, 0.09f, 0.17f);
+        Hysteresis(thresholdImg, 100);
+        return thresholdImg;
     }
 
     //////////////////////////////////////////////////////////////////////////
