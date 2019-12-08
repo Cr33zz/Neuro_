@@ -3,58 +3,70 @@
 //////////////////////////////////////////////////////////////////////////
 ModelBase* Pix2Pix::CreateGenerator(const Shape& imgShape)
 {
-    auto encoderBlock = [](TensorLike* input, uint32_t filtersNum, bool batchNorm = true)
+    auto encoderBlock = [](TensorLike* x, uint32_t nbFilters, const string& name, bool batchNorm = true)
     {
-        //auto g = (new ZeroPadding2D(1, 1, 1, 1))->Call(input);
-        auto g = (new Conv2D(filtersNum, 3, 2, Tensor::GetPadding(Same, 3)))->Call(input);
+        x = (new Activation(new LeakyReLU(0.2f)))->Call(x)[0];
+        x = (new Conv2D(nbFilters, 3, 2, Tensor::GetPadding(Same, 3), nullptr, NCHW, name))->Call(x)[0];
         if (batchNorm)
-            g = (new BatchNormalization())->Call(g);
-        g = (new Activation(new LeakyReLU(0.2f)))->Call(g);
-        return g;
+            x = (new BatchNormalization())->Call(x)[0];
+        return x;
     };
 
-    auto decoderBlock = [](TensorLike* input, TensorLike* skipInput, uint32_t filtersNum, bool dropout = true)
+    auto decoderBlock = [](TensorLike* x, TensorLike* x2, uint32_t nbFilters, const string& name, bool batchNorm = true, bool dropout = false)
     {
-        auto g = (new UpSampling2D(2))->Call(input);
-        //g = (new ZeroPadding2D(2, 2, 2, 2))->Call(g);
-        g = (new Conv2D(filtersNum, 3, 1, Tensor::GetPadding(Same, 3)))->Call(g);
-        g = (new BatchNormalization())->Call(g);
+        x = (new Activation(new ReLU()))->Call(x)[0];
+        x = (new UpSampling2D(2))->Call(x)[0];
+        x = (new Conv2D(nbFilters, 3, 1, Tensor::GetPadding(Same, 3), nullptr, NCHW, name))->Call(x)[0];
+        if (batchNorm)
+            x = (new BatchNormalization())->Call(x)[0];
         if (dropout)
-            g = (new Dropout(0.5f))->Call(g);
-        g = (new Concatenate(DepthAxis))->Call({ g[0], skipInput });
-        g = (new Activation(new ReLU()))->Call(g);
-        return g;
+            x = (new Dropout(0.5f))->Call(x)[0];
+        x = (new Concatenate(DepthAxis))->Call({ x, x2 })[0];
+        return x;
     };
+
+    uint32_t minSize = min(imgShape.Width(), imgShape.Height());
+    uint32_t filtersStart = 64;
+    size_t nbConv = int(floor(::log(minSize) / ::log(2)));
+    vector<uint32_t> filtersList(nbConv);
+    for (int i = 0; i < nbConv; ++i)
+        filtersList[i] = filtersStart * min<uint32_t>(8, (uint32_t)::pow(2, i));
 
     auto inImage = new Input(imgShape);
 
-    ///encoder
-    auto e1 = encoderBlock(inImage->Outputs()[0], 64, false);
-    auto e2 = encoderBlock(e1[0], 128);
-    auto e3 = encoderBlock(e2[0], 256);
-    auto e4 = encoderBlock(e3[0], 512);
-    auto e5 = encoderBlock(e4[0], 512);
-    auto e6 = encoderBlock(e5[0], 512);
-    auto e7 = encoderBlock(e6[0], 512);
-    /// bottleneck
-    //auto b = (new ZeroPadding2D(2, 2, 2, 2))->Call(e7);
-    auto b = (new Conv2D(512, 3, 2, Tensor::GetPadding(Same, 3)))->Call(e7);
-    b = (new Activation(new ReLU()))->Call(b);
-    /// decoder
-    auto d1 = decoderBlock(b[0], e7[0], 512);
-    auto d2 = decoderBlock(d1[0], e6[0], 512);
-    auto d3 = decoderBlock(d2[0], e5[0], 512);
-    auto d4 = decoderBlock(d3[0], e4[0], 512, false);
-    auto d5 = decoderBlock(d4[0], e3[0], 256, false);
-    auto d6 = decoderBlock(d5[0], e2[0], 128, false);
-    auto d7 = decoderBlock(d6[0], e1[0], 64, false);
-    /// output
-    auto g = (new UpSampling2D(2))->Call(d7);
-    //g = (new ZeroPadding2D(2, 2, 2, 2))->Call(g);
-    g = (new Conv2D(3, 3, 1, Tensor::GetPadding(Same, 3)))->Call(g);
-    auto outImage = (new Activation(new Tanh()))->Call(g);
+    // Encoder
+    vector<TensorLike*> encoderList = { (new Conv2D(filtersList[0], 3, 2, Tensor::GetPadding(Same, 3), nullptr, NCHW, "unet_conv2D_1"))->Call(inImage->Outputs())[0] };
+    for (uint32_t i = 1; i < filtersList.size(); ++i)
+    {
+        uint32_t nbFilters = filtersList[i];
+        string name = "unet_conv2D_" + to_string(i + 1);
+        encoderList.push_back(encoderBlock(encoderList.back(), nbFilters, name));
+    }
 
-    auto model = new Flow({ inImage->Outputs()[0] }, outImage);
+    // Prepare decoder filters
+    filtersList.pop_back();
+    filtersList.pop_back();
+    reverse(filtersList.begin(), filtersList.end());
+    if (filtersList.size() < nbConv - 1)
+        filtersList.push_back(filtersStart);
+
+    // Decoder
+    vector<TensorLike*> decoderList = { decoderBlock(encoderList.back(), *(encoderList.end() - 2), filtersList[0], "unet_upconv2D_1", true, true) };
+    for (uint32_t i = 1; i < filtersList.size(); ++i)
+    {
+        uint32_t nbFilters = filtersList[i];
+        string name = "unet_upconv2D_" + to_string(i + 1);
+        // Dropout only on first few layers
+        bool d = i < 3;
+        decoderList.push_back(decoderBlock(decoderList.back(), *(encoderList.end() - (i + 2)), nbFilters, name, true, d));
+    }
+    
+    auto x = (new Activation(new ReLU()))->Call(decoderList.back())[0];
+    x = (new UpSampling2D(2))->Call(x)[0];
+    x = (new Conv2D(imgShape.Depth(), 3, 1, Tensor::GetPadding(Same, 3), nullptr, NCHW, "last_conv"))->Call(x)[0];
+    x = (new Activation(new Tanh()))->Call(x)[0];
+
+    auto model = new Flow(inImage->Outputs(), { x }, "gen");
     return model;
 }
 
@@ -97,13 +109,13 @@ ModelBase* Pix2Pix::CreatePatchDiscriminator(const Shape& imgShape, uint32_t pat
     vector<TensorLike*> patches;
 
     for (int y = 0; y < ::sqrt(nbPatches); ++y)
-        for (int x = 0; x < ::sqrt(nbPatches); ++x)
-        {
-            static auto patchExtract = [=](const vector<TensorLike*>& inputNodes)->vector<TensorLike*> { return { sub_tensor2d(inputNodes[0], patchSize, patchSize, patchSize * x, patchSize * y) }; };
+    for (int x = 0; x < ::sqrt(nbPatches); ++x)
+    {
+        static auto patchExtract = [=](const vector<TensorLike*>& inputNodes)->vector<TensorLike*> { return { sub_tensor2d(inputNodes[0], patchSize, patchSize, patchSize * x, patchSize * y) }; };
 
-            auto patch = (new Lambda(patchExtract))->Call(imgInput->Outputs())[0];
-            patches.push_back(patch);
-        }
+        auto patch = (new Lambda(patchExtract))->Call(imgInput->Outputs())[0];
+        patches.push_back(patch);
+    }
 
     vector<TensorLike*> xList;
     vector<TensorLike*> xFlatList;
@@ -159,6 +171,6 @@ ModelBase* Pix2Pix::CreatePatchDiscriminator(const Shape& imgShape, uint32_t pat
     auto xOut = (new Dense(2, new Softmax()))->Call(xMerged);
 
     auto model = new Flow(imgInput->Outputs(), xOut, "disc");
-    model->Optimize(new Adam(0.0001f), new BinaryCrossEntropy(), {}, All);
+    model->Optimize(new Adam(0.001f), new BinaryCrossEntropy(), {}, All);
     return model;
 }
