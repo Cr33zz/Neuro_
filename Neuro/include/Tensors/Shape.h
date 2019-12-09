@@ -6,15 +6,18 @@
 
 #include "Types.h"
 
+typedef struct cudnnTensorStruct* cudnnTensorDescriptor_t;
+
 namespace Neuro
 {
-	using namespace std;
+	using namespace std;    
 
     class Shape
     {
 	public:
         Shape(uint32_t width = 0, uint32_t height = 1, uint32_t depth = 1, uint32_t batchSize = 1);
         Shape(istream& stream);
+        ~Shape();
 
         bool IsValid() const { return NDim > 0; }
 
@@ -52,6 +55,8 @@ namespace Neuro
         uint32_t Len(size_t dim) const { return Dimensions[dim]; }
         uint32_t Str(size_t dim) const { return Stride[dim]; }
 
+        const cudnnTensorDescriptor_t DeviceDesc() const;
+
         uint32_t Dimensions[4];
         uint32_t Stride[4];
         uint32_t Dim0;
@@ -59,6 +64,9 @@ namespace Neuro
         uint32_t Dim0Dim1Dim2;
         uint32_t Length;
         uint32_t NDim;
+
+    private:
+        mutable cudnnTensorDescriptor_t CudnnDesc = nullptr;
     };
 
     //////////////////////////////////////////////////////////////////////////

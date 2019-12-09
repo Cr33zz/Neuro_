@@ -321,6 +321,7 @@ namespace Neuro
 
         const float* GetDevicePtr() const;
         float* GetDevicePtr();
+        const cudnnTensorDescriptor_t DeviceDesc() const { return m_Shape.DeviceDesc(); }
 
         static TensorOpCpu* DefaultOp();
         static TensorOpCpu* ActiveOp();

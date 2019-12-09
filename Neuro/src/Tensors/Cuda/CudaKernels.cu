@@ -283,15 +283,10 @@ __global__ void log(int inputLen, const float* __restrict input, float* __restri
         output[i] = ::log(input[i]);
 }
 
-__global__ void add(int inputLen, const float* __restrict input, float v, float* __restrict output, int subLen)
+__global__ void add(int inputLen, const float* __restrict input, float v, float* __restrict output)
 {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    
-    int maxN = i * subLen + subLen;
-    if (maxN > inputLen)
-        maxN = inputLen;
-    for (int n = i * subLen; n < maxN; ++n)
-        output[n] = input[n] + v;
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < inputLen; i += gridDim.x * blockDim.x)
+        output[i] = input[i] + v;
 }
 
 __global__ void addBroadcast(float alpha, const float* __restrict t1, int t1Width, int t1Height, int t1Depth, int t1Batch, float beta, const float* __restrict t2, int t2Width, int t2Height, int t2Depth, int t2Batch, float* __restrict output, int outputWidth, int outputHeight, int outputDepth, int outputBatch)
@@ -668,9 +663,9 @@ namespace Neuro
         leakyReluGrad<<<blocks, threads>>>(inputLen, outputDev, outputGradientDev, alpha, inputGradientDev);
     }
 
-    void CudaKernels::Add(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float v, float* outputDev, int subLen)
+    void CudaKernels::Add(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float v, float* outputDev)
     {
-        add<<<blocks, threads>>>(inputLen, inputDev, v, outputDev, subLen);
+        add<<<blocks, threads>>>(inputLen, inputDev, v, outputDev);
     }
 
     void CudaKernels::Pow(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float power, float* outputDev)

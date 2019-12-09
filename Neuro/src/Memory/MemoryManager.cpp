@@ -187,6 +187,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     EMemStatus MemoryManagerBase::ReleaseAll()
     {
+        NEURO_ASSERT(!m_UsedBlocks, "Releasing used memory, it could lead to memory corruption!");
         // Destroy used blocks. It's a kind of panic mode to avoid leaks. NOTE: Do that only with roots!!!
         while (m_UsedBlocks)
             MEM_CHECK(ReleaseBlock(m_UsedBlocks, nullptr));

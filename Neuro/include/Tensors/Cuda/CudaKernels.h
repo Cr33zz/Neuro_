@@ -24,7 +24,7 @@ namespace Neuro
         static void Negate(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float* outputDev);
         static void Log(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float* outputDev);
         static void Inverse(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float alpha, float* outputDev);
-        static void Add(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float v, float* outputDev, int subLen);
+        static void Add(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, float v, float* outputDev);
         static void AddBroadcast(const dim3& blocks, const dim3& threads, float alpha, const float* t1Dev, int t1Width, int t1Height, int t1Depth, int t1Batch, float beta, const float* t2Dev, int t2Width, int t2Height, int t2Depth, int t2Batch, float* outputDev, int outputWidth, int outputHeight, int outputDepth, int outputBatch);
         static void Mul(const dim3& blocks, const dim3& threads, int len, const float* t1, const float* t2, float* outputDev, int subLen);
         static void MulBroadcast(const dim3& blocks, const dim3& threads, float alpha, const float* t1Dev, int t1Width, int t1Height, int t1Depth, int t1Batch, float beta, const float* t2Dev, int t2Width, int t2Height, int t2Depth, int t2Batch, float* outputDev, int outputWidth, int outputHeight, int outputDepth, int outputBatch);

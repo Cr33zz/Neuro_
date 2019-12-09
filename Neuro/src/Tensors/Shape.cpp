@@ -1,4 +1,5 @@
 ﻿#include <sstream>
+#include <cudnn.h>
 #include "assert.h"
 
 #include "Tensors/Shape.h"
@@ -35,6 +36,12 @@ namespace Neuro
     Shape::Shape(istream& stream)
     {
         LoadBin(stream);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Shape::~Shape()
+    {
+        cudnnDestroyTensorDescriptor(CudnnDesc);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -158,7 +165,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-	std::string Shape::ToString() const
+	string Shape::ToString() const
 	{
 		stringstream ss;
 		ss << "(" << Width() << ", " << Height() << ", " << Depth() << ", " << Batch() << ")";
@@ -176,6 +183,17 @@ namespace Neuro
     {
         stream.read((char*)Dimensions, sizeof(Dimensions));
         new(this) Shape(Dimensions[0], Dimensions[1], Dimensions[2], Dimensions[3]); // reconstruct
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    const cudnnTensorDescriptor_t Shape::DeviceDesc() const
+    {
+        if (!CudnnDesc)
+        {
+            cudnnCreateTensorDescriptor(&CudnnDesc);
+            cudnnSetTensor4dDescriptor(CudnnDesc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT, Dimensions[3], Dimensions[2], Dimensions[1], Dimensions[0]);
+        }
+        return CudnnDesc;
     }
 
     //////////////////////////////////////////////////////////////////////////

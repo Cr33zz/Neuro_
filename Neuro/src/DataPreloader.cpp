@@ -28,6 +28,12 @@ namespace Neuro
         m_PendingCond.notify_all();
         if (m_ThreadedMode)
             m_PreloaderThread.join();
+
+        for (auto& tVec : m_Pending)
+            delete tVec;
+
+        for (auto& tVec : m_Available)
+            delete tVec;
     }
 
     //////////////////////////////////////////////////////////////////////////

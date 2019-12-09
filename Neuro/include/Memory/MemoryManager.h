@@ -78,6 +78,8 @@ namespace Neuro
         EMemStatus DumpMemoryState(FILE* file) const;
         void UpdateAnnotation(void* ptr, const string& annotation);
 
+        EMemStatus ReleaseAll();
+
     protected:
         virtual void InternalAllocate(void** ptr, size_t size, const string& annotation = "") = 0;
         virtual void InternalFree(void* ptr) = 0;
@@ -94,8 +96,6 @@ namespace Neuro
         EMemStatus AddNativeBlock(void* ptr, size_t size);
         EMemStatus RemoveNativeBlock(void* ptr);
         
-        EMemStatus ReleaseAll();
-
         EMemStatus PrintList(FILE* file, const char* name, const Block* head) const;
         inline EMemStatus GetUsedMemory(size_t& usedMemory) const;
         inline EMemStatus GetFreeMemory(size_t& freeMemory) const;
@@ -179,6 +179,13 @@ namespace Neuro
         HostMemoryManager::Default().DumpMemoryState(file);
         HostPinnedMemoryManager::Default().DumpMemoryState(file);
         fclose(file);
+    }
+
+    static void ReleaseAllMemory()
+    {
+        DeviceMemoryManager::Default().ReleaseAll();
+        HostMemoryManager::Default().ReleaseAll();
+        HostPinnedMemoryManager::Default().ReleaseAll();
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -161,8 +161,8 @@ public:
         const uint32_t BATCH_SIZE = 4;
         const uint32_t STEPS = 150;
 
-        auto trainFiles = LoadFilesList("f:/!TrainingData/flowers", false, true);
-        //auto trainFiles = LoadFilesList("e:/Downloads/flowers", false, true);
+        //auto trainFiles = LoadFilesList("f:/!TrainingData/flowers", false, true);
+        auto trainFiles = LoadFilesList("e:/Downloads/flowers", false, true);
 
         Tensor condImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "cond_image");
         Tensor realImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "output_image");
