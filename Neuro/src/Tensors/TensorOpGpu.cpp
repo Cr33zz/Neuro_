@@ -91,6 +91,7 @@ namespace Neuro
                 float beta2 = 0.f;
                 CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, addDesc, &alpha, t1.DeviceDesc(), t1.GetDevicePtr(), &beta, t2.DeviceDesc(), t2.GetDevicePtr(), &beta2, output.DeviceDesc(), output.GetDevicePtr()));
                 cudaStreamSynchronize(0);
+
                 cudnnDestroyOpTensorDescriptor(addDesc);
                 return;
             }
@@ -102,6 +103,7 @@ namespace Neuro
                 float beta2 = 0.f;
                 CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, addDesc, &beta, t2.DeviceDesc(), t2.GetDevicePtr(), &alpha, t1.DeviceDesc(), t1.GetDevicePtr(), &beta2, output.DeviceDesc(), output.GetDevicePtr()));
                 cudaStreamSynchronize(0);
+
                 cudnnDestroyOpTensorDescriptor(addDesc);
                 return;
             }
@@ -218,6 +220,8 @@ namespace Neuro
             else
                 CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, mulDesc, &beta, t2.DeviceDesc(), t2.GetDevicePtr(), &alpha, t1.DeviceDesc(), t1.GetDevicePtr(), &beta2, output.DeviceDesc(), output.GetDevicePtr()));
             cudaStreamSynchronize(0);
+
+            cudnnDestroyOpTensorDescriptor(mulDesc);
             return;
         }
 
@@ -339,6 +343,7 @@ namespace Neuro
             float alpha1 = 1.f, alpha2 = 1.f, beta = 0.f;
             CUDA_CHECK(cudnnOpTensor(s_CudnnHandle, sqrDesc, &alpha1, input.DeviceDesc(), input.GetDevicePtr(), &alpha2, input.DeviceDesc(), input.GetDevicePtr(), &beta, output.DeviceDesc(), output.GetDevicePtr()));
             cudaStreamSynchronize(0);
+
             cudnnDestroyOpTensorDescriptor(sqrDesc);
             return;
         }
