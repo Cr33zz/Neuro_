@@ -1212,30 +1212,19 @@ namespace NeuroTests
         TEST_METHOD(Image_Save_Load)
         {
             Tensor t(Shape(50, 50, 3));
-            t.FillWithRand(-1, 0, 1);
-            t.SaveAsImage("test.bmp", true);
+            t.FillWithRand(-1, 0, 255);
+            t.SaveAsImage("test.bmp", false);
 
-            Tensor t2("test.bmp", true);
-
-            Assert::IsTrue(t.Equals(t2, 0.01f));
-        }
-
-        TEST_METHOD(Image_Save_Load_Grayscale)
-        {
-            Tensor t(Shape(50, 50, 1));
-            t.FillWithRand(-1, 0, 1);
-            t.SaveAsImage("test_g.bmp", true);
-
-            Tensor t2("test_g.bmp", true, true);
+            Tensor t2 = LoadImage("test.bmp");
 
             Assert::IsTrue(t.Equals(t2, 0.01f));
         }
 
-        TEST_METHOD(Save_Load)
+        /*TEST_METHOD(Save_Load)
         {
             auto t = Tensor(Shape(5, 4, 3, 2), "1337");
             t.FillWithRand();
-            
+
             string filename = "tensor_tmp.bin";
             ofstream ostream(filename, ios::out | ios::binary);
             t.SaveBin(ostream);
@@ -1244,6 +1233,6 @@ namespace NeuroTests
             ifstream istream(filename, ios::in | ios::binary);
             Assert::IsTrue(t.Equals(Tensor(istream)));
             istream.close();
-        }
+        }*/
     };
 }

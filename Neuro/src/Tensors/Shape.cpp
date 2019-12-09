@@ -39,6 +39,41 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    Shape::Shape(const Shape& other)
+    {
+        *this = other;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Shape::Shape(Shape&& other)
+    {
+        *this = move(other);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Shape& Shape::operator=(const Shape& other)
+    {
+        if (this != &other)
+        {
+            memcpy(this, &other, sizeof(Shape));
+            CudnnDesc = nullptr;
+        }
+        return *this;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Shape& Shape::operator=(Shape&& other)
+    {
+        if (this != &other)
+        {
+            memcpy(this, &other, sizeof(Shape));
+            CudnnDesc = other.CudnnDesc;
+            other.CudnnDesc = nullptr;
+        }
+        return *this;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     Shape::~Shape()
     {
         cudnnDestroyTensorDescriptor(CudnnDesc);

@@ -21,42 +21,42 @@
 
 int main()
 {
-    Tensor::SetForcedOpMode(GPU);
-    cin.get();
+    //Tensor::SetForcedOpMode(GPU);
+    //cin.get();
 
-    {
-        auto trainFiles = LoadFilesList("e:/Downloads/flowers", false, true);
+    //{
+    //    auto trainFiles = LoadFilesList("f:/!TrainingData/flowers", false, true);
 
-        const Shape IMG_SHAPE(256, 256, 3);
-        const uint32_t PATCH_SIZE = 64;
-        const uint32_t BATCH_SIZE = 4;
+    //    const Shape IMG_SHAPE(256, 256, 3);
+    //    const uint32_t PATCH_SIZE = 64;
+    //    const uint32_t BATCH_SIZE = 4;
 
-        Tensor condImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "cond_image");
-        Tensor realImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "output_image");
+    //    Tensor condImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "cond_image");
+    //    Tensor realImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "output_image");
 
-        Pix2Pix::Pix2PixImageLoader loader(trainFiles, BATCH_SIZE, 1, 1337);
-        DataPreloader preloader({ &condImages, &realImages }, { &loader }, 5, false);
+    //    Pix2Pix::Pix2PixImageLoader loader(trainFiles, BATCH_SIZE, 1, 1337);
+    //    DataPreloader preloader({ &condImages, &realImages }, { &loader }, 5, false);
 
-        //cin.get();
-        for (int i = 0; i < 2000; ++i)
-        {
-            /*Tensor t(Shape(256,256,3,1), "t");
-            t.FillWithRand(-1, 0, 255);
-            Tensor e = CannyEdgeDetection(t);
-            e.Name("e");
-            cout << e.DataPtrUnsafe()[0] << endl;*/
-            preloader.Load();
+    //    //cin.get();
+    //    for (int i = 0; i < 100; ++i)
+    //    {
+    //        /*Tensor t(Shape(256,256,3,1), "t");
+    //        t.FillWithRand(-1, 0, 255);
+    //        Tensor e = CannyEdgeDetection(t);
+    //        e.Name("e");
+    //        cout << e.DataPtrUnsafe()[0] << endl;*/
+    //        preloader.Load();
 
-            /*if (i == 2)
-            {
-                DumpMemoryManagers("mem_1.log");
-                cin.get();
-            }*/
-        }
-    }
-    ReleaseAllMemory();
-    DumpMemoryManagers("mem_2.log");
-    cin.get();
+    //        /*if (i == 2)
+    //        {
+    //            DumpMemoryManagers("mem_1.log");
+    //            cin.get();
+    //        }*/
+    //    }
+    //}
+    //ReleaseAllMemory();
+    //DumpMemoryManagers("mem_2.log");
+    //cin.get();
 
     //ComputationalGraph().Run();
     //IrisNetwork().Run();

@@ -23,8 +23,7 @@ namespace fs = std::experimental::filesystem;
 namespace Neuro
 {
     Random g_Rng;
-    bool g_ImageLibInitialized = false;
-
+    
     //////////////////////////////////////////////////////////////////////////
     Random& GlobalRng()
     {
@@ -65,6 +64,18 @@ namespace Neuro
 			hits += targetArgMax(i) == outputArgMax(i) ? 1 : 0;
 		return hits;
 	}
+
+    //////////////////////////////////////////////////////////////////////////
+    static void ImageLibInit()
+    {
+        static bool imgLibInitialized = false;
+
+        if (!imgLibInitialized)
+        {
+            FreeImage_Initialise();
+            imgLibInitialized = true;
+        }
+    }
 
     //////////////////////////////////////////////////////////////////////////
     void DeleteData(vector<const_tensor_ptr_vec_t>& data)
@@ -577,6 +588,43 @@ namespace Neuro
         return result;
     }
 
+    //////////////////////////////////////////////////////////////////////////
+    void SaveImage(const Tensor& t, const string& imageFile, bool denormalize, uint32_t maxCols)
+    {
+        ImageLibInit();
+
+        auto format = FreeImage_GetFileType(imageFile.c_str());
+        NEURO_ASSERT(format != FIF_UNKNOWN, "Unrecognized format while writing '" << imageFile << "'");
+
+        const uint32_t TENSOR_WIDTH = t.Width();
+        const uint32_t TENSOR_HEIGHT = t.Height();
+        const uint32_t IMG_COLS = min((uint32_t)ceil(::sqrt((float)t.Batch())), maxCols == 0 ? numeric_limits<uint32_t>().max() : maxCols);
+        const uint32_t IMG_ROWS = (uint32_t)ceil((float)t.Batch() / IMG_COLS);
+        const uint32_t IMG_WIDTH = IMG_COLS * TENSOR_WIDTH;
+        const uint32_t IMG_HEIGHT = IMG_ROWS * TENSOR_HEIGHT;
+        const bool GRAYSCALE = (t.Depth() == 1);
+
+        RGBQUAD color;
+        color.rgbRed = color.rgbGreen = color.rgbBlue = 255;
+
+        FIBITMAP* image = FreeImage_Allocate(IMG_WIDTH, IMG_HEIGHT, 24);
+        FreeImage_FillBackground(image, &color);
+
+        for (uint32_t n = 0; n < t.Batch(); ++n)
+        for (uint32_t h = 0; h < t.Height(); ++h)
+        for (uint32_t w = 0; w < t.Width(); ++w)
+        {
+            color.rgbRed = (int)(t.Get(w, h, 0, n) * (denormalize ? 255.0f : 1.f));
+            color.rgbGreen = GRAYSCALE ? color.rgbRed : (int)(t.Get(w, h, 1, n) * (denormalize ? 255.0f : 1.f));
+            color.rgbBlue = GRAYSCALE ? color.rgbRed : (int)(t.Get(w, h, 2, n) * (denormalize ? 255.0f : 1.f));
+
+            FreeImage_SetPixelColor(image, (n % IMG_COLS) * TENSOR_WIDTH + w, IMG_HEIGHT - ((n / IMG_COLS) * TENSOR_HEIGHT + h) - 1, &color);
+        }
+
+        FreeImage_Save(format, image, imageFile.c_str());
+        FreeImage_Unload(image);
+    }
+
     struct PixelData
     {
         uint8_t r;
@@ -754,16 +802,6 @@ namespace Neuro
                 break;
         }
         return string(formatted.get());
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    void ImageLibInit()
-    {
-        if (!g_ImageLibInitialized)
-        {
-            FreeImage_Initialise();
-            g_ImageLibInitialized = true;
-        }
     }
 
     //////////////////////////////////////////////////////////////////////////

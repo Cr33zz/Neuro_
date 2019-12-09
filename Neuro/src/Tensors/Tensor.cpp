@@ -25,16 +25,6 @@ namespace Neuro
     TensorOpCpu* Tensor::g_DefaultOp = nullptr;
     TensorOpCpu* Tensor::g_ForcedOp = nullptr;
 
-    FREE_IMAGE_FORMAT GetFormat(const string& fileName)
-    {
-        auto fif = FreeImage_GetFileType(fileName.c_str());
-        
-        if (fif == FIF_UNKNOWN)
-            fif = FreeImage_GetFIFFromFilename(fileName.c_str());
-
-        return fif;
-    }
-
     //////////////////////////////////////////////////////////////////////////
     Tensor::Tensor(const Shape& shape, const string& name, EStorageType storageType)
         : m_Name(name), m_Shape(shape), m_Storage(storageType, shape.Length, name)
@@ -102,80 +92,9 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-    Tensor::Tensor(const string& imageFile, bool normalize, bool grayScale, const string& name, EStorageType storageType)
-        : Tensor(Shape(0), name, storageType)
-	{
-        ImageLibInit();
-
-        auto format = GetFormat(imageFile);
-        assert(format != FIF_UNKNOWN);
-
-        FIBITMAP* image = FreeImage_Load(format, imageFile.c_str());
-
-        assert(image);
-
-        const uint32_t WIDTH = FreeImage_GetWidth(image);
-        const uint32_t HEIGHT = FreeImage_GetHeight(image);
-
-        m_Shape = Shape(WIDTH, HEIGHT, grayScale ? 1 : 3);
-        m_Storage.Resize(m_Shape.Length);
-
-        RGBQUAD color;
-
-        for (uint32_t h = 0; h < HEIGHT; ++h)
-        for (uint32_t w = 0; w < WIDTH; ++w)
-        {
-            FreeImage_GetPixelColor(image, (unsigned int)w, HEIGHT - (unsigned int)h - 1, &color);
-            int r = color.rgbRed, g = color.rgbGreen, b = color.rgbBlue;
-
-            if (grayScale)
-                Set((r * 0.3f + g * 0.59f + b * 0.11f) / (normalize ? 255.0f : 1.f), w, h);
-            else
-            {
-                Set(r / (normalize ? 255.0f : 1.f), w, h, 0);
-                Set(g / (normalize ? 255.0f : 1.f), w, h, 1);
-                Set(b / (normalize ? 255.0f : 1.f), w, h, 2);
-            }
-        }
-
-        FreeImage_Unload(image);
-	}
-
-    //////////////////////////////////////////////////////////////////////////
     void Tensor::SaveAsImage(const string& imageFile, bool denormalize, uint32_t maxCols) const
     {
-        ImageLibInit();
-
-        auto format = GetFormat(imageFile);
-        assert(format != FIF_UNKNOWN);
-
-        const uint32_t TENSOR_WIDTH = Width();
-        const uint32_t TENSOR_HEIGHT = Height();
-        const uint32_t IMG_COLS = min((uint32_t)ceil(::sqrt((float)Batch())), maxCols == 0 ? numeric_limits<uint32_t>().max() : maxCols);
-        const uint32_t IMG_ROWS = (uint32_t)ceil((float)Batch() / IMG_COLS);
-        const uint32_t IMG_WIDTH = IMG_COLS * TENSOR_WIDTH;
-        const uint32_t IMG_HEIGHT = IMG_ROWS * TENSOR_HEIGHT;
-        const bool GRAYSCALE = (Depth() == 1);
-        
-        RGBQUAD color;
-        color.rgbRed = color.rgbGreen = color.rgbBlue = 255;
-        
-        FIBITMAP* image = FreeImage_Allocate(IMG_WIDTH, IMG_HEIGHT, 24);
-        FreeImage_FillBackground(image, &color);
-
-        for (uint32_t n = 0; n < Batch(); ++n)
-        for (uint32_t h = 0; h < Height(); ++h)
-        for (uint32_t w = 0; w < Width(); ++w)
-        {
-            color.rgbRed = (int)(Get(w, h, 0, n) * (denormalize ? 255.0f : 1.f));
-            color.rgbGreen = GRAYSCALE ? color.rgbRed : (int)(Get(w, h, 1, n) * (denormalize ? 255.0f : 1.f));
-            color.rgbBlue = GRAYSCALE ? color.rgbRed : (int)(Get(w, h, 2, n) * (denormalize ? 255.0f : 1.f));
-
-            FreeImage_SetPixelColor(image, (n % IMG_COLS) * TENSOR_WIDTH + w, IMG_HEIGHT - ((n / IMG_COLS) * TENSOR_HEIGHT + h) - 1, &color);
-        }
-
-        FreeImage_Save(format, image, imageFile.c_str());
-        FreeImage_Unload(image);
+        SaveImage(*this, imageFile, denormalize, maxCols);
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -28,7 +28,6 @@ namespace Neuro
         explicit Tensor(const Shape& shape = Shape(0), const string& name = "", EStorageType storageType = ST_Default);
         Tensor(const vector<float>&, const Shape& shape, const string& name = "", EStorageType storageType = ST_Default);
         Tensor(const vector<float>&, const string& name = "", EStorageType storageType = ST_Default);
-        Tensor(const string& imageFile, bool normalize, bool grayScale = false, const string& name = "", EStorageType storageType = ST_Default);
         Tensor(istream& stream, EStorageType storageType = ST_Default);
         Tensor(const Tensor& t);
         Tensor(Tensor&& t);

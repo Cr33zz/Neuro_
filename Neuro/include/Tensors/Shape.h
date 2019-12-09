@@ -17,6 +17,10 @@ namespace Neuro
 	public:
         Shape(uint32_t width = 0, uint32_t height = 1, uint32_t depth = 1, uint32_t batchSize = 1);
         Shape(istream& stream);
+        Shape(const Shape& other);
+        Shape(Shape&& other);
+        Shape& operator=(const Shape& other);
+        Shape& operator=(Shape&& other);
         ~Shape();
 
         bool IsValid() const { return NDim > 0; }

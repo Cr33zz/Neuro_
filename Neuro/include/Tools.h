@@ -59,6 +59,7 @@ namespace Neuro
     void LoadImage(const string& filename, float* buffer, uint32_t targetSizeX = 0, uint32_t targetSizeY = 0, uint32_t cropSizeX = 0, uint32_t cropSizeY = 0, EDataFormat targetFormat = NCHW);
     Tensor LoadImage(const string& filename, uint32_t targetSizeX = 0, uint32_t targetSizeY = 0, uint32_t cropSizeX = 0, uint32_t cropSizeY = 0, EDataFormat targetFormat = NCHW);
     Tensor LoadImage(uint8_t* imageBuffer, uint32_t width, uint32_t height, EPixelFormat format = RGB);
+    void SaveImage(const Tensor& t, const string& imageFile, bool denormalize, uint32_t maxCols = 0);
     bool IsImageFileValid(const string& filename);
     Shape GetImageDims(const string& filename);
 
@@ -70,9 +71,6 @@ namespace Neuro
     vector<T> MergeVectors(initializer_list<vector<T>> vectors);
 
     string StringFormat(const string fmt_str, ...);
-
-    void ImageLibInit();
-    extern bool g_ImageLibInitialized;
 
     Tensor GaussianFilter(uint32_t size, float sigma = 1.f);
     void SobelFilters(const Tensor& img, Tensor& g, Tensor& theta);
