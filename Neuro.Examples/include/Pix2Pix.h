@@ -13,9 +13,9 @@ using namespace Neuro;
 class Pix2Pix
 {
 public:
-    struct Pix2PixImageLoader : public ImageLoader
+    struct EdgeImageLoader : public ImageLoader
     {
-        Pix2PixImageLoader(const vector<string>& files, uint32_t batchSize, uint32_t upScaleFactor = 1, uint32_t seed = 0) :ImageLoader(files, batchSize, upScaleFactor), m_Rng(seed) {}
+        EdgeImageLoader(const vector<string>& files, uint32_t batchSize, uint32_t upScaleFactor = 1, uint32_t seed = 0) :ImageLoader(files, batchSize, upScaleFactor), m_Rng(seed) {}
 
         virtual size_t operator()(vector<Tensor>& dest, size_t loadIdx) override
         {
@@ -46,6 +46,40 @@ public:
         Random m_Rng;
     };
 
+    //struct SplitImageLoader : public ImageLoader
+    //{
+    //    SplitImageLoader(const vector<string>& files, uint32_t batchSize, uint32_t splitInto = 2, uint32_t seed = 0) :ImageLoader(files, batchSize), m_Rng(seed) {}
+
+    //    virtual size_t operator()(vector<Tensor>& dest, size_t loadIdx) override
+    //    {
+    //        auto& cndImg = dest[loadIdx];
+    //        auto& outImg = dest[loadIdx + 1];
+    //        cndImg.ResizeBatch(m_BatchSize);
+    //        cndImg.OverrideHost();
+    //        outImg.ResizeBatch(m_BatchSize);
+    //        outImg.OverrideHost();
+
+    //        for (uint32_t n = 0; n < m_BatchSize; ++n)
+    //        {
+    //            const auto& file = m_Files[m_Rng.Next((int)m_Files.size())];
+    //            //cout << "Load: " << file << endl;
+    //            auto img = LoadImage(file, cndImg.Width() * m_UpScaleFactor, cndImg.Height() * m_UpScaleFactor, cndImg.Width(), cndImg.Height());
+    //            img.Split(WidthAxis, )
+    //            auto edges = CannyEdgeDetection(img).ToRGB();
+
+    //            edges.Sub(127.5f).Div(127.5f).CopyBatchTo(0, (uint32_t)n, cndImg);
+    //            img.Sub(127.5f).Div(127.5f).CopyBatchTo(0, (uint32_t)n, outImg);
+    //        }
+
+    //        cndImg.CopyToDevice();
+    //        outImg.CopyToDevice();
+    //        return 2;
+    //    }
+
+    //private:
+    //    Random m_Rng;
+    //};
+
     void Run()
     {
         Tensor::SetForcedOpMode(GPU);
@@ -54,21 +88,20 @@ public:
         const Shape IMG_SHAPE(256, 256, 3);
         const uint32_t PATCH_SIZE = 64;
         const uint32_t STEPS = 100000;
-        const uint32_t BATCH_SIZE = 1;
+        const uint32_t BATCH_SIZE = 4;
         const float LEARNING_RATE = 0.0002f;
         const float ADAM_BETA1 = 0.5f;
         //const uint32_t STEPS = 6;
 
         cout << "Example: Pix2Pix" << endl;
 
-        //auto trainFiles = LoadFilesList("e:/Downloads/flowers", false, true);
-        auto trainFiles = LoadFilesList("f:/!TrainingData/flowers", false, true);
+        auto trainFiles = LoadFilesList("data/flowers", false, true);
 
         Tensor condImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "cond_image");
         Tensor realImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "output_image");
 
         // setup data preloader
-        Pix2PixImageLoader loader(trainFiles, BATCH_SIZE, 1);
+        EdgeImageLoader loader(trainFiles, BATCH_SIZE, 1);
         DataPreloader preloader({ &condImages, &realImages }, { &loader }, 5);
 
         // setup models
@@ -166,8 +199,7 @@ public:
         const float LEARNING_RATE = 0.0002f;
         const float ADAM_BETA1 = 0.5f;
 
-        //auto trainFiles = LoadFilesList("f:/!TrainingData/flowers", false, true);
-        auto trainFiles = LoadFilesList("e:/Downloads/flowers", false, true);
+        auto trainFiles = LoadFilesList("data/flowers", false, true);
 
         Tensor condImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "cond_image");
         Tensor realImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "output_image");
@@ -192,7 +224,7 @@ public:
         one.FuseSubTensor2D(1, 0, realLabels);
 
         // setup data preloader
-        Pix2PixImageLoader loader(trainFiles, BATCH_SIZE, 1, 1337);
+        EdgeImageLoader loader(trainFiles, BATCH_SIZE, 1, 1337);
         DataPreloader preloader({ &condImages, &realImages }, { &loader }, 5);
 
         for (uint32_t e = 1; e <= STEPS; ++e)

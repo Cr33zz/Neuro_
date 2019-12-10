@@ -29,7 +29,7 @@ Neuro::ModelBase* CifarGAN::CreateDiscriminator()
     model->AddLayer(new Conv2D(128, 3, 2, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)));
     model->AddLayer(new Conv2D(256, 3, 1, Tensor::GetPadding(Same, 3), new LeakyReLU(0.2f)));
     model->AddLayer(new Flatten());
-    //model->AddLayer(new Dropout(0.4f));
+    model->AddLayer(new Dropout(0.4f));
     model->AddLayer(new Dense(1, new Sigmoid()));
     model->Optimize(new Adam(0.0002f, 0.5f), new BinaryCrossEntropy(), {}, All);
     return model;
