@@ -593,7 +593,7 @@ namespace Neuro
     {
         ImageLibInit();
 
-        auto format = FreeImage_GetFileType(imageFile.c_str());
+        auto format = FreeImage_GetFIFFromFilename(imageFile.c_str());
         NEURO_ASSERT(format != FIF_UNKNOWN, "Unrecognized format while writing '" << imageFile << "'");
 
         const uint32_t TENSOR_WIDTH = t.Width();
