@@ -53,8 +53,10 @@ public:
 
         const Shape IMG_SHAPE(256, 256, 3);
         const uint32_t PATCH_SIZE = 64;
-        const uint32_t BATCH_SIZE = 4;
         const uint32_t STEPS = 100000;
+        const uint32_t BATCH_SIZE = 1;
+        const float LEARNING_RATE = 0.0002f;
+        const float ADAM_BETA1 = 0.5f;
         //const uint32_t STEPS = 6;
 
         cout << "Example: Pix2Pix" << endl;
@@ -73,6 +75,7 @@ public:
         auto gModel = CreateGenerator(IMG_SHAPE);
         cout << "Generator" << endl << gModel->Summary();
         auto dModel = CreatePatchDiscriminator(IMG_SHAPE, PATCH_SIZE, BATCH_SIZE > 1);
+        dModel->Optimize(new Adam(LEARNING_RATE, ADAM_BETA1), new BinaryCrossEntropy(), {}, All);
         //cout << "Discriminator" << endl << dModel->Summary();
 
         auto inSrc = new Input(IMG_SHAPE);
@@ -80,7 +83,7 @@ public:
         auto disOut = dModel->Call(genOut[0], "discriminator");
 
         auto ganModel = new Flow(inSrc->Outputs(), { disOut[0], genOut[0] }, "pix2pix");
-        ganModel->Optimize(new Adam(0.001f), { new BinaryCrossEntropy(), new MeanAbsoluteError() }, { 1.f, 100.f });
+        ganModel->Optimize(new Adam(LEARNING_RATE, ADAM_BETA1), { new BinaryCrossEntropy(), new MeanAbsoluteError() }, { 1.f, 100.f });
         ganModel->LoadWeights("pix2pix.h5", false, true);
 
         Tensor one(Shape(1, 1, 1, BATCH_SIZE)); one.One();
@@ -158,8 +161,10 @@ public:
 
         const Shape IMG_SHAPE(256, 256, 3);
         const uint32_t PATCH_SIZE = 64;
-        const uint32_t BATCH_SIZE = 4;
+        const uint32_t BATCH_SIZE = 1;
         const uint32_t STEPS = 150;
+        const float LEARNING_RATE = 0.0002f;
+        const float ADAM_BETA1 = 0.5f;
 
         //auto trainFiles = LoadFilesList("f:/!TrainingData/flowers", false, true);
         auto trainFiles = LoadFilesList("e:/Downloads/flowers", false, true);
@@ -171,6 +176,7 @@ public:
         auto gModel = CreateGenerator(IMG_SHAPE);
         //cout << "Generator" << endl << gModel->Summary();
         auto dModel = CreatePatchDiscriminator(IMG_SHAPE, PATCH_SIZE, BATCH_SIZE > 1);
+        dModel->Optimize(new Adam(LEARNING_RATE, ADAM_BETA1), new BinaryCrossEntropy(), {}, All);
         //cout << "Discriminator" << endl << dModel->Summary();
 
         auto inSrc = new Input(IMG_SHAPE);
