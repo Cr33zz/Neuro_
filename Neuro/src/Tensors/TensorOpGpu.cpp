@@ -1149,7 +1149,6 @@ namespace Neuro
         output.CopyToDevice();
         outputGradient.CopyToDevice();
         inputGradient.OverrideDevice();
-        inputGradient.Zero();
 
         float alpha = 1, beta = 0;
         CUDA_CHECK(cudnnSoftmaxBackward(
