@@ -93,7 +93,7 @@ public:
         //GlobalRngSeed(1337);
 
         const Shape IMG_SHAPE(256, 256, 3);
-        const uint32_t STEPS = 100000;
+        const int EPOCHS = 150;
         const uint32_t BATCH_SIZE = 1;
         const float LEARNING_RATE = 0.0002f;
         const float ADAM_BETA1 = 0.5f;
@@ -101,74 +101,92 @@ public:
 
         cout << "Example: Pix2Pix" << endl;
 
-        Tensor condImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "cond_image");
-        Tensor realImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "output_image");
-
         //const string NAME = "flowers";
         //auto trainFiles = LoadFilesList("data/flowers", false, true);
         const string NAME = "facades";
         auto trainFiles = LoadFilesList("data/facades/train", false, true);
 
-        // setup data preloader
-        //EdgeImageLoader loader(trainFiles, BATCH_SIZE, 1);
-        //DataPreloader preloader({ &condImages, &realImages }, { &loader }, 5);
-        SplitImageLoader loader(trainFiles, BATCH_SIZE, 1); // facades
-        DataPreloader preloader({ &realImages, &condImages }, { &loader }, 5); // facades
-
         // setup models
         auto gModel = CreateGenerator(IMG_SHAPE);
         cout << "Generator" << endl << gModel->Summary();
         auto dModel = CreateDiscriminator(IMG_SHAPE);
-        dModel->Optimize(new Adam(LEARNING_RATE, ADAM_BETA1), new BinaryCrossEntropy(), {}, All);
+        //dModel->Optimize(new Adam(LEARNING_RATE, ADAM_BETA1), new BinaryCrossEntropy(), {}, All);
         //cout << "Discriminator" << endl << dModel->Summary();
 
-        auto inSrc = (new Input(IMG_SHAPE))->Outputs()[0];
-        auto genOut = gModel->Call(inSrc, "generator")[0];
-        auto disOut = dModel->Call({ inSrc, genOut }, "discriminator")[0];
+        //auto inSrc = (new Input(IMG_SHAPE))->Outputs()[0];
+        auto inputImg = new Placeholder(IMG_SHAPE);
+        auto targetImg = new Placeholder(IMG_SHAPE);
+        
+        auto genImg = gModel->Call(inputImg, "generator")[0];
+        auto disOut1 = dModel->Call({ inputImg, genImg }, "discriminator1")[0];
+        auto disOut2 = dModel->Call({ inputImg, targetImg }, "discriminator2")[0];
 
-        auto ganModel = new Flow({ inSrc }, { disOut, genOut }, "pix2pix");
-        ganModel->Optimize(new Adam(LEARNING_RATE, ADAM_BETA1), { new BinaryCrossEntropy(), new MeanAbsoluteError() }, { 1.f, 100.f });
-        ganModel->LoadWeights(NAME + ".h5", false, true);
+        auto fakeLabels = new Constant(zeros(disOut1->GetShape()), "fake_labels");
+        auto realLabels = new Constant(ones(disOut2->GetShape()), "real_labels");
+        auto crossEntropy = new BinaryCrossEntropy();
 
-        Tensor realLabels(Shape::From(disOut->GetShape(), BATCH_SIZE)); realLabels.One();
-        Tensor fakeLabels(Shape::From(disOut->GetShape(), BATCH_SIZE)); fakeLabels.Zero();
+        auto discLoss = add(crossEntropy->Build(fakeLabels, disOut1), crossEntropy->Build(realLabels, disOut2));
 
-        Tqdm progress(STEPS, 0);
-        progress.ShowEta(true).ShowElapsed(false).ShowPercent(false);
-        for (uint32_t i = 0; i < STEPS; ++i, progress.NextStep())
+        auto ganLoss = crossEntropy->Build(realLabels, disOut1);
+        auto l1Loss = mean(abs(sub(targetImg, genImg)));
+        auto genLoss = add(ganLoss, multiply(l1Loss, 100.f));
+
+        auto genOpt = new Adam(LEARNING_RATE, ADAM_BETA1);
+        auto genMinimize = genOpt->Minimize({ genLoss });
+        auto discOpt = new Adam(LEARNING_RATE, ADAM_BETA1);
+        auto discMinimize = discOpt->Minimize({ discLoss });
+
+        dModel->LoadWeights(NAME + "_disc.h5", false, true);
+        gModel->LoadWeights(NAME + "_gen.h5", false, true);
+
+        // setup data preloader
+        //EdgeImageLoader loader(trainFiles, BATCH_SIZE, 1);
+        //DataPreloader preloader({ &condImages, &realImages }, { &loader }, 5);
+        SplitImageLoader loader(trainFiles, BATCH_SIZE, 1); // facades
+        DataPreloader preloader({ targetImg->OutputPtr(), inputImg->OutputPtr() }, { &loader }, 5); // facades
+
+        const size_t STEPS = trainFiles.size();
+
+        for (size_t e = 0; e < EPOCHS; ++e)
         {
-            //load next conditional and expected images
-            preloader.Load();
-
-            // perform step of training discriminator to distinguish fake from real images
-            dModel->SetTrainable(true);
-
-            float dRealLoss = get<0>(dModel->TrainOnBatch({ &condImages, &realImages }, { &realLabels }));
-            // generate fake images from condition
-            Tensor fakeImages = *gModel->Predict(condImages)[0];
-            float dFakeLoss = get<0>(dModel->TrainOnBatch({ &condImages, &fakeImages }, { &fakeLabels }));
-
-            if (i % 20 == 0)
+            Tqdm progress(STEPS, 0);
+            progress.ShowEta(true).ShowElapsed(false).ShowPercent(false);
+            for (size_t s = 0; s < STEPS; ++s, progress.NextStep())
             {
-                ganModel->SaveWeights(NAME + ".h5");
-                Tensor tmp(Shape(IMG_SHAPE.Width() * 3, IMG_SHAPE.Height(), IMG_SHAPE.Depth(), BATCH_SIZE));
-                Tensor::Concat(WidthAxis, { &condImages, &fakeImages, &realImages }, tmp);
-                tmp.Add(1.f).Mul(127.5f).SaveAsImage(NAME + "_s" + PadLeft(to_string(i), 4, '0') + ".jpg", false, 1);
-            }
-                    
-            // load next batch for GAN training step
-            preloader.Load();
-            
-            // perform step of training generator to generate more real images
-            dModel->SetTrainable(false);
-            float ganLoss = get<0>(ganModel->TrainOnBatch({ &condImages }, { &realLabels, &realImages }));
+                //load next conditional and expected images
+                preloader.Load();
 
-            stringstream extString;
-            extString << setprecision(4) << fixed << " - real_l: " << dRealLoss << " - fake_l: " << dFakeLoss << " - gan_l: " << ganLoss;
-            progress.SetExtraString(extString.str());
+                // optimize discriminator
+                dModel->SetTrainable(true);
+                gModel->SetTrainable(false);
+                auto discResults = Session::Default()->Run({ discLoss, discMinimize }, {});
+                float dLoss = (*discResults[0])(0);
+
+                // optimize generator
+                dModel->SetTrainable(false);
+                gModel->SetTrainable(true);
+                auto genResults = Session::Default()->Run({ genLoss, ganLoss, l1Loss, genImg, genMinimize }, {});
+                float _genLoss = (*genResults[0])(0);
+                float _ganLoss = (*genResults[1])(0);
+                float _l1Loss = (*genResults[2])(0);
+                auto _genImg = (*genResults[3]);
+
+                if ((e * STEPS + s) % 50 == 0)
+                {
+                    dModel->SaveWeights(NAME + "_disc.h5");
+                    gModel->SaveWeights(NAME + "_gen.h5");
+                    Tensor tmp(Shape(IMG_SHAPE.Width() * 3, IMG_SHAPE.Height(), IMG_SHAPE.Depth(), BATCH_SIZE));
+                    Tensor::Concat(WidthAxis, { inputImg->OutputPtr(), &_genImg, targetImg->OutputPtr() }, tmp);
+                    tmp.Add(1.f).Mul(127.5f).SaveAsImage(NAME + "_s" + PadLeft(to_string(e * STEPS + s), 4, '0') + ".jpg", false, 1);
+                }
+
+                stringstream extString;
+                extString << setprecision(4) << fixed << " - dLoss: " << dLoss << " - ganLoss: " << _ganLoss << " - l1Loss: " << _l1Loss << " - genLoss: " << _genLoss;
+                progress.SetExtraString(extString.str());
+            }
         }
 
-        ganModel->SaveWeights(NAME + ".h5");
+        //ganModel->SaveWeights(NAME + ".h5");
     }
 
     //////////////////////////////////////////////////////////////////////////
