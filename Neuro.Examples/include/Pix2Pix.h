@@ -101,10 +101,10 @@ public:
 
         cout << "Example: Pix2Pix" << endl;
 
-        //const string NAME = "flowers";
-        //auto trainFiles = LoadFilesList("data/flowers", false, true);
-        const string NAME = "facades";
-        auto trainFiles = LoadFilesList("data/facades/train", false, true);
+        const string NAME = "flowers";
+        auto trainFiles = LoadFilesList("data/flowers", false, true);
+        /*const string NAME = "facades";
+        auto trainFiles = LoadFilesList("data/facades/train", false, true);*/
 
         // setup models
         auto gModel = CreateGenerator(IMG_SHAPE);
@@ -140,50 +140,47 @@ public:
         gModel->LoadWeights(NAME + "_gen.h5", false, true);
 
         // setup data preloader
-        //EdgeImageLoader loader(trainFiles, BATCH_SIZE, 1);
-        //DataPreloader preloader({ &condImages, &realImages }, { &loader }, 5);
-        SplitImageLoader loader(trainFiles, BATCH_SIZE, 1); // facades
-        DataPreloader preloader({ targetImg->OutputPtr(), inputImg->OutputPtr() }, { &loader }, 5); // facades
+        EdgeImageLoader loader(trainFiles, BATCH_SIZE, 1);
+        DataPreloader preloader({ inputImg->OutputPtr(), targetImg->OutputPtr() }, { &loader }, 5);
+        //SplitImageLoader loader(trainFiles, BATCH_SIZE, 1); // facades
+        //DataPreloader preloader({ targetImg->OutputPtr(), inputImg->OutputPtr() }, { &loader }, 5); // facades
 
-        const size_t STEPS = trainFiles.size();
+        const size_t STEPS = trainFiles.size() * EPOCHS;
 
-        for (size_t e = 0; e < EPOCHS; ++e)
+        Tqdm progress(STEPS, 0);
+        progress.ShowEta(true).ShowElapsed(false).ShowPercent(false);
+        for (size_t s = 0; s < STEPS; ++s, progress.NextStep())
         {
-            Tqdm progress(STEPS, 0);
-            progress.ShowEta(true).ShowElapsed(false).ShowPercent(false);
-            for (size_t s = 0; s < STEPS; ++s, progress.NextStep())
+            //load next conditional and expected images
+            preloader.Load();
+
+            // optimize discriminator
+            dModel->SetTrainable(true);
+            gModel->SetTrainable(false);
+            auto discResults = Session::Default()->Run({ discLoss, discMinimize }, {});
+            float dLoss = discResults[0]->Mean(GlobalAxis)(0);
+
+            // optimize generator
+            dModel->SetTrainable(false);
+            gModel->SetTrainable(true);
+            auto genResults = Session::Default()->Run({ genLoss, ganLoss, l1Loss, genImg, genMinimize }, {});
+            float _genLoss = genResults[0]->Mean(GlobalAxis)(0);
+            float _ganLoss = genResults[1]->Mean(GlobalAxis)(0);
+            float _l1Loss = (*genResults[2])(0);
+            auto _genImg = (*genResults[3]);
+
+            if (s % 50 == 0)
             {
-                //load next conditional and expected images
-                preloader.Load();
-
-                // optimize discriminator
-                dModel->SetTrainable(true);
-                gModel->SetTrainable(false);
-                auto discResults = Session::Default()->Run({ discLoss, discMinimize }, {});
-                float dLoss = (*discResults[0])(0);
-
-                // optimize generator
-                dModel->SetTrainable(false);
-                gModel->SetTrainable(true);
-                auto genResults = Session::Default()->Run({ genLoss, ganLoss, l1Loss, genImg, genMinimize }, {});
-                float _genLoss = (*genResults[0])(0);
-                float _ganLoss = (*genResults[1])(0);
-                float _l1Loss = (*genResults[2])(0);
-                auto _genImg = (*genResults[3]);
-
-                if ((e * STEPS + s) % 50 == 0)
-                {
-                    dModel->SaveWeights(NAME + "_disc.h5");
-                    gModel->SaveWeights(NAME + "_gen.h5");
-                    Tensor tmp(Shape(IMG_SHAPE.Width() * 3, IMG_SHAPE.Height(), IMG_SHAPE.Depth(), BATCH_SIZE));
-                    Tensor::Concat(WidthAxis, { inputImg->OutputPtr(), &_genImg, targetImg->OutputPtr() }, tmp);
-                    tmp.Add(1.f).Mul(127.5f).SaveAsImage(NAME + "_s" + PadLeft(to_string(e * STEPS + s), 4, '0') + ".jpg", false, 1);
-                }
-
-                stringstream extString;
-                extString << setprecision(4) << fixed << " - dLoss: " << dLoss << " - ganLoss: " << _ganLoss << " - l1Loss: " << _l1Loss << " - genLoss: " << _genLoss;
-                progress.SetExtraString(extString.str());
+                dModel->SaveWeights(NAME + "_disc.h5");
+                gModel->SaveWeights(NAME + "_gen.h5");
+                Tensor tmp(Shape(IMG_SHAPE.Width() * 3, IMG_SHAPE.Height(), IMG_SHAPE.Depth(), BATCH_SIZE));
+                Tensor::Concat(WidthAxis, { inputImg->OutputPtr(), &_genImg, targetImg->OutputPtr() }, tmp);
+                tmp.Add(1.f).Mul(127.5f).SaveAsImage(NAME + "_s" + PadLeft(to_string(s), 4, '0') + ".jpg", false, 1);
             }
+
+            stringstream extString;
+            extString << setprecision(4) << fixed << " - dLoss: " << dLoss << " - ganLoss: " << _ganLoss << " - l1Loss: " << _l1Loss << " - genLoss: " << _genLoss;
+            progress.SetExtraString(extString.str());
         }
 
         //ganModel->SaveWeights(NAME + ".h5");
