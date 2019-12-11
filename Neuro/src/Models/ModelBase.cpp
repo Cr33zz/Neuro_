@@ -368,7 +368,7 @@ namespace Neuro
         vector<Variable*> params;
         Parameters(params);
 
-        fetches.push_back(optimizer->Minimize(losses, params));
+        fetches.push_back(optimizer->Minimize({ totalLoss }, params));
 
         vector<Placeholder*> inputs;
         for_each(m_Inputs.begin(), m_Inputs.end(), [&](TensorLike* input) { inputs.push_back(static_cast<Placeholder*>(input)); });
