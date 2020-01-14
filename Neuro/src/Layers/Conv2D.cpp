@@ -108,7 +108,7 @@ namespace Neuro
         if (m_UseBias)
         {
             if (m_DataFormat == NCHW)
-                params.push_back({ m_Bias, { DepthAxis, HeightAxis, WidthAxis } });
+                params.push_back({ m_Bias, Tensor::FillUpTranposeAxis({ DepthAxis, HeightAxis, WidthAxis }) });
             else
                 params.push_back({ m_Bias });
         }
