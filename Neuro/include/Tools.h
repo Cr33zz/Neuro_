@@ -61,6 +61,7 @@ namespace Neuro
     Tensor LoadImage(uint8_t* imageBuffer, uint32_t width, uint32_t height, EPixelFormat format = RGB);
     void SaveImage(const Tensor& t, const string& imageFile, bool denormalize, uint32_t maxCols = 0);
     bool IsImageFileValid(const string& filename);
+    Shape GetShapeForMaxSize(const Shape& shape, uint32_t maxSize);
     Shape GetImageDims(const string& filename);
 
     vector<string> LoadFilesList(const string& dir, bool shuffle, bool useCache = true, bool validate = false);

@@ -520,18 +520,18 @@ namespace Neuro
             auto resizedImage = FreeImage_Rescale(image, targetWidth, targetHeight);
             FreeImage_Unload(image);
             image = resizedImage;
+        }
 
-            if ((cropSizeX || cropSizeY) && (targetWidth > cropSizeX || targetHeight > cropSizeY))
-            {
-                // copy random-part
-                auto left = GlobalRng().Next(targetWidth - cropSizeX);
-                auto top = GlobalRng().Next(targetHeight - cropSizeY);
-                auto croppedImage = FreeImage_Copy(resizedImage, left, top, left + cropSizeX, top + cropSizeY);
-                FreeImage_Unload(resizedImage);
-                image = croppedImage;
-                targetWidth = cropSizeX;
-                targetHeight = cropSizeY;
-            }
+        if ((cropSizeX || cropSizeY) && (targetWidth > cropSizeX || targetHeight > cropSizeY))
+        {
+            // copy random-part
+            auto left = GlobalRng().Next(targetWidth - cropSizeX);
+            auto top = GlobalRng().Next(targetHeight - cropSizeY);
+            auto croppedImage = FreeImage_Copy(image, left, top, left + cropSizeX, top + cropSizeY);
+            FreeImage_Unload(image);
+            image = croppedImage;
+            targetWidth = cropSizeX;
+            targetHeight = cropSizeY;
         }
 
         sizeX = targetWidth;
@@ -696,6 +696,14 @@ namespace Neuro
         FreeImage_Unload(image);
 
         return true;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Shape GetShapeForMaxSize(const Shape& shape, uint32_t maxSize)
+    {
+        if (shape.Width() < shape.Height())
+            return Shape(uint32_t(float(shape.Width()) / shape.Height() * maxSize), maxSize, shape.Depth());
+        return Shape(maxSize, uint32_t(float(shape.Height()) / shape.Width() * maxSize), shape.Depth());
     }
 
     //////////////////////////////////////////////////////////////////////////
