@@ -491,13 +491,13 @@ namespace Neuro
             if (inputW < 0)
                 inputW = -inputW;
             else if (inputW >= (int)input.Width())
-                inputW = (int)::fabs((int)input.Width() - inputW);
+                inputW = (int)::fabs((int)input.Width() - inputW % input.Width() - 2);
             inputW %= input.Width();
 
             if (inputH < 0)
                 inputH = -inputH;
             else if (inputH >= (int)input.Height())
-                inputH = (int)::fabs((int)input.Height() - inputH);
+                inputH = (int)::fabs((int)input.Height() - inputH % input.Height() - 2);
             inputH %= input.Height();
 
             output(w, h, d, n) = input((uint32_t)inputW, (uint32_t)inputH, d, n);

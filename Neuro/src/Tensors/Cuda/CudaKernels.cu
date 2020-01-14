@@ -128,13 +128,13 @@ __global__ void reflectPad2D(int outputLen, const float* __restrict input, int i
         if (inputW < 0)
             inputW = -inputW;
         else if (inputW >= inputWidth)
-            inputW = abs(inputWidth - inputW);
+            inputW = abs(inputWidth - inputW % inputWidth - 2);
         inputW %= inputWidth;
 
         if (inputH < 0)
             inputH = -inputH;
         else if (inputH >= inputHeight)
-            inputH = abs(inputHeight - inputH);
+            inputH = abs(inputHeight - inputH % inputHeight - 2);
         inputH %= inputHeight;
 
         output[i] = input[getIndex(inputW, inputH, d, n, inputStride1, inputStride2, inputStride3)];

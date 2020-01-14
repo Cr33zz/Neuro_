@@ -1430,7 +1430,7 @@ namespace NeuroTests
 
         TEST_METHOD(ReflectPad2D_CompareWithCpuResult)
         {
-            Tensor t(Shape(7, 9, 3, 5)); t.FillWithRand();
+            Tensor t(Shape(20, 30, 40, 20)); t.FillWithRand();
 
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t.ReflectPad2D(3, 5, 1, 2);)
@@ -1443,7 +1443,7 @@ namespace NeuroTests
 
         TEST_METHOD(Pad2DGradient_CompareWithCpuResult)
         {
-            Tensor input(Shape(2, 3, 4, 2)); input.FillWithRand(15);
+            Tensor input(Shape(20, 30, 40, 20)); input.FillWithRand(15);
             Tensor output = input.ReflectPad2D(3, 5, 1, 2);
             Tensor outputGradient(output.GetShape()); outputGradient.FillWithRand();
 
