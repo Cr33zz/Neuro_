@@ -699,6 +699,14 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    Shape GetShapeForMinSize(const Shape& shape, uint32_t minSize)
+    {
+        if (shape.Width() < shape.Height())
+            return Shape(minSize, uint32_t(float(shape.Height()) / shape.Width() * minSize), shape.Depth());
+        return Shape(uint32_t(float(shape.Width()) / shape.Height() * minSize), minSize, shape.Depth());
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     Shape GetShapeForMaxSize(const Shape& shape, uint32_t maxSize)
     {
         if (shape.Width() < shape.Height())
