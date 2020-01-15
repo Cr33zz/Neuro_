@@ -2512,7 +2512,7 @@ namespace Neuro
 
         SyncToHost();
         ofstream stream(Replace(outFile, "/", "-"));
-        stream << "h_ptr=0x" << hex << m_Storage.DataUnsafe() << endl << "d_ptr=0x" << hex << m_Storage.DeviceDataUnsafe() << endl;
+        stream << "h_ptr=0x" << hex << m_Storage.DataUnsafe() << endl << "d_ptr=0x" << hex << m_Storage.DeviceDataUnsafe() << dec << endl;
         for (int i = 0; i < 4; ++i)
             stream << m_Shape.Dimensions[i] << "\n";
         stream << fixed << setprecision(6);
