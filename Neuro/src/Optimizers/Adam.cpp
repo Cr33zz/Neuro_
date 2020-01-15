@@ -53,6 +53,16 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void Adam::MinimizationOperation::Reset()
+    {
+        m_MGradients.clear();
+        m_VGradients.clear();
+        m_Iteration = 0;
+        if (m_GlobalStep)
+            m_GlobalStep->Output()(0) = 0;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void Adam::MinimizationOperation::ComputeInternal()
     {
         m_InputsManuallyConsumed = true;

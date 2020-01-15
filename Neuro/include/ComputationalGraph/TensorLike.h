@@ -39,6 +39,9 @@ namespace Neuro
 
         virtual void Preload();
         virtual void PreloadForGradient();
+
+        // Can be used to clean up internal state
+        virtual void Reset() {}
         
         void AddInputNode(TensorLike* node) { m_InputNodes.push_back(node); }
 
