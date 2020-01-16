@@ -757,6 +757,8 @@ namespace Neuro
         NEURO_ASSERT(srcDevPtr, "Invalid device pointer.");
         NEURO_ASSERT(destDevPtr, "Invalid destination device pointer.");
         CUDA_CHECK(cudaMemcpy(destDevPtr, srcDevPtr, sizeInBytes, cudaMemcpyDeviceToDevice));
+        // make sure CPU waits for this to be finished (by default this operation is asynchronous with respect to the host code)
+        cudaStreamSynchronize(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
