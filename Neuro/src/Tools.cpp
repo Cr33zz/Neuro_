@@ -17,7 +17,7 @@
 namespace fs = std::experimental::filesystem;
 
 #ifndef NDEBUG
-//#define CUDA_PROFILING_ENABLED
+#define CUDA_PROFILING_ENABLED
 #endif
 
 namespace Neuro
@@ -507,16 +507,6 @@ namespace Neuro
 
         if (targetSizeX > 0 || targetSizeY > 0)
         {
-            if (cropSizeX || cropSizeY)
-            {
-                float xScale = (float)targetSizeX / imgWidth;
-                float yScale = (float)targetSizeY / imgHeight;
-                float scale = max(xScale, yScale);
-
-                targetWidth = (uint32_t)round(imgWidth * scale);
-                targetHeight = (uint32_t)round(imgHeight * scale);
-            }
-
             auto resizedImage = FreeImage_Rescale(image, targetWidth, targetHeight);
             FreeImage_Unload(image);
             image = resizedImage;
@@ -525,13 +515,13 @@ namespace Neuro
         if ((cropSizeX || cropSizeY) && (targetWidth > cropSizeX || targetHeight > cropSizeY))
         {
             // copy random-part
-            auto left = GlobalRng().Next(targetWidth - cropSizeX);
-            auto top = GlobalRng().Next(targetHeight - cropSizeY);
-            auto croppedImage = FreeImage_Copy(image, left, top, left + cropSizeX, top + cropSizeY);
+            auto left = targetWidth > cropSizeX ? GlobalRng().Next(targetWidth - cropSizeX) : 0;
+            auto top = targetHeight > cropSizeY ? GlobalRng().Next(targetHeight - cropSizeY) : 0;
+            auto croppedImage = FreeImage_Copy(image, left, top, min(left + cropSizeX, targetWidth), min(top + cropSizeY, targetHeight));
             FreeImage_Unload(image);
             image = croppedImage;
-            targetWidth = cropSizeX;
-            targetHeight = cropSizeY;
+            targetWidth = min(cropSizeX, targetWidth);
+            targetHeight = min(cropSizeY, targetHeight);
         }
 
         sizeX = targetWidth;
