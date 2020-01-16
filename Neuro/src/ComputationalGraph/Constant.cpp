@@ -13,6 +13,7 @@ namespace Neuro
         m_Output.Resize(value.GetShape());
         m_Output.SetStorageType(ST_KeepDevMem);
         value.CopyTo(m_Output);
+        Graph::Default()->AddConstant(this);
     }
 
     //////////////////////////////////////////////////////////////////////////

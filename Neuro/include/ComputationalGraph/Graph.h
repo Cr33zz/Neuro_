@@ -11,6 +11,7 @@ namespace Neuro
     class Placeholder;
     class Operation;
     class Variable;
+    class Constant;
 
     class Graph
     {
@@ -21,10 +22,14 @@ namespace Neuro
         static Graph* Default();
 
         void AddVariable(Variable* v);
+        void AddConstant(Constant* c);
         void AddPlaceholder(Placeholder* p);
         void AddOperation(Operation* op);
 
+        void Clear();
+
         const vector<Variable*>& Variables() const { return m_Variables; }
+        const vector<Constant*>& Constants() const { return m_Constants; }
         const vector<Placeholder*>& Placeholders() const { return m_Placeholders; }
         const vector<Operation*>& Operations() const { return m_Operations; }
 
@@ -50,6 +55,7 @@ namespace Neuro
         vector<Placeholder*> m_Placeholders;
         vector<Operation*> m_Operations;
         vector<Variable*> m_Variables;
+        vector<Constant*> m_Constants;
         vector<TensorLike*> m_Nodes;
         uint32_t m_CurrentStep = 0;
 

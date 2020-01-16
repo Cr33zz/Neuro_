@@ -4,6 +4,7 @@
 #include "ComputationalGraph/TensorLike.h"
 #include "ComputationalGraph/Placeholder.h"
 #include "ComputationalGraph/Variable.h"
+#include "ComputationalGraph/Constant.h"
 #include "ComputationalGraph/Operation.h"
 #include "Debug.h"
 #include "Tools.h"
@@ -45,6 +46,13 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void Graph::AddConstant(Constant* c)
+    {
+        m_Constants.push_back(c);
+        m_Nodes.push_back(c);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void Graph::AddPlaceholder(Placeholder* p)
     {
         m_Placeholders.push_back(p);
@@ -56,6 +64,21 @@ namespace Neuro
     {
         m_Operations.push_back(op);
         m_Nodes.push_back(op);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Graph::Clear()
+    {
+        for (auto node : m_Nodes)
+            delete node;
+
+        m_Nodes.clear();
+        m_Placeholders.clear();
+        m_Variables.clear();
+        m_Constants.clear();
+        m_Operations.clear();
+
+        m_CurrentStep = 0;
     }
 
     //////////////////////////////////////////////////////////////////////////

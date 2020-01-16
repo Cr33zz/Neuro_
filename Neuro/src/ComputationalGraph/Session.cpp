@@ -127,4 +127,11 @@ namespace Neuro
             result[i] = fetches[i]->OutputPtr();
         return result;
     }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Session::Clear()
+    {
+        m_OrderCache.clear();
+        m_Graph->Clear();
+    }
 }
