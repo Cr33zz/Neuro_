@@ -8,6 +8,7 @@ Supported layers:
 * UpSampling2D
 * BatchNormalization
 * InstanceNormalization
+* Value/ReflectPadding2D
 * Dropout
 * Flatten
 * Reshape
@@ -205,4 +206,6 @@ Among others it contains MNIST, CIFAR-10 data sets.
 Currently CUDA is required to compile the library. For GPU computation CUDA 10.1 and CudNN 7.6.4 are required. Both can be downloaded from NVidia website:  
 https://developer.nvidia.com/cuda-downloads  
 https://developer.nvidia.com/cudnn  
-Also please make sure your graphics card drivers are up to date.
+You also need to add the NvToolsExt binaries folder to the Path enviroment variable, usually this is the path you need to add:  
+c:\Program Files\NVIDIA Corporation\NvToolsExt\bin\x64  
+Lastly, please make sure your graphics card drivers are up to date.  
