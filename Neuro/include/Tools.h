@@ -109,7 +109,7 @@ namespace Neuro
     class Tqdm
     {
     public:
-        Tqdm(size_t maxIterations, size_t barLen = 30);
+        Tqdm(size_t maxIterations, size_t barLen = 30, bool finalizeInit = true);
         Tqdm& ShowElapsed(bool show) { m_ShowElapsed = show; return *this; }
         Tqdm& ShowEta(bool show) { m_ShowEta = show; return *this; }
         Tqdm& ShowIterTime(bool show) { m_ShowIterTime = show; return *this; }
@@ -118,6 +118,7 @@ namespace Neuro
         Tqdm& EnableSeparateLines(bool enable) { m_SeparateLinesEnabled = enable; return *this; }
         void SetExtraString(const string& str) { m_ExtraString = str; }
 
+        void FinalizeInit();
         void NextStep(size_t iterations = 1);
         string Str() const { return m_Stream.str(); }
         __int64 ElapsedMilliseconds() const { return m_Timer.ElapsedMilliseconds(); }

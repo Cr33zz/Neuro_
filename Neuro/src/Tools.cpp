@@ -939,9 +939,19 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tqdm::Tqdm(size_t maxIterations, size_t barLength)
+    Tqdm::Tqdm(size_t maxIterations, size_t barLength, bool finalizeInit)
         : m_MaxIterations(maxIterations), m_BarLength(barLength)
     {
+        if (finalizeInit)
+            FinalizeInit();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tqdm::FinalizeInit()
+    {
+        if (m_Iteration != -1)
+            return;
+
         m_Timer.Start();
         NextStep();
     }
