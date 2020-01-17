@@ -153,7 +153,7 @@ namespace Neuro
     string TensorFormatter::Dragon4FloatFormatter::Float2Str(float f, int precision) const
     {
         stringstream stream;
-        stream << fixed << setprecision(5) << f;
+        stream << fixed << setprecision(2) << f;
         return stream.str();
     }
 }
