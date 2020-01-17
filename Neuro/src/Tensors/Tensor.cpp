@@ -1427,6 +1427,21 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void Tensor::LinearRampPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float endValue, Tensor& output) const
+    {
+        NEURO_ASSERT(Shape(m_Shape.Width() + left + right, m_Shape.Height() + top + bottom, m_Shape.Depth(), m_Shape.Batch()) == output.GetShape(), "Output shape doesn't match padded input shape.");
+        Op()->LinearRampPad2D(*this, left, right, top, bottom, endValue, output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::LinearRampPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float endValue) const
+    {
+        Tensor output(Shape(Width() + left + right, Height() + top + bottom, Depth(), Batch()));
+        LinearRampPad2D(left, right, top, bottom, endValue, output);
+        return output;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void Tensor::Pad2DGradient(const Tensor& gradient, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& inputGradient) const
     {
         NEURO_ASSERT(Shape(gradient.Width() - left - right, gradient.Height() - top - bottom, gradient.Depth(), gradient.Batch()) == inputGradient.GetShape(), "Input gradient shape doesn't match input shape.");

@@ -505,6 +505,54 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::LinearRampPad2D(const Tensor& input, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float endValue, Tensor& output) const
+    {
+        input.CopyToHost();
+        output.OverrideHost();
+
+        for (uint32_t n = 0; n < output.Batch(); ++n)
+		for (uint32_t d = 0; d < output.Depth(); ++d)
+		for (uint32_t h = 0; h < output.Height(); ++h)
+		for (uint32_t w = 0; w < output.Width(); ++w)
+        {
+            float v = 0;
+
+            if (w >= left && h >= top && w < input.Width() + left && h < input.Height() + top)
+                v = input(w - left, h - top, d, n);
+            else if (h >= top && h < input.Height() + top)
+            {
+                if (w < left)
+                    v = (input(0, h - top, d, n) - endValue) * (w / (float)left);
+                else
+                    v = (input(input.Width() - 1, h - top, d, n) - endValue) * (right - (w - input.Width() - left) - 1) / (float)right;
+            }
+            else if (w >= left && w < input.Width() + left)
+            {
+                if (h < top)
+                    v = (input(w - left, 0, d, n) - endValue) * (h / (float)top);
+                else
+                    v = (input(w - left, input.Height() - 1, d, n) - endValue) * (bottom - (h - input.Height() - top) - 1) / (float)bottom;
+            }
+            else if (w < left)
+            {
+                if (h < top)
+                    v = (input(0, 0, d, n) - endValue) * (h / (float)top) * (w / (float)left);
+                else
+                    v = (input(0, input.Height() - 1, d, n) - endValue) * (bottom - (h - input.Height() - top) - 1) / (float)bottom * (w / (float)left);
+            }
+            else if (w >= input.Width() + left)
+            {
+                if (h < top)
+                    v = (input(input.Width() - 1, 0, d, n) - endValue) * (h / (float)top) * (right - (w - input.Width() - left) - 1) / (float)right;
+                else
+                    v = (input(input.Width() - 1, input.Height() - 1, d, n) - endValue) * ((bottom - (h - input.Height() - top) - 1) / (float)bottom) * (right - (w - input.Width() - left) - 1) / (float)right;
+            }
+
+            output(w, h, d, n) = v;
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::Pad2DGradient(const Tensor& gradient, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& inputsGradient) const
     {
         gradient.CopyToHost();
