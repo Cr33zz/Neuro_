@@ -8,6 +8,7 @@ Supported layers:
 * UpSampling2D
 * BatchNormalization
 * InstanceNormalization
+* Value/ReflectPadding2D
 * Dropout
 * Flatten
 * Reshape
@@ -16,6 +17,9 @@ Supported layers:
 * Activation
 
 ## Code examples
+#### Pix2pix
+This is one of the conditional adversarial generative networks. Example below comes from training a network on a dataset of flower paintings scoured from pintrest. The goal of this particular model is to learn how to generate flower paintings from image containing only edges. Left image is conditional input to the model (created by running canny edge detection on an image from the dataset), right image is the original image from the dataset and central image is the output from generator network.
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/flowers.jpg)  
 #### Neural Style Transfer
 This neural network is given style image and any image we want to stylize. Model is using pre-trained VGG16/19 network to extract feature maps from style and content image and uses them to compute style and content loss. The only trainable element of the whole model is input image itself.  
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/content.jpg)  
@@ -202,4 +206,6 @@ Among others it contains MNIST, CIFAR-10 data sets.
 Currently CUDA is required to compile the library. For GPU computation CUDA 10.1 and CudNN 7.6.4 are required. Both can be downloaded from NVidia website:  
 https://developer.nvidia.com/cuda-downloads  
 https://developer.nvidia.com/cudnn  
-Also please make sure your graphics card drivers are up to date.
+You also need to add the NvToolsExt binaries folder to the Path enviroment variable, usually this is the path you need to add:  
+c:\Program Files\NVIDIA Corporation\NvToolsExt\bin\x64  
+Lastly, please make sure your graphics card drivers are up to date.  
