@@ -15,10 +15,15 @@ TensorLike* GramMatrix(TensorLike* features, const string& name)
 //////////////////////////////////////////////////////////////////////////
 TensorLike* StyleLoss(TensorLike* styleGram, TensorLike* stylizedFeatures, int index)
 {
-    NameScope scope("style_loss_" + to_string(index));
     assert(stylizedFeatures->GetShape().Batch() == 1);
+    return StyleLossFromGram(styleGram, GramMatrix(stylizedFeatures, "stylized" + to_string(index)), index);
+}
 
-    auto stylizedGram = GramMatrix(stylizedFeatures, "gen_style_" + to_string(index));
+//////////////////////////////////////////////////////////////////////////
+TensorLike* StyleLossFromGram(TensorLike* styleGram, TensorLike* stylizedGram, int index)
+{
+    NameScope scope("style_loss_" + to_string(index));
+    
     /*auto& styleFeaturesShape = stylizedFeatures->GetShape();
     float height = (float)styleFeaturesShape.Height(), width = (float)styleFeaturesShape.Width(), channels = (float)styleFeaturesShape.Depth();*/
     return sum(square(sub(styleGram, stylizedGram)));

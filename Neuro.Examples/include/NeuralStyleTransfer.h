@@ -14,6 +14,7 @@ using namespace Neuro;
 
 TensorLike* GramMatrix(TensorLike* reshapedFeatures, const string& name);
 TensorLike* StyleLoss(TensorLike* styleGram, TensorLike* stylizedFeatures, int index);
+TensorLike* StyleLossFromGram(TensorLike* styleGram, TensorLike* stylizedGram, int index);
 TensorLike* ContentLoss(TensorLike* contentFeatures, TensorLike* stylizedFeatures);
 
 //https://medium.com/tensorflow/neural-style-transfer-creating-art-with-deep-learning-using-tf-keras-and-eager-execution-7d541ac31398
