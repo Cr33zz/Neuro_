@@ -200,6 +200,7 @@
     <ClInclude Include="include\ComputationalGraph\Operations\LeakyReLUOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\MeanSquaredErrorOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\MergeOp.h" />
+    <ClInclude Include="include\ComputationalGraph\Operations\NormalizeGradientOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\Pad2dOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\Pool2dOp.h" />
     <ClInclude Include="include\ComputationalGraph\Operations\ReshapeOp.h" />
@@ -318,6 +319,7 @@
     <ClCompile Include="src\ComputationalGraph\Operations\InstanceNormalizeOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\LeakyReLUOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\MergeOp.cpp" />
+    <ClCompile Include="src\ComputationalGraph\Operations\NormalizeGradientOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\Pad2dOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\Pool2dOp.cpp" />
     <ClCompile Include="src\ComputationalGraph\Operations\ReshapeOp.cpp" />

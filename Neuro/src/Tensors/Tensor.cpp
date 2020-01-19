@@ -783,7 +783,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::AbsSum(EAxis axis, Tensor& output) const
     {
-        NEURO_ASSERT(m_Shape == output.GetShape(), "Output shape doesn't match input shape.");
         Op()->AbsSum(*this, axis, output);
     }
 

@@ -420,6 +420,7 @@
     <ClInclude Include="include\Layers\Padding2D.h">
       <Filter>include\Layers</Filter>
     </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\NormalizeGradientOp.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -725,6 +726,7 @@
     <ClCompile Include="src\Layers\Padding2D.cpp">
       <Filter>src\Layers</Filter>
     </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\NormalizeGradientOp.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\Tensors\Cuda\CudaKernels.cu">
