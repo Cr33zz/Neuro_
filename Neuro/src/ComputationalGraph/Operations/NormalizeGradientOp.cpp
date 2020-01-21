@@ -3,8 +3,8 @@
 namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
-    NormalizeGradientOp::NormalizeGradientOp(TensorLike* x, size_t order, const string& name)
-        : Operation({ x }, name.empty() ? "normalize_gradient" : name), m_Order((float)order)
+    NormalizeGradientOp::NormalizeGradientOp(TensorLike* x, size_t order, float scale, const string& name)
+        : Operation({ x }, name.empty() ? "normalize_gradient" : name), m_Order((float)order), m_Scale(scale)
     {
         UpdateOutputShape();
     }
@@ -25,6 +25,6 @@ namespace Neuro
         else
             norm += ::pow(sum(pow(grad, m_Order), NoneAxis)(0), 1.f / m_Order);
 
-        grad.Div(norm, m_InputsGrads[0]);
+        grad.Mul(m_Scale / norm, m_InputsGrads[0]);
     }
 }
