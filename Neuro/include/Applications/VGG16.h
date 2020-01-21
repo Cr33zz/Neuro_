@@ -20,6 +20,9 @@ namespace Neuro
         static void PreprocessImage(Tensor& image, EDataFormat dataFormat, bool swapChannels = true);
         static void DeprocessImage(Tensor& image, EDataFormat dataFormat, bool swapChannels = true, bool clipValues = true);
 
+        static Tensor PreprocessImageCopy(const Tensor& image, EDataFormat dataFormat, bool swapChannels = true);
+        static Tensor DeprocessImageCopy(const Tensor& image, EDataFormat dataFormat, bool swapChannels = true, bool clipValues = true);
+
         static void SwapChannels(Tensor& image);
     };
 }
