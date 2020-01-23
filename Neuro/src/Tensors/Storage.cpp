@@ -144,7 +144,9 @@ namespace Neuro
         if ((m_Type & ST_Offloadable) && !(type & ST_Offloadable))
         {
             CUDA_CHECK(cudaEventDestroy(m_OffloadEvent));
+            m_OffloadEvent = nullptr;
             CUDA_CHECK(cudaEventDestroy(m_PreloadEvent));
+            m_PreloadEvent = nullptr;
         }
         else if (!(m_Type & ST_Offloadable) && (type & ST_Offloadable))
         {
