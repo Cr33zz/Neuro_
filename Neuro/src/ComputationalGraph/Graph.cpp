@@ -209,7 +209,7 @@ namespace Neuro
     {
         //DeviceMemoryManager::Default().ForceMemoryStreamSync();
 
-        const size_t PRELOAD_STEPS = 8;
+        const size_t PRELOAD_STEPS = 3;
         vector<Variable*> variables;
 
         /// remove all node which don't care about gradient. it has to be done at runtime since variables can be switched between trainable and non-trainable state
