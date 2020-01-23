@@ -74,7 +74,7 @@ namespace Neuro
 
     string StringFormat(const string fmt_str, ...);
 
-    Tensor GaussianFilter(uint32_t size, float sigma = 1.f);
+    Tensor GaussianFilter(uint32_t size, uint32_t channels, float sigma = 1.f);
     void SobelFilters(const Tensor& img, Tensor& g, Tensor& theta);
     Tensor NonMaxSuppression(const Tensor& img, const Tensor& theta);
     Tensor Threshold(const Tensor& img, float lowThresholdRatio = 0.05f, float highThresholdRatio = 0.09f, float weak = 100.f, float strong = 255.f);
