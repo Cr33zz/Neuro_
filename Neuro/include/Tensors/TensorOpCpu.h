@@ -39,6 +39,7 @@ namespace Neuro
         virtual void ReflectPad2D(const Tensor& input, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& output) const;
         virtual void LinearRampPad2D(const Tensor& input, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float endValue, Tensor& output) const;
         virtual void Pad2DGradient(const Tensor& gradient, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& inputsGradient) const;
+        virtual void Roll2D(const Tensor& input, int xShift, int yShift, Tensor& output);
         virtual void Conv2D(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& output) const;
         virtual void Conv2DBiasActivation(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, const Tensor& bias, EActivation activation, float activationAlpha, Tensor& output);
         virtual void Conv2DBiasGradient(const Tensor& gradient, Tensor& biasGradient);

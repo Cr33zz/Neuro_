@@ -1670,6 +1670,19 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
+    void Tensor::Roll2D(int xShift, int yShift, Tensor& output)
+    {
+        Op()->Roll2D(*this, xShift, yShift, output);
+    }
+
+    Tensor Tensor::Roll2D(int xShift, int yShift)
+    {
+        Tensor result(m_Shape);
+        Roll2D(xShift, yShift, result);
+        return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void Tensor::Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& output) const
 	{
         NEURO_ASSERT(GetConvOutputShape(m_Shape, kernels.Batch(), kernels.Width(), kernels.Height(), stride, padding, padding, dataFormat) == output.GetShape(), "Output shape doesn't match input shape.");
