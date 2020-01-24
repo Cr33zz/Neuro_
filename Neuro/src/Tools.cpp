@@ -811,21 +811,26 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor GaussianFilter(uint32_t size, uint32_t channels, float sigma)
+    Tensor GaussianFilter(uint32_t size, float sigma)
     {
         int k = (int)size >> 1;
-        Tensor filter = zeros(Shape(2 * k + 1, 2 * k + 1, channels, channels));
+        Tensor filter(Shape(2 * k + 1, 2 * k + 1));
         float normal = 1.f / (2.f * (float)M_PI * sigma * sigma);
 
         for (int j = 1; j <= 2 * k + 1; ++j)
         for (int i = 1; i <= 2 * k + 1; ++i)
-        {
-             float value = normal * (float)::exp(-(((float)::pow(i - (k + 1), 2) + (float)::pow(j - (k + 1), 2)) / (2.f * sigma * sigma)));
-             for (uint32_t c = 0; c < channels; ++c)
-                 filter(i - 1, j - 1, c, c) = value;
-        }
+            filter(i - 1, j - 1) = normal * (float)::exp(-(((float)::pow(i - (k + 1), 2) + (float)::pow(j - (k + 1), 2)) / (2.f * sigma * sigma)));
 
         return filter;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor GaussianFilterFromRadius(uint32_t radius, uint32_t channels)
+    {
+        uint32_t kernelSize = 2 * radius + 1;
+        float sigma = (kernelSize - 1) / 4.f;
+
+        return GaussianFilter(kernelSize, channels, sigma);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -933,7 +938,7 @@ namespace Neuro
     Tensor CannyEdgeDetection(const Tensor& img)
     {
         Tensor output = img.ToGrayScale();
-        auto blurred = output.Conv2D(GaussianFilter(5, 1, 1.4f), 1, 2, NCHW);
+        auto blurred = output.Conv2D(GaussianFilter(5, 1.4f), 1, 2, NCHW);
         Tensor g, theta;
         SobelFilters(blurred, g, theta);
         auto nonMaxImg = NonMaxSuppression(g, theta);

@@ -27,7 +27,7 @@ namespace Neuro
 	class Tensor;
 
     const float _EPSILON = 10e-7f;
-    
+
     Random& GlobalRng();
     void GlobalRngSeed(unsigned int seed);
 
@@ -75,6 +75,7 @@ namespace Neuro
     string StringFormat(const string fmt_str, ...);
 
     Tensor GaussianFilter(uint32_t size, uint32_t channels, float sigma = 1.f);
+    Tensor GaussianFilterFromRadius(uint32_t radius, uint32_t channels);
     void SobelFilters(const Tensor& img, Tensor& g, Tensor& theta);
     Tensor NonMaxSuppression(const Tensor& img, const Tensor& theta);
     Tensor Threshold(const Tensor& img, float lowThresholdRatio = 0.05f, float highThresholdRatio = 0.09f, float weak = 100.f, float strong = 255.f);
