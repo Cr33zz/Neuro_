@@ -379,6 +379,52 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::RGBToYUV() const
+    {
+        NEURO_ASSERT(Depth() == 3 && Batch() == 1, "");
+
+        Tensor output(GetShape());
+        Tensor tmp(Shape(Width(), Height()));
+
+        Tensor Y({ 0.299f, 0.587f, 0.114f }, Shape(1, 1, 3));
+        MulElem(Y).Sum(_2Axis, tmp);
+        tmp.CopyDepthTo(0, 0, 0, 0, output);
+
+        Tensor U({ -0.14714119f, -0.28886916f, 0.43601035f }, Shape(1, 1, 3));
+        MulElem(U).Sum(_2Axis, tmp);
+        tmp.CopyDepthTo(0, 0, 1, 0, output);
+
+        Tensor V({ 0.61497538f, -0.51496512f, -0.10001026f }, Shape(1, 1, 3));
+        MulElem(V).Sum(_2Axis, tmp);
+        tmp.CopyDepthTo(0, 0, 2, 0, output);
+
+        return output;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::YUVToRGB() const
+    {
+        NEURO_ASSERT(Depth() == 3 && Batch() == 1, "");
+
+        Tensor output(GetShape());
+        Tensor tmp(Shape(Width(), Height()));
+
+        Tensor R({ 1.f, 0.f, 1.13988303f }, Shape(1, 1, 3));
+        MulElem(R).Sum(_2Axis, tmp);
+        tmp.CopyDepthTo(0, 0, 0, 0, output);
+
+        Tensor G({ 1.f, -0.394642334f, -0.58062185f }, Shape(1, 1, 3));
+        MulElem(G).Sum(_2Axis, tmp);
+        tmp.CopyDepthTo(0, 0, 1, 0, output);
+
+        Tensor B({ 1.f, 2.03206185f, 0.f }, Shape(1, 1, 3));
+        MulElem(B).Sum(_2Axis, tmp);
+        tmp.CopyDepthTo(0, 0, 2, 0, output);
+
+        return output;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void Tensor::MatMul(bool transposeT, const Tensor& t, Tensor& output) const
 	{
         NEURO_ASSERT(!transposeT, "Fused tranpose and matmul not supported.");
@@ -783,7 +829,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::AbsSum(EAxis axis, Tensor& output) const
     {
-        NEURO_ASSERT(m_Shape == output.GetShape(), "Output shape doesn't match input shape.");
         Op()->AbsSum(*this, axis, output);
     }
 

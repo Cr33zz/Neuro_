@@ -21,6 +21,14 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    Tensor VGG16::PreprocessImageCopy(const Tensor& image, EDataFormat dataFormat, bool swapChannels)
+    {
+        Tensor output(image);
+        PreprocessImage(output, dataFormat, swapChannels);
+        return output;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void VGG16::DeprocessImage(Tensor& image, EDataFormat dataFormat, bool swapChannels, bool clipValues)
     {
         image.Add(Tensor({ 123.68f, 116.779f, 103.939f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), image);
@@ -32,6 +40,14 @@ namespace Neuro
 
         if (clipValues)
             image.Clip(0, 255, image);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor VGG16::DeprocessImageCopy(const Tensor& image, EDataFormat dataFormat, bool swapChannels, bool clipValues)
+    {
+        Tensor output(image);
+        DeprocessImage(output, dataFormat, swapChannels, clipValues);
+        return output;
     }
 
     //////////////////////////////////////////////////////////////////////////
