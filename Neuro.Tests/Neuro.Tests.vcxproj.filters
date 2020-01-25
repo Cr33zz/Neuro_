@@ -16,9 +16,6 @@
     <ClCompile Include="src\ShapeTests.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\TensorOpMultiCpuTests.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\RandomTests.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -35,6 +32,12 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\TrainingModelsTests.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TensorOpCpuMtTests.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TensorOpCpuMklTests.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

@@ -7,7 +7,8 @@
 
 #include "Tensors/Tensor.h"
 #include "Tensors/TensorOpCpu.h"
-#include "Tensors/TensorOpMultiCpu.h"
+#include "Tensors/TensorOpCpuMt.h"
+#include "Tensors/TensorOpCpuMkl.h"
 #include "Tensors/TensorOpGpu.h"
 #include "Tensors/TensorFormatter.h"
 #include "Random.h"
@@ -19,7 +20,8 @@ namespace Neuro
     using namespace std;
 
 	TensorOpCpu* Tensor::g_OpCpu = new TensorOpCpu();
-    TensorOpCpu* Tensor::g_OpMultiCpu = nullptr;
+    TensorOpCpu* Tensor::g_OpCpuMt = nullptr;
+    TensorOpCpu* Tensor::g_OpCpuMkl = nullptr;
     TensorOpCpu* Tensor::g_OpGpu = nullptr;
 
     TensorOpCpu* Tensor::g_DefaultOp = nullptr;
@@ -2623,8 +2625,10 @@ namespace Neuro
 		{
 		case EOpMode::CPU:
 			return g_OpCpu;
-        case EOpMode::MultiCPU:
-			return g_OpMultiCpu = (g_OpMultiCpu ? g_OpMultiCpu : new TensorOpMultiCpu());
+        case EOpMode::CPU_MT:
+			return g_OpCpuMt = (g_OpCpuMt ? g_OpCpuMt : new TensorOpCpuMt());
+        case EOpMode::CPU_MKL:
+            return g_OpCpuMkl = (g_OpCpuMkl ? g_OpCpuMkl : new TensorOpCpuMkl());
         case EOpMode::GPU:
 			return g_OpGpu = (g_OpGpu ? g_OpGpu : new TensorOpGpu());
 		}
@@ -2727,7 +2731,7 @@ namespace Neuro
     Tensor zeros(const Shape& shape)
     {
         Tensor tmp(shape);
-        tmp.FillWithValue(0);
+        tmp.Zero();
         return tmp;
     }
 

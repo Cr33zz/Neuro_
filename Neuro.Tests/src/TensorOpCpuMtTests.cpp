@@ -6,7 +6,7 @@ using namespace Neuro;
 
 namespace NeuroTests
 {
-    TEST_CLASS(TensorOpMultiCpuTests)
+    TEST_CLASS(TensorOpCpuMtTests)
     {
         TEST_METHOD(MatMul_CompareWithCpuResult)
         {
@@ -16,8 +16,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t1.MatMul(t2);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t1.MatMul(t2);)
+            Tensor::SetForcedOpMode(CPU_MT);
+            NEURO_PROFILE("CPU_MT", Tensor r2 = t1.MatMul(t2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -30,8 +30,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t1.Add(t2);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t1.Add(t2);)
+            Tensor::SetForcedOpMode(CPU_MT);
+            NEURO_PROFILE("CPU_MT", Tensor r2 = t1.Add(t2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -44,8 +44,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t1.Add(t2);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t1.Add(t2);)
+            Tensor::SetForcedOpMode(CPU_MT);
+            NEURO_PROFILE("CPU_MT", Tensor r2 = t1.Add(t2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -58,8 +58,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t1.Sub(t2);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t1.Sub(t2);)
+            Tensor::SetForcedOpMode(CPU_MT);
+            NEURO_PROFILE("CPU_MT", Tensor r2 = t1.Sub(t2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -72,8 +72,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t1.Sub(t2);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t1.Sub(t2);)
+            Tensor::SetForcedOpMode(CPU_MT);
+            NEURO_PROFILE("CPU_MT", Tensor r2 = t1.Sub(t2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -86,8 +86,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t1.MulElem(t2);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t1.MulElem(t2);)
+            Tensor::SetForcedOpMode(CPU_MT);
+            NEURO_PROFILE("CPU_MT", Tensor r2 = t1.MulElem(t2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -100,8 +100,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t1.MulElem(t2);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t1.MulElem(t2);)
+            Tensor::SetForcedOpMode(CPU_MT);
+            NEURO_PROFILE("CPU_MT", Tensor r2 = t1.MulElem(t2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -113,8 +113,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t.Sum(_012Axes);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Sum(_012Axes);)
+            Tensor::SetForcedOpMode(CPU_MT);
+            NEURO_PROFILE("CPU_MT", Tensor r2 = t.Sum(_012Axes);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -126,8 +126,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t.Sum(_123Axes);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Sum(_123Axes);)
+            Tensor::SetForcedOpMode(CPU_MT);
+            NEURO_PROFILE("CPU_MT", Tensor r2 = t.Sum(_123Axes);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -139,8 +139,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t.Sum(BatchAxis);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Sum(BatchAxis);)
+            Tensor::SetForcedOpMode(CPU_MT);
+            NEURO_PROFILE("CPU_MT", Tensor r2 = t.Sum(BatchAxis);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -152,8 +152,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t.Sum(GlobalAxis);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Sum(GlobalAxis);)
+            Tensor::SetForcedOpMode(CPU_MT);
+            NEURO_PROFILE("CPU_MT", Tensor r2 = t.Sum(GlobalAxis);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -165,8 +165,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t.Div(2.f);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Div(2.f);)
+            Tensor::SetForcedOpMode(CPU_MT);
+            NEURO_PROFILE("CPU_MT", Tensor r2 = t.Div(2.f);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -180,8 +180,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t.Map(func);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Map(func);)
+            Tensor::SetForcedOpMode(CPU_MT);
+            NEURO_PROFILE("CPU_MT", Tensor r2 = t.Map(func);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -193,8 +193,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r(t.GetShape()); t.Softmax(r);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2(t.GetShape()); t.Softmax(r2);)
+            Tensor::SetForcedOpMode(CPU_MT);
+            NEURO_PROFILE("CPU_MT", Tensor r2(t.GetShape()); t.Softmax(r2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -208,8 +208,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r(input.GetShape()); input.SoftmaxGradient(output, gradient, r);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2(input.GetShape()); input.SoftmaxGradient(output, gradient, r2);)
+            Tensor::SetForcedOpMode(CPU_MT);
+            NEURO_PROFILE("CPU_MT", Tensor r2(input.GetShape()); input.SoftmaxGradient(output, gradient, r2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -222,8 +222,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t.Conv2D(kernals, 1, 0, NCHW);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Conv2D(kernals, 1, 0, NCHW);)
+            Tensor::SetForcedOpMode(CPU_MT);
+            NEURO_PROFILE("CPU_MT", Tensor r2 = t.Conv2D(kernals, 1, 0, NCHW);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -236,8 +236,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t.Conv2D(kernals, 1, 0, NHWC);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Conv2D(kernals, 1, 0, NHWC);)
+            Tensor::SetForcedOpMode(CPU_MT);
+            NEURO_PROFILE("CPU_MT", Tensor r2 = t.Conv2D(kernals, 1, 0, NHWC);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -253,9 +253,9 @@ namespace NeuroTests
             Tensor inputGradient(input);
             NEURO_PROFILE("CPU", gradient.Conv2DInputsGradient(gradient, kernels, 1, 0, NCHW, inputGradient);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
+            Tensor::SetForcedOpMode(CPU_MT);
             Tensor inputGradient2(input);
-            NEURO_PROFILE("MultiCPU", gradient.Conv2DInputsGradient(gradient, kernels, 1, 0, NCHW, inputGradient2);)
+            NEURO_PROFILE("CPU_MT", gradient.Conv2DInputsGradient(gradient, kernels, 1, 0, NCHW, inputGradient2);)
 
             Assert::IsTrue(inputGradient.Equals(inputGradient2));
         }
@@ -271,9 +271,9 @@ namespace NeuroTests
             Tensor inputGradient(input);
             NEURO_PROFILE("CPU", gradient.Conv2DInputsGradient(gradient, kernels, 1, 0, NHWC, inputGradient);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
+            Tensor::SetForcedOpMode(CPU_MT);
             Tensor inputGradient2(input);
-            NEURO_PROFILE("MultiCPU", gradient.Conv2DInputsGradient(gradient, kernels, 1, 0, NHWC, inputGradient2);)
+            NEURO_PROFILE("CPU_MT", gradient.Conv2DInputsGradient(gradient, kernels, 1, 0, NHWC, inputGradient2);)
 
             Assert::IsTrue(inputGradient.Equals(inputGradient2));
         }
@@ -289,9 +289,9 @@ namespace NeuroTests
             Tensor kernelsGradient(kernels);
             NEURO_PROFILE("CPU", input.Conv2DKernelsGradient(input, gradient, 1, 0, NCHW, kernelsGradient);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
+            Tensor::SetForcedOpMode(CPU_MT);
             Tensor kernelsGradient2(kernels);
-            NEURO_PROFILE("MultiCPU", input.Conv2DKernelsGradient(input, gradient, 1, 0, NCHW, kernelsGradient2);)
+            NEURO_PROFILE("CPU_MT", input.Conv2DKernelsGradient(input, gradient, 1, 0, NCHW, kernelsGradient2);)
 
             Assert::IsTrue(kernelsGradient.Equals(kernelsGradient2));
         }
@@ -307,9 +307,9 @@ namespace NeuroTests
             Tensor kernelsGradient(kernels);
             NEURO_PROFILE("CPU", input.Conv2DKernelsGradient(input, gradient, 1, 0, NHWC, kernelsGradient);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
+            Tensor::SetForcedOpMode(CPU_MT);
             Tensor kernelsGradient2(kernels);
-            NEURO_PROFILE("MultiCPU", input.Conv2DKernelsGradient(input, gradient, 1, 0, NHWC, kernelsGradient2);)
+            NEURO_PROFILE("CPU_MT", input.Conv2DKernelsGradient(input, gradient, 1, 0, NHWC, kernelsGradient2);)
 
             //CuDNN is generating marginally different results than CPU
             Assert::IsTrue(kernelsGradient.Equals(kernelsGradient2, 0.0001f));
@@ -322,8 +322,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t.Pool2D(3, 2, MaxPool, 0, NCHW);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Pool2D(3, 2, MaxPool, 0, NCHW);)
+            Tensor::SetForcedOpMode(CPU_MT);
+            NEURO_PROFILE("CPU_MT", Tensor r2 = t.Pool2D(3, 2, MaxPool, 0, NCHW);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -335,8 +335,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t.Pool2D(3, 2, AvgPool, 0, NCHW);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Pool2D(3, 2, AvgPool, 0, NCHW);)
+            Tensor::SetForcedOpMode(CPU_MT);
+            NEURO_PROFILE("CPU_MT", Tensor r2 = t.Pool2D(3, 2, AvgPool, 0, NCHW);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -348,8 +348,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t.Pool2D(3, 2, MaxPool, 0, NHWC);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Pool2D(3, 2, MaxPool, 0, NHWC);)
+            Tensor::SetForcedOpMode(CPU_MT);
+            NEURO_PROFILE("CPU_MT", Tensor r2 = t.Pool2D(3, 2, MaxPool, 0, NHWC);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -361,8 +361,8 @@ namespace NeuroTests
             Tensor::SetForcedOpMode(CPU);
             NEURO_PROFILE("CPU", Tensor r = t.Pool2D(3, 2, AvgPool, 0, NHWC);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
-            NEURO_PROFILE("MultiCPU", Tensor r2 = t.Pool2D(3, 2, AvgPool, 0, NHWC);)
+            Tensor::SetForcedOpMode(CPU_MT);
+            NEURO_PROFILE("CPU_MT", Tensor r2 = t.Pool2D(3, 2, AvgPool, 0, NHWC);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -377,9 +377,9 @@ namespace NeuroTests
             Tensor r(input.GetShape());
             NEURO_PROFILE("CPU", output.Pool2DGradient(output, input, outputGradient, 3, 2, MaxPool, 0, NCHW, r);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
+            Tensor::SetForcedOpMode(CPU_MT);
             Tensor r2(input.GetShape());
-            NEURO_PROFILE("MultiCPU", output.Pool2DGradient(output, input, outputGradient, 3, 2, MaxPool, 0, NCHW, r2);)
+            NEURO_PROFILE("CPU_MT", output.Pool2DGradient(output, input, outputGradient, 3, 2, MaxPool, 0, NCHW, r2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -394,9 +394,9 @@ namespace NeuroTests
             Tensor r(input.GetShape());
             NEURO_PROFILE("CPU", output.Pool2DGradient(output, input, outputGradient, 3, 2, AvgPool, 0, NCHW, r);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
+            Tensor::SetForcedOpMode(CPU_MT);
             Tensor r2(input.GetShape());
-            NEURO_PROFILE("MultiCPU", output.Pool2DGradient(output, input, outputGradient, 3, 2, AvgPool, 0, NCHW, r2);)
+            NEURO_PROFILE("CPU_MT", output.Pool2DGradient(output, input, outputGradient, 3, 2, AvgPool, 0, NCHW, r2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -411,9 +411,9 @@ namespace NeuroTests
             Tensor r(input.GetShape());
             NEURO_PROFILE("CPU", output.Pool2DGradient(output, input, outputGradient, 3, 2, MaxPool, 0, NHWC, r);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
+            Tensor::SetForcedOpMode(CPU_MT);
             Tensor r2(input.GetShape());
-            NEURO_PROFILE("MultiCPU", output.Pool2DGradient(output, input, outputGradient, 3, 2, MaxPool, 0, NHWC, r2);)
+            NEURO_PROFILE("CPU_MT", output.Pool2DGradient(output, input, outputGradient, 3, 2, MaxPool, 0, NHWC, r2);)
 
             Assert::IsTrue(r.Equals(r2));
         }
@@ -428,9 +428,9 @@ namespace NeuroTests
             Tensor r(input.GetShape());
             NEURO_PROFILE("CPU", output.Pool2DGradient(output, input, outputGradient, 3, 2, AvgPool, 0, NHWC, r);)
 
-            Tensor::SetForcedOpMode(MultiCPU);
+            Tensor::SetForcedOpMode(CPU_MT);
             Tensor r2(input.GetShape());
-            NEURO_PROFILE("MultiCPU", output.Pool2DGradient(output, input, outputGradient, 3, 2, AvgPool, 0, NHWC, r2);)
+            NEURO_PROFILE("CPU_MT", output.Pool2DGradient(output, input, outputGradient, 3, 2, AvgPool, 0, NHWC, r2);)
 
             Assert::IsTrue(r.Equals(r2));
         }

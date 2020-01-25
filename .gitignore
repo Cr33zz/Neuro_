@@ -341,3 +341,4 @@ data/
 *.diagsession
 Neuro.Examples/*.jpg
 Neuro.Examples/include/NeuralStyleTransferHD.h
+Neuro.Examples/include/NeuralStyleTransferHD2.h

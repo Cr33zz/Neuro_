@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class TensorOpMultiCpu : public TensorOpCpu
+    class TensorOpCpuMt : public TensorOpCpu
     {
     public:
         virtual void Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const override;

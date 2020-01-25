@@ -12,7 +12,7 @@ class FlowNetwork
 public:
     void Run()
     {
-        Tensor::SetDefaultOpMode(MultiCPU);
+        Tensor::SetDefaultOpMode(CPU_MT);
         GlobalRngSeed(1337);
 
         /*auto input1 = new Input(Shape(2));

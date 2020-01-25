@@ -1,13 +1,13 @@
 ﻿#include <ppl.h>
 
-#include "Tensors/TensorOpMultiCpu.h"
+#include "Tensors/TensorOpCpuMt.h"
 
 namespace Neuro
 {
     using namespace concurrency;
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const
+    void TensorOpCpuMt::Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const
     {
         t1.CopyToHost();
         t2.CopyToHost();
@@ -41,7 +41,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::MatMul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
+    void TensorOpCpuMt::MatMul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
     {
         NEURO_ASSERT(!transposeT1, "");
         NEURO_ASSERT(!transposeT2, "");
@@ -67,7 +67,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Mul(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const
+    void TensorOpCpuMt::Mul(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const
     {
         t1.CopyToHost();
         t2.CopyToHost();
@@ -101,7 +101,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Div(const Tensor& input, float v, Tensor& output) const
+    void TensorOpCpuMt::Div(const Tensor& input, float v, Tensor& output) const
     {
         input.CopyToHost();
         output.OverrideHost();
@@ -116,7 +116,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Sum(const Tensor& input, EAxis axis, Tensor& output) const
+    void TensorOpCpuMt::Sum(const Tensor& input, EAxis axis, Tensor& output) const
     {
         return __super::Sum(input, axis, output);
         //output.Zero();
@@ -155,7 +155,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Transpose(const Tensor& input, Tensor& output) const
+    void TensorOpCpuMt::Transpose(const Tensor& input, Tensor& output) const
     {
         input.CopyToHost();
         output.OverrideHost();
@@ -170,7 +170,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Conv2D(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& output) const
+    void TensorOpCpuMt::Conv2D(const Tensor& input, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& output) const
     {
         input.CopyToHost();
         kernels.CopyToHost();
@@ -217,7 +217,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& inputGradient) const
+    void TensorOpCpuMt::Conv2DInputGradient(const Tensor& gradient, const Tensor& kernels, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& inputGradient) const
     {
         gradient.CopyToHost();
         kernels.CopyToHost();
@@ -275,7 +275,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& kernelsGradient) const
+    void TensorOpCpuMt::Conv2DKernelsGradient(const Tensor& input, const Tensor& gradient, uint32_t stride, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& kernelsGradient) const
     {
         input.CopyToHost();
         gradient.CopyToHost();
@@ -333,7 +333,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Pool2D(const Tensor& input, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& output) const
+    void TensorOpCpuMt::Pool2D(const Tensor& input, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& output) const
     {
         input.CopyToHost();
         output.OverrideHost();
@@ -401,7 +401,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& inputGradient) const
+    void TensorOpCpuMt::Pool2DGradient(const Tensor& output, const Tensor& input, const Tensor& outputGradient, uint32_t filterSize, uint32_t stride, EPoolingMode type, uint32_t paddingX, uint32_t paddingY, EDataFormat dataFormat, Tensor& inputGradient) const
     {
         output.CopyToHost();
         input.CopyToHost();
@@ -494,7 +494,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::UpSample2D(const Tensor& t, uint32_t scaleFactor, Tensor& output) const
+    void TensorOpCpuMt::UpSample2D(const Tensor& t, uint32_t scaleFactor, Tensor& output) const
     {
         output.CopyToHost();
         output.OverrideHost();
@@ -513,7 +513,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::UpSample2DGradient(const Tensor& outputGradient, uint32_t scaleFactor, Tensor& inputGradient) const
+    void TensorOpCpuMt::UpSample2DGradient(const Tensor& outputGradient, uint32_t scaleFactor, Tensor& inputGradient) const
     {
         outputGradient.CopyToHost();
         inputGradient.OverrideHost();
@@ -529,7 +529,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Map(const function<float(float)>& func, const Tensor& input, Tensor& output) const
+    void TensorOpCpuMt::Map(const function<float(float)>& func, const Tensor& input, Tensor& output) const
     {
         input.CopyToHost();
         output.OverrideHost();
@@ -544,7 +544,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpMultiCpu::Map(const function<float(float, float)>& func, const Tensor& t1, const Tensor& t2, Tensor& output) const
+    void TensorOpCpuMt::Map(const function<float(float, float)>& func, const Tensor& t1, const Tensor& t2, Tensor& output) const
     {
         t1.CopyToHost();
         t2.CopyToHost();

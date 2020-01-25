@@ -351,7 +351,8 @@ namespace Neuro
 		static TensorOpCpu* g_DefaultOp;
         static TensorOpCpu* g_ForcedOp;
 		static TensorOpCpu* g_OpCpu;
-        static TensorOpCpu* g_OpMultiCpu;
+        static TensorOpCpu* g_OpCpuMt;
+        static TensorOpCpu* g_OpCpuMkl;
         static TensorOpCpu* g_OpGpu;
 
         friend class TensorOpGpu;

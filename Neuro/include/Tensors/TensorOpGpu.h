@@ -5,11 +5,11 @@
 #include <curand.h>
 
 #include "Types.h"
-#include "Tensors/TensorOpMultiCpu.h"
+#include "Tensors/TensorOpCpuMt.h"
 
 namespace Neuro
 {
-    class TensorOpGpu : public TensorOpMultiCpu
+    class TensorOpGpu : public TensorOpCpuMt
     {
     public:
         TensorOpGpu();
