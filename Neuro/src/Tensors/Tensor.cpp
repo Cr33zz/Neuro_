@@ -664,10 +664,10 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::FuseSubTensor2D(uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const
+    void Tensor::FuseSubTensor2D(uint32_t widthOffset, uint32_t heightOffset, Tensor& output, bool clampAllowed) const
     {
-        NEURO_ASSERT(widthOffset + Width() <= output.Width(), "");
-        NEURO_ASSERT(heightOffset + Height() <= output.Height(), "");
+        NEURO_ASSERT(clampAllowed || (widthOffset + Width()) <= output.Width(), "");
+        NEURO_ASSERT(clampAllowed || (heightOffset + Height()) <= output.Height(), "");
         Op()->FuseSubTensor2D(*this, widthOffset, heightOffset, output);
     }
 

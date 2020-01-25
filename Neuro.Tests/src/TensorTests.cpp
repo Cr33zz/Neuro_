@@ -9,6 +9,35 @@ namespace NeuroTests
 {
     TEST_CLASS(TensorTests)
     {
+        TEST_METHOD(Fuse_NoClampAllowed)
+        {
+            auto t1 = Tensor({ 7, 6, 4,
+                               0, 3, 5 }, Shape(3, 2, 1, 1));
+            auto t2 = Tensor({ 1, 2 }, Shape(2, 1, 1, 1));
+
+            auto correct = Tensor({ 7, 6, 4, 
+                                    0, 1, 2 }, Shape(3, 2, 1, 1));
+
+            t2.FuseSubTensor2D(1, 1, t1);
+
+            Assert::IsTrue(t1.Equals(correct));
+        }
+
+        TEST_METHOD(Fuse_Clamp)
+        {
+            auto t1 = Tensor({ 7, 6, 4,
+                               0, 3, 5 }, Shape(3, 2, 1, 1));
+            auto t2 = Tensor({ 1, 2, 4, 
+                               9, 4, 6 }, Shape(3, 2, 1, 1));
+
+            auto correct = Tensor({ 7, 6, 4,
+                                    0, 1, 2 }, Shape(3, 2, 1, 1));
+
+            t2.FuseSubTensor2D(1, 1, t1, true);
+
+            Assert::IsTrue(t1.Equals(correct));
+        }
+
         TEST_METHOD(Add_SameBatchSize)
         {
             auto t1 = Tensor(Shape(2, 3, 4, 5)); t1.FillWithRange(1);

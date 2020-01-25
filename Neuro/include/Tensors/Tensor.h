@@ -119,7 +119,7 @@ namespace Neuro
         void ClipGradient(const Tensor& input, float min, float max, const Tensor& outputGradient, Tensor& inputGradient) const;
 
         void ExtractSubTensor2D(uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const;
-        void FuseSubTensor2D(uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const;
+        void FuseSubTensor2D(uint32_t widthOffset, uint32_t heightOffset, Tensor& output, bool clampAllowed = false) const;
 
         Tensor DiagFlat() const;
 

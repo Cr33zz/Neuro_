@@ -744,11 +744,19 @@ namespace Neuro
         input.SyncToHost();
         output.CopyToHost();
 
+        uint32_t outputWidth = output.Width();
+        uint32_t outputHeight = output.Height();
+
         for (uint32_t n = 0; n < input.Batch(); ++n)
 		for (uint32_t d = 0; d < input.Depth(); ++d)
 		for (uint32_t h = 0; h < input.Height(); ++h)
 		for (uint32_t w = 0; w < input.Width(); ++w)
+        {
+            if ((w + widthOffset) >= outputWidth || (h + heightOffset) >= outputHeight)
+                continue;
+
 			output(w + widthOffset, h + heightOffset, d, n) = input(w, h, d, n);
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////
