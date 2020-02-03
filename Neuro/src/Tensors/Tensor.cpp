@@ -1444,6 +1444,24 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    float Tensor::L1Norm() const
+    {
+        return AbsSum(NoneAxis)(0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    float Tensor::L2Norm() const
+    {
+        return ::sqrt(SquaredL2Norm());
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    float Tensor::SquaredL2Norm() const
+    {
+        return Pow(2).Sum(NoneAxis)(0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void Tensor::ConstantPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, Tensor& output) const
     {
         NEURO_ASSERT(Shape(m_Shape.Width() + left + right, m_Shape.Height() + top + bottom, m_Shape.Depth(), m_Shape.Batch()) == output.GetShape(), "Output shape doesn't match padded input shape.");
