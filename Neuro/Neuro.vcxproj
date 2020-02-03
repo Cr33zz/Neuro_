@@ -139,7 +139,7 @@
     </ClCompile>
     <Lib>
       <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\h5cpp\lib;$(CudaToolkitLibDir);c:\Program Files\NVIDIA Corporation\NvToolsExt\lib\x64;c:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\mkl\lib\intel64;C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries\windows\tbb\lib\intel64\vc_mt;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>cuda.lib;cudart_static.lib;cudnn.lib;cublas.lib;curand.lib;nvToolsExt64_1.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib;mkl_core.lib;mkl_intel_ilp64.lib;mkl_sequential.lib</AdditionalDependencies>
+      <AdditionalDependencies>cuda.lib;cudart_static.lib;cudnn.lib;cublas.lib;curand.lib;nvToolsExt64_1.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Lib>
     <CudaCompile>
@@ -325,6 +325,7 @@
     <ClInclude Include="include\Models\Sequential.h" />
     <ClInclude Include="include\Neuro.h" />
     <ClInclude Include="include\Optimizers\Adam.h" />
+    <ClInclude Include="include\Optimizers\LBFGS.h" />
     <ClInclude Include="include\Optimizers\OptimizerBase.h" />
     <ClInclude Include="include\Optimizers\SGD.h" />
     <ClInclude Include="include\ParameterAndGradient.h" />
@@ -433,6 +434,7 @@
     <ClCompile Include="src\Models\ModelBase.cpp" />
     <ClCompile Include="src\Models\Sequential.cpp" />
     <ClCompile Include="src\Optimizers\Adam.cpp" />
+    <ClCompile Include="src\Optimizers\LBFGS.cpp" />
     <ClCompile Include="src\Optimizers\OptimizerBase.cpp" />
     <ClCompile Include="src\Optimizers\SGD.cpp" />
     <ClCompile Include="src\Random.cpp" />

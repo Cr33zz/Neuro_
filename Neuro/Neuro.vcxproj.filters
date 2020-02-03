@@ -422,6 +422,9 @@
       <Filter>include\Tensors</Filter>
     </ClInclude>
     <ClInclude Include="include\Tensors\TensorOpCpuMkl.h" />
+    <ClInclude Include="include\Optimizers\LBFGS.h">
+      <Filter>include\Optimizers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -729,6 +732,9 @@
       <Filter>src\Tensors</Filter>
     </ClCompile>
     <ClCompile Include="src\Tensors\TensorOpCpuMkl.cpp" />
+    <ClCompile Include="src\Optimizers\LBFGS.cpp">
+      <Filter>src\Optimizers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\Tensors\Cuda\CudaKernels.cu">
