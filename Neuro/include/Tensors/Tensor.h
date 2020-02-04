@@ -92,6 +92,7 @@ namespace Neuro
         Tensor MatMul(const Tensor& t) const;
         void MulElem(const Tensor& t, Tensor& result) const;
         Tensor MulElem(const Tensor& t) const;
+        float Dot(const Tensor& t) const;
         void Mul(float v, Tensor& result) const;
         Tensor Mul(float v) const;
         void Scale(float v);

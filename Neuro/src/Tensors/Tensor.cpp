@@ -472,7 +472,14 @@ namespace Neuro
 		return result;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    float Tensor::Dot(const Tensor& t) const
+    {
+        NEURO_ASSERT(m_Shape.NDim == 1 && t.GetShape().NDim == 1 && m_Shape.Length == t.GetShape().Length, "");
+        return MulElem(t).Sum(NoneAxis)(0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void Tensor::Mul(float v, Tensor& result) const
 	{
         NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
