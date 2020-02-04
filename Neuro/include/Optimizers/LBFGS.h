@@ -10,7 +10,7 @@ namespace Neuro
     class LBFGS : public OptimizerBase
     {
     public:
-        LBFGS();
+        LBFGS(size_t maxIterations = 100, float epsilon = 1e-6f);
         virtual OptimizerBase* Clone() const override;
         virtual string ToString() override;
         const char* ClassName() const;
@@ -65,6 +65,7 @@ namespace Neuro
             Tensor m_Grad;   // New gradient
             Tensor m_GradP;  // Old gradient
             Tensor m_Drt;    // Moving direction
+            uint32_t m_ParamsNum;
 
             vector<Variable*> m_Vars;
             vector<TensorLike*> m_Losses;

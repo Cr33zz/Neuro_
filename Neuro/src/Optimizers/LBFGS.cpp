@@ -69,8 +69,8 @@ namespace Neuro
         {
             UnPackParams(x, m_Vars);
             Session::Default()->Run(m_Losses);
-            Graph::Default()->ComputeGradientsInOrder(m_BwdOrder, m_Losses, m_NodesAffectingLosses, m_Vars);
-            PackGrads(m_Vars, grad);
+            auto vars = Graph::Default()->ComputeGradientsInOrder(m_BwdOrder, m_Losses, m_NodesAffectingLosses, m_Vars);
+            PackGrads(vars, grad);
 
             float fx = 0.f; // loss is considered sum of all input tensors values...
             for (auto inputNode : m_Losses)
@@ -125,7 +125,7 @@ namespace Neuro
             // Save the function value at the current x
             const float fx_init = fx;
             // Projection of gradient on the search direction
-            const float dg_init = grad.MatMul(drt)(0);
+            const float dg_init = grad.Dot(drt);
             // Make sure d points to a descent direction
             if (dg_init > 0)
                 std::logic_error("the moving direction increases the objective function value");
@@ -151,7 +151,7 @@ namespace Neuro
                     if (param.linesearch == LBFGS::LINESEARCH_BACKTRACKING_ARMIJO)
                         break;
 
-                    const float dg = grad.MatMul(drt)(0);
+                    const float dg = grad.Dot(drt);
                     if (dg < param.wolfe * dg_init)
                     {
                         width = inc;
@@ -187,7 +187,8 @@ namespace Neuro
     };
 
     //////////////////////////////////////////////////////////////////////////
-    LBFGS::LBFGS()
+    LBFGS::LBFGS(size_t maxIterations, float epsilon)
+        : m_MaxIterations(maxIterations), m_Epsilon(epsilon)
     {
     }
 
@@ -218,10 +219,25 @@ namespace Neuro
         m_param.epsilon = epsilon;
         m_param.max_iterations = maxIterations;
 
-        uint32_t gradValuesNum = 0;
-        for (auto v : vars)
-            gradValuesNum += v->Output().Length();
-        m_Grad.Resize(gradValuesNum);
+        if (vars.empty())
+        {
+            // we need all trainable tensors to figure out final number of parameters
+            unordered_set<TensorLike*> nodesAffectingLosses;
+            auto order = Graph::Default()->BuildBackwardOrder(losses, nodesAffectingLosses, vars);
+
+            for (auto node : nodesAffectingLosses)
+            {
+                if (node->CareAboutGradient() && node->IsVar())
+                {
+                    Variable* var = static_cast<Variable*>(node);
+                    if (var->Trainable())
+                        m_Vars.push_back(var);
+                }
+            }
+        }
+
+        for (auto v : m_Vars)
+            m_ParamsNum += v->Output().Length();
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -230,9 +246,10 @@ namespace Neuro
         m_InputsManuallyConsumed = true; // loss outputs will be completely obliterated after gradients computation
 
         Foo f(m_Losses, m_Vars);
-        Tensor x(m_Grad.GetShape());
+        Tensor x = zeros(Shape(m_ParamsNum));
+        PackParams(m_Vars, x);
 
-        const uint32_t n = x.Length();
+        const uint32_t n = m_ParamsNum;
         const size_t fpast = m_param.past;
         Reset(n);
 
@@ -296,12 +313,12 @@ namespace Neuro
             // y_{k+1} = g_{k+1} - g_k
             Tensor& svec = m_s[end];
             Tensor& yvec = m_y[end];
-            svec = x - m_xp;
-            yvec = m_Grad - m_GradP;
+            x.Sub(m_xp, svec);
+            m_Grad.Sub(m_GradP, yvec);
 
             // ys = y's = 1/rho
             // yy = y'y
-            float ys = yvec.MatMul(svec)(0);
+            float ys = yvec.Dot(svec);
             float yy = yvec.SquaredL2Norm();
             m_ys[end] = ys;
 
@@ -313,9 +330,9 @@ namespace Neuro
             for (size_t i = 0; i < bound; i++)
             {
                 j = (j + m_param.m - 1) % m_param.m;
-                Tensor& sj = m_s[j];
-                Tensor& yj = m_y[j];
-                m_alpha[j] = sj.MatMul(m_Drt)(0) / m_ys[j];
+                const Tensor& sj = m_s[j];
+                const Tensor& yj = m_y[j];
+                m_alpha[j] = sj.Dot(m_Drt) / m_ys[j];
                 m_Drt.Sub(yj.Mul(m_alpha[j]), m_Drt);
             }
 
@@ -323,9 +340,9 @@ namespace Neuro
 
             for (int i = 0; i < bound; i++)
             {
-                Tensor& sj = m_s[j];
-                Tensor& yj = m_y[j];
-                float beta = yj.MatMul(m_Drt)(0) / m_ys[j];
+                const Tensor& sj = m_s[j];
+                const Tensor& yj = m_y[j];
+                float beta = yj.Dot(m_Drt) / m_ys[j];
                 m_Drt.Add(sj.Mul(m_alpha[j] - beta), m_Drt);
                 j = (j + 1) % m_param.m;
             }
@@ -391,8 +408,8 @@ namespace Neuro
         // n is number of parameters
         // m is number of correction steps
         const size_t m = m_param.m;
-        m_s.resize(m); fill(m_s.begin(), m_s.end(), Tensor(Shape(n)));
-        m_y.resize(m); fill(m_y.begin(), m_y.end(), Tensor(Shape(n)));
+        m_s.resize(m); fill(m_s.begin(), m_s.end(), zeros(Shape(n)));
+        m_y.resize(m); fill(m_y.begin(), m_y.end(), zeros(Shape(n)));
         m_ys.resize(m);
         m_alpha.resize(m);
         m_xp.Resize(n);
