@@ -6,7 +6,27 @@
 
 namespace Neuro
 {
+    // Computational graph evaluation wrapper, used to compute total loss and gradients at any
+    // point of parameters space
+    class Foo
+    {
+    public:
+        Foo() {}
+        Foo(const vector<TensorLike*>& losses, const vector<Variable*>& vars);
+
+        // Evaluate computational graph for the purpose of l-bfgs optimization step
+        // both x and grad contain flatten and merged parameters and their gradients
+        float operator()(const Tensor& x, Tensor& grad);
+
+    private:
+        vector<TensorLike*> m_Losses;
+        vector<Variable*> m_Vars;
+        vector<TensorLike*> m_BwdOrder;
+        unordered_set<TensorLike*> m_NodesAffectingLosses;
+    };
+
     // Limited-memory Broyden-Fletcher-Goldfarb-Shanno optimizer
+    // Implementation based on https://github.com/yixuan/LBFGSpp
     class LBFGS : public OptimizerBase
     {
     public:
@@ -55,17 +75,24 @@ namespace Neuro
         private:
             void Reset(uint32_t n);
 
-            LBFGS::Param m_param;  // Parameters to control the LBFGS algorithm
-            vector<Tensor> m_s;      // History of the s vectors
-            vector<Tensor> m_y;      // History of the y vectors
-            vector<float> m_ys;     // History of the s'y values
-            vector<float> m_alpha;  // History of the step lengths
-            vector<float> m_fx;     // History of the objective function values
-            Tensor m_xp;     // Old x
-            Tensor m_Grad;   // New gradient
-            Tensor m_GradP;  // Old gradient
-            Tensor m_Drt;    // Moving direction
-            uint32_t m_ParamsNum;
+            LBFGS::Param m_Param;
+            vector<Tensor> m_S;
+            vector<Tensor> m_Y;
+            vector<float> m_YS;
+            vector<float> m_Alpha; // history of the step lengths
+            vector<float> m_Fx; // history of the objective function values
+            Tensor m_PrevX; // old x
+            Tensor m_Grad; // new gradient
+            Tensor m_PrevGrad; // old gradient
+            Tensor m_Drt; // moving direction
+            uint32_t m_ParamsNum = 0;
+            Foo m_F;
+            size_t m_Iter = 1;
+            size_t m_End = 0;
+            float m_Step;
+            Tensor m_X;
+            float m_LocalFx;
+            bool m_Done = false;
 
             vector<Variable*> m_Vars;
             vector<TensorLike*> m_Losses;
