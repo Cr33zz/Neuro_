@@ -13,6 +13,7 @@
 
 #include "Tools.h"
 #include "Tensors/Tensor.h"
+#include "ComputationalGraph/Variable.h"
 
 namespace fs = std::experimental::filesystem;
 
@@ -175,6 +176,50 @@ namespace Neuro
         result.push_back(str.substr(lastPos, str.length() - lastPos));
 
         return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void PackParams(const vector<Variable*>& vars, Tensor& x)
+    {
+        size_t xOffset = 0;
+        for (auto v : vars)
+        {
+            v->Output().CopyTo(0, x, xOffset, v->Output().Length());
+            xOffset += v->Output().Length();
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void UnPackParams(const Tensor& x, vector<Variable*>& vars)
+    {
+        size_t xOffset = 0;
+        for (auto v : vars)
+        {
+            x.CopyTo(xOffset, v->Output(), 0, v->Output().Length());
+            xOffset += v->Output().Length();
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void PackGrads(const vector<Variable*>& vars, Tensor& grad)
+    {
+        size_t gradOffset = 0;
+        for (auto v : vars)
+        {
+            v->OutputGrad().CopyTo(0, grad, gradOffset, v->Output().Length());
+            gradOffset += v->Output().Length();
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void UnPackGrads(const Tensor& grad, vector<Variable*>& vars)
+    {
+        size_t gradOffset = 0;
+        for (auto v : vars)
+        {
+            grad.CopyTo(gradOffset, v->OutputGrad(), gradOffset, v->Output().Length());
+            gradOffset += v->Output().Length();
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////

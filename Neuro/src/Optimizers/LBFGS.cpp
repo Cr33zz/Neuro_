@@ -6,72 +6,31 @@
 #include "Tensors/TensorOpCpu.h"
 #include "ComputationalGraph/Variable.h"
 #include "ComputationalGraph/Graph.h"
+#include "ComputationalGraph/Operations/GradientsOp.h"
+#include "Tools.h"
 
 namespace Neuro
 {
-    //////////////////////////////////////////////////////////////////////////
-    static void PackParams(const vector<Variable*>& vars, Tensor& x)
-    {
-        size_t xOffset = 0;
-        for (auto v : vars)
-        {
-            v->Output().CopyTo(0, x, xOffset, v->Output().Length());
-            xOffset += v->Output().Length();
-        }
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    static void UnPackParams(const Tensor& x, vector<Variable*>& vars)
-    {
-        size_t xOffset = 0;
-        for (auto v : vars)
-        {
-            x.CopyTo(xOffset, v->Output(), 0, v->Output().Length());
-            xOffset += v->Output().Length();
-        }
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    static void PackGrads(const vector<Variable*>& vars, Tensor& grad)
-    {
-        size_t gradOffset = 0;
-        for (auto v : vars)
-        {
-            v->OutputGrad().CopyTo(0, grad, gradOffset, v->Output().Length());
-            gradOffset += v->Output().Length();
-        }
-    }
-
-    //////////////////////////////////////////////////////////////////////////
-    static void UnPackGrads(const Tensor& grad, vector<Variable*>& vars)
-    {
-        size_t gradOffset = 0;
-        for (auto v : vars)
-        {
-            grad.CopyTo(gradOffset, v->OutputGrad(), gradOffset, v->Output().Length());
-            gradOffset += v->Output().Length();
-        }
-    }
-
     ////////////////////////////////////////////////////////////////////////
-    Foo::Foo(const vector<TensorLike*>& losses, const vector<Variable*>& vars) : m_Losses(losses), m_Vars(vars)
+    Foo::Foo(TensorLike* loss, const vector<Variable*>& vars) : m_Vars(vars)
     {
-        m_BwdOrder = Graph::Default()->BuildBackwardOrder(losses, m_NodesAffectingLosses, vars);
+        m_Fetches = MergeVectors({ vector<TensorLike*>{ loss }, gradients(loss, vars) });
     }
 
     ////////////////////////////////////////////////////////////////////////
     float Foo::operator()(const Tensor& x, Tensor& grad)
     {
         UnPackParams(x, m_Vars);
-        Session::Default()->Run(m_Losses);
-        auto vars = Graph::Default()->ComputeGradientsInOrder(m_BwdOrder, m_Losses, m_NodesAffectingLosses, m_Vars);
-        PackGrads(vars, grad);
+        auto res = Session::Default()->Run(m_Fetches);
 
-        float fx = 0.f; // loss is considered sum of all input tensors values...
-        for (auto inputNode : m_Losses)
-            fx += inputNode->Output().Sum(NoneAxis)(0);
-
-        return fx;
+        size_t gradOffset = 0;
+        for (size_t i = 1; i < res.size(); ++i)
+        {
+            res[i]->CopyTo(0, grad, gradOffset, res[i]->Length());
+            gradOffset += res[i]->Length();
+        }
+        //PackGrads(m_Vars, grad);
+        return (*res[0])(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -120,7 +79,7 @@ namespace Neuro
                 std::logic_error("the moving direction increases the objective function value");
 
             const float dgTest = param.ftol * dgInit;
-            float width;
+            float width = 0;
 
             for (int iter = 0; iter < param.max_linesearch; ++iter)
             {
@@ -172,8 +131,8 @@ namespace Neuro
     };
 
     //////////////////////////////////////////////////////////////////////////
-    LBFGS::LBFGS(size_t maxIterations, float epsilon)
-        : m_MaxIterations(maxIterations), m_Epsilon(epsilon)
+    LBFGS::LBFGS(/*size_t maxIterations, */float epsilon)
+        : /*m_MaxIterations(maxIterations), */m_Epsilon(epsilon)
     {
     }
 
@@ -199,8 +158,9 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     LBFGS::MinimizationOperation::MinimizationOperation(const vector<TensorLike*>& losses, const vector<Variable*>& vars, size_t maxIterations, float epsilon)
-        : Operation({}, "L_BFGS_minimize"), m_Vars(vars), m_Losses(losses)
+        : Operation({}, "L_BFGS_minimize"), m_Vars(vars), m_Loss(losses[0])
     {
+        NEURO_ASSERT(losses.size() == 1 && losses[0]->Output().Length() == 1, "L-BFGS expects single loss returning scalar value.");
         m_Param.epsilon = epsilon;
         m_Param.max_iterations = maxIterations;
 
@@ -224,7 +184,7 @@ namespace Neuro
         for (auto v : m_Vars)
             m_ParamsNum += v->Output().Length();
 
-         m_F = Foo(m_Losses, m_Vars);
+         m_F = Foo(m_Loss, m_Vars);
          m_X = zeros(Shape(m_ParamsNum));
 
          Reset(m_ParamsNum);

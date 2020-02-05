@@ -1199,6 +1199,12 @@ namespace Neuro
         input.CopyToDevice();
         output.OverrideDevice();
 
+        if (input.Length() == 1)
+        {
+            input.CopyTo(output);
+            return;
+        }
+
         cudnnReduceTensorDescriptor_t reduceDesc; cudnnCreateReduceTensorDescriptor(&reduceDesc);
         cudnnSetReduceTensorDescriptor(reduceDesc, reductionOp, CUDNN_DATA_FLOAT, CUDNN_PROPAGATE_NAN, CUDNN_REDUCE_TENSOR_NO_INDICES, CUDNN_32BIT_INDICES);
         

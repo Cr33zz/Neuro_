@@ -25,6 +25,7 @@ namespace Neuro
     using namespace std;
 
 	class Tensor;
+    class Variable;
 
     const float _EPSILON = 10e-7f;
     
@@ -46,6 +47,11 @@ namespace Neuro
     string PadRight(const string& str, size_t len, char paddingChar = ' ');
     vector<string> Split(const string& str, const string& delimiter);
     string Replace(const string& str, const string& pattern, const string& replacement);
+
+    void PackParams(const vector<Variable*>& vars, Tensor& x);
+    void UnPackParams(const Tensor& x, vector<Variable*>& vars);
+    void PackGrads(const vector<Variable*>& vars, Tensor& grad);
+    void UnPackGrads(const Tensor& grad, vector<Variable*>& vars);
 
     string GetProgressString(int iteration, int maxIterations, const string& extraStr = "", int barLength = 30, char blankSymbol = '.', char fullSymbol = '=');
 

@@ -12,17 +12,15 @@ namespace Neuro
     {
     public:
         Foo() {}
-        Foo(const vector<TensorLike*>& losses, const vector<Variable*>& vars);
+        Foo(TensorLike* loss, const vector<Variable*>& vars);
 
         // Evaluate computational graph for the purpose of l-bfgs optimization step
         // both x and grad contain flatten and merged parameters and their gradients
         float operator()(const Tensor& x, Tensor& grad);
 
     private:
-        vector<TensorLike*> m_Losses;
         vector<Variable*> m_Vars;
-        vector<TensorLike*> m_BwdOrder;
-        unordered_set<TensorLike*> m_NodesAffectingLosses;
+        vector<TensorLike*> m_Fetches;
     };
 
     // Limited-memory Broyden-Fletcher-Goldfarb-Shanno optimizer
@@ -30,7 +28,7 @@ namespace Neuro
     class LBFGS : public OptimizerBase
     {
     public:
-        LBFGS(size_t maxIterations = 100, float epsilon = 1e-6f);
+        LBFGS(/*size_t maxIterations = 100, */float epsilon = 1e-6f);
         virtual OptimizerBase* Clone() const override;
         virtual string ToString() override;
         const char* ClassName() const;
@@ -95,7 +93,7 @@ namespace Neuro
             bool m_Done = false;
 
             vector<Variable*> m_Vars;
-            vector<TensorLike*> m_Losses;
+            TensorLike* m_Loss;
         };
 
         size_t m_MaxIterations;
