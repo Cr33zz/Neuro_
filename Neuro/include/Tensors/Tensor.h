@@ -340,7 +340,7 @@ namespace Neuro
         static TensorOpCpu* DefaultOp();
         static TensorOpCpu* ActiveOp();
 
-        void DebugDumpValues(const string& outFile) const;
+        void DebugDumpValues(const string& outFile, bool includePtrs = false) const;
         void DebugRecoverValues(const string& inFile);
 
 	private:
