@@ -116,12 +116,14 @@ namespace Neuro
     {
     public:
         Tqdm(size_t maxIterations, size_t barLen = 30, bool finalizeInit = true);
+        Tqdm& ShowBar(bool show) { m_ShowBar = show; return *this; }
         Tqdm& ShowElapsed(bool show) { m_ShowElapsed = show; return *this; }
         Tqdm& ShowEta(bool show) { m_ShowEta = show; return *this; }
         Tqdm& ShowIterTime(bool show) { m_ShowIterTime = show; return *this; }
         Tqdm& ShowStep(bool show) { m_ShowStep = show; return *this; }
         Tqdm& ShowPercent(bool show) { m_ShowPercent = show; return *this; }
         Tqdm& EnableSeparateLines(bool enable) { m_SeparateLinesEnabled = enable; return *this; }
+        Tqdm& PrintLinesIteration(size_t iter) { m_PrintLineIteration = iter; return *this; }
         void SetExtraString(const string& str) { m_ExtraString = str; }
 
         void FinalizeInit();
@@ -132,9 +134,11 @@ namespace Neuro
     private:
         int m_Iteration = -1;
         size_t m_MaxIterations;
+        size_t m_PrintLineIteration = 1;
         size_t m_BarLength;
         Stopwatch m_Timer;
         stringstream m_Stream;
+        bool m_ShowBar = true;
         bool m_ShowElapsed = true;
         bool m_ShowEta = true;
         bool m_ShowIterTime = false;

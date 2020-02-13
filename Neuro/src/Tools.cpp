@@ -998,7 +998,8 @@ namespace Neuro
             return;
 
         m_Timer.Start();
-        NextStep();
+        if (!m_SeparateLinesEnabled)
+            NextStep();
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1017,13 +1018,15 @@ namespace Neuro
             for (uint32_t i = 0; i < m_Stream.str().length(); ++i)
                 cout << "\b \b";
         }
+        else if (m_Iteration % m_PrintLineIteration != 0)
+            return;
 
         m_Stream.str("");
 
         if (m_ShowPercent)
             m_Stream << right << setw(4) << (to_string((int)pct) + "%");
 
-        if (m_BarLength > 0)
+        if (m_ShowBar && m_BarLength > 0)
         {
             m_Stream << '[';
 
@@ -1036,11 +1039,11 @@ namespace Neuro
             for (size_t i = 0; i < m_BarLength - currStep; ++i)
                 m_Stream << BLANK_SYMBOL;
 
-            m_Stream << ']';
+            m_Stream << "] ";
         }
 
         if (m_ShowStep)
-            m_Stream << ' ' << right << setw(to_string(m_MaxIterations).length()) << m_Iteration << "/" << m_MaxIterations;
+            m_Stream << right << setw(to_string(m_MaxIterations).length()) << m_Iteration << "/" << m_MaxIterations;
 
         auto dhms = [](uint32_t seconds)
         {
@@ -1063,7 +1066,7 @@ namespace Neuro
             return result;
         };
 
-        if (m_Iteration > 0)
+        if (m_Iteration > 0 || m_SeparateLinesEnabled)
         {
             float averageTimePerStep = m_Timer.ElapsedMilliseconds() / (float)m_Iteration;
 
