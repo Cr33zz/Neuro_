@@ -31,12 +31,13 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void VGG16::DeprocessImage(Tensor& image, EDataFormat dataFormat, bool swapChannels, bool clipValues)
     {
-        image.Add(Tensor({ 123.68f, 116.779f, 103.939f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), image);
         // because VGG networks were trained on BGR images they generate feature maps in BGR "style"
         // if these feature maps are used to generate image, the result will also be in BGR and will need 
         // channels swap if user wants RGB
         if (swapChannels)
             SwapChannels(image);
+
+        image.Add(Tensor({ 123.68f, 116.779f, 103.939f }, dataFormat == NHWC ? Shape(3) : Shape(1, 1, 3)), image);
 
         if (clipValues)
             image.Clip(0, 255, image);
