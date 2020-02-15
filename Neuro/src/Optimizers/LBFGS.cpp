@@ -184,10 +184,7 @@ namespace Neuro
         for (auto v : m_Vars)
             m_ParamsNum += v->Output().Length();
 
-         m_F = Foo(m_Loss, m_Vars);
-         m_X = zeros(Shape(m_ParamsNum));
-
-         Reset(m_ParamsNum);
+        Reset();
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -324,4 +321,18 @@ namespace Neuro
         if (m_Param.past > 0)
             m_Fx.resize(m_Param.past);
     }
+
+    ////////////////////////////////////////////////////////////////////////
+    void LBFGS::MinimizationOperation::Reset()
+    {
+        m_F = Foo(m_Loss, m_Vars);
+        m_X = zeros(Shape(m_ParamsNum));
+
+        Reset(m_ParamsNum);
+
+        m_Iter = 1;
+        m_End = 0;
+        m_Done = false;
+    }
+
 }

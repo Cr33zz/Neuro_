@@ -69,7 +69,7 @@ namespace Neuro
         protected:
             virtual void ComputeInternal();
             virtual void ComputeGradientInternal(const Tensor& grad) {}
-
+            virtual void Reset() override;
         private:
             void Reset(uint32_t n);
 
