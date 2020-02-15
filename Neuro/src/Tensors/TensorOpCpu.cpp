@@ -575,6 +575,102 @@ namespace Neuro
         auto inputValues = input.Values();
         auto outputValues = output.Values();
 
+        if (&input == &output)
+        {
+            function<int(uint32_t, uint32_t)> gcd;
+            gcd = [&gcd](unsigned int u, unsigned int v)->int
+            {
+                // simple cases (termination)
+                if (u == v)
+                    return u;
+
+                if (u == 0)
+                    return v;
+
+                if (v == 0)
+                    return u;
+
+                // look for factors of 2
+                if (~u & 1) // u is even
+                    if (v & 1) // v is odd
+                        return gcd(u >> 1, v);
+                    else // both u and v are even
+                        return gcd(u >> 1, v >> 1) << 1;
+
+                if (~v & 1) // u is odd, v is even
+                    return gcd(u, v >> 1);
+
+                // reduce larger argument
+                if (u > v)
+                    return gcd((u - v) >> 1, v);
+
+                return gcd((v - u) >> 1, u);
+            };
+
+            int cyclesCountX = gcd(output.Width(), ::abs(xShift));
+            int cyclesCountY = gcd(output.Height(), ::abs(yShift));
+            uint32_t width = output.Width();
+            uint32_t height = output.Height();
+            size_t offset = 0;
+
+            for (uint32_t n = 0; n < output.Batch(); ++n)
+		    for (uint32_t d = 0; d < output.Depth(); ++d)
+            {
+                float tmp;
+                if (xShift)
+                {
+                    for (uint32_t h = 0; h < height; ++h)
+                    {
+                        for (int i = 0; i < cyclesCountX; ++i)
+                        {
+                            int idx = i;
+                            tmp = outputValues[offset + h * width + idx];
+
+                            while (true)
+                            {
+                                int idxNext = idx + xShift;
+                                if (idxNext < 0)
+                                    idxNext += width;
+                                idxNext %= width;
+                                swap(tmp, outputValues[offset + h * width + idxNext]);
+                                idx = idxNext;
+                                if (idx == i)
+                                    break;
+                            }
+                        }
+                    }
+                }
+
+                if (yShift)
+                {
+                    for (uint32_t w = 0; w < width; ++w)
+                    {
+                        for (int i = 0; i < cyclesCountY; ++i)
+                        {
+                            int idx = i;
+                            tmp = outputValues[offset + w + idx * width];
+
+                            while (true)
+                            {
+                                int idxNext = idx + yShift;
+                                if (idxNext < 0)
+                                    idxNext += height;
+                                idxNext %= height;
+                                swap(tmp, outputValues[offset + w + idxNext * width]);
+                                idx = idxNext;
+                                if (idx == i)
+                                    break;
+                            }
+                        }
+                    }
+                }
+
+                offset += width * height;
+            }
+                
+            return;
+        }
+
         uint32_t i = 0;
         for (uint32_t n = 0; n < output.Batch(); ++n)
 		for (uint32_t d = 0; d < output.Depth(); ++d)
