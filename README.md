@@ -15,13 +15,19 @@ Supported layers:
 * Concatenate
 * Merge
 * Activation
+Supported optimizers:  
+* SGD
+* Adam
+* L-BFGS
 
 ## Code examples
-#### Pix2pix
+### Pix2pix
 This is one of the conditional adversarial generative networks. Example below comes from training a network on a dataset of flower paintings scoured from pintrest. The goal of this particular model is to learn how to generate flower paintings from image containing only edges. Left image is conditional input to the model (created by running canny edge detection on an image from the dataset), right image is the original image from the dataset and central image is the output from generator network.  
+  
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/flowers.jpg)  
-#### Neural Style Transfer
+### Neural Style Transfer
 This neural network is given style image and any image we want to stylize. Model is using pre-trained VGG16/19 network to extract feature maps from style and content image and uses them to compute style and content loss. The only trainable element of the whole model is input image itself.  
+  
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-content.jpg)  
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-starry_night-style.jpg)
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-starry_night-result.jpg)  
@@ -108,7 +114,7 @@ for (int e = 1; e < EPOCHS; ++e, progress.NextStep())
 }
 
 ```
-#### Deep Autoencoder
+### Deep Autoencoder
 Deep autoencoder is trying to reduce input to small set of numbers (encode) and then try to recover the original input (decode). In the case below we go from 784 down to 392 and back to 784.
 ```cpp
 auto encoder = new Sequential("encoder");
@@ -140,7 +146,7 @@ cout << model.TrainSummary();
 Below are original and decoded sample digits.  
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/original_conv.jpg)
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/decoded_conv.jpg)
-#### Deep Convolutional Generative Adversarial Network (DCGAN)
+### Deep Convolutional Generative Adversarial Network (DCGAN)
 DCGAN is trying to learn to generate data samples similar to the ones it was trained on. It is comprised of 2 connected neural networks (generator and discriminator). Generator is trying to learn to generate realistic data from random noise while discriminator is learning to distinquish real from fake data.
 ```cpp
 Tensor images, labels;
