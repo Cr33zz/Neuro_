@@ -1062,6 +1062,8 @@ namespace Neuro
                 result += to_string(minutes) + "m";
             if (seconds > 0)
                 result += to_string(seconds) + "s";
+            if (result.empty())
+                result = "<1s";
 
             return result;
         };
