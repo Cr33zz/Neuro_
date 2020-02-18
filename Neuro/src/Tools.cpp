@@ -13,6 +13,7 @@
 
 #include "Tools.h"
 #include "Tensors/Tensor.h"
+#include "ComputationalGraph/Variable.h"
 
 namespace fs = std::experimental::filesystem;
 
@@ -175,6 +176,50 @@ namespace Neuro
         result.push_back(str.substr(lastPos, str.length() - lastPos));
 
         return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void PackParams(const vector<Variable*>& vars, Tensor& x)
+    {
+        size_t xOffset = 0;
+        for (auto v : vars)
+        {
+            v->Output().CopyTo(0, x, xOffset, v->Output().Length());
+            xOffset += v->Output().Length();
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void UnPackParams(const Tensor& x, vector<Variable*>& vars)
+    {
+        size_t xOffset = 0;
+        for (auto v : vars)
+        {
+            x.CopyTo(xOffset, v->Output(), 0, v->Output().Length());
+            xOffset += v->Output().Length();
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void PackGrads(const vector<Variable*>& vars, Tensor& grad)
+    {
+        size_t gradOffset = 0;
+        for (auto v : vars)
+        {
+            v->OutputGrad().CopyTo(0, grad, gradOffset, v->Output().Length());
+            gradOffset += v->Output().Length();
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void UnPackGrads(const Tensor& grad, vector<Variable*>& vars)
+    {
+        size_t gradOffset = 0;
+        for (auto v : vars)
+        {
+            grad.CopyTo(gradOffset, v->OutputGrad(), gradOffset, v->Output().Length());
+            gradOffset += v->Output().Length();
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -953,7 +998,8 @@ namespace Neuro
             return;
 
         m_Timer.Start();
-        NextStep();
+        if (!m_SeparateLinesEnabled)
+            NextStep();
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -972,13 +1018,15 @@ namespace Neuro
             for (uint32_t i = 0; i < m_Stream.str().length(); ++i)
                 cout << "\b \b";
         }
+        else if (m_Iteration % m_PrintLineIteration != 0)
+            return;
 
         m_Stream.str("");
 
         if (m_ShowPercent)
             m_Stream << right << setw(4) << (to_string((int)pct) + "%");
 
-        if (m_BarLength > 0)
+        if (m_ShowBar && m_BarLength > 0)
         {
             m_Stream << '[';
 
@@ -991,11 +1039,11 @@ namespace Neuro
             for (size_t i = 0; i < m_BarLength - currStep; ++i)
                 m_Stream << BLANK_SYMBOL;
 
-            m_Stream << ']';
+            m_Stream << "] ";
         }
 
         if (m_ShowStep)
-            m_Stream << ' ' << right << setw(to_string(m_MaxIterations).length()) << m_Iteration << "/" << m_MaxIterations;
+            m_Stream << right << setw(to_string(m_MaxIterations).length()) << m_Iteration << "/" << m_MaxIterations;
 
         auto dhms = [](uint32_t seconds)
         {
@@ -1018,7 +1066,7 @@ namespace Neuro
             return result;
         };
 
-        if (m_Iteration > 0)
+        if (m_Iteration > 0 || m_SeparateLinesEnabled)
         {
             float averageTimePerStep = m_Timer.ElapsedMilliseconds() / (float)m_Iteration;
 

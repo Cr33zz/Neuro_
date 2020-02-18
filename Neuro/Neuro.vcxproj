@@ -1,6 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="DebugNoMkl|x64">
+      <Configuration>DebugNoMkl</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
@@ -23,6 +27,12 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoMkl|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
@@ -51,6 +61,9 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoMkl|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -59,6 +72,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(IncludePath)</IncludePath>
+    <OutDir>$(ProjectDir)lib\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoMkl|x64'">
     <IncludePath>$(IncludePath)</IncludePath>
     <OutDir>$(ProjectDir)lib\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)\</IntDir>
@@ -91,6 +110,36 @@
     <Lib>
       <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\h5cpp\lib;$(CudaToolkitLibDir);c:\Program Files\NVIDIA Corporation\NvToolsExt\lib\x64;c:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\mkl\lib\intel64;C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries\windows\tbb\lib\intel64\vc_mt;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>cuda.lib;cudart_static.lib;cudnn.lib;cublas.lib;curand.lib;nvToolsExt64_1.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib;mkl_core.lib;mkl_intel_ilp64.lib;mkl_sequential.lib</AdditionalDependencies>
+      <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
+    </Lib>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+      <Include>
+      </Include>
+      <AdditionalOptions>--expt-extended-lambda %(AdditionalOptions)</AdditionalOptions>
+    </CudaCompile>
+    <ProjectReference>
+      <LinkLibraryDependencies>
+      </LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoMkl|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>include;deps;deps\FreeImage\include;deps\h5cpp\include;c:\Program Files\NVIDIA Corporation\NvToolsExt\include;C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries_2019.5.281\windows\mkl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <FunctionLevelLinking>
+      </FunctionLevelLinking>
+      <PreprocessorDefinitions>MKL_DISABLED;_CRT_SECURE_NO_WARNINGS;FREEIMAGE_LIB;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>-D_CRT_NONSTDC_NO_DEPRECATE -DMKL_ILP64 %(AdditionalOptions)</AdditionalOptions>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    </ClCompile>
+    <Lib>
+      <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\h5cpp\lib;$(CudaToolkitLibDir);c:\Program Files\NVIDIA Corporation\NvToolsExt\lib\x64;c:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\mkl\lib\intel64;C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries\windows\tbb\lib\intel64\vc_mt;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cuda.lib;cudart_static.lib;cudnn.lib;cublas.lib;curand.lib;nvToolsExt64_1.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Lib>
     <CudaCompile>
@@ -276,6 +325,7 @@
     <ClInclude Include="include\Models\Sequential.h" />
     <ClInclude Include="include\Neuro.h" />
     <ClInclude Include="include\Optimizers\Adam.h" />
+    <ClInclude Include="include\Optimizers\LBFGS.h" />
     <ClInclude Include="include\Optimizers\OptimizerBase.h" />
     <ClInclude Include="include\Optimizers\SGD.h" />
     <ClInclude Include="include\ParameterAndGradient.h" />
@@ -384,6 +434,7 @@
     <ClCompile Include="src\Models\ModelBase.cpp" />
     <ClCompile Include="src\Models\Sequential.cpp" />
     <ClCompile Include="src\Optimizers\Adam.cpp" />
+    <ClCompile Include="src\Optimizers\LBFGS.cpp" />
     <ClCompile Include="src\Optimizers\OptimizerBase.cpp" />
     <ClCompile Include="src\Optimizers\SGD.cpp" />
     <ClCompile Include="src\Random.cpp" />

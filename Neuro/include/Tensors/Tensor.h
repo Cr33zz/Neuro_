@@ -92,6 +92,7 @@ namespace Neuro
         Tensor MatMul(const Tensor& t) const;
         void MulElem(const Tensor& t, Tensor& result) const;
         Tensor MulElem(const Tensor& t) const;
+        float Dot(const Tensor& t) const;
         void Mul(float v, Tensor& result) const;
         Tensor Mul(float v) const;
         void Scale(float v);
@@ -205,6 +206,10 @@ namespace Neuro
         Tensor NormalizedMinMax(EAxis axis, float scaleMin = 0, float scaleMax = 1, Tensor* savedMin = nullptr, Tensor* savedMax = nullptr) const;
         pair<Tensor, Tensor> Standardized(EAxis axis, Tensor& result, Tensor* mean = nullptr, Tensor* invVariance = nullptr) const;
         Tensor Standardized(EAxis axis, Tensor* mean = nullptr, Tensor* invVariance = nullptr) const;
+
+        float L1Norm() const;
+        float L2Norm() const;
+        float SquaredL2Norm() const;
 
         void ConstantPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, Tensor& output) const;
         Tensor ConstantPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value) const;
@@ -335,7 +340,7 @@ namespace Neuro
         static TensorOpCpu* DefaultOp();
         static TensorOpCpu* ActiveOp();
 
-        void DebugDumpValues(const string& outFile) const;
+        void DebugDumpValues(const string& outFile, bool includePtrs = false) const;
         void DebugRecoverValues(const string& inFile);
 
 	private:

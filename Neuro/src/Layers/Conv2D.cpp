@@ -103,7 +103,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Conv2D::SerializedParameters(vector<SerializedParameter>& params)
     {
-        params.push_back({ m_Kernels, { DepthAxis, BatchAxis, HeightAxis, WidthAxis } });
+        // kernels are stored in h5 files in NCWH(0123) format thus have to be transposed to WHCN(2310) format used by this library
+        params.push_back({ m_Kernels, { (EAxis)2, (EAxis)3, (EAxis)1, (EAxis)0 } });
 
         if (m_UseBias)
         {

@@ -472,7 +472,14 @@ namespace Neuro
 		return result;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    float Tensor::Dot(const Tensor& t) const
+    {
+        NEURO_ASSERT(m_Shape.NDim == 1 && t.GetShape().NDim == 1 && m_Shape.Length == t.GetShape().Length, "");
+        return MulElem(t).Sum(NoneAxis)(0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void Tensor::Mul(float v, Tensor& result) const
 	{
         NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
@@ -1441,6 +1448,24 @@ namespace Neuro
         Tensor result(GetShape());
         Standardized(axis, result, mean, invVariance);
         return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    float Tensor::L1Norm() const
+    {
+        return AbsSum(NoneAxis)(0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    float Tensor::L2Norm() const
+    {
+        return ::sqrt(SquaredL2Norm());
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    float Tensor::SquaredL2Norm() const
+    {
+        return Pow(2).Sum(NoneAxis)(0);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -2580,14 +2605,15 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::DebugDumpValues(const string& outFile) const
+    void Tensor::DebugDumpValues(const string& outFile, bool includePtrs) const
     {
         if (!m_Storage.AllocSizeInBytes() || !m_Storage.IsHostAllocated())
             return;
 
         SyncToHost();
         ofstream stream(Replace(outFile, "/", "-"));
-        stream << "h_ptr=0x" << hex << m_Storage.DataUnsafe() << endl << "d_ptr=0x" << hex << m_Storage.DeviceDataUnsafe() << dec << endl;
+        if (includePtrs)
+            stream << "h_ptr=0x" << hex << m_Storage.DataUnsafe() << endl << "d_ptr=0x" << hex << m_Storage.DeviceDataUnsafe() << dec << endl;
         for (int i = 0; i < 4; ++i)
             stream << m_Shape.Dimensions[i] << "\n";
         stream << fixed << setprecision(6);
@@ -2610,7 +2636,10 @@ namespace Neuro
         OverrideHost();
         vector<int> dimensions(4);
         for (int i = 0; i < 4; ++i)
+        {
             stream >> dimensions[i];
+            NEURO_ASSERT(dimensions[i] > 0, "Invalid dimension detected.");
+        }
         m_Shape = Shape::From(dimensions);
         m_Storage.Resize(m_Shape.Length);
         for (uint32_t i = 0; i < m_Shape.Length; ++i)

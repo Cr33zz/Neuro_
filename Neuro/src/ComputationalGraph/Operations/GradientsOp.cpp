@@ -19,7 +19,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void GradientsOp::ComputeInternal()
     {
+        m_InputsManuallyConsumed = true; // loss outputs will be completely obliterated after gradients computation
         m_InputNodes[0]->GetGraph()->ComputeGradientsInOrder(m_Order, m_InputNodes, m_NodesAffectingInputNodes, m_Vars);
+
         for (size_t i = 0; i < m_Vars.size(); ++i)
             m_Vars[i]->OutputGrad().CopyTo(m_Grads[i]->Output());
     }

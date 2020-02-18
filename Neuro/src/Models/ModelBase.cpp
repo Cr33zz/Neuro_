@@ -629,7 +629,7 @@ namespace Neuro
                         NEURO_ASSERT(weightDims[i] == wShape.Dimensions[i], "Dimension " << i << " of parameter '" << w->Name() << "' doesn't match corresponding dimension of saved parameter. Found " << weightDims[i] << " expected " << wShape.Dimensions[i] << ".");
                 }
 
-                dataset.read(&w->Values()[0], PredType::NATIVE_FLOAT);
+                dataset.read(w->Values(), PredType::NATIVE_FLOAT);
 
                 if (is_keras && (!params[i].transAxesKeras.empty() || params[i].reshapeKeras))
                 {
