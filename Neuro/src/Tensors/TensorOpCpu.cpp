@@ -824,7 +824,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::ExtractSubTensor2D(const Tensor& input, uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const
     {
-        input.SyncToHost();
+        input.CopyToHost();
         output.OverrideHost();
 
         for (uint32_t n = 0; n < output.Batch(); ++n)
@@ -835,7 +835,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::FuseSubTensor2D(const Tensor& input, uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const
+    void TensorOpCpu::FuseSubTensor2D(const Tensor& input, uint32_t widthOffset, uint32_t heightOffset, bool add, Tensor& output) const
     {
         input.SyncToHost();
         output.CopyToHost();
@@ -851,7 +851,8 @@ namespace Neuro
             if ((w + widthOffset) >= outputWidth || (h + heightOffset) >= outputHeight)
                 continue;
 
-			output(w + widthOffset, h + heightOffset, d, n) = input(w, h, d, n);
+            float& val = output(w + widthOffset, h + heightOffset, d, n);
+			val = (add ? val : 0.f) + input(w, h, d, n);
         }
     }
 
