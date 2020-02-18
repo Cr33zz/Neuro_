@@ -18,19 +18,25 @@ Supported layers:
 
 ## Code examples
 #### Pix2pix
-This is one of the conditional adversarial generative networks. Example below comes from training a network on a dataset of flower paintings scoured from pintrest. The goal of this particular model is to learn how to generate flower paintings from image containing only edges. Left image is conditional input to the model (created by running canny edge detection on an image from the dataset), right image is the original image from the dataset and central image is the output from generator network.
+This is one of the conditional adversarial generative networks. Example below comes from training a network on a dataset of flower paintings scoured from pintrest. The goal of this particular model is to learn how to generate flower paintings from image containing only edges. Left image is conditional input to the model (created by running canny edge detection on an image from the dataset), right image is the original image from the dataset and central image is the output from generator network.  
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/flowers.jpg)  
 #### Neural Style Transfer
 This neural network is given style image and any image we want to stylize. Model is using pre-trained VGG16/19 network to extract feature maps from style and content image and uses them to compute style and content loss. The only trainable element of the whole model is input image itself.  
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/content.jpg)  
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/great_wave.jpg)
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/neural_transfer_great_wave.jpg)  
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/starry_night.jpg)
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/neural_transfer_starry_night.jpg)  
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/composition_vii.jpg)
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/neural_transfer_composition_vii.jpg)  
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/pillars_of_creation.jpg)
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/neural_transfer_pillars_of_creation.jpg)  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-content.jpg)  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-starry_night-style.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-starry_night-result.jpg)  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-kandinsky-style.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-kandinsky-result.jpg)  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-wave_crop-style.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-wave_crop-result.jpg)  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-woman-with-hat-matisse-style.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-woman-with-hat-matisse-result.jpg)  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-seated_nude-style.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-seated_nude-result.jpg)  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-frida-style.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-frida-result.jpg)  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-calliefink_crop-style.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-calliefink_crop-result.jpg)  
 ```cpp
 Tensor contentImage = LoadImage("data/content.jpg", 400, 300, NCHW);
 VGG16::PreprocessImage(contentImage, NCHW);
