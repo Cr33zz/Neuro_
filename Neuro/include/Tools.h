@@ -36,7 +36,7 @@ namespace Neuro
     void DeleteData(vector<const_tensor_ptr_vec_t>& data);
 
     float Clip(float value, float min, float max);
-	int Sign(float value);
+    template <typename T> int Sign(T val);
 
     vector<float> LinSpace(float start, float stop, uint32_t num = 50, bool endPoint = true);
 
@@ -147,6 +147,13 @@ namespace Neuro
         bool m_SeparateLinesEnabled = false;
         string m_ExtraString;
     };
+
+    //////////////////////////////////////////////////////////////////////////
+    template <typename T>
+    int Sign(T val)
+    {
+        return (T(0) < val) - (val < T(0));
+    }
 
     //////////////////////////////////////////////////////////////////////////
     template<typename C>
