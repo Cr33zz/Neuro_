@@ -216,9 +216,11 @@ Training data required to run examples can be downloaded via this link
 https://www.dropbox.com/s/kti8255njbx7wqy/neuro_examples_data.zip  
 Among others it contains MNIST, CIFAR-10 data sets.
 ## Prerequisites
-Currently CUDA is required to compile the library. For GPU computation CUDA 10.1 and CudNN 7.6.4 are required. Both can be downloaded from NVidia website:  
-https://developer.nvidia.com/cuda-downloads  
-https://developer.nvidia.com/cudnn  
+Currently CUDA, CuDNN and MKL are required to compile the library. Detailed library requirements:
+* CUDA 10.1 (https://developer.nvidia.com/cuda-downloads)
+* CudNN 7.6.4 (https://developer.nvidia.com/cudnn)
+* Intel MKL 2019 Update 5 (https://software.intel.com/en-us/mkl/choose-download/windows)
+  
 You also need to add the NvToolsExt binaries folder to the Path enviroment variable, usually this is the path you need to add:  
 c:\Program Files\NVIDIA Corporation\NvToolsExt\bin\x64  
 Lastly, please make sure your graphics card drivers are up to date.  
