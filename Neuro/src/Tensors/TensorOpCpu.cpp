@@ -614,17 +614,18 @@ namespace Neuro
             size_t offset = 0;
 
             for (uint32_t n = 0; n < output.Batch(); ++n)
-		    for (uint32_t d = 0; d < output.Depth(); ++d)
+            for (uint32_t d = 0; d < output.Depth(); ++d)
             {
-                float tmp;
                 if (xShift)
                 {
-                    for (uint32_t h = 0; h < height; ++h)
+                    #pragma omp parallel for
+                    for (int h = 0; h < (int)height; ++h)
                     {
+                        float tmp;
                         for (int i = 0; i < cyclesCountX; ++i)
                         {
                             int idx = i;
-                            tmp = outputValues[offset + h * width + idx];
+                            tmp = outputValues[offset + (uint32_t)h * width + idx];
 
                             while (true)
                             {
@@ -632,7 +633,7 @@ namespace Neuro
                                 if (idxNext < 0)
                                     idxNext += width;
                                 idxNext %= width;
-                                swap(tmp, outputValues[offset + h * width + idxNext]);
+                                swap(tmp, outputValues[offset + (uint32_t)h * width + idxNext]);
                                 idx = idxNext;
                                 if (idx == i)
                                     break;
@@ -643,12 +644,14 @@ namespace Neuro
 
                 if (yShift)
                 {
-                    for (uint32_t w = 0; w < width; ++w)
+                    #pragma omp parallel for
+                    for (int w = 0; w < (int)width; ++w)
                     {
+                        float tmp;
                         for (int i = 0; i < cyclesCountY; ++i)
                         {
                             int idx = i;
-                            tmp = outputValues[offset + w + idx * width];
+                            tmp = outputValues[offset + (uint32_t)w + idx * width];
 
                             while (true)
                             {
@@ -656,7 +659,7 @@ namespace Neuro
                                 if (idxNext < 0)
                                     idxNext += height;
                                 idxNext %= height;
-                                swap(tmp, outputValues[offset + w + idxNext * width]);
+                                swap(tmp, outputValues[offset + (uint32_t)w + idxNext * width]);
                                 idx = idxNext;
                                 if (idx == i)
                                     break;

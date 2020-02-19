@@ -103,9 +103,10 @@
       <FunctionLevelLinking>
       </FunctionLevelLinking>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;FREEIMAGE_LIB;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalOptions>-D_CRT_NONSTDC_NO_DEPRECATE -DMKL_ILP64 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-D_CRT_NONSTDC_NO_DEPRECATE -DMKL_ILP64 /Zc:twoPhase- %(AdditionalOptions)</AdditionalOptions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Lib>
       <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\h5cpp\lib;$(CudaToolkitLibDir);c:\Program Files\NVIDIA Corporation\NvToolsExt\lib\x64;c:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\mkl\lib\intel64;C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries\windows\tbb\lib\intel64\vc_mt;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -133,9 +134,10 @@
       <FunctionLevelLinking>
       </FunctionLevelLinking>
       <PreprocessorDefinitions>MKL_DISABLED;_CRT_SECURE_NO_WARNINGS;FREEIMAGE_LIB;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalOptions>-D_CRT_NONSTDC_NO_DEPRECATE -DMKL_ILP64 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-D_CRT_NONSTDC_NO_DEPRECATE -DMKL_ILP64 /Zc:twoPhase- %(AdditionalOptions)</AdditionalOptions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Lib>
       <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\h5cpp\lib;$(CudaToolkitLibDir);c:\Program Files\NVIDIA Corporation\NvToolsExt\lib\x64;c:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\mkl\lib\intel64;C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries\windows\tbb\lib\intel64\vc_mt;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -164,8 +166,9 @@
       <AdditionalIncludeDirectories>include;deps;deps\FreeImage\include;deps\h5cpp\include;c:\Program Files\NVIDIA Corporation\NvToolsExt\include;C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries_2019.5.281\windows\mkl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;FREEIMAGE_LIB;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalOptions>-D_CRT_NONSTDC_NO_DEPRECATE -DMKL_ILP64 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-D_CRT_NONSTDC_NO_DEPRECATE -DMKL_ILP64 /Zc:twoPhase- %(AdditionalOptions)</AdditionalOptions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -198,8 +201,9 @@
       <AdditionalIncludeDirectories>include;deps;deps\FreeImage\include;deps\h5cpp\include;c:\Program Files\NVIDIA Corporation\NvToolsExt\include;C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries_2019.5.281\windows\mkl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PreprocessorDefinitions>NDEBUG;_CRT_SECURE_NO_WARNINGS;FREEIMAGE_LIB;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalOptions>-D_CRT_NONSTDC_NO_DEPRECATE -DMKL_ILP64 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-D_CRT_NONSTDC_NO_DEPRECATE -DMKL_ILP64 /Zc:twoPhase- %(AdditionalOptions)</AdditionalOptions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
