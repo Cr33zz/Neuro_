@@ -33,6 +33,9 @@
     <ClCompile Include="src\Pix2Pix.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\CycleGAN.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\IrisNetwork.h">
@@ -81,6 +84,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Pix2Pix.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CycleGAN.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

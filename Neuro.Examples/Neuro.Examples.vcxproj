@@ -207,6 +207,7 @@
   <ItemGroup>
     <ClCompile Include="src\AdaptiveStyleTransfer.cpp" />
     <ClCompile Include="src\CifarGAN.cpp" />
+    <ClCompile Include="src\CycleGAN.cpp" />
     <ClCompile Include="src\DeepConvGAN.cpp" />
     <ClCompile Include="src\FastNeuralStyleTransfer.cpp" />
     <ClCompile Include="src\GAN.cpp" />
@@ -222,6 +223,7 @@
     <ClInclude Include="include\ComputationalGraph.h" />
     <ClInclude Include="include\ConvAutoencoderNetwork.h" />
     <ClInclude Include="include\ConvNetwork.h" />
+    <ClInclude Include="include\CycleGAN.h" />
     <ClInclude Include="include\DeepConvGAN.h" />
     <ClInclude Include="include\FastNeuralStyleTransfer.h" />
     <ClInclude Include="include\GAN.h" />
