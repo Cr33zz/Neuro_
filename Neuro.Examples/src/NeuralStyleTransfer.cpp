@@ -55,11 +55,13 @@ TensorLike* ContentLoss(TensorLike* contentFeatures, TensorLike* stylizedFeature
     float M = (float)shape.Height() * shape.Width();
     float N = (float)shape.Depth();
 
-    float K = 0.5f;
+    float K = 1.f;
     if (mode == 1)
         K = 1.f / (2.f * ::sqrt(N) * ::sqrt(M));
     else if (mode == 2)
         K = 1.f / (N * M);
+    else if (mode == 3)
+        K = 0.5f;
 
     return multiply(sum(square(sub(contentFeatures, stylizedFeatures))), K);
 }
