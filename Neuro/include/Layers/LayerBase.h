@@ -116,6 +116,7 @@ namespace Neuro
         string m_ClassName;
 
 		static map<string, int> s_LayersCountPerType;
+        static int s_CallCounter;
 
         friend class ModelBase;
 		friend class Flow;

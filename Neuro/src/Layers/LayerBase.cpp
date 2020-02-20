@@ -12,6 +12,7 @@
 namespace Neuro
 {
     map<string, int> LayerBase::s_LayersCountPerType;
+    int LayerBase::s_CallCounter = 0;
 
 	//////////////////////////////////////////////////////////////////////////
     LayerBase::LayerBase(const string& constructorName, const Shape& expectedInputShape, const string& name)
@@ -178,7 +179,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     const vector<TensorLike*>& LayerBase::Call(const vector<TensorLike*>& inputs, const string& name)
     {
-        NameScope scope(name.empty() ? Name() : name);
+        NameScope scope(name.empty() ? (Name() + "_c" + to_string(s_CallCounter++)) : name);
 
         vector<Shape> inputShapes = CollectShapes(inputs);
         CheckInputCompatibility(inputs);
