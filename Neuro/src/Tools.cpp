@@ -1134,4 +1134,20 @@ namespace Neuro
         x.CopyToDevice();
         return 1;
     }
+
+    //////////////////////////////////////////////////////////////////////////
+    size_t MultiImageLoader::operator()(vector<Tensor>& dest, size_t loadIdx)
+    {
+        for (size_t i = 0; i < m_Files.size(); ++i)
+        {
+            auto& x = dest[loadIdx + i];
+            x.ResizeBatch(m_BatchSize);
+            x.OverrideHost();
+            for (uint32_t j = 0; j < x.Batch(); ++j)
+                LoadImage(m_Files[i][GlobalRng().Next((int)m_Files[i].size())], x.Values() + j * x.BatchLength(), x.Width() * m_UpScaleFactor, x.Height() * m_UpScaleFactor, x.Width(), x.Height());
+            x.CopyToDevice();
+        }
+        return m_Files.size();
+    }
+
 }

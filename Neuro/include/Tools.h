@@ -112,6 +112,17 @@ namespace Neuro
         uint32_t m_UpScaleFactor;
     };
 
+    struct MultiImageLoader : public ILoader
+    {
+        MultiImageLoader(const vector<vector<string>>& files, uint32_t batchSize, uint32_t upScaleFactor = 1) : m_Files(files), m_BatchSize(batchSize), m_UpScaleFactor(upScaleFactor) {}
+
+        virtual size_t operator()(vector<Tensor>& dest, size_t loadIdx) override;
+
+        vector<vector<string>> m_Files;
+        uint32_t m_BatchSize;
+        uint32_t m_UpScaleFactor;
+    };
+
     class Tqdm
     {
     public:
