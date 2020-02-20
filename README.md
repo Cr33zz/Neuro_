@@ -213,7 +213,7 @@ Below are randomly generated images after 100 epochs.
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/cifar_dc_gan_after_100_epochs.jpg "DCGAN after 100 epochs")
 ## Neuro.Examples training data
 Training data required to run examples can be downloaded via this link
-https://www.dropbox.com/s/kti8255njbx7wqy/neuro_examples_data.zip  
+https://www.dropbox.com/s/1zccfhtx9zi52mf/neuro_examples_data.zip
 Among others it contains MNIST, CIFAR-10 data sets.
 ## Prerequisites
 Currently CUDA, CuDNN and MKL are required to compile the library. Detailed library requirements:
