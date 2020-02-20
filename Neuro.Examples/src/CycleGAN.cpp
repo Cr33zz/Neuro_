@@ -5,15 +5,15 @@ ModelBase* CycleGAN::CreateGenerator(const Shape& imgShape, uint32_t filtersStar
 {
     auto encoderBlock = [](TensorLike* x, uint32_t nbFilters, uint32_t fSize = 4)
     {
-        x = (new Conv2D(nbFilters, fSize, 2, Tensor::GetPadding(Same, fSize), new LeakyReLU(0.2f), NCHW, name))->Call(x)[0];
+        x = (new Conv2D(nbFilters, fSize, 2, Tensor::GetPadding(Same, fSize), new LeakyReLU(0.2f)))->Call(x)[0];
         x = (new InstanceNormalization())->Call(x)[0];
         return x;
     };
 
-    auto decoderBlock = [](TensorLike* x, TensorLike* x2, uint32_t nbFilters, uint32_t fSize, float dropoutRate = 0)
+    auto decoderBlock = [](TensorLike* x, TensorLike* x2, uint32_t nbFilters, uint32_t fSize = 4, float dropoutRate = 0)
     {
         x = (new UpSampling2D(2))->Call(x)[0];
-        x = (new Conv2D(nbFilters, fSize, 1, Tensor::GetPadding(Same, fSize), new ReLU(), NCHW, name))->Call(x)[0];
+        x = (new Conv2D(nbFilters, fSize, 1, Tensor::GetPadding(Same, fSize), new ReLU()))->Call(x)[0];
         if (dropoutRate)
             x = (new Dropout(dropoutRate))->Call(x)[0];
         x = (new InstanceNormalization())->Call(x)[0];
@@ -21,7 +21,7 @@ ModelBase* CycleGAN::CreateGenerator(const Shape& imgShape, uint32_t filtersStar
         return x;
     };
 
-    auto d0 = new Input(imgShape);
+    auto d0 = (new Input(imgShape))->Outputs()[0];
 
     // Encoder
     auto d1 = encoderBlock(d0, filtersStart);
@@ -36,9 +36,9 @@ ModelBase* CycleGAN::CreateGenerator(const Shape& imgShape, uint32_t filtersStar
 
     auto u4 = (new UpSampling2D(2))->Call(u3)[0];
 
-    auto output = (new Conv2D(imgShape.Depth(), 4, 1, Tensor::GetPadding(Same, 4), new Tanh(), NCHW, "last_conv"))->Call(u4)[0];
+    auto output = (new Conv2D(imgShape.Depth(), 4, 1, Tensor::GetPadding(Same, 4), new Tanh()))->Call(u4)[0];
 
-    auto model = new Flow(d0->Outputs(), { output }, "gen");
+    auto model = new Flow({ d0 }, { output }, "gen");
     return model;
 }
 
@@ -47,13 +47,13 @@ ModelBase* CycleGAN::CreateDiscriminator(const Shape& imgShape, uint32_t filters
 {
     auto block = [](TensorLike* x, uint32_t nbFilters, uint32_t fSize = 4, bool norm = true)
     {
-        x = (new Conv2D(nbFilters, fSize, 2, Tensor::GetPadding(Same, fSize), new LeakyReLU(0.2f), NCHW, name))->Call(x)[0];
+        x = (new Conv2D(nbFilters, fSize, 2, Tensor::GetPadding(Same, fSize), new LeakyReLU(0.2f)))->Call(x)[0];
         if (norm)
             x = (new InstanceNormalization())->Call(x)[0];
         return x;
     };
 
-    auto d0 = new Input(imgShape);
+    auto d0 = (new Input(imgShape))->Outputs()[0];
 
     auto d1 = block(d0, filtersStart, 4, false);
     auto d2 = block(d1, filtersStart * 2);
@@ -62,6 +62,6 @@ ModelBase* CycleGAN::CreateDiscriminator(const Shape& imgShape, uint32_t filters
 
     auto output = (new Conv2D(1, 4, 1, Tensor::GetPadding(Same, 4), nullptr, NCHW, "last_conv"))->Call(d4)[0];
 
-    auto model = new Flow(d0->Outputs(), { output });
+    auto model = new Flow({ d0 }, { output });
     return model;
 }

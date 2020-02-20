@@ -13,53 +13,30 @@ using namespace Neuro;
 class CycleGAN
 {
 public:
-    //// Splits source image into 2 images along width axis
-    //struct SplitImageLoader : public ImageLoader
-    //{
-    //    SplitImageLoader(const vector<string>& files, uint32_t batchSize, uint32_t seed = 0) :ImageLoader(files, batchSize), m_Rng(seed) {}
+    struct CustomMultiImageLoader : public MultiImageLoader
+    {
+        CustomMultiImageLoader(const vector<string>& filesA, const vector<string>& filesB, uint32_t batchSize) : MultiImageLoader({ filesA, filesB }, batchSize) {}
 
-    //    virtual size_t operator()(vector<Tensor>& dest, size_t loadIdx) override
-    //    {
-    //        auto& img1 = dest[loadIdx];
-    //        auto& img2 = dest[loadIdx + 1];
+        virtual size_t operator()(vector<Tensor>& dest, size_t loadIdx) override
+        {
+            size_t loaded = __super::operator()(dest, loadIdx);
+            
+            for (size_t i = 0; i < loaded; ++i)
+            {
+                dest[i].Sub(127.5f, dest[i]);
+                dest[i].Div(127.5f, dest[i]);
+            }
 
-    //        NEURO_ASSERT(img1.Width() == img2.Width(), "");
-    //        NEURO_ASSERT(img1.Height() == img2.Height(), "");
-
-    //        img1.ResizeBatch(m_BatchSize);
-    //        img1.OverrideHost();
-    //        img2.ResizeBatch(m_BatchSize);
-    //        img2.OverrideHost();
-
-    //        Tensor t1(Shape::From(img1.GetShape(), 1));
-    //        Tensor t2(Shape::From(img2.GetShape(), 1));
-    //        tensor_ptr_vec_t tmp{ &t1, &t2 };
-
-    //        for (uint32_t n = 0; n < m_BatchSize; ++n)
-    //        {
-    //            const auto& file = m_Files[m_Rng.Next((int)m_Files.size())];
-    //            auto img = LoadImage(file, img1.Width() * 2, img1.Height());
-    //            img.Split(WidthAxis, tmp);
-
-    //            t1.Sub(127.5f).Div(127.5f).CopyBatchTo(0, (uint32_t)n, img1);
-    //            t2.Sub(127.5f).Div(127.5f).CopyBatchTo(0, (uint32_t)n, img2);
-    //        }
-
-    //        img1.CopyToDevice();
-    //        img2.CopyToDevice();
-    //        return 2;
-    //    }
-
-    //private:
-    //    Random m_Rng;
-    //};
+            return loaded;
+        }
+    };
 
     void Run()
     {
         Tensor::SetForcedOpMode(GPU);
         //GlobalRngSeed(1337);
 
-        const Shape IMG_SHAPE(256, 256, 3);
+        const Shape IMG_SHAPE(128, 128, 3);
         const uint32_t PATCH = (uint32_t)(IMG_SHAPE.Height() / pow(2, 4));
         const Shape DISC_PATCH(PATCH, PATCH, 1);
 
@@ -67,7 +44,7 @@ public:
         const uint32_t DF = 64;
 
         const float LAMBDA_CYCLE_WEIGHT = 10.f; // cycle consistency loss weight
-        const float LAMBDA_ID_WEIGHT = 0.1f * LAMBDA_CYCLE; // identity loss weight
+        const float LAMBDA_ID_WEIGHT = 0.1f * LAMBDA_CYCLE_WEIGHT; // identity loss weight
 
         const int EPOCHS = 150;
         const uint32_t BATCH_SIZE = 1;
@@ -76,18 +53,17 @@ public:
 
         cout << "Example: CycleGAN" << endl;
 
-        const string NAME = "flowers";
-        auto trainFiles = LoadFilesList("data/flowers", false, true);
-        /*const string NAME = "facades";
-        auto trainFiles = LoadFilesList("data/facades/train", false, true);*/
-
+        const string NAME = "apples2oranges";
+        auto trainFilesA = LoadFilesList("data/" + NAME + "/trainA", false, true);
+        auto trainFilesB = LoadFilesList("data/" + NAME + "/trainB", false, true);
+        
         // setup models
-        auto gABModel = CreateGenerator(IMG_SHAPE);
-        auto gBAModel = CreateGenerator(IMG_SHAPE);
+        auto gABModel = CreateGenerator(IMG_SHAPE, GF);
+        auto gBAModel = CreateGenerator(IMG_SHAPE, GF);
         cout << "Generator AB" << endl << gABModel->Summary();
         cout << "Generator BA" << endl << gBAModel->Summary();
-        auto dAModel = CreateDiscriminator(IMG_SHAPE);
-        auto dBModel = CreateDiscriminator(IMG_SHAPE);
+        auto dAModel = CreateDiscriminator(IMG_SHAPE, DF);
+        auto dBModel = CreateDiscriminator(IMG_SHAPE, DF);
         dAModel->Optimize(new Adam(LEARNING_RATE, ADAM_BETA1), new MeanSquareError(), {}, All);
         dBModel->Optimize(new Adam(LEARNING_RATE, ADAM_BETA1), new MeanSquareError(), {}, All);
         cout << "Discriminator A" << endl << dAModel->Summary();
@@ -123,12 +99,16 @@ public:
             { 1.f, 1.f, LAMBDA_CYCLE_WEIGHT, LAMBDA_CYCLE_WEIGHT, LAMBDA_ID_WEIGHT, LAMBDA_ID_WEIGHT });
 
         // training
-        auto fakeLabels = new Constant(zeros(validA->GetShape()), "fake_labels");
-        auto realLabels = new Constant(ones(validA->GetShape()), "real_labels");
+        auto fakeLabels = zeros(validA->GetShape());
+        auto realLabels = ones(validA->GetShape());
 
-        DataPreloader preloader({ realImgA->OutputPtr(), realImgB->OutputPtr() }, { &loader }, 5);
+        auto realImgA = zeros(inputImgA->GetShape());
+        auto realImgB = zeros(inputImgB->GetShape());
+
+        CustomMultiImageLoader loader(trainFilesA, trainFilesB, BATCH_SIZE);
+        DataPreloader preloader({ &realImgA, &realImgB }, { &loader }, 5);
         
-        const size_t STEPS = trainFiles.size() * EPOCHS;
+        const size_t STEPS = (size_t)((trainFilesA.size() + trainFilesB.size()) * 0.5f) * EPOCHS;
 
         Tqdm progress(STEPS, 0);
         progress.ShowEta(true).ShowElapsed(false).ShowPercent(false);
@@ -146,8 +126,15 @@ public:
             auto fakeImgB = gABModel->Predict(realImgA)[0];
             auto fakeImgA = gBAModel->Predict(realImgB)[0];
 
-            dAModel->TrainOnBatch(realImgA, realLabels);
-            dAModel->TrainOnBatch(fakeImgA, fakeLabels);
+            auto dAReal = dAModel->TrainOnBatch(realImgA, realLabels);
+            auto dAFake = dAModel->TrainOnBatch(*fakeImgA, fakeLabels);
+            float dALoss = 0.5f * (get<0>(dAReal) + get<0>(dAFake));
+
+            auto dBReal = dBModel->TrainOnBatch(realImgB, realLabels);
+            auto dBFake = dBModel->TrainOnBatch(*fakeImgB, fakeLabels);
+            float dBLoss = 0.5f * (get<0>(dBReal) + get<0>(dBFake));
+
+            float dLoss = 0.5f * (dALoss + dBLoss);
 
             // optimize generator
             dAModel->SetTrainable(false);
@@ -155,24 +142,24 @@ public:
             gABModel->SetTrainable(true);
             gBAModel->SetTrainable(true);
 
-            ganModel.TrainOnBatch({ realImgA, realImgB }, { realLabels, realLabels, realImgA, realImgB, realImgA, realImgB });
+            float ganLoss = get<0>(ganModel.TrainOnBatch({ &realImgA, &realImgB }, { &realLabels, &realLabels, &realImgA, &realImgB, &realImgA, &realImgB }));
             
 
             if (s % 50 == 0)
             {
-                dModel->SaveWeights(NAME + "_disc.h5");
-                gModel->SaveWeights(NAME + "_gen.h5");
+                dAModel->SaveWeights(NAME + "_discA.h5");
+                dBModel->SaveWeights(NAME + "_discB.h5");
+                gABModel->SaveWeights(NAME + "_genAB.h5");
+                gBAModel->SaveWeights(NAME + "_genBA.h5");
                 Tensor tmp(Shape(IMG_SHAPE.Width() * 3, IMG_SHAPE.Height(), IMG_SHAPE.Depth(), BATCH_SIZE));
-                Tensor::Concat(WidthAxis, { inputImg->OutputPtr(), &_genImg, targetImg->OutputPtr() }, tmp);
+                Tensor::Concat(WidthAxis, { &realImgA, fakeImgB, &realImgB, fakeImgA }, tmp);
                 tmp.Add(1.f).Mul(127.5f).SaveAsImage(NAME + "_s" + PadLeft(to_string(s), 4, '0') + ".jpg", false, 1);
             }
 
             stringstream extString;
-            extString << setprecision(4) << fixed << " - dLoss: " << dLoss << " - ganLoss: " << _ganLoss << " - l1Loss: " << _l1Loss << " - genLoss: " << _genLoss;
+            extString << setprecision(4) << fixed << " - dLoss: " << dLoss << " - ganLoss: " << ganLoss;
             progress.SetExtraString(extString.str());
         }
-
-        //ganModel->SaveWeights(NAME + ".h5");
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -239,7 +226,7 @@ public:
         //}
     }
 
-    ModelBase* CreateGenerator(const Shape& imgShape);
+    ModelBase* CreateGenerator(const Shape& imgShape, uint32_t filtersStart);
     //ModelBase* CreatePatchDiscriminator(const Shape& imgShape, uint32_t patchSize, bool useMiniBatchDiscrimination = true);
-    ModelBase* CreateDiscriminator(const Shape& imgShape);
+    ModelBase* CreateDiscriminator(const Shape& imgShape, uint32_t filtersStart);
 };
