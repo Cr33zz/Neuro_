@@ -26,23 +26,23 @@ namespace Neuro
     {
         NameScope scope("cross_entropy");
         auto clippedOutput = clip(output, _EPSILON, 1 - _EPSILON);
-        return negative(add(multiply(targetOutput, log(clippedOutput, "log(y)"), "yTrue×log(y)"),
-                            multiply(subtract(new Constant(1), targetOutput, "1-yTrue"), 
-                                     log(subtract(new Constant(1), clippedOutput, "1-y"), "log(1-y)"), "(1-yTrue)×log(1-y)"), "yTrue×log(y)+(1-yTrue)×log(1-y)"));
+        return mean(negative(add(multiply(targetOutput, log(clippedOutput, "log(y)"), "yTrue×log(y)"),
+                                 multiply(subtract(new Constant(1), targetOutput, "1-yTrue"), 
+                                          log(subtract(new Constant(1), clippedOutput, "1-y"), "log(1-y)"), "(1-yTrue)×log(1-y)"), "yTrue×log(y)+(1-yTrue)×log(1-y)")));
     }
 
     //////////////////////////////////////////////////////////////////////////
     TensorLike* MeanSquareError::Build(TensorLike* targetOutput, TensorLike* output)
     {
         NameScope scope("mean_square_error");
-        return multiply(square(subtract(output, targetOutput)), new Constant(0.5f));
+        return mean(square(subtract(output, targetOutput)));
     }
 
     //////////////////////////////////////////////////////////////////////////
     TensorLike* MeanAbsoluteError::Build(TensorLike* targetOutput, TensorLike* output)
     {
         NameScope scope("mean_absolute_error");
-        return abs(subtract(output, targetOutput));
+        return mean(abs(subtract(output, targetOutput)));
     }
 
 	//////////////////////////////////////////////////////////////////////////
