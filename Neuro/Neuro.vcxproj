@@ -227,6 +227,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\Activations.h" />
+    <ClInclude Include="include\Applications\GAN.h" />
     <ClInclude Include="include\Applications\VGG16.h" />
     <ClInclude Include="include\Applications\VGG19.h" />
     <ClInclude Include="include\ChartGenerator.h" />
@@ -350,6 +351,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Activations.cpp" />
+    <ClCompile Include="src\Applications\GAN.cpp" />
     <ClCompile Include="src\Applications\VGG16.cpp" />
     <ClCompile Include="src\Applications\VGG19.cpp" />
     <ClCompile Include="src\ChartGenerator.cpp" />

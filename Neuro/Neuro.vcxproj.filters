@@ -429,6 +429,9 @@
     <ClInclude Include="include\Tensors\TensorOpCpuMkl.h">
       <Filter>include\Tensors</Filter>
     </ClInclude>
+    <ClInclude Include="include\Applications\GAN.h">
+      <Filter>include\Applications</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -742,6 +745,9 @@
     </ClCompile>
     <ClCompile Include="src\Tensors\TensorOpCpuMkl.cpp">
       <Filter>src\Tensors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Applications\GAN.cpp">
+      <Filter>src\Applications</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
