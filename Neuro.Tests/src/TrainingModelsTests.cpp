@@ -57,14 +57,14 @@ namespace NeuroTests
         {
             Tensor::SetForcedOpMode(GPU);
             float loss = TrainIrisNetwork("iris_gpu");
-            Assert::AreEqual(0.41869, (double)loss, 0.00001);
+            Assert::AreEqual(0.41876, (double)loss, 0.00001);
         }
 
         TEST_METHOD(Iris_Network_CPU)
         {
             Tensor::SetForcedOpMode(CPU_MT);
             float loss = TrainIrisNetwork("iris_cpu");
-            Assert::AreEqual(0.41869, (double)loss, 0.00001);
+            Assert::AreEqual(0.41876, (double)loss, 0.00001);
         }
 
         float TrainIrisNetwork(const string& name)
