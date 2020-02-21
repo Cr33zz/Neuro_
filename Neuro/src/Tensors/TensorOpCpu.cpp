@@ -135,7 +135,8 @@ namespace Neuro
         auto inputValues = input.Values();
         auto outputValues = output.Values();
 
-        for (uint32_t i = 0; i < input.Length(); ++i)
+        #pragma omp parallel for
+        for (int i = 0; i < (int)input.Length(); ++i)
             outputValues[i] = inputValues[i] * v;
     }
 
