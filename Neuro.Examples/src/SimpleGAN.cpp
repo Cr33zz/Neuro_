@@ -1,7 +1,7 @@
-#include "GAN.h"
+#include "SimpleGAN.h"
 
 //////////////////////////////////////////////////////////////////////////
-void GAN::Run()
+void SimpleGAN::Run()
 {
     Tensor::SetDefaultOpMode(GPU);
     GlobalRngSeed(1337);
@@ -88,7 +88,7 @@ void GAN::Run()
 }
 
 //////////////////////////////////////////////////////////////////////////
-void GAN::RunDiscriminatorTrainTest()
+void SimpleGAN::RunDiscriminatorTrainTest()
 {
     Tensor::SetDefaultOpMode(GPU);
 
@@ -123,14 +123,14 @@ void GAN::RunDiscriminatorTrainTest()
 }
 
 //////////////////////////////////////////////////////////////////////////
-void GAN::LoadImages(Tensor& images)
+void SimpleGAN::LoadImages(Tensor& images)
 {
     Tensor labels;
     LoadMnistData("data/train-images.idx3-ubyte", "data/train-labels.idx1-ubyte", images, labels, false, false, -1);
 }
 
 //////////////////////////////////////////////////////////////////////////
-ModelBase* GAN::CreateGenerator(uint32_t inputsNum)
+ModelBase* SimpleGAN::CreateGenerator(uint32_t inputsNum)
 {
     auto model = new Sequential("generator");
     model->AddLayer(new Dense(inputsNum, 256, new LeakyReLU(0.2f)));
@@ -141,7 +141,7 @@ ModelBase* GAN::CreateGenerator(uint32_t inputsNum)
 }
 
 //////////////////////////////////////////////////////////////////////////
-ModelBase* GAN::CreateDiscriminator()
+ModelBase* SimpleGAN::CreateDiscriminator()
 {
     auto model = new Sequential("discriminator");
     model->AddLayer(new Dense(784, 1024, new LeakyReLU(0.2f)));

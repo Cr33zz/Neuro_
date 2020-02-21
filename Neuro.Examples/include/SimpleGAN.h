@@ -10,7 +10,7 @@
 using namespace std;
 using namespace Neuro;
 
-class GAN
+class SimpleGAN
 {
 public:
     void Run();

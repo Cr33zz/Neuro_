@@ -5,7 +5,7 @@
 #include "IrisNetwork.h"
 #include "MnistConvNetwork.h"
 #include "MnistNetwork.h"
-#include "GAN.h"
+#include "SimpleGAN.h"
 #include "DeepConvGAN.h"
 #include "CifarGAN.h"
 #include "ComputationalGraph.h"
@@ -13,6 +13,7 @@
 #include "FastNeuralStyleTransfer.h"
 #include "AdaptiveStyleTransfer.h"
 #include "Pix2Pix.h"
+#include "CycleGAN.h"
 
 #include <cuda.h>
 #include <cudnn.h>
@@ -75,8 +76,9 @@ int main()
     //FastNeuralStyleTransfer().Run();
     //AdaptiveStyleTransfer().Run();
     //AdaptiveStyleTransfer().Test();
-    Pix2Pix().Run();
+    //Pix2Pix().Run();
     //Pix2Pix().RunDiscriminatorTrainTest();
+    CycleGAN().Run();
 
     return 0;
 }

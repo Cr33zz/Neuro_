@@ -5,12 +5,12 @@
 #include <vector>
 
 #include "Neuro.h"
-#include "GAN.h"
+#include "SimpleGAN.h"
 
 using namespace std;
 using namespace Neuro;
 
-class DeepConvGAN : public GAN
+class DeepConvGAN : public SimpleGAN
 {
 protected:
     virtual ModelBase* CreateGenerator(uint32_t inputsNum) override;

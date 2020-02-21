@@ -65,7 +65,7 @@ ModelBase* CycleGAN::CreateDiscriminator(const Shape& imgShape, uint32_t filters
     auto d4 = block(d3, filtersStart * 8);
 
     auto d5 = (new ZeroPadding2D(2, 1, 2, 1))->Call(d4)[0];
-    auto output = (new Conv2D(1, 4, 1, 0, nullptr))->Call(d5)[0];
+    auto output = (new Conv2D(1, 4, 1, 0, new Sigmoid()))->Call(d5)[0];
 
     auto model = new Flow({ d0 }, { output });
     return model;

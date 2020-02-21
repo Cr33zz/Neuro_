@@ -210,7 +210,7 @@
     <ClCompile Include="src\CycleGAN.cpp" />
     <ClCompile Include="src\DeepConvGAN.cpp" />
     <ClCompile Include="src\FastNeuralStyleTransfer.cpp" />
-    <ClCompile Include="src\GAN.cpp" />
+    <ClCompile Include="src\SimpleGAN.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\NeuralStyleTransfer.cpp" />
     <ClCompile Include="src\Pix2Pix.cpp" />
@@ -226,7 +226,7 @@
     <ClInclude Include="include\CycleGAN.h" />
     <ClInclude Include="include\DeepConvGAN.h" />
     <ClInclude Include="include\FastNeuralStyleTransfer.h" />
-    <ClInclude Include="include\GAN.h" />
+    <ClInclude Include="include\SimpleGAN.h" />
     <ClInclude Include="include\IrisNetwork.h" />
     <ClInclude Include="include\FlowNetwork.h" />
     <ClInclude Include="include\MnistConvNetwork.h" />
