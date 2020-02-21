@@ -41,8 +41,8 @@ public:
         const uint32_t GF = 32;
         const uint32_t DF = 64;
 
-        const float LAMBDA_CYCLE_WEIGHT = 10.f; // cycle consistency loss weight
-        const float LAMBDA_ID_WEIGHT = 0.1f * LAMBDA_CYCLE_WEIGHT; // identity loss weight
+        const float CYCLE_WEIGHT = 10.f; // cycle consistency loss weight
+        const float IDENTITY_WEIGHT = 0.1f * CYCLE_WEIGHT; // identity loss weight
 
         const int EPOCHS = 150;
         const uint32_t BATCH_SIZE = 1;
@@ -51,29 +51,29 @@ public:
 
         cout << "Example: CycleGAN" << endl;
 
-        const string NAME = "cezanne2photo";
+        const string NAME = "horse2zebra";
         auto trainFilesA = LoadFilesList("data/" + NAME + "/trainA", false, true);
         auto trainFilesB = LoadFilesList("data/" + NAME + "/trainB", false, true);
         
         // setup models
         auto gABModel = CreateGenerator(IMG_SHAPE, GF);
         auto gBAModel = CreateGenerator(IMG_SHAPE, GF);
-        cout << "Generator AB" << endl << gABModel->Summary();
-        cout << "Generator BA" << endl << gBAModel->Summary();
+        //cout << "Generator AB" << endl << gABModel->Summary();
+        //cout << "Generator BA" << endl << gBAModel->Summary();
         auto dAModel = CreateDiscriminator(IMG_SHAPE, DF);
         auto dBModel = CreateDiscriminator(IMG_SHAPE, DF);
         dAModel->Optimize(new Adam(LEARNING_RATE, ADAM_BETA1), new MeanSquareError(), {}, All);
         dBModel->Optimize(new Adam(LEARNING_RATE, ADAM_BETA1), new MeanSquareError(), {}, All);
-        cout << "Discriminator A" << endl << dAModel->Summary();
-        cout << "Discriminator B" << endl << dBModel->Summary();
+        //cout << "Discriminator A" << endl << dAModel->Summary();
+        //cout << "Discriminator B" << endl << dBModel->Summary();
 
-        auto inputImgA = (new Input(IMG_SHAPE))->Outputs()[0];
-        auto inputImgB = (new Input(IMG_SHAPE))->Outputs()[0];
+        auto inputA = (new Input(IMG_SHAPE))->Outputs()[0];
+        auto inputB = (new Input(IMG_SHAPE))->Outputs()[0];
 
         // translate image A -> B
-        auto fakeB = gABModel->Call(inputImgA)[0];
+        auto fakeB = gABModel->Call(inputA)[0];
         // translate image B -> A
-        auto fakeA = gBAModel->Call(inputImgB)[0];
+        auto fakeA = gBAModel->Call(inputB)[0];
 
         // translate fake image B back to A
         auto reconstructedA = gBAModel->Call(fakeB)[0];
@@ -81,31 +81,35 @@ public:
         auto reconstructedB = gABModel->Call(fakeA)[0];
 
         // identity mapping
-        auto imgAIdentity = gBAModel->Call(inputImgA)[0];
-        auto imgBIdentity = gABModel->Call(inputImgB)[0];
+        auto identityA = gBAModel->Call(inputA)[0];
+        auto identityB = gABModel->Call(inputB)[0];
 
         auto validA = dAModel->Call(fakeA)[0];
         auto validB = dBModel->Call(fakeB)[0];
 
         auto ganModel = Flow(
-            { inputImgA, inputImgB }, 
-            { validA, validB, reconstructedA, reconstructedB, imgAIdentity, imgBIdentity });
+            { inputA, inputB }, 
+            { validA, validB, reconstructedA, reconstructedB, identityA, identityB });
+
         ganModel.Optimize(
             new Adam(LEARNING_RATE, ADAM_BETA1), 
             { new MeanSquareError(), new MeanSquareError(), new MeanAbsoluteError(), new MeanAbsoluteError(), new MeanAbsoluteError(), new MeanAbsoluteError() }, 
-            { 1.f, 1.f, LAMBDA_CYCLE_WEIGHT, LAMBDA_CYCLE_WEIGHT, LAMBDA_ID_WEIGHT, LAMBDA_ID_WEIGHT });
+            { 1.f, 1.f, CYCLE_WEIGHT, CYCLE_WEIGHT, IDENTITY_WEIGHT, IDENTITY_WEIGHT });
 
         // training
         auto fakeLabels = zeros(Shape::From(validA->GetShape(), BATCH_SIZE));
         auto realLabels = ones(Shape::From(validA->GetShape(), BATCH_SIZE));
 
-        auto realImgA = zeros(Shape::From(inputImgA->GetShape(), BATCH_SIZE));
-        auto realImgB = zeros(Shape::From(inputImgA->GetShape(), BATCH_SIZE));
+        auto realImgA = zeros(Shape::From(inputA->GetShape(), BATCH_SIZE));
+        auto realImgB = zeros(Shape::From(inputA->GetShape(), BATCH_SIZE));
 
         CustomMultiImageLoader loader(trainFilesA, trainFilesB, BATCH_SIZE);
         DataPreloader preloader({ &realImgA, &realImgB }, { &loader }, 5);
+
+        auto testImgA = realImgA;
+        auto testImgB = realImgB;
         
-        const size_t STEPS = (size_t)((trainFilesA.size() + trainFilesB.size()) * 0.5f) * EPOCHS;
+        const size_t STEPS = min(trainFilesA.size(), trainFilesB.size()) * EPOCHS;
 
         Tqdm progress(STEPS, 0);
         progress.ShowEta(true).ShowElapsed(false).ShowPercent(false);
@@ -114,43 +118,61 @@ public:
             //load next conditional and expected images
             preloader.Load();
 
-            // optimize discriminator
+            if (s == 0)
+            {
+                testImgA = realImgA;
+                testImgB = realImgB;
+            }
+
+            if (s % 100 == 0)
+            {
+                dAModel->SaveWeights(NAME + "_discA.h5");
+                dBModel->SaveWeights(NAME + "_discB.h5");
+                gABModel->SaveWeights(NAME + "_genAB.h5");
+                gBAModel->SaveWeights(NAME + "_genBA.h5");
+                Tensor output(Shape(IMG_SHAPE.Width() * 3, IMG_SHAPE.Height() * 2, IMG_SHAPE.Depth(), BATCH_SIZE));
+
+                Tensor ab(Shape(IMG_SHAPE.Width() * 3, IMG_SHAPE.Height(), IMG_SHAPE.Depth(), BATCH_SIZE));
+                auto testFakeB = *gABModel->Predict(testImgA)[0];
+                auto testReconstructedA = *gBAModel->Predict(testFakeB)[0];
+                Tensor::Concat(WidthAxis, { &testImgA, &testFakeB, &testReconstructedA }, ab);
+
+                Tensor ba(Shape(IMG_SHAPE.Width() * 3, IMG_SHAPE.Height(), IMG_SHAPE.Depth(), BATCH_SIZE));
+                auto testFakeA = *gABModel->Predict(testImgB)[0];
+                auto testReconstructedB = *gBAModel->Predict(testFakeA)[0];
+                Tensor::Concat(WidthAxis, { &testImgB, &testFakeA, &testReconstructedB }, ba);
+
+                Tensor::Concat(HeightAxis, { &ab, &ba }, output);
+
+                output.Add(1.f).Mul(127.5f).SaveAsImage(NAME + "_s" + PadLeft(to_string(s), 4, '0') + ".jpg", false, 1);
+            }
+
+            // optimize discriminators
             dAModel->SetTrainable(true);
             dBModel->SetTrainable(true);
             gABModel->SetTrainable(false);
             gBAModel->SetTrainable(false);
             
-            auto fakeImgB = gABModel->Predict(realImgA)[0];
-            auto fakeImgA = gBAModel->Predict(realImgB)[0];
+            auto fakeImgB = *gABModel->Predict(realImgA)[0];
+            auto fakeImgA = *gBAModel->Predict(realImgB)[0];
 
             auto dAReal = dAModel->TrainOnBatch(realImgA, realLabels);
-            auto dAFake = dAModel->TrainOnBatch(*fakeImgA, fakeLabels);
+            auto dAFake = dAModel->TrainOnBatch(fakeImgA, fakeLabels);
             float dALoss = 0.5f * (get<0>(dAReal) + get<0>(dAFake));
 
             auto dBReal = dBModel->TrainOnBatch(realImgB, realLabels);
-            auto dBFake = dBModel->TrainOnBatch(*fakeImgB, fakeLabels);
+            auto dBFake = dBModel->TrainOnBatch(fakeImgB, fakeLabels);
             float dBLoss = 0.5f * (get<0>(dBReal) + get<0>(dBFake));
 
             float dLoss = 0.5f * (dALoss + dBLoss);
 
-            // optimize generator
+            // optimize generators
             dAModel->SetTrainable(false);
             dBModel->SetTrainable(false);
             gABModel->SetTrainable(true);
             gBAModel->SetTrainable(true);
 
             float ganLoss = get<0>(ganModel.TrainOnBatch({ &realImgA, &realImgB }, { &realLabels, &realLabels, &realImgA, &realImgB, &realImgA, &realImgB }));
-
-            if (s % 50 == 0)
-            {
-                dAModel->SaveWeights(NAME + "_discA.h5");
-                dBModel->SaveWeights(NAME + "_discB.h5");
-                gABModel->SaveWeights(NAME + "_genAB.h5");
-                gBAModel->SaveWeights(NAME + "_genBA.h5");
-                Tensor tmp(Shape(IMG_SHAPE.Width() * 4, IMG_SHAPE.Height(), IMG_SHAPE.Depth(), BATCH_SIZE));
-                Tensor::Concat(WidthAxis, { &realImgA, fakeImgB, &realImgB, fakeImgA }, tmp);
-                tmp.Add(1.f).Mul(127.5f).SaveAsImage(NAME + "_s" + PadLeft(to_string(s), 4, '0') + ".jpg", false, 1);
-            }
 
             stringstream extString;
             extString << setprecision(4) << fixed << " - dLoss: " << dLoss << " - ganLoss: " << ganLoss;

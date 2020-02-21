@@ -5,12 +5,12 @@
 #include <vector>
 
 #include "Neuro.h"
-#include "GAN.h"
+#include "SimpleGAN.h"
 
 using namespace std;
 using namespace Neuro;
 
-class CifarGAN : public GAN
+class CifarGAN : public SimpleGAN
 {
 protected:
     virtual void LoadImages(Tensor& images);
