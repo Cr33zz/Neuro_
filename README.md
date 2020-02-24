@@ -1,6 +1,6 @@
 ## Neuro_
 C++ implementation of neural networks library with Keras-like API. Contains majority of commonly used layers, losses and optimizers. Supports sequential and multi-input-output (flow) models. Supports single CPU, Multi-CPU and GPU tensor operations (using cuDNN and cuBLAS). This is a result of months of scouring internet for information regarding minute details of how neural networks work. Hopefully, it serves a good source of knowlegde for those who want to understand how neural networks are implemented. Master branch contains computational graphs approach allowing more complex networks. It might be easier to start your adventure analysing "classic" feed forward/backward propagate implementation available in *non-computational-graph-impl* branch.  
-Supported layers:  
+Supported layers:
 * Dense
 * Conv2D
 * Conv2DTranspose
@@ -16,21 +16,34 @@ Supported layers:
 * Merge
 * Activation
 
+Supported optimizers:  
+* SGD
+* Adam
+* L-BFGS
+
 ## Code examples
-#### Pix2pix
-This is one of the conditional adversarial generative networks. Example below comes from training a network on a dataset of flower paintings scoured from pintrest. The goal of this particular model is to learn how to generate flower paintings from image containing only edges. Left image is conditional input to the model (created by running canny edge detection on an image from the dataset), right image is the original image from the dataset and central image is the output from generator network.
+### Pix2pix
+This is one of the conditional adversarial generative networks. Example below comes from training a network on a dataset of flower paintings scoured from pintrest. The goal of this particular model is to learn how to generate flower paintings from image containing only edges. Left image is conditional input to the model (created by running canny edge detection on an image from the dataset), right image is the original image from the dataset and central image is the output from generator network.  
+  
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/flowers.jpg)  
-#### Neural Style Transfer
+### Neural Style Transfer
 This neural network is given style image and any image we want to stylize. Model is using pre-trained VGG16/19 network to extract feature maps from style and content image and uses them to compute style and content loss. The only trainable element of the whole model is input image itself.  
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/content.jpg)  
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/great_wave.jpg)
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/neural_transfer_great_wave.jpg)  
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/starry_night.jpg)
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/neural_transfer_starry_night.jpg)  
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/composition_vii.jpg)
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/neural_transfer_composition_vii.jpg)  
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/pillars_of_creation.jpg)
-![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/neural_transfer_pillars_of_creation.jpg)  
+  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-content.jpg)  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-starry_night-style.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-starry_night-result.jpg)  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-kandinsky-style.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-kandinsky-result.jpg)  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-wave_crop-style.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-wave_crop-result.jpg)  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-woman-with-hat-matisse-style.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-woman-with-hat-matisse-result.jpg)  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-seated_nude-style.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-seated_nude-result.jpg)  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-frida-style.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-frida-result.jpg)  
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-calliefink_crop-style.jpg)
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-calliefink_crop-result.jpg)  
 ```cpp
 Tensor contentImage = LoadImage("data/content.jpg", 400, 300, NCHW);
 VGG16::PreprocessImage(contentImage, NCHW);
@@ -102,7 +115,7 @@ for (int e = 1; e < EPOCHS; ++e, progress.NextStep())
 }
 
 ```
-#### Deep Autoencoder
+### Deep Autoencoder
 Deep autoencoder is trying to reduce input to small set of numbers (encode) and then try to recover the original input (decode). In the case below we go from 784 down to 392 and back to 784.
 ```cpp
 auto encoder = new Sequential("encoder");
@@ -134,7 +147,7 @@ cout << model.TrainSummary();
 Below are original and decoded sample digits.  
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/original_conv.jpg)
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/decoded_conv.jpg)
-#### Deep Convolutional Generative Adversarial Network (DCGAN)
+### Deep Convolutional Generative Adversarial Network (DCGAN)
 DCGAN is trying to learn to generate data samples similar to the ones it was trained on. It is comprised of 2 connected neural networks (generator and discriminator). Generator is trying to learn to generate realistic data from random noise while discriminator is learning to distinquish real from fake data.
 ```cpp
 Tensor images, labels;
@@ -200,12 +213,14 @@ Below are randomly generated images after 100 epochs.
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/cifar_dc_gan_after_100_epochs.jpg "DCGAN after 100 epochs")
 ## Neuro.Examples training data
 Training data required to run examples can be downloaded via this link
-https://www.dropbox.com/s/kti8255njbx7wqy/neuro_examples_data.zip  
+https://www.dropbox.com/s/1zccfhtx9zi52mf/neuro_examples_data.zip
 Among others it contains MNIST, CIFAR-10 data sets.
 ## Prerequisites
-Currently CUDA is required to compile the library. For GPU computation CUDA 10.1 and CudNN 7.6.4 are required. Both can be downloaded from NVidia website:  
-https://developer.nvidia.com/cuda-downloads  
-https://developer.nvidia.com/cudnn  
+Currently CUDA, CuDNN and MKL are required to compile the library. Detailed library requirements:
+* CUDA 10.1 (https://developer.nvidia.com/cuda-downloads)
+* CudNN 7.6.4 (https://developer.nvidia.com/cudnn)
+* Intel MKL 2019 Update 5 (https://software.intel.com/en-us/mkl/choose-download/windows)
+  
 You also need to add the NvToolsExt binaries folder to the Path enviroment variable, usually this is the path you need to add:  
 c:\Program Files\NVIDIA Corporation\NvToolsExt\bin\x64  
 Lastly, please make sure your graphics card drivers are up to date.  

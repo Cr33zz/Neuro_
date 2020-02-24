@@ -1180,7 +1180,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::FuseSubTensor2D(const Tensor& input, uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const
+    void TensorOpGpu::FuseSubTensor2D(const Tensor& input, uint32_t widthOffset, uint32_t heightOffset, bool add, Tensor& output) const
     {
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
@@ -1188,7 +1188,7 @@ namespace Neuro
 
         dim3 blocks, threads;
         GetKernelRunParamsForSequence(input.Length(), blocks, threads, 128);
-        CudaKernels::FuseSubTensor2D(blocks, threads, input.Length(), input.GetDevicePtr(), input.Stride(1), input.Stride(2), input.Stride(3), widthOffset, heightOffset, output.GetDevicePtr(), output.Stride(1), output.Stride(2), output.Stride(3));
+        CudaKernels::FuseSubTensor2D(blocks, threads, input.Length(), input.GetDevicePtr(), input.Stride(1), input.Stride(2), input.Stride(3), widthOffset, heightOffset, add, output.GetDevicePtr(), output.Stride(1), output.Stride(2), output.Stride(3));
         cudaStreamSynchronize(0);
     }
 
@@ -1198,6 +1198,12 @@ namespace Neuro
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         input.CopyToDevice();
         output.OverrideDevice();
+
+        if (input.Length() == 1)
+        {
+            input.CopyTo(output);
+            return;
+        }
 
         cudnnReduceTensorDescriptor_t reduceDesc; cudnnCreateReduceTensorDescriptor(&reduceDesc);
         cudnnSetReduceTensorDescriptor(reduceDesc, reductionOp, CUDNN_DATA_FLOAT, CUDNN_PROPAGATE_NAN, CUDNN_REDUCE_TENSOR_NO_INDICES, CUDNN_32BIT_INDICES);

@@ -417,11 +417,18 @@
     <ClInclude Include="include\Layers\Padding2D.h">
       <Filter>include\Layers</Filter>
     </ClInclude>
-    <ClInclude Include="include\ComputationalGraph\Operations\NormalizeGradientOp.h" />
     <ClInclude Include="include\Tensors\TensorOpCpuMt.h">
       <Filter>include\Tensors</Filter>
     </ClInclude>
-    <ClInclude Include="include\Tensors\TensorOpCpuMkl.h" />
+    <ClInclude Include="include\Optimizers\LBFGS.h">
+      <Filter>include\Optimizers</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\NormalizeGradientOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tensors\TensorOpCpuMkl.h">
+      <Filter>include\Tensors</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -724,11 +731,18 @@
     <ClCompile Include="src\Layers\Padding2D.cpp">
       <Filter>src\Layers</Filter>
     </ClCompile>
-    <ClCompile Include="src\ComputationalGraph\Operations\NormalizeGradientOp.cpp" />
     <ClCompile Include="src\Tensors\TensorOpCpuMt.cpp">
       <Filter>src\Tensors</Filter>
     </ClCompile>
-    <ClCompile Include="src\Tensors\TensorOpCpuMkl.cpp" />
+    <ClCompile Include="src\Optimizers\LBFGS.cpp">
+      <Filter>src\Optimizers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\NormalizeGradientOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tensors\TensorOpCpuMkl.cpp">
+      <Filter>src\Tensors</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\Tensors\Cuda\CudaKernels.cu">

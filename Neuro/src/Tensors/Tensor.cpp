@@ -472,7 +472,14 @@ namespace Neuro
 		return result;
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    float Tensor::Dot(const Tensor& t) const
+    {
+        NEURO_ASSERT(m_Shape.NDim == 1 && t.GetShape().NDim == 1 && m_Shape.Length == t.GetShape().Length, "");
+        return MulElem(t).Sum(NoneAxis)(0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void Tensor::Mul(float v, Tensor& result) const
 	{
         NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
@@ -664,11 +671,11 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::FuseSubTensor2D(uint32_t widthOffset, uint32_t heightOffset, Tensor& output, bool clampAllowed) const
+    void Tensor::FuseSubTensor2D(uint32_t widthOffset, uint32_t heightOffset, Tensor& output, bool clampAllowed, bool add) const
     {
         NEURO_ASSERT(clampAllowed || (widthOffset + Width()) <= output.Width(), "");
         NEURO_ASSERT(clampAllowed || (heightOffset + Height()) <= output.Height(), "");
-        Op()->FuseSubTensor2D(*this, widthOffset, heightOffset, output);
+        Op()->FuseSubTensor2D(*this, widthOffset, heightOffset, add, output);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1444,6 +1451,24 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    float Tensor::L1Norm() const
+    {
+        return AbsSum(NoneAxis)(0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    float Tensor::L2Norm() const
+    {
+        return ::sqrt(SquaredL2Norm());
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    float Tensor::SquaredL2Norm() const
+    {
+        return Pow(2).Sum(NoneAxis)(0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void Tensor::ConstantPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, Tensor& output) const
     {
         NEURO_ASSERT(Shape(m_Shape.Width() + left + right, m_Shape.Height() + top + bottom, m_Shape.Depth(), m_Shape.Batch()) == output.GetShape(), "Output shape doesn't match padded input shape.");
@@ -1674,6 +1699,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Roll2D(int xShift, int yShift, Tensor& output)
     {
+        if (xShift == 0 && yShift == 0)
+            return;
         Op()->Roll2D(*this, xShift, yShift, output);
     }
 
@@ -2580,14 +2607,15 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::DebugDumpValues(const string& outFile) const
+    void Tensor::DebugDumpValues(const string& outFile, bool includePtrs) const
     {
         if (!m_Storage.AllocSizeInBytes() || !m_Storage.IsHostAllocated())
             return;
 
         SyncToHost();
-        ofstream stream(Replace(outFile, "/", "-"));
-        stream << "h_ptr=0x" << hex << m_Storage.DataUnsafe() << endl << "d_ptr=0x" << hex << m_Storage.DeviceDataUnsafe() << dec << endl;
+        ofstream stream(outFile);
+        if (includePtrs)
+            stream << "h_ptr=0x" << hex << m_Storage.DataUnsafe() << endl << "d_ptr=0x" << hex << m_Storage.DeviceDataUnsafe() << dec << endl;
         for (int i = 0; i < 4; ++i)
             stream << m_Shape.Dimensions[i] << "\n";
         stream << fixed << setprecision(6);
@@ -2610,7 +2638,10 @@ namespace Neuro
         OverrideHost();
         vector<int> dimensions(4);
         for (int i = 0; i < 4; ++i)
+        {
             stream >> dimensions[i];
+            NEURO_ASSERT(dimensions[i] > 0, "Invalid dimension detected.");
+        }
         m_Shape = Shape::From(dimensions);
         m_Storage.Resize(m_Shape.Length);
         for (uint32_t i = 0; i < m_Shape.Length; ++i)

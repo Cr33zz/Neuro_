@@ -135,7 +135,8 @@ namespace Neuro
         auto inputValues = input.Values();
         auto outputValues = output.Values();
 
-        for (uint32_t i = 0; i < input.Length(); ++i)
+        #pragma omp parallel for
+        for (int i = 0; i < (int)input.Length(); ++i)
             outputValues[i] = inputValues[i] * v;
     }
 
@@ -575,6 +576,105 @@ namespace Neuro
         auto inputValues = input.Values();
         auto outputValues = output.Values();
 
+        if (&input == &output)
+        {
+            function<int(uint32_t, uint32_t)> gcd;
+            gcd = [&gcd](unsigned int u, unsigned int v)->int
+            {
+                // simple cases (termination)
+                if (u == v)
+                    return u;
+
+                if (u == 0)
+                    return v;
+
+                if (v == 0)
+                    return u;
+
+                // look for factors of 2
+                if (~u & 1) // u is even
+                    if (v & 1) // v is odd
+                        return gcd(u >> 1, v);
+                    else // both u and v are even
+                        return gcd(u >> 1, v >> 1) << 1;
+
+                if (~v & 1) // u is odd, v is even
+                    return gcd(u, v >> 1);
+
+                // reduce larger argument
+                if (u > v)
+                    return gcd((u - v) >> 1, v);
+
+                return gcd((v - u) >> 1, u);
+            };
+
+            int cyclesCountX = gcd(output.Width(), ::abs(xShift));
+            int cyclesCountY = gcd(output.Height(), ::abs(yShift));
+            uint32_t width = output.Width();
+            uint32_t height = output.Height();
+            size_t offset = 0;
+
+            for (uint32_t n = 0; n < output.Batch(); ++n)
+            for (uint32_t d = 0; d < output.Depth(); ++d)
+            {
+                if (xShift)
+                {
+                    #pragma omp parallel for
+                    for (int h = 0; h < (int)height; ++h)
+                    {
+                        float tmp;
+                        for (int i = 0; i < cyclesCountX; ++i)
+                        {
+                            int idx = i;
+                            tmp = outputValues[offset + (uint32_t)h * width + idx];
+
+                            while (true)
+                            {
+                                int idxNext = idx + xShift;
+                                if (idxNext < 0)
+                                    idxNext += width;
+                                idxNext %= width;
+                                swap(tmp, outputValues[offset + (uint32_t)h * width + idxNext]);
+                                idx = idxNext;
+                                if (idx == i)
+                                    break;
+                            }
+                        }
+                    }
+                }
+
+                if (yShift)
+                {
+                    #pragma omp parallel for
+                    for (int w = 0; w < (int)width; ++w)
+                    {
+                        float tmp;
+                        for (int i = 0; i < cyclesCountY; ++i)
+                        {
+                            int idx = i;
+                            tmp = outputValues[offset + (uint32_t)w + idx * width];
+
+                            while (true)
+                            {
+                                int idxNext = idx + yShift;
+                                if (idxNext < 0)
+                                    idxNext += height;
+                                idxNext %= height;
+                                swap(tmp, outputValues[offset + (uint32_t)w + idxNext * width]);
+                                idx = idxNext;
+                                if (idx == i)
+                                    break;
+                            }
+                        }
+                    }
+                }
+
+                offset += width * height;
+            }
+                
+            return;
+        }
+
         uint32_t i = 0;
         for (uint32_t n = 0; n < output.Batch(); ++n)
 		for (uint32_t d = 0; d < output.Depth(); ++d)
@@ -728,7 +828,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::ExtractSubTensor2D(const Tensor& input, uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const
     {
-        input.SyncToHost();
+        input.CopyToHost();
         output.OverrideHost();
 
         for (uint32_t n = 0; n < output.Batch(); ++n)
@@ -739,7 +839,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpCpu::FuseSubTensor2D(const Tensor& input, uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const
+    void TensorOpCpu::FuseSubTensor2D(const Tensor& input, uint32_t widthOffset, uint32_t heightOffset, bool add, Tensor& output) const
     {
         input.SyncToHost();
         output.CopyToHost();
@@ -749,13 +849,16 @@ namespace Neuro
 
         for (uint32_t n = 0; n < input.Batch(); ++n)
 		for (uint32_t d = 0; d < input.Depth(); ++d)
-		for (uint32_t h = 0; h < input.Height(); ++h)
-		for (uint32_t w = 0; w < input.Width(); ++w)
+        #pragma omp parallel for
+		for (int h = 0; h < (int)input.Height(); ++h)
+        #pragma omp parallel for
+		for (int w = 0; w < (int)input.Width(); ++w)
         {
             if ((w + widthOffset) >= outputWidth || (h + heightOffset) >= outputHeight)
                 continue;
 
-			output(w + widthOffset, h + heightOffset, d, n) = input(w, h, d, n);
+            float& val = output((uint32_t)w + widthOffset, (uint32_t)h + heightOffset, d, n);
+			val = (add ? val : 0.f) + input((uint32_t)w, (uint32_t)h, d, n);
         }
     }
 

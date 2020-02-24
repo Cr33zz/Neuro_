@@ -1,44 +1,67 @@
 #include "NeuralStyleTransfer.h"
 
 //////////////////////////////////////////////////////////////////////////
-TensorLike* GramMatrix(TensorLike* features, const string& name)
+TensorLike* GramMatrix(TensorLike* features, uint32_t area, uint32_t depth, bool normalize, const string& name)
 {
     NameScope scope(name + "_gram");
     assert(features->GetShape().Batch() == 1);
 
-    uint32_t featureMapSize = features->GetShape().Width() * features->GetShape().Height();
-    auto reshapedFeatures = reshape(features, Shape(featureMapSize, features->GetShape().Depth()));
-    return div(matmul(reshapedFeatures, transpose(reshapedFeatures)), (float)reshapedFeatures->GetShape().Length, "result");
+    auto reshapedFeatures = reshape(features, Shape(area, depth));
+    auto gram = matmul(reshapedFeatures, transpose(reshapedFeatures), name);
+
+    if (normalize)
+        gram = div(gram, (float)reshapedFeatures->GetShape().Length, name + "_norm");
+
+    return gram;
     //return div(matmul(features, transpose(features)), (float)featureMapSize, "result");
     //return matmul(reshapedFeatures, transpose(reshapedFeatures));
 }
 
 //////////////////////////////////////////////////////////////////////////
-TensorLike* StyleLoss(TensorLike* styleGram, TensorLike* stylizedFeatures, int index)
+TensorLike* StyleLoss(TensorLike* styleFeatures, TensorLike* stylizedFeatures, int index, int mode)
 {
     assert(stylizedFeatures->GetShape().Batch() == 1);
-    return StyleLossFromGram(styleGram, GramMatrix(stylizedFeatures, "stylized" + to_string(index)), stylizedFeatures->GetShape(), index);
+    auto& shape = styleFeatures->GetShape();
+    uint32_t M = shape.Width() * shape.Height();
+    uint32_t N = shape.Depth();
+
+    return StyleLossFromGram(
+        GramMatrix(styleFeatures, M, N, mode == 1, "style" + to_string(index)),
+        GramMatrix(stylizedFeatures, M, N, mode == 1, "stylized" + to_string(index)),
+        M,
+        N,
+        index, 
+        mode);
 }
 
 //////////////////////////////////////////////////////////////////////////
-TensorLike* StyleLossFromGram(TensorLike* styleGram, TensorLike* stylizedGram, const Shape& featuresShape, int index)
+TensorLike* StyleLossFromGram(TensorLike* styleGram, TensorLike* stylizedGram, uint32_t area, uint32_t depth, int index, int mode)
 {
     NameScope scope("style_loss_" + to_string(index));
     
-    return sum(square(sub(styleGram, stylizedGram)));
-    //return mean(square(sub(styleGram, stylizedGram)));
+    auto loss = sum(square(sub(styleGram, stylizedGram)));
 
-    //float height = (float)featuresShape.Height(), width = (float)featuresShape.Width(), channels = (float)featuresShape.Depth();
-    //return div(sum(square(sub(targetStyleGram, styleGram))), 4.f * ::pow(channels, 2) * ::pow(width * height, 2));
-    //return div(sum(square(sub(styleGram, stylizedGram))), channels * width * height);
+    if (mode > 1)
+        loss = multiply(loss, 1.f / (4.f * ::pow((float)area, 2) * ::pow((float)depth, 2)));
+
+    return loss;
 }
 
 //////////////////////////////////////////////////////////////////////////
-TensorLike* ContentLoss(TensorLike* contentFeatures, TensorLike* stylizedFeatures)
+TensorLike* ContentLoss(TensorLike* contentFeatures, TensorLike* stylizedFeatures, int mode)
 {
     NameScope scope("content_loss");
     auto& shape = stylizedFeatures->GetShape();
-    //return mean(square(sub(contentFeatures, stylizedFeatures)));
-    //return l2_loss(sub(contentFeatures, stylizedFeatures));
-    return div(sum(square(sub(contentFeatures, stylizedFeatures))), (float)shape.Width() * shape.Height() * shape.Depth());
+    float M = (float)shape.Height() * shape.Width();
+    float N = (float)shape.Depth();
+
+    float K = 1.f;
+    if (mode == 1)
+        K = 1.f / (2.f * ::sqrt(N) * ::sqrt(M));
+    else if (mode == 2)
+        K = 1.f / (N * M);
+    else if (mode == 3)
+        K = 0.5f;
+
+    return multiply(sum(square(sub(contentFeatures, stylizedFeatures))), K);
 }

@@ -71,7 +71,7 @@ __global__ void extractSubTensor2D(int outputLen, const float* __restrict input,
     }
 }
 
-__global__ void fuseSubTensor2D(int inputLen, const float* __restrict input, int inputStride1, int inputStride2, int inputStride3, int widthOffset, int heightOffset, float* __restrict output, int outputStride1, int outputStride2, int outputStride3)
+__global__ void fuseSubTensor2D(int inputLen, const float* __restrict input, int inputStride1, int inputStride2, int inputStride3, int widthOffset, int heightOffset, bool add, float* __restrict output, int outputStride1, int outputStride2, int outputStride3)
 {
     int inputHeight = inputStride2 / inputStride1;
     int inputDepth = inputStride3 / inputStride2;
@@ -89,7 +89,8 @@ __global__ void fuseSubTensor2D(int inputLen, const float* __restrict input, int
         int d = (i / inputStride2) % inputDepth;
         int n = i / inputStride3;
 
-        output[getIndex(w + widthOffset, h + heightOffset, d, n, outputStride1, outputStride2, outputStride3)] = input[i];
+        int valIdx = getIndex(w + widthOffset, h + heightOffset, d, n, outputStride1, outputStride2, outputStride3);
+        output[valIdx] = (add ? output[valIdx] : 0.f) + input[i];
     }
 }
 
@@ -629,9 +630,9 @@ namespace Neuro
         extractSubTensor2D<<<blocks, threads>>>(outputLen, inputDev, inputStride1, inputStride2, inputStride3, widthOffset, heightOffset, outputDev, outputStride1, outputStride2, outputStride3);
     }
 
-    void CudaKernels::FuseSubTensor2D(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, int inputStride1, int inputStride2, int inputStride3, int widthOffset, int heightOffset, float* __restrict outputDev, int outputStride1, int outputStride2, int outputStride3)
+    void CudaKernels::FuseSubTensor2D(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, int inputStride1, int inputStride2, int inputStride3, int widthOffset, int heightOffset, bool add, float* __restrict outputDev, int outputStride1, int outputStride2, int outputStride3)
     {
-        fuseSubTensor2D<<<blocks, threads>>>(inputLen, inputDev, inputStride1, inputStride2, inputStride3, widthOffset, heightOffset, outputDev, outputStride1, outputStride2, outputStride3);
+        fuseSubTensor2D<<<blocks, threads>>>(inputLen, inputDev, inputStride1, inputStride2, inputStride3, widthOffset, heightOffset, add, outputDev, outputStride1, outputStride2, outputStride3);
     }
 
     void CudaKernels::ConstantPad2D(const dim3& blocks, const dim3& threads, int outputLen, const float* inputDev, int inputStride1, int inputStride2, int inputStride3, int left, int right, int top, int bottom, float value, float* __restrict outputDev, int outputStride1, int outputStride2, int outputStride3)

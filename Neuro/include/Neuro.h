@@ -32,6 +32,7 @@
 #include "Optimizers/OptimizerBase.h"
 #include "Optimizers/Adam.h"
 #include "Optimizers/SGD.h"
+#include "Optimizers/LBFGS.h"
 
 #include "Initializers/InitializerBase.h"
 #include "Initializers/Const.h"

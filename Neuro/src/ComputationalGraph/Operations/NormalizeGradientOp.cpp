@@ -25,6 +25,6 @@ namespace Neuro
         else
             norm += ::pow(sum(pow(grad, m_Order), NoneAxis)(0), 1.f / m_Order);
 
-        grad.Mul(m_Scale / norm, m_InputsGrads[0]);
+        grad.Mul(m_Scale / (norm / (float)grad.Length()), m_InputsGrads[0]);
     }
 }

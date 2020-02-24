@@ -1,3 +1,4 @@
+#ifndef MKL_DISABLED
 #include <mkl.h>
 
 #include "Tensors/TensorOpCpuMkl.h"
@@ -82,3 +83,4 @@ namespace Neuro
         }
     }
 }
+#endif
