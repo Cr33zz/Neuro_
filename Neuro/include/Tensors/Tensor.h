@@ -119,7 +119,7 @@ namespace Neuro
         void ClipGradient(const Tensor& input, float min, float max, const Tensor& outputGradient, Tensor& inputGradient) const;
 
         void ExtractSubTensor2D(uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const;
-        void FuseSubTensor2D(uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const;
+        void FuseSubTensor2D(uint32_t widthOffset, uint32_t heightOffset, Tensor& output, bool clampAllowed = false) const;
 
         Tensor DiagFlat() const;
 
@@ -213,6 +213,9 @@ namespace Neuro
         void LinearRampPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float endValue, Tensor& output) const;
         Tensor LinearRampPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float endValue) const;
         void Pad2DGradient(const Tensor& gradient, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& inputGradient) const;
+
+        Tensor Roll2D(int xShift, int yShift);
+        void Roll2D(int xShift, int yShift, Tensor& output);
 
         void Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& output) const;
         Tensor Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat) const;
@@ -348,7 +351,8 @@ namespace Neuro
 		static TensorOpCpu* g_DefaultOp;
         static TensorOpCpu* g_ForcedOp;
 		static TensorOpCpu* g_OpCpu;
-        static TensorOpCpu* g_OpMultiCpu;
+        static TensorOpCpu* g_OpCpuMt;
+        static TensorOpCpu* g_OpCpuMkl;
         static TensorOpCpu* g_OpGpu;
 
         friend class TensorOpGpu;

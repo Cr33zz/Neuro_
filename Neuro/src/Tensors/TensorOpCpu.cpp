@@ -566,6 +566,24 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::Roll2D(const Tensor& input, int xShift, int yShift, Tensor& output)
+    {
+        input.CopyToHost();
+        output.OverrideHost();
+
+        const Shape& shape = input.GetShape();
+        auto inputValues = input.Values();
+        auto outputValues = output.Values();
+
+        uint32_t i = 0;
+        for (uint32_t n = 0; n < output.Batch(); ++n)
+		for (uint32_t d = 0; d < output.Depth(); ++d)
+		for (uint32_t h = 0; h < output.Height(); ++h)
+		for (uint32_t w = 0; w < output.Width(); ++w, ++i)
+            outputValues[shape.GetIndex((int)w + xShift, (int)h + yShift, (int)d, (int)n)] = inputValues[i];
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void TensorOpCpu::Map(const function<float(float)>& func, const Tensor& t, Tensor& output) const
 	{
 		t.CopyToHost();
@@ -726,11 +744,19 @@ namespace Neuro
         input.SyncToHost();
         output.CopyToHost();
 
+        uint32_t outputWidth = output.Width();
+        uint32_t outputHeight = output.Height();
+
         for (uint32_t n = 0; n < input.Batch(); ++n)
 		for (uint32_t d = 0; d < input.Depth(); ++d)
 		for (uint32_t h = 0; h < input.Height(); ++h)
 		for (uint32_t w = 0; w < input.Width(); ++w)
+        {
+            if ((w + widthOffset) >= outputWidth || (h + heightOffset) >= outputHeight)
+                continue;
+
 			output(w + widthOffset, h + heightOffset, d, n) = input(w, h, d, n);
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -62,7 +62,7 @@ namespace NeuroTests
 
         TEST_METHOD(Iris_Network_CPU)
         {
-            Tensor::SetForcedOpMode(MultiCPU);
+            Tensor::SetForcedOpMode(CPU_MT);
             float loss = TrainIrisNetwork("iris_cpu");
             Assert::AreEqual(0.41869, (double)loss, 0.00001);
         }
@@ -98,7 +98,7 @@ namespace NeuroTests
 
         TEST_METHOD(Conv_Network_CPU)
         {
-            Tensor::SetForcedOpMode(MultiCPU);
+            Tensor::SetForcedOpMode(CPU_MT);
             float loss = TrainConvNetwork();
             Assert::AreEqual(0.04879, (double)loss, 0.0001);
         }
@@ -140,7 +140,7 @@ namespace NeuroTests
 
         TEST_METHOD(Mnist_Network_CPU)
         {
-            Tensor::SetForcedOpMode(MultiCPU);
+            Tensor::SetForcedOpMode(CPU_MT);
             float loss = TrainMnistNetwork();
             Assert::AreEqual(0.1148, (double)loss, 0.0001);
         }
@@ -176,7 +176,7 @@ namespace NeuroTests
 
         /*TEST_METHOD(Autoencoder_Network_CPU)
         {
-            Tensor::SetForcedOpMode(MultiCPU);
+            Tensor::SetForcedOpMode(CPU_MT);
             float loss = TrainAutoencoderNetwork();
             Assert::AreEqual(0.5966, (double)loss, 0.0001);
         }*/

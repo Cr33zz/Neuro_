@@ -1011,6 +1011,21 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
+        TEST_METHOD(FuseSubTensor2D_Clamp_CompareWithCpuResult)
+        {
+            Tensor t(Shape(3, 5, 3, 4)); t.FillWithRand();
+            Tensor r(Shape(10, 20, 3, 4)); r.FillWithRand();
+            Tensor r2(r);
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", t.FuseSubTensor2D(8, 17, r, true);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", t.FuseSubTensor2D(8, 17, r2, true);)
+
+            Assert::IsTrue(r.Equals(r2));
+        }
+
         TEST_METHOD(Transpose_CompareWithCpuResult)
         {
             Tensor t(Shape(10, 20, 3, 4)); t.FillWithRand();

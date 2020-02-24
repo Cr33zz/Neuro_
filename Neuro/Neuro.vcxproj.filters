@@ -156,9 +156,6 @@
     <ClInclude Include="include\ChartGenerator.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\Tensors\TensorOpMultiCpu.h">
-      <Filter>include\Tensors</Filter>
-    </ClInclude>
     <ClInclude Include="include\Tensors\TensorOpGpu.h">
       <Filter>include\Tensors</Filter>
     </ClInclude>
@@ -421,6 +418,10 @@
       <Filter>include\Layers</Filter>
     </ClInclude>
     <ClInclude Include="include\ComputationalGraph\Operations\NormalizeGradientOp.h" />
+    <ClInclude Include="include\Tensors\TensorOpCpuMt.h">
+      <Filter>include\Tensors</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tensors\TensorOpCpuMkl.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -482,9 +483,6 @@
     </ClCompile>
     <ClCompile Include="src\ChartGenerator.cpp">
       <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Tensors\TensorOpMultiCpu.cpp">
-      <Filter>src\Tensors</Filter>
     </ClCompile>
     <ClCompile Include="src\Tensors\TensorOpGpu.cpp">
       <Filter>src\Tensors</Filter>
@@ -727,6 +725,10 @@
       <Filter>src\Layers</Filter>
     </ClCompile>
     <ClCompile Include="src\ComputationalGraph\Operations\NormalizeGradientOp.cpp" />
+    <ClCompile Include="src\Tensors\TensorOpCpuMt.cpp">
+      <Filter>src\Tensors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tensors\TensorOpCpuMkl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\Tensors\Cuda\CudaKernels.cu">

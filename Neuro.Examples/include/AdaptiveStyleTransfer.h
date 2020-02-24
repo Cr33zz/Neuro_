@@ -32,7 +32,7 @@ public:
 #ifdef USE_GRAMS
         const float STYLE_WEIGHT = 2.f;
 #else
-        const float STYLE_WEIGHT = 0.01f;
+        const float STYLE_WEIGHT = 1e-1f;
 #endif
         const float ALPHA = 1.f;
         const float TEST_ALPHA = 1.f;
@@ -54,9 +54,9 @@ public:
         const string STYLE_FILES_DIR = "f:/!TrainingData/deviantart";
         const uint32_t BATCH_SIZE = 4;
 #else
-        const string CONTENT_FILES_DIR = "f:/!TrainingData/coco14";
+        const string CONTENT_FILES_DIR = "e:/Downloads/coco14";
         //const string STYLE_FILES_DIR = "f:/!TrainingData/deviantart";
-        const string STYLE_FILES_DIR = "f:/!TrainingData/wikiart";
+        const string STYLE_FILES_DIR = "e:/Downloads/wikiart";
         const uint32_t BATCH_SIZE = 6;
 #endif
 

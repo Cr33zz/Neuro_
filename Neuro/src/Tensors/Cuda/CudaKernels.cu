@@ -76,10 +76,16 @@ __global__ void fuseSubTensor2D(int inputLen, const float* __restrict input, int
     int inputHeight = inputStride2 / inputStride1;
     int inputDepth = inputStride3 / inputStride2;
 
+    int outputHeight = outputStride2 / outputStride1;
+
     for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < inputLen; i += gridDim.x * blockDim.x)
     {
         int w = i % inputStride1;
         int h = (i / inputStride1) % inputHeight;
+
+        if ((w + widthOffset) >= outputStride1 || (h + heightOffset) >= outputHeight)
+            continue;
+
         int d = (i / inputStride2) % inputDepth;
         int n = i / inputStride3;
 

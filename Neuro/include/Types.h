@@ -32,7 +32,8 @@ namespace Neuro
     enum EOpMode
     {
         CPU,
-        MultiCPU,
+        CPU_MKL,
+        CPU_MT,
         GPU
     };
 

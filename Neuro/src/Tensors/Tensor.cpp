@@ -7,7 +7,8 @@
 
 #include "Tensors/Tensor.h"
 #include "Tensors/TensorOpCpu.h"
-#include "Tensors/TensorOpMultiCpu.h"
+#include "Tensors/TensorOpCpuMt.h"
+#include "Tensors/TensorOpCpuMkl.h"
 #include "Tensors/TensorOpGpu.h"
 #include "Tensors/TensorFormatter.h"
 #include "Random.h"
@@ -19,7 +20,8 @@ namespace Neuro
     using namespace std;
 
 	TensorOpCpu* Tensor::g_OpCpu = new TensorOpCpu();
-    TensorOpCpu* Tensor::g_OpMultiCpu = nullptr;
+    TensorOpCpu* Tensor::g_OpCpuMt = nullptr;
+    TensorOpCpu* Tensor::g_OpCpuMkl = nullptr;
     TensorOpCpu* Tensor::g_OpGpu = nullptr;
 
     TensorOpCpu* Tensor::g_DefaultOp = nullptr;
@@ -662,10 +664,10 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::FuseSubTensor2D(uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const
+    void Tensor::FuseSubTensor2D(uint32_t widthOffset, uint32_t heightOffset, Tensor& output, bool clampAllowed) const
     {
-        NEURO_ASSERT(widthOffset + Width() <= output.Width(), "");
-        NEURO_ASSERT(heightOffset + Height() <= output.Height(), "");
+        NEURO_ASSERT(clampAllowed || (widthOffset + Width()) <= output.Width(), "");
+        NEURO_ASSERT(clampAllowed || (heightOffset + Height()) <= output.Height(), "");
         Op()->FuseSubTensor2D(*this, widthOffset, heightOffset, output);
     }
 
@@ -1670,6 +1672,19 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
+    void Tensor::Roll2D(int xShift, int yShift, Tensor& output)
+    {
+        Op()->Roll2D(*this, xShift, yShift, output);
+    }
+
+    Tensor Tensor::Roll2D(int xShift, int yShift)
+    {
+        Tensor result(m_Shape);
+        Roll2D(xShift, yShift, result);
+        return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void Tensor::Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& output) const
 	{
         NEURO_ASSERT(GetConvOutputShape(m_Shape, kernels.Batch(), kernels.Width(), kernels.Height(), stride, padding, padding, dataFormat) == output.GetShape(), "Output shape doesn't match input shape.");
@@ -2610,8 +2625,10 @@ namespace Neuro
 		{
 		case EOpMode::CPU:
 			return g_OpCpu;
-        case EOpMode::MultiCPU:
-			return g_OpMultiCpu = (g_OpMultiCpu ? g_OpMultiCpu : new TensorOpMultiCpu());
+        case EOpMode::CPU_MT:
+			return g_OpCpuMt = (g_OpCpuMt ? g_OpCpuMt : new TensorOpCpuMt());
+        case EOpMode::CPU_MKL:
+            return g_OpCpuMkl = (g_OpCpuMkl ? g_OpCpuMkl : new TensorOpCpuMkl());
         case EOpMode::GPU:
 			return g_OpGpu = (g_OpGpu ? g_OpGpu : new TensorOpGpu());
 		}
@@ -2714,7 +2731,7 @@ namespace Neuro
     Tensor zeros(const Shape& shape)
     {
         Tensor tmp(shape);
-        tmp.FillWithValue(0);
+        tmp.Zero();
         return tmp;
     }
 
