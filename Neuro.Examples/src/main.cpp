@@ -13,10 +13,12 @@
 #include "FastNeuralStyleTransfer.h"
 #include "AdaptiveStyleTransfer.h"
 #include "Pix2Pix.h"
-//#include "NeuralStyleTransferHD2.h"
+#include "NeuralStyleTransferHD2.h"
 
-int main()
+int main(int argc, char *argv[])
 {
+    Args args = Args(argc, argv);
+
     //ComputationalGraph().Run();
     //IrisNetwork().Run();
     //ConvNetwork().Run();
@@ -31,7 +33,7 @@ int main()
     //CifarGAN().Run();
     //CifarGAN().RunDiscriminatorTrainTest();
     //NeuralStyleTransfer().Run();
-    //NeuralStyleTransferHD2().Run();
+    //NeuralStyleTransferHD2().Run(args);
     //FastNeuralStyleTransfer().Run();
     //AdaptiveStyleTransfer().Run();
     //AdaptiveStyleTransfer().Test();

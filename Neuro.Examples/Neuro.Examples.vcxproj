@@ -217,6 +217,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\NeuroExt\Neuro.Examples\include\NeuralStyleTransferHD2.h" />
     <ClInclude Include="include\AdaptiveStyleTransfer.h" />
+    <ClInclude Include="include\Args.h" />
     <ClInclude Include="include\AutoencoderNetwork.h" />
     <ClInclude Include="include\CifarGAN.h" />
     <ClInclude Include="include\CifarResNet.h" />
