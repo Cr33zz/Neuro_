@@ -135,7 +135,8 @@ namespace Neuro
         auto inputValues = input.Values();
         auto outputValues = output.Values();
 
-        for (uint32_t i = 0; i < input.Length(); ++i)
+        #pragma omp parallel for
+        for (int i = 0; i < (int)input.Length(); ++i)
             outputValues[i] = inputValues[i] * v;
     }
 
@@ -848,14 +849,16 @@ namespace Neuro
 
         for (uint32_t n = 0; n < input.Batch(); ++n)
 		for (uint32_t d = 0; d < input.Depth(); ++d)
-		for (uint32_t h = 0; h < input.Height(); ++h)
-		for (uint32_t w = 0; w < input.Width(); ++w)
+        #pragma omp parallel for
+		for (int h = 0; h < (int)input.Height(); ++h)
+        #pragma omp parallel for
+		for (int w = 0; w < (int)input.Width(); ++w)
         {
             if ((w + widthOffset) >= outputWidth || (h + heightOffset) >= outputHeight)
                 continue;
 
-            float& val = output(w + widthOffset, h + heightOffset, d, n);
-			val = (add ? val : 0.f) + input(w, h, d, n);
+            float& val = output((uint32_t)w + widthOffset, (uint32_t)h + heightOffset, d, n);
+			val = (add ? val : 0.f) + input((uint32_t)w, (uint32_t)h, d, n);
         }
     }
 

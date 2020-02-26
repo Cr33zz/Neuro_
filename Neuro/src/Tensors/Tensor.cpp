@@ -2613,7 +2613,7 @@ namespace Neuro
             return;
 
         SyncToHost();
-        ofstream stream(Replace(outFile, "/", "-"));
+        ofstream stream(outFile);
         if (includePtrs)
             stream << "h_ptr=0x" << hex << m_Storage.DataUnsafe() << endl << "d_ptr=0x" << hex << m_Storage.DeviceDataUnsafe() << dec << endl;
         for (int i = 0; i < 4; ++i)

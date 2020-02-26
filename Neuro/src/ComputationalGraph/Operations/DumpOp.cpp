@@ -15,7 +15,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void DumpOp::ComputeInternal()
     {
-        m_Inputs[0]->DebugDumpValues(Replace(Name() + "_step" + to_string(Debug::GetStep()) + ".log", "/", "_"));
+        m_Inputs[0]->DebugDumpValues(Name() + "_step" + to_string(Debug::GetStep()) + ".log");
         m_Output.ResizeBatch(m_Inputs[0]->Batch());
         m_Inputs[0]->CopyTo(m_Output);
     }

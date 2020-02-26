@@ -23,7 +23,7 @@ namespace Neuro
         for (auto& scope : s_Scopes)
         {
             name.append(scope);
-            name.append("/");
+            name.append("-");
         }
         return name;
     }
