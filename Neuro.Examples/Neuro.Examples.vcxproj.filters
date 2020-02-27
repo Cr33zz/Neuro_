@@ -87,10 +87,15 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\SimpleGAN.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\NeuroExt\Neuro.Examples\include\NeuralStyleTransferHD2.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Args.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SRGAN.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
