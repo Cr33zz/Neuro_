@@ -1,3 +1,4 @@
+#include "Args.h"
 #include "AutoencoderNetwork.h"
 #include "ConvAutoencoderNetwork.h"
 #include "ConvNetwork.h"
@@ -14,6 +15,7 @@
 #include "AdaptiveStyleTransfer.h"
 #include "Pix2Pix.h"
 #include "CycleGAN.h"
+#include "SRGAN.h"
 #include "NeuralStyleTransferHD2.h"
 
 int main(int argc, char *argv[])
@@ -40,7 +42,8 @@ int main(int argc, char *argv[])
     //AdaptiveStyleTransfer().Test();
     //Pix2Pix().Run();
     //Pix2Pix().RunDiscriminatorTrainTest();
-    CycleGAN().Run();
+    //CycleGAN().Run();
+    SRGAN().Run();
 
     return 0;
 }

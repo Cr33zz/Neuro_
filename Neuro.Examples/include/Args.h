@@ -1,6 +1,9 @@
 #pragma once
 
 #include <string>
+#include <map>
+
+#include "Types.h"
 
 using namespace std;
 

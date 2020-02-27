@@ -18,85 +18,64 @@ public:
         Tensor::SetForcedOpMode(GPU);
         //GlobalRngSeed(1337);
 
-        const uint32_t LOW_RES_DIM  64;
+        const uint32_t LOW_RES_DIM = 64;
 
         const Shape LR_IMG_SHAPE(LOW_RES_DIM, LOW_RES_DIM, 3);
         const Shape HR_IMG_SHAPE(LOW_RES_DIM * 4, LOW_RES_DIM * 4, 3);
 
-        const size_t RESIDUAL_BLOCKS_NUM 16
+        const size_t RESIDUAL_BLOCKS_NUM = 16;
 
         const uint32_t GF = 64;
         const uint32_t DF = 64;
-
-        const float CYCLE_WEIGHT = 10.f; // cycle consistency loss weight
-        const float IDENTITY_WEIGHT = 0.1f * CYCLE_WEIGHT; // identity loss weight
 
         const int EPOCHS = 150;
         const uint32_t BATCH_SIZE = 1;
         const float LEARNING_RATE = 0.0002f;
         const float ADAM_BETA1 = 0.5f;
 
-        cout << "Example: CycleGAN" << endl;
+        cout << "Example: SRGAN" << endl;
 
         const string NAME = "horse2zebra";
-        auto trainFilesA = LoadFilesList("data/" + NAME + "/trainA", false, true);
-        auto trainFilesB = LoadFilesList("data/" + NAME + "/trainB", false, true);
+        auto trainFiles = LoadFilesList("data/" + NAME, false, true);
 
         // setup models
-        auto gABModel = CreateGenerator(IMG_SHAPE, GF);
-        auto gBAModel = CreateGenerator(IMG_SHAPE, GF);
-        //cout << "Generator AB" << endl << gABModel->Summary();
-        //cout << "Generator BA" << endl << gBAModel->Summary();
-        auto dAModel = CreateDiscriminator(IMG_SHAPE, DF);
-        auto dBModel = CreateDiscriminator(IMG_SHAPE, DF);
-        dAModel->Optimize(new Adam(LEARNING_RATE, ADAM_BETA1), new MeanSquareError(), {}, All);
-        dBModel->Optimize(new Adam(LEARNING_RATE, ADAM_BETA1), new MeanSquareError(), {}, All);
-        //cout << "Discriminator A" << endl << dAModel->Summary();
-        //cout << "Discriminator B" << endl << dBModel->Summary();
+        auto gen = CreateGenerator(LR_IMG_SHAPE, HR_IMG_SHAPE, GF, RESIDUAL_BLOCKS_NUM);
+        //cout << "Generator" << endl << gen->Summary();
+        auto disc = CreateDiscriminator(HR_IMG_SHAPE, DF);
+        disc->Optimize(new Adam(LEARNING_RATE, ADAM_BETA1), new MeanSquareError(), {}, All);
+        //cout << "Discriminator" << endl << disc->Summary();
 
-        auto inputA = (new Input(IMG_SHAPE))->Outputs()[0];
-        auto inputB = (new Input(IMG_SHAPE))->Outputs()[0];
+        auto imgLr = (new Input(LR_IMG_SHAPE))->Outputs()[0];
+        auto imgHr = (new Input(HR_IMG_SHAPE))->Outputs()[0];
 
-        // translate image A -> B
-        auto fakeB = gABModel->Call(inputA)[0];
-        // translate image B -> A
-        auto fakeA = gBAModel->Call(inputB)[0];
+        // generate high resolution image
+        auto fakeHr = gen->Call(imgLr)[0];
 
-        // translate fake image B back to A
-        auto reconstructedA = gBAModel->Call(fakeB)[0];
-        // translate fake image A back to B
-        auto reconstructedB = gABModel->Call(fakeA)[0];
+        auto vgg = VGG19::CreateModel(NCHW, HR_IMG_SHAPE, false, MaxPool, "data/");
+        vgg->SetTrainable(false);
 
-        // identity mapping
-        auto identityA = gBAModel->Call(inputA)[0];
-        auto identityB = gABModel->Call(inputB)[0];
+        auto model = Flow(vgg->InputsAt(-1), vgg->Layer("block3_conv2")->Outputs());
 
-        auto validA = dAModel->Call(fakeA)[0];
-        auto validB = dBModel->Call(fakeB)[0];
+        auto fakeFeatures = model(fakeHr)[0];
+        auto validity = disc->Call(fakeHr)[0];
 
-        auto ganModel = Flow(
-            { inputA, inputB },
-            { validA, validB, reconstructedA, reconstructedB, identityA, identityB });
-
-        ganModel.Optimize(
-            new Adam(LEARNING_RATE, ADAM_BETA1),
-            { new MeanSquareError(), new MeanSquareError(), new MeanAbsoluteError(), new MeanAbsoluteError(), new MeanAbsoluteError(), new MeanAbsoluteError() },
-            { 1.f, 1.f, CYCLE_WEIGHT, CYCLE_WEIGHT, IDENTITY_WEIGHT, IDENTITY_WEIGHT });
+        auto ganModel = Flow(vector<TensorLike*>{ imgLr, imgHr }, { validity, fakeFeatures });
+        ganModel.Optimize(new Adam(LEARNING_RATE, ADAM_BETA1), { new BinaryCrossEntropy(), new MeanSquareError() }, { 1e-3f, 1.f });
 
         // training
-        auto fakeLabels = zeros(Shape::From(validA->GetShape(), BATCH_SIZE));
-        auto realLabels = ones(Shape::From(validA->GetShape(), BATCH_SIZE));
+        auto fakeLabels = zeros(Shape::From(validity->GetShape(), BATCH_SIZE));
+        auto realLabels = ones(Shape::From(validity->GetShape(), BATCH_SIZE));
 
-        auto realImgA = zeros(Shape::From(inputA->GetShape(), BATCH_SIZE));
-        auto realImgB = zeros(Shape::From(inputA->GetShape(), BATCH_SIZE));
+        auto realLrImg = zeros(Shape::From(LR_IMG_SHAPE, BATCH_SIZE));
+        auto realHrImg = zeros(Shape::From(HR_IMG_SHAPE, BATCH_SIZE));
 
-        CustomMultiImageLoader loader(trainFilesA, trainFilesB, BATCH_SIZE);
-        DataPreloader preloader({ &realImgA, &realImgB }, { &loader }, 5);
+        CustomMultiImageLoader loader(trainFiles, BATCH_SIZE);
+        DataPreloader preloader({ &realLrImg, &realHrImg }, { &loader }, 5);
 
-        auto testImgA = realImgA;
-        auto testImgB = realImgB;
+        auto testLrImg = realLrImg;
+        auto testHrImg = realHrImg;
 
-        const size_t STEPS = min(trainFilesA.size(), trainFilesB.size()) * EPOCHS;
+        const size_t STEPS = trainFiles.size() * EPOCHS;
 
         Tqdm progress(STEPS, 0);
         progress.ShowEta(true).ShowElapsed(false).ShowPercent(false);
@@ -107,59 +86,40 @@ public:
 
             if (s == 0)
             {
-                testImgA = realImgA;
-                testImgB = realImgB;
+                testLrImg = realLrImg;
+                testHrImg = realHrImg;
             }
 
             if (s % 100 == 0)
             {
-                dAModel->SaveWeights(NAME + "_discA.h5");
-                dBModel->SaveWeights(NAME + "_discB.h5");
-                gABModel->SaveWeights(NAME + "_genAB.h5");
-                gBAModel->SaveWeights(NAME + "_genBA.h5");
-                Tensor output(Shape(IMG_SHAPE.Width() * 3, IMG_SHAPE.Height() * 2, IMG_SHAPE.Depth(), BATCH_SIZE));
+                disc->SaveWeights(NAME + "_disc.h5");
+                gen->SaveWeights(NAME + "_gen.h5");
+                Tensor output(Shape(HR_IMG_SHAPE.Width() * 3, HR_IMG_SHAPE.Height(), HR_IMG_SHAPE.Depth(), BATCH_SIZE));
 
-                Tensor ab(Shape(IMG_SHAPE.Width() * 3, IMG_SHAPE.Height(), IMG_SHAPE.Depth(), BATCH_SIZE));
-                auto testFakeB = *gABModel->Predict(testImgA)[0];
-                auto testReconstructedA = *gBAModel->Predict(testFakeB)[0];
-                Tensor::Concat(WidthAxis, { &testImgA, &testFakeB, &testReconstructedA }, ab);
-
-                Tensor ba(Shape(IMG_SHAPE.Width() * 3, IMG_SHAPE.Height(), IMG_SHAPE.Depth(), BATCH_SIZE));
-                auto testFakeA = *gABModel->Predict(testImgB)[0];
-                auto testReconstructedB = *gBAModel->Predict(testFakeA)[0];
-                Tensor::Concat(WidthAxis, { &testImgB, &testFakeA, &testReconstructedB }, ba);
-
-                Tensor::Concat(HeightAxis, { &ab, &ba }, output);
-
+                auto testFakeHrImg = *gen->Predict(testLrImg)[0];
+                Tensor::Concat(WidthAxis, { &realLrImg.UpSample2D(2), &testFakeHrImg, &realHrImg }, output);
                 output.Add(1.f).Mul(127.5f).SaveAsImage(NAME + "_s" + PadLeft(to_string(s), 4, '0') + ".jpg", false, 1);
             }
 
             // optimize discriminators
-            dAModel->SetTrainable(true);
-            dBModel->SetTrainable(true);
-            gABModel->SetTrainable(false);
-            gBAModel->SetTrainable(false);
+            disc->SetTrainable(true);
+            gen->SetTrainable(false);
 
-            auto fakeImgB = *gABModel->Predict(realImgA)[0];
-            auto fakeImgA = *gBAModel->Predict(realImgB)[0];
+            auto fakeHrImg = *gen->Predict(realLrImg)[0];
 
-            auto dAReal = dAModel->TrainOnBatch(realImgA, realLabels);
-            auto dAFake = dAModel->TrainOnBatch(fakeImgA, fakeLabels);
-            float dALoss = 0.5f * (get<0>(dAReal) + get<0>(dAFake));
-
-            auto dBReal = dBModel->TrainOnBatch(realImgB, realLabels);
-            auto dBFake = dBModel->TrainOnBatch(fakeImgB, fakeLabels);
-            float dBLoss = 0.5f * (get<0>(dBReal) + get<0>(dBFake));
-
-            float dLoss = 0.5f * (dALoss + dBLoss);
+            auto dReal = disc->TrainOnBatch(realHrImg, realLabels);
+            auto dFake = disc->TrainOnBatch(fakeHrImg, fakeLabels);
+            float dLoss = 0.5f * (get<0>(dReal) + get<0>(dFake));
+            
+            preloader.Load();
 
             // optimize generators
-            dAModel->SetTrainable(false);
-            dBModel->SetTrainable(false);
-            gABModel->SetTrainable(true);
-            gBAModel->SetTrainable(true);
+            disc->SetTrainable(false);
+            gen->SetTrainable(true);
 
-            float ganLoss = get<0>(ganModel.TrainOnBatch({ &realImgA, &realImgB }, { &realLabels, &realLabels, &realImgA, &realImgB, &realImgA, &realImgB }));
+            auto realFeat = *model.Predict(realHrImg)[0];
+
+            float ganLoss = get<0>(ganModel.TrainOnBatch({ &realLrImg, &realHrImg }, { &realLabels, &realFeat }));
 
             stringstream extString;
             extString << setprecision(4) << fixed << " - dLoss: " << dLoss << " - ganLoss: " << ganLoss;
@@ -167,71 +127,6 @@ public:
         }
     }
 
-    //////////////////////////////////////////////////////////////////////////
-    void RunDiscriminatorTrainTest()
-    {
-        //Tensor::SetDefaultOpMode(GPU);
-
-        //GlobalRngSeed(1338);
-
-        ///*Debug::LogAllGrads();
-        //Debug::LogAllOutputs();*/
-
-        //const Shape IMG_SHAPE(256, 256, 3);
-        //const uint32_t PATCH_SIZE = 64;
-        //const uint32_t BATCH_SIZE = 1;
-        //const uint32_t STEPS = 150;
-        //const float LEARNING_RATE = 0.0002f;
-        //const float ADAM_BETA1 = 0.5f;
-
-        //auto trainFiles = LoadFilesList("data/flowers", false, true);
-
-        //Tensor condImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "cond_image");
-        //Tensor realImages(Shape::From(IMG_SHAPE, BATCH_SIZE), "output_image");
-
-        //// setup models
-        //auto gModel = CreateGenerator(IMG_SHAPE);
-        ////cout << "Generator" << endl << gModel->Summary();
-        ////auto dModel = CreatePatchDiscriminator(IMG_SHAPE, PATCH_SIZE, BATCH_SIZE > 1);
-        //auto dModel = CreateDiscriminator(IMG_SHAPE);
-        //dModel->Optimize(new Adam(LEARNING_RATE, ADAM_BETA1), new BinaryCrossEntropy(), {}, All);
-        ////cout << "Discriminator" << endl << dModel->Summary();
-
-        //auto inSrc = (new Input(IMG_SHAPE))->Outputs()[0];
-        //auto genOut = gModel->Call(inSrc, "generator")[0];
-        //auto disOut = dModel->Call({ inSrc, genOut }, "discriminator");
-
-        //Tensor one(Shape(1, 1, 1, BATCH_SIZE)); one.One();
-
-        //// labels consist of two values [fake_prob, real_prob]
-        //Tensor fakeLabels(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE), "fake_labels"); fakeLabels.Zero();
-        //one.FuseSubTensor2D(0, 0, fakeLabels); // generate [1, 0] batch
-        //Tensor realLabels(Shape::From(dModel->OutputShapesAt(-1)[0], BATCH_SIZE), "real_lables"); realLabels.Zero();
-        //one.FuseSubTensor2D(1, 0, realLabels);
-
-        //// setup data preloader
-        //EdgeImageLoader loader(trainFiles, BATCH_SIZE, 1, 1337);
-        //DataPreloader preloader({ &condImages, &realImages }, { &loader }, 5);
-
-        //for (uint32_t e = 1; e <= STEPS; ++e)
-        //{
-        //    preloader.Load();
-
-        //    // generate fake images from condition
-        //    //Tensor fakeImages = *gModel->Predict(condImages)[0];
-        //    Tensor fakeImages(Shape::From(IMG_SHAPE, BATCH_SIZE));
-        //    fakeImages.FillWithFunc([]() { return Uniform::NextSingle(-1, 1); });
-
-        //    auto realTrainData = dModel->TrainOnBatch({ &realImages }, { &realLabels });
-        //    //cout << get<0>(realTrainData) << endl;
-        //    auto fakeTrainData = dModel->TrainOnBatch({ &fakeImages }, { &fakeLabels });
-        //    //cout << get<0>(fakeTrainData) << endl;
-
-        //    cout << ">" << e << setprecision(4) << fixed << " loss=" << (get<0>(realTrainData) + get<0>(fakeTrainData)) * 0.5f << " real=" << round(get<1>(realTrainData) * 100) << "% fake=" << round(get<1>(fakeTrainData) * 100) << "%" << endl;
-        //}
-    }
-
-    ModelBase* CreateGenerator(const Shape& imgShape, uint32_t filtersStart);
-    //ModelBase* CreatePatchDiscriminator(const Shape& imgShape, uint32_t patchSize, bool useMiniBatchDiscrimination = true);
-    ModelBase* CreateDiscriminator(const Shape& imgShape, uint32_t filtersStart);
+    ModelBase* CreateGenerator(const Shape& lrShape, const Shape& hrShape, uint32_t filtersStart, size_t residualBlocksNum);
+    ModelBase* CreateDiscriminator(const Shape& hrShape, uint32_t filtersStart);
 };

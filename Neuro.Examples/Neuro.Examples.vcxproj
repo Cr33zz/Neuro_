@@ -214,6 +214,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\NeuralStyleTransfer.cpp" />
     <ClCompile Include="src\Pix2Pix.cpp" />
+    <ClCompile Include="src\SRGAN.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\NeuroExt\Neuro.Examples\include\NeuralStyleTransferHD2.h" />
