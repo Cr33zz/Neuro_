@@ -429,6 +429,15 @@
     <ClInclude Include="include\Tensors\TensorOpCpuMkl.h">
       <Filter>include\Tensors</Filter>
     </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\ExtractSubTensorOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\FuseSubTensorsOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ComputationalGraph\Operations\RollOp.h">
+      <Filter>include\ComputationalGraph\Operations</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Tensors\Shape.cpp">
@@ -742,6 +751,15 @@
     </ClCompile>
     <ClCompile Include="src\Tensors\TensorOpCpuMkl.cpp">
       <Filter>src\Tensors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\ExtractSubTensorOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\FuseSubTensorsOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ComputationalGraph\Operations\RollOp.cpp">
+      <Filter>src\ComputationalGraph\Operations</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

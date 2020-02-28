@@ -1697,18 +1697,27 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::Roll2D(int xShift, int yShift, Tensor& output)
+    void Tensor::Roll2D(int xShift, int yShift, Tensor& output) const
     {
         if (xShift == 0 && yShift == 0)
             return;
         Op()->Roll2D(*this, xShift, yShift, output);
     }
 
-    Tensor Tensor::Roll2D(int xShift, int yShift)
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::Roll2D(int xShift, int yShift) const
     {
         Tensor result(m_Shape);
         Roll2D(xShift, yShift, result);
         return result;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::Roll2DInPlace(int xShift, int yShift)
+    {
+        if (xShift == 0 && yShift == 0)
+            return;
+        Op()->Roll2D(*this, xShift, yShift);
     }
 
     //////////////////////////////////////////////////////////////////////////

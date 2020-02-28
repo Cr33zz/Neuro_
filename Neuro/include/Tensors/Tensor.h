@@ -219,8 +219,9 @@ namespace Neuro
         Tensor LinearRampPad2D(uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float endValue) const;
         void Pad2DGradient(const Tensor& gradient, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, Tensor& inputGradient) const;
 
-        Tensor Roll2D(int xShift, int yShift);
-        void Roll2D(int xShift, int yShift, Tensor& output);
+        Tensor Roll2D(int xShift, int yShift) const;
+        void Roll2D(int xShift, int yShift, Tensor& output) const;
+        void Roll2DInPlace(int xShift, int yShift);
 
         void Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat, Tensor& output) const;
         Tensor Conv2D(const Tensor& kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat) const;
