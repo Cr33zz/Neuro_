@@ -116,6 +116,7 @@ namespace Neuro
     {
     public:
         Tqdm(size_t maxIterations, size_t barLen = 30, bool finalizeInit = true);
+        Tqdm& Silence(bool silence) { m_Silence = silence; return *this; }
         Tqdm& ShowBar(bool show) { m_ShowBar = show; return *this; }
         Tqdm& ShowElapsed(bool show) { m_ShowElapsed = show; return *this; }
         Tqdm& ShowEta(bool show) { m_ShowEta = show; return *this; }
@@ -138,6 +139,7 @@ namespace Neuro
         size_t m_BarLength;
         Stopwatch m_Timer;
         stringstream m_Stream;
+        bool m_Silence = false;
         bool m_ShowBar = true;
         bool m_ShowElapsed = true;
         bool m_ShowEta = true;

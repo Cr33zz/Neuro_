@@ -1004,7 +1004,10 @@ namespace Neuro
 
     //////////////////////////////////////////////////////////////////////////
     void Tqdm::NextStep(size_t iterations)
-    {        
+    {
+        if (m_Silence)
+            return;
+
         const char BLANK_SYMBOL = (char)176;
         const char FULL_SYMBOL = (char)219;
         const char ACTIVE_SYMBOL = (char)176;
