@@ -60,6 +60,42 @@ public:
         return m_Args.find(name) != m_Args.end();
     }
 
+    vector<string> GetArgArray(const string& name) const
+    {
+        return Tokenize(GetArg(name));
+    }
+
+    vector<float> GetArgArrayFloat(const string& name) const
+    {
+        vector<float> args;
+        for (auto& token : Tokenize(GetArg(name)))
+            args.push_back(stof(token));
+        return args;
+    }
+
+    template <typename INT_TYPE = int>
+    vector<INT_TYPE> GetArgArrayInt(const string& name) const
+    {
+        vector<INT_TYPE> args;
+        for (auto& token : Tokenize(GetArg(name)))
+            args.push_back(stoi(token));
+        return args;
+    }
+
 private:
+    vector<string> Tokenize(const string& str) const
+    {
+        vector<string> tokens;
+        vector<char> strData(begin(str), end(str));
+        char* context = nullptr;
+
+        char* pch = strtok_s(strData.data(), ",", &context);
+        while (pch)
+        {
+            tokens.push_back(pch);
+            pch = strtok_s(nullptr, ",", &context);
+        }
+    }
+
     map<string, string> m_Args;
 };
