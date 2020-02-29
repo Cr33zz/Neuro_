@@ -56,7 +56,7 @@ namespace Neuro
                 widthOffset += m_Inputs[i]->GetShape().Width();
             }
 
-            heightOffset += m_Inputs[i]->GetShape().Height();
+            heightOffset += m_Inputs[0]->GetShape().Height();
         }
     }
 
@@ -78,7 +78,7 @@ namespace Neuro
                 widthOffset += m_Inputs[i]->GetShape().Width();
             }
 
-            heightOffset += m_Inputs[i]->GetShape().Height();
+            heightOffset += m_Inputs[0]->GetShape().Height();
         }
     }
 }

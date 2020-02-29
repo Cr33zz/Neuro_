@@ -846,7 +846,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::FuseSubTensor2D(const Tensor& input, uint32_t widthOffset, uint32_t heightOffset, bool add, Tensor& output) const
     {
-        input.SyncToHost();
+        input.CopyToHost();
         output.CopyToHost(true);
 
         uint32_t outputWidth = output.Width();
