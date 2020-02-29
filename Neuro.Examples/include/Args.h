@@ -95,6 +95,8 @@ private:
             tokens.push_back(pch);
             pch = strtok_s(nullptr, ",", &context);
         }
+
+        return tokens;
     }
 
     map<string, string> m_Args;
