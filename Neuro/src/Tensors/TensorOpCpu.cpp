@@ -587,7 +587,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::Roll2D(Tensor& input, int xShift, int yShift) const
     {
-        input.CopyToHost();
+        input.CopyToHost(true);
 
         const Shape& shape = input.GetShape();
         auto inputValues = input.Values();
@@ -837,16 +837,17 @@ namespace Neuro
 
         for (uint32_t n = 0; n < output.Batch(); ++n)
 		for (uint32_t d = 0; d < output.Depth(); ++d)
-		for (uint32_t h = 0; h < output.Height(); ++h)
+        #pragma omp parallel for
+        for (int h = 0; h < (int)output.Height(); ++h)
 		for (uint32_t w = 0; w < output.Width(); ++w)
-			output(w, h, d, n) = input(w + widthOffset, h + heightOffset, d, n);
+			output(w, (uint32_t)h, d, n) = input(w + widthOffset, (uint32_t)h + heightOffset, d, n);
     }
 
     //////////////////////////////////////////////////////////////////////////
     void TensorOpCpu::FuseSubTensor2D(const Tensor& input, uint32_t widthOffset, uint32_t heightOffset, bool add, Tensor& output) const
     {
         input.SyncToHost();
-        output.CopyToHost();
+        output.CopyToHost(true);
 
         uint32_t outputWidth = output.Width();
         uint32_t outputHeight = output.Height();
@@ -855,14 +856,13 @@ namespace Neuro
 		for (uint32_t d = 0; d < input.Depth(); ++d)
         #pragma omp parallel for
 		for (int h = 0; h < (int)input.Height(); ++h)
-        #pragma omp parallel for
-		for (int w = 0; w < (int)input.Width(); ++w)
+        for (uint32_t w = 0; w < input.Width(); ++w)
         {
             if ((w + widthOffset) >= outputWidth || (h + heightOffset) >= outputHeight)
                 continue;
 
-            float& val = output((uint32_t)w + widthOffset, (uint32_t)h + heightOffset, d, n);
-			val = (add ? val : 0.f) + input((uint32_t)w, (uint32_t)h, d, n);
+            float& val = output(w + widthOffset, (uint32_t)h + heightOffset, d, n);
+			val = (add ? val : 0.f) + input(w, (uint32_t)h, d, n);
         }
     }
 

@@ -8,7 +8,6 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     TensorOpCpuMkl::TensorOpCpuMkl()
     {
-
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -23,7 +22,6 @@ namespace Neuro
         int lda = transposeT1 ? m : k;
         int ldb = transposeT2 ? k : n;
         int ldc = n;
-
 
         float alpha = 1, beta = 0;
 
