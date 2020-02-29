@@ -33,6 +33,9 @@ public:
                     NEURO_ASSERT(false, "Invalid argument '" + arg + "'");
             }
         }
+
+        if (lastArgName != "")
+            m_Args[lastArgName] = "__present";
     }
 
     string GetArg(const string& name) const
