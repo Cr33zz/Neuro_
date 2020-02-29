@@ -345,17 +345,26 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    Tensor Tensor::ToGrayScale() const
+    Tensor Tensor::ToGrayScale(uint32_t depth) const
     {
         NEURO_ASSERT(Depth() == 3, "Expected 3 color channels.");
         NEURO_ASSERT(Batch() == 1, "Batches are not supported.");
         SyncToHost();
-        Tensor output(Shape(Width(), Height()));
+        Tensor output(Shape(Width(), Height(), depth));
+        float* outputValues = output.Values();
+        
+        #pragma omp parallel for
+        for (int h = 0; h < (int)Height(); ++h)
+        {
+            uint32_t offset = h * Width();
+            for (uint32_t w = 0; w < Width(); ++w)
+                outputValues[offset + w] = Get(w, (uint32_t)h, 0) * 0.2989f + Get(w, (uint32_t)h, 1) * 0.5870f + Get(w, (uint32_t)h, 2) * 0.1140f;
+        }
 
-        uint32_t i = 0;
-        for (uint32_t h = 0; h < Height(); ++h)
-        for (uint32_t w = 0; w < Width(); ++w, ++i)
-            output.Values()[i] = Get(w, h, 0) * 0.2989f + Get(w, h, 1) * 0.5870f + Get(w, h, 2) * 0.1140f;
+        if (depth > 0)
+            output.CopyDepthTo(0, 0, 1, 0, output);
+        if (depth > 1)
+            output.CopyDepthTo(0, 0, 2, 0, output);
 
         return output;
     }
@@ -1677,28 +1686,30 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::Rotated180(Tensor& result) const
+	void Tensor::Rotated180(Tensor& output) const
 	{
-        NEURO_ASSERT(m_Shape == result.GetShape(), "Output shape doesn't match input shape.");
+        NEURO_ASSERT(m_Shape == output.GetShape(), "Output shape doesn't match input shape.");
 
 		for (uint32_t n = 0; n < Batch(); ++n)
 		for (uint32_t d = 0; d < Depth(); ++d)
 		for (int h = Height() - 1; h >= 0; --h)
 		for (int w = Width() - 1; w >= 0; --w)
-			result.Set(Get(Width() - (uint32_t)w - 1, Height() - (uint32_t)h - 1, d, n), w, h, d, n);
+			output.Set(Get(Width() - (uint32_t)w - 1, Height() - (uint32_t)h - 1, d, n), w, h, d, n);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::Rotated180() const
 	{
-		Tensor result(m_Shape);
-		Rotated180(result);
-		return result;
+		Tensor output(m_Shape);
+		Rotated180(output);
+		return output;
 	}
 
     //////////////////////////////////////////////////////////////////////////
     void Tensor::Roll2D(int xShift, int yShift, Tensor& output) const
     {
+        NEURO_ASSERT(this != &output, "For in-place roll use Roll2DInPlace.");
+
         if (xShift == 0 && yShift == 0)
             return;
         Op()->Roll2D(*this, xShift, yShift, output);
@@ -1707,9 +1718,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     Tensor Tensor::Roll2D(int xShift, int yShift) const
     {
-        Tensor result(m_Shape);
-        Roll2D(xShift, yShift, result);
-        return result;
+        Tensor output(m_Shape);
+        Roll2D(xShift, yShift, output);
+        return output;
     }
 
     //////////////////////////////////////////////////////////////////////////

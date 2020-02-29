@@ -75,7 +75,7 @@ namespace Neuro
         Tensor ToNCHW() const;
         // Converts to NHWC assuming the data is in NCHW format. Shape remains unchanged.
         Tensor ToNHWC() const;
-        Tensor ToGrayScale() const;
+        Tensor ToGrayScale(uint32_t depth = 1) const;
         Tensor ToRGB() const;
 
         // RGB -> YUV conversion is only valid if pixel values are in [0,1]

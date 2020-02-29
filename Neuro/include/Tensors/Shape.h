@@ -83,10 +83,10 @@ namespace Neuro
 		assert(n >= -(int)Batch() && n < (int)Batch());
 #       endif
 
-		return Dim0Dim1Dim2 * (n >= 0 ? n : (n + Dimensions[3])) + 
-               Dim0Dim1 * (d >= 0 ? d : (d + Dimensions[2])) + 
-               Dim0 * (h >= 0 ? h : (h + Dimensions[1])) + 
-               (w >= 0 ? w : (w + Dimensions[0]));
+		return Dim0Dim1Dim2 * ((n >= 0 ? n : (n + Dimensions[3])) % (int)Batch()) + 
+               Dim0Dim1 * ((d >= 0 ? d : (d + Dimensions[2])) % (int)Depth()) +
+               Dim0 * ((h >= 0 ? h : (h + Dimensions[1])) % (int)Height()) +
+               ((w >= 0 ? w : (w + Dimensions[0])) % (int)Width());
 	}
 
     //////////////////////////////////////////////////////////////////////////
