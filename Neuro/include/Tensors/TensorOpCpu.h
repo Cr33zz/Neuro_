@@ -8,6 +8,7 @@ namespace Neuro
     {
 	public:
 		virtual ~TensorOpCpu() {}
+        virtual EOpMode OpMode() const { return CPU; }
 
         virtual void Zero(Tensor& input) const;
         virtual void One(Tensor& input) const;

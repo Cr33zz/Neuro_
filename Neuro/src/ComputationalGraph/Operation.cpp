@@ -1,6 +1,7 @@
 ﻿#include "ComputationalGraph/Operation.h"
 #include "ComputationalGraph/Graph.h"
 #include "Tensors/Tensor.h"
+#include "Tensors/TensorOpCpu.h"
 #include "Tools.h"
 #include "Debug.h"
 
@@ -12,6 +13,7 @@ namespace Neuro
     Operation::Operation(const vector<TensorLike*>& inputNodes, const string& name)
         : TensorLike(name)
     {
+        m_OpMode = Tensor::ActiveOp()->OpMode();
         m_InputNodes = inputNodes;
 
         for (auto inputNode : inputNodes)
@@ -48,6 +50,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     const Tensor& Operation::Compute(bool training)
     {
+        Tensor::SetForcedOpMode(m_OpMode);
+
         if (m_Output.TryDeviceAllocate())
             m_Output.OverrideDevice();
         m_Output.ResetDeviceRef(m_Consumers.size());
@@ -81,6 +85,8 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     const vector<Tensor*>& Operation::ComputeGradient(const Tensor& grad)
     {
+        Tensor::SetForcedOpMode(m_OpMode);
+
         for (size_t i = 0; i < m_InputsGrads.size(); ++i)
         {
             if (!m_InputNodes[i]->CareAboutGradient() && !ForceAllocInputGradNode(i))

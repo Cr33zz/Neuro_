@@ -13,6 +13,7 @@ namespace Neuro
     {
     public:
         TensorOpGpu();
+        virtual EOpMode OpMode() const { return GPU; }
 
         virtual void Zero(Tensor& input) const override;
         virtual void One(Tensor& input) const override;

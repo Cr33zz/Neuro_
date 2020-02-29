@@ -7,6 +7,8 @@ namespace Neuro
     class TensorOpCpuMt : public TensorOpCpu
     {
     public:
+        virtual EOpMode OpMode() const { return CPU_MT; }
+
         virtual void Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const override;
         virtual void MatMul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const override;
         virtual void Mul(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const override;

@@ -37,6 +37,7 @@ namespace Neuro
         virtual void ComputeInternal() = 0;
         virtual void ComputeGradientInternal(const Tensor& grad) = 0;
 
+        EOpMode m_OpMode;
         vector<const Tensor*> m_Inputs;
         vector<Tensor> m_InputsGrads;
         vector<Tensor*> m_InputsGradsPtrs; // for performance/convenience
