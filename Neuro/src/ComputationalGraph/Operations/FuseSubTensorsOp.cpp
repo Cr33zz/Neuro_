@@ -74,7 +74,7 @@ namespace Neuro
             for (uint32_t tX = 0; tX < m_TX; ++tX, ++i)
             {
                 if (m_InputNodes[i]->CareAboutGradient())
-                    m_Output.ExtractSubTensor2D(widthOffset, heightOffset, m_InputsGrads[i]);
+                    grad.ExtractSubTensor2D(widthOffset, heightOffset, m_InputsGrads[i]);
                 widthOffset += m_Inputs[i]->GetShape().Width();
             }
 
