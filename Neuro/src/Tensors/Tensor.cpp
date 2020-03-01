@@ -1604,7 +1604,10 @@ namespace Neuro
     {
         NEURO_ASSERT(permutation.size() == 4, "Invalid number of axes in permutation, expected 4, found " << permutation.size());
         NEURO_ASSERT(Shape(m_Shape.Dimensions[permutation[0]], m_Shape.Dimensions[permutation[1]], m_Shape.Dimensions[permutation[2]], m_Shape.Dimensions[permutation[3]]) == output.GetShape(), "Output shape doesn't match input shape.");
-        Op()->Transpose(*this, permutation, output);
+        if (permutation[0] == HeightAxis && permutation[1] == WidthAxis && permutation[2] == DepthAxis)
+            Op()->Transpose(*this, output);
+        else
+            Op()->Transpose(*this, permutation, output);
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -31,17 +31,33 @@ namespace Neuro
 		t2.CopyToHost();
 		output.OverrideHost();
 
-        for (uint32_t n = 0; n < max(t1.Batch(), t2.Batch()); ++n)
+        if (t1.GetShape() == t2.GetShape())
+        {
+            auto t1Values = t1.Values();
+            auto t2Values = t2.Values();
+            auto outputValues = output.Values();
+
+            #pragma omp parallel for
+            for (int i = 0; i < (int)output.Length(); ++i)
+                outputValues[i] = alpha * t1Values[i] + beta * t2Values[i];
+            
+            return;
+        }
+
+        #pragma omp parallel for
+        for (int n = 0; n < (int)max(t1.Batch(), t2.Batch()); ++n)
         {
             uint32_t t1N = n % t1.Batch();
             uint32_t t2N = n % t2.Batch();
 
-            for (uint32_t d = 0; d < max(t1.Depth(), t2.Depth()); ++d)
+            #pragma omp parallel for
+            for (int d = 0; d < (int)max(t1.Depth(), t2.Depth()); ++d)
             {
                 uint32_t t1D = d % t1.Depth();
                 uint32_t t2D = d % t2.Depth();
 
-                for (uint32_t h = 0; h < max(t1.Height(), t2.Height()); ++h)
+                #pragma omp parallel for
+                for (int h = 0; h < (int)max(t1.Height(), t2.Height()); ++h)
                 {
                     uint32_t t1H = h % t1.Height();
                     uint32_t t2H = h % t2.Height();
@@ -51,7 +67,7 @@ namespace Neuro
                         uint32_t t1W = w % t1.Width();
                         uint32_t t2W = w % t2.Width();
 
-                        output(w, h, d, n) = alpha * t1(t1W, t1H, t1D, t1N) + beta * t2(t2W, t2H, t2D, t2N);
+                        output(w, (uint32_t)h, (uint32_t)d, (uint32_t)n) = alpha * t1(t1W, t1H, t1D, t1N) + beta * t2(t2W, t2H, t2D, t2N);
                     }
                 }
             }
@@ -99,17 +115,33 @@ namespace Neuro
         t2.CopyToHost();
         output.OverrideHost();
 
-        for (uint32_t n = 0; n < max(t1.Batch(), t2.Batch()); ++n)
+        if (t1.GetShape() == t2.GetShape())
+        {
+            auto t1Values = t1.Values();
+            auto t2Values = t2.Values();
+            auto outputValues = output.Values();
+
+            #pragma omp parallel for
+            for (int i = 0; i < (int)output.Length(); ++i)
+                outputValues[i] = alpha * t1Values[i] * beta * t2Values[i];
+            
+            return;
+        }
+
+        #pragma omp parallel for
+        for (int n = 0; n < (int)max(t1.Batch(), t2.Batch()); ++n)
         {
             uint32_t t1N = n % t1.Batch();
             uint32_t t2N = n % t2.Batch();
 
-            for (uint32_t d = 0; d < max(t1.Depth(), t2.Depth()); ++d)
+            #pragma omp parallel for
+            for (int d = 0; d < (int)max(t1.Depth(), t2.Depth()); ++d)
             {
                 uint32_t t1D = d % t1.Depth();
                 uint32_t t2D = d % t2.Depth();
 
-                for (uint32_t h = 0; h < max(t1.Height(), t2.Height()); ++h)
+                #pragma omp parallel for
+                for (int h = 0; h < (int)max(t1.Height(), t2.Height()); ++h)
                 {
                     uint32_t t1H = h % t1.Height();
                     uint32_t t2H = h % t2.Height();
@@ -119,7 +151,7 @@ namespace Neuro
                         uint32_t t1W = w % t1.Width();
                         uint32_t t2W = w % t2.Width();
 
-                        output(w, h, d, n) = alpha * t1(t1W, t1H, t1D, t1N) * beta * t2(t2W, t2H, t2D, t2N);
+                        output(w, (uint32_t)h, (uint32_t)d, (uint32_t)n) = alpha * t1(t1W, t1H, t1D, t1N) * beta * t2(t2W, t2H, t2D, t2N);
                     }
                 }
             }
@@ -170,6 +202,19 @@ namespace Neuro
         t1.CopyToHost();
         t2.CopyToHost();
         output.OverrideHost();
+
+        if (t1.GetShape() == t2.GetShape())
+        {
+            auto t1Values = t1.Values();
+            auto t2Values = t2.Values();
+            auto outputValues = output.Values();
+
+            #pragma omp parallel for
+            for (int i = 0; i < (int)output.Length(); ++i)
+                outputValues[i] = alpha * t1Values[i] / (beta * t2Values[i]);
+            
+            return;
+        }
 
         for (uint32_t n = 0; n < max(t1.Batch(), t2.Batch()); ++n)
         {
