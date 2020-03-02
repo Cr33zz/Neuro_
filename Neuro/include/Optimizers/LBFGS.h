@@ -60,7 +60,6 @@ namespace Neuro
 
         virtual Operation* Minimize(const vector<TensorLike*>& losses, const vector<Variable*>& vars = {}, Variable* globalStep = nullptr) override { return new MinimizationOperation(losses, vars, m_MaxIterations, m_Epsilon); }
 
-    private:
         class MinimizationOperation : public Operation
         {
         public:
@@ -96,6 +95,7 @@ namespace Neuro
             TensorLike* m_Loss;
         };
 
+    private:
         size_t m_MaxIterations;
         float m_Epsilon;
 

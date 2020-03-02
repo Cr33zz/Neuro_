@@ -16,7 +16,6 @@ namespace Neuro
 
         virtual Operation* Minimize(const vector<TensorLike*>& losses, const vector<Variable*>& vars = {}, Variable* globalStep = nullptr) override { return new MinimizationOperation(losses, vars, m_LearningRate); }
 
-    private:
         class MinimizationOperation : public Operation
         {
         public:
@@ -34,6 +33,7 @@ namespace Neuro
             unordered_set<TensorLike*> m_NodesAffectingLosses;
         };
 
+    private:
         float m_LearningRate;
 
         friend class MinimizationOperation;
