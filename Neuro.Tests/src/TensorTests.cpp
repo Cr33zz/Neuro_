@@ -9,6 +9,34 @@ namespace NeuroTests
 {
     TEST_CLASS(TensorTests)
     {
+        TEST_METHOD(Extract_NoClampAllowed)
+        {
+            auto t1 = Tensor({ 7, 6, 4,
+                               0, 3, 5 }, Shape(3, 2, 1, 1));
+            auto t2 = Tensor({ 1, 2 }, Shape(2, 1, 1, 1));
+
+            auto correct = Tensor({ 3, 5 }, Shape(2, 1, 1, 1));
+
+            t1.ExtractSubTensor2D(1, 1, t2);
+
+            Assert::IsTrue(t2.Equals(correct));
+        }
+
+        TEST_METHOD(Extract_Clamp)
+        {
+            auto t1 = Tensor({ 7, 6, 4,
+                               0, 3, 5 }, Shape(3, 2, 1, 1));
+            auto t2 = Tensor({ 1, 2, 4,
+                               9, 4, 6 }, Shape(3, 2, 1, 1));
+
+            auto correct = Tensor({ 3, 5, 0,
+                                    0, 0, 0 }, Shape(3, 2, 1, 1));
+
+            t1.ExtractSubTensor2D(1, 1, t2, true);
+
+            Assert::IsTrue(t2.Equals(correct));
+        }
+
         TEST_METHOD(Fuse_NoClampAllowed)
         {
             auto t1 = Tensor({ 7, 6, 4,

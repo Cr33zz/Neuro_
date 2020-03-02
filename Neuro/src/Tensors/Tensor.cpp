@@ -672,10 +672,10 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Tensor::ExtractSubTensor2D(uint32_t widthOffset, uint32_t heightOffset, Tensor& output) const
+    void Tensor::ExtractSubTensor2D(uint32_t widthOffset, uint32_t heightOffset, Tensor& output, bool clampAllowed) const
     {
-        NEURO_ASSERT(widthOffset + output.Width() <= Width(), "");
-        NEURO_ASSERT(heightOffset + output.Height() <= Height(), "");
+        NEURO_ASSERT(clampAllowed || (widthOffset + output.Width()) <= Width(), "");
+        NEURO_ASSERT(clampAllowed || (heightOffset + output.Height()) <= Height(), "");
         Op()->ExtractSubTensor2D(*this, widthOffset, heightOffset, output);
     }
 

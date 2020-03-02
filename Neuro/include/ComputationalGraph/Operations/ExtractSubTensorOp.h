@@ -7,7 +7,7 @@ namespace Neuro
     class ExtractSubTensorOp : public Operation
     {
     public:
-        ExtractSubTensorOp(TensorLike* x, uint32_t width, uint32_t height, uint32_t widthOffset, uint32_t heightOffset, const string& name = "");
+        ExtractSubTensorOp(TensorLike* x, uint32_t width, uint32_t height, uint32_t widthOffset, uint32_t heightOffset, bool clampAllowed = false, const string& name = "");
 
     protected:
         virtual void ComputeInternal() override;
@@ -19,10 +19,11 @@ namespace Neuro
         uint32_t m_Height;
         uint32_t m_WidthOffset;
         uint32_t m_HeightOffset;
+        bool m_ClampAllowed;
     };
 
-    static Operation* extract_subtensor(TensorLike* x, uint32_t width, uint32_t height, uint32_t widthOffset, uint32_t heightOffset, const string& name = "")
+    static Operation* extract_subtensor(TensorLike* x, uint32_t width, uint32_t height, uint32_t widthOffset, uint32_t heightOffset, bool clampAllowed = false, const string& name = "")
     {
-        return new ExtractSubTensorOp(x, width, height, widthOffset, heightOffset, name);
+        return new ExtractSubTensorOp(x, width, height, widthOffset, heightOffset, clampAllowed, name);
     }
 }

@@ -4,9 +4,21 @@ namespace Neuro
 {
     //////////////////////////////////////////////////////////////////////////
     FuseSubTensorsOp::FuseSubTensorsOp(const vector<TensorLike*>& xs, size_t tX, size_t tY, const string& name)
+        : FuseSubTensorsOp(xs, tX, tY, Shape(), name)
+    {
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    FuseSubTensorsOp::FuseSubTensorsOp(const vector<TensorLike*>& xs, size_t tX, size_t tY, const Shape& outputShape, const string& name)
         : Operation(xs, name.empty() ? "fuse_subtensors" : name), m_TX(tX), m_TY(tY)
     {
-        UpdateOutputShape();
+        if (outputShape.IsValid())
+        {
+            m_ClampAllowed = true; // allow clamping for custom outputs only
+            m_Output.Resize(outputShape);
+        }
+        else 
+            UpdateOutputShape();
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -52,7 +64,7 @@ namespace Neuro
 
             for (uint32_t tX = 0; tX < m_TX; ++tX, ++i)
             {
-                m_Inputs[i]->FuseSubTensor2D(widthOffset, heightOffset, m_Output);
+                m_Inputs[i]->FuseSubTensor2D(widthOffset, heightOffset, m_Output, m_ClampAllowed);
                 widthOffset += m_Inputs[i]->GetShape().Width();
             }
 
@@ -74,7 +86,7 @@ namespace Neuro
             for (uint32_t tX = 0; tX < m_TX; ++tX, ++i)
             {
                 if (m_InputNodes[i]->CareAboutGradient())
-                    grad.ExtractSubTensor2D(widthOffset, heightOffset, m_InputsGrads[i]);
+                    grad.ExtractSubTensor2D(widthOffset, heightOffset, m_InputsGrads[i], m_ClampAllowed);
                 widthOffset += m_Inputs[i]->GetShape().Width();
             }
 

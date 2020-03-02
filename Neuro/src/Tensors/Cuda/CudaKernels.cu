@@ -57,6 +57,7 @@ __global__ void transpose(int inputLen, const float* __restrict input, int axis0
 
 __global__ void extractSubTensor2D(int outputLen, const float* __restrict input, int inputStride1, int inputStride2, int inputStride3, int widthOffset, int heightOffset, float* __restrict output, int outputStride1, int outputStride2, int outputStride3)
 {
+    int inputHeight = inputStride2 / inputStride1;
     int outputHeight = outputStride2 / outputStride1;
     int outputDepth = outputStride3 / outputStride2;
 
@@ -66,6 +67,12 @@ __global__ void extractSubTensor2D(int outputLen, const float* __restrict input,
         int h = (i / outputStride1) % outputHeight;
         int d = (i / outputStride2) % outputDepth;
         int n = i / outputStride3;
+
+        if ((w + widthOffset) >= inputStride1 || (h + heightOffset) >= inputHeight)
+        {
+            output[i] = 0;
+            continue;
+        }
 
         output[i] = input[getIndex(w + widthOffset, h + heightOffset, d, n, inputStride1, inputStride2, inputStride3)];
     }

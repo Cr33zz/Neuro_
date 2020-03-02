@@ -880,12 +880,23 @@ namespace Neuro
         input.CopyToHost();
         output.OverrideHost();
 
+        uint32_t inputWidth = input.Width();
+        uint32_t inputHeight = input.Height();
+
         for (uint32_t n = 0; n < output.Batch(); ++n)
 		for (uint32_t d = 0; d < output.Depth(); ++d)
         #pragma omp parallel for
         for (int h = 0; h < (int)output.Height(); ++h)
 		for (uint32_t w = 0; w < output.Width(); ++w)
+        {
+            if ((w + widthOffset) >= inputWidth || (h + heightOffset) >= inputHeight)
+            {
+                output(w, (uint32_t)h, d, n) = 0;
+                continue;
+            }
+
 			output(w, (uint32_t)h, d, n) = input(w + widthOffset, (uint32_t)h + heightOffset, d, n);
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////
