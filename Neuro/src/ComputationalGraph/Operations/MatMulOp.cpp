@@ -92,7 +92,10 @@ namespace Neuro
     {
         const Shape& aShape = m_InputNodes[0]->GetShape();
         const Shape& bShape = m_InputNodes[1]->GetShape();
-        NEURO_ASSERT(aShape.Width() == bShape.Height(), "");
+        NEURO_ASSERT((!m_TransposeA && !m_TransposeB && aShape.Width() == bShape.Height()) ||
+                     (m_TransposeA && !m_TransposeB && aShape.Height() == bShape.Height()) ||
+                     (!m_TransposeA && m_TransposeB && aShape.Width() == bShape.Width()) ||
+                     (m_TransposeA && m_TransposeB && aShape.Height() == bShape.Width()), "Matrices width/height mismatch");
         NEURO_ASSERT(aShape.Depth() == bShape.Depth(), "Depths mismatch.");
         m_Output.Resize(Shape(bShape.Width(), aShape.Height(), aShape.Depth(), max(aShape.Batch(), bShape.Batch())));
     }

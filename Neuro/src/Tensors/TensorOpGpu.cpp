@@ -1350,11 +1350,15 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::MatMulGeneric(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
+    void TensorOpGpu::MatMulGeneric(bool transposeT1, bool transposeT2, const Tensor& a, const Tensor& b, Tensor& output) const
     {
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         int m = t1.Height(), n = t2.Width(), k = t1.Width();
         float alpha = 1, beta = 0;
+
+        // because cublas operates on column-major matrices it sees our row-major matrices as if they were transposed
+        // so any transposition we want to apply should be flipped and the result must be transposed as well
+        // A1 = A ^ T and B1 = B ^ T
 
         for (uint32_t b = 0; b < output.Batch(); ++b)
         {
@@ -1363,21 +1367,61 @@ namespace Neuro
 
             for (uint32_t d = 0; d < t1.Depth(); ++d)
             {
-                CUDA_CHECK(cublasSgemm_v2(
-                    s_CublasHandle,
-                    transposeT2 ? CUBLAS_OP_T : CUBLAS_OP_N,
-                    transposeT1 ? CUBLAS_OP_T : CUBLAS_OP_N,
-                    n,
-                    m,
-                    k,  // trick to convert row major to column major
-                    &alpha,
-                    t2.GetDevicePtr() + d * t2.GetShape().Dim0Dim1 + t2B * t2.BatchLength(),
-                    n,
-                    t1.GetDevicePtr() + d * t1.GetShape().Dim0Dim1 + t1B * t1.BatchLength(),
-                    k,
-                    &beta,
-                    output.GetDevicePtr() + d * output.GetShape().Dim0Dim1 + b * output.BatchLength(),
-                    n));
+                if (!transposeT1 && !transposeT2)
+                {
+                    // a little trick to avoid transposition at the end
+                    CUDA_CHECK(cublasSgemm_v2(
+                        s_CublasHandle,
+                        CUBLAS_OP_N,
+                        CUBLAS_OP_N,
+                        n,
+                        m,
+                        k,  // trick to convert row major to column major
+                        &alpha,
+                        t2.GetDevicePtr() + d * t2.GetShape().Dim0Dim1 + t2B * t2.BatchLength(),
+                        n,
+                        t1.GetDevicePtr() + d * t1.GetShape().Dim0Dim1 + t1B * t1.BatchLength(),
+                        k,
+                        &beta,
+                        output.GetDevicePtr() + d * output.GetShape().Dim0Dim1 + b * output.BatchLength(),
+                        n));
+                }
+                else
+                {
+                    CUDA_CHECK(cublasSgemm_v2(
+                        s_CublasHandle,
+                        transposeT1 ? CUBLAS_OP_N : CUBLAS_OP_T, // transpose flag flipped on purpose
+                        transposeT2 ? CUBLAS_OP_N : CUBLAS_OP_T, // transpose flag flipped on purpose
+                        m,
+                        n,
+                        k,
+                        &alpha,
+                        t1.GetDevicePtr() + d * t1.GetShape().Dim0Dim1 + t1B * t1.BatchLength(),
+                        k,
+                        t2.GetDevicePtr() + d * t2.GetShape().Dim0Dim1 + t2B * t2.BatchLength(),
+                        n,
+                        &beta,
+                        output.GetDevicePtr() + d * output.GetShape().Dim0Dim1 + b * output.BatchLength(),
+                        n));
+
+                    const float* tPtr = output.GetDevicePtr() + d * output.GetShape().Dim0Dim1 + b * output.BatchLength();
+                    float alphaT = 1, betaT = 0;
+
+                    CUDA_CHECK(cublasSgeam(
+                        s_CublasHandle,
+                        CUBLAS_OP_T,
+                        CUBLAS_OP_N,
+                        output.Height(),
+                        output.Width(),
+                        &alphaT,
+                        tPtr,
+                        output.Width(),
+                        &betaT,
+                        tPtr,
+                        output.Height(),
+                        tPtr,
+                        output.Height()));
+                }
             }
         }
         cudaStreamSynchronize(0);
