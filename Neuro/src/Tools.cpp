@@ -1027,7 +1027,7 @@ namespace Neuro
         m_Stream.str("");
 
         if (m_ShowPercent)
-            m_Stream << right << setw(4) << (to_string((int)pct) + "% ");
+            m_Stream << right << setw(5) << (to_string((int)pct) + "% ");
 
         if (m_ShowBar && m_BarLength > 0)
         {

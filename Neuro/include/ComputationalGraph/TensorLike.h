@@ -37,6 +37,7 @@ namespace Neuro
         virtual bool IsVar() const { return false; }
         virtual bool IsConst() const { return false; }
 
+        virtual bool ShouldPreload() const { return true; }
         virtual void Preload();
         virtual void PreloadForGradient();
 

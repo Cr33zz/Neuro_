@@ -30,6 +30,8 @@ namespace Neuro
         // Existence of training operations in fetched list will cause network to automatically run in training mode
         virtual bool IsTrainingOp() const { return false; }
 
+        virtual bool ShouldPreload() const override { return m_OpMode == GPU; }
+
     protected:
         Operation(const vector<TensorLike*>& inputNodes, const string& name);
 

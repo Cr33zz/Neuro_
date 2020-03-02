@@ -27,9 +27,14 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void TensorLike::PreloadForGradient()
     {
-        Output().Prefetch();
+        if (ShouldPreload())
+            Output().Prefetch();
+
         for (auto inputNode : m_InputNodes)
-            inputNode->Output().Prefetch();
+        {
+            if (inputNode->ShouldPreload())
+                inputNode->Output().Prefetch();
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////
