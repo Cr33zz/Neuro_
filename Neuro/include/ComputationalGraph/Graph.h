@@ -37,6 +37,9 @@ namespace Neuro
         void IncrementStep();
         uint32_t CurrentStep() const { return m_CurrentStep; }
 
+        size_t PreloadSteps() const { return m_PreloadSteps; }
+        void PreloadSteps(size_t steps) { m_PreloadSteps = steps; }
+
         // Builds nodes visitation order for forward pass, returns true when order contains training operation
         bool BuildForwardOrder(const vector<TensorLike*>& endNodes, vector<TensorLike*>& order);
         // Builds nodes visitation order for backward/gradients computation pass
@@ -58,6 +61,7 @@ namespace Neuro
         vector<Constant*> m_Constants;
         vector<TensorLike*> m_Nodes;
         uint32_t m_CurrentStep = 0;
+        size_t m_PreloadSteps = 8;
 
         static Graph* s_Default;
     };
