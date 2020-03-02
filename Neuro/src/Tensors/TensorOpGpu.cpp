@@ -1350,7 +1350,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::MatMulGeneric(bool transposeT1, bool transposeT2, const Tensor& a, const Tensor& b, Tensor& output) const
+    void TensorOpGpu::MatMulGeneric(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
     {
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         int m = t1.Height(), n = t2.Width(), k = t1.Width();
@@ -1404,7 +1404,7 @@ namespace Neuro
                         output.GetDevicePtr() + d * output.GetShape().Dim0Dim1 + b * output.BatchLength(),
                         n));
 
-                    const float* tPtr = output.GetDevicePtr() + d * output.GetShape().Dim0Dim1 + b * output.BatchLength();
+                    float* tPtr = output.GetDevicePtr() + d * output.GetShape().Dim0Dim1 + b * output.BatchLength();
                     float alphaT = 1, betaT = 0;
 
                     CUDA_CHECK(cublasSgeam(
