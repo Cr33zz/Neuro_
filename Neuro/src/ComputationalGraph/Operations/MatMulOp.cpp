@@ -79,4 +79,66 @@ namespace Neuro
             m_TransTempA.TryDeviceRelease();
         }
     }
+
+    //////////////////////////////////////////////////////////////////////////
+    MatMulTransOp::MatMulTransOp(TensorLike* a, bool transposeA, TensorLike* b, bool transposeB, const string& name)
+        : Operation({ a, b }, name.empty() ? "matmul" : name), m_TransposeA(transposeA), m_TransposeB(transposeB)
+    {
+        UpdateOutputShape();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void MatMulTransOp::UpdateOutputShape()
+    {
+        const Shape& aShape = m_InputNodes[0]->GetShape();
+        const Shape& bShape = m_InputNodes[1]->GetShape();
+        NEURO_ASSERT(aShape.Width() == bShape.Height(), "");
+        NEURO_ASSERT(aShape.Depth() == bShape.Depth(), "Depths mismatch.");
+        m_Output.Resize(Shape(bShape.Width(), aShape.Height(), aShape.Depth(), max(aShape.Batch(), bShape.Batch())));
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void MatMulTransOp::ComputeInternal()
+    {
+        auto& a = *m_Inputs[0];
+        auto& b = *m_Inputs[1];
+
+        m_Output.ResizeBatch(max(a.Batch(), b.Batch()));
+        a.MatMul(m_TransposeA, b, m_TransposeB, m_Output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void MatMulTransOp::ComputeGradientInternal(const Tensor& grad)
+    {
+        auto& a = *m_Inputs[0];
+        auto& b = *m_Inputs[1];
+
+        if (m_InputNodes[0]->CareAboutGradient())
+        {
+            if (m_InputsGrads[0].Batch() == grad.Batch())
+                grad.MatMul(false, b, true, m_InputsGrads[0]);
+            else
+            {
+                Tensor tmp(Shape::From(m_InputsGrads[0].GetShape(), grad.Batch()));
+                tmp.TryDeviceAllocate(); // this is actually workspace
+                grad.MatMul(false, b, true, tmp);
+                tmp.Sum(BatchAxis, m_InputsGrads[0]);
+                tmp.TryDeviceRelease();
+            }
+        }
+
+        if (m_InputNodes[1]->CareAboutGradient())
+        {
+            if (m_InputsGrads[1].Batch() == grad.Batch())
+                a.MatMul(true, grad, false, m_InputsGrads[1]);
+            else
+            {
+                Tensor tmp(Shape::From(m_InputsGrads[1].GetShape(), grad.Batch()));
+                tmp.TryDeviceAllocate();
+                a.MatMul(true, grad, false, tmp);
+                tmp.Sum(BatchAxis, m_InputsGrads[1]);
+                tmp.TryDeviceRelease();
+            }
+        }
+    }
 }

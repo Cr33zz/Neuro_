@@ -185,8 +185,11 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::MatMul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
+    void TensorOpGpu::MatMul(const Tensor& t1, bool transposeT1, const Tensor& t2, bool transposeT2, Tensor& output) const
     {
+        NEURO_ASSERT(!transposeT1, "Not supported yet.");
+        NEURO_ASSERT(!transposeT2, "Not supported yet.");
+
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         t1.CopyToDevice();
         t2.CopyToDevice();

@@ -7,8 +7,8 @@ namespace Neuro
     class MatMulOp : public Operation
     {
     public:
-        MatMulOp(TensorLike* x1, TensorLike* x2, const string& name = "");
-
+        MatMulOp(TensorLike* a, TensorLike* b, const string& name = "");
+        
     protected:
         virtual void UpdateOutputShape() override;
         virtual void ComputeInternal() override;
@@ -21,8 +21,28 @@ namespace Neuro
         Tensor m_MulTempB;
     };
 
-    static Operation* matmul(TensorLike* x1, TensorLike* x2, const string& name = "")
+    class MatMulTransOp : public Operation
     {
-        return new MatMulOp(x1, x2, name);
+    public:
+        MatMulTransOp(TensorLike* a, bool transposeA, TensorLike* b, bool transposeB, const string& name = "");
+
+    protected:
+        virtual void UpdateOutputShape() override;
+        virtual void ComputeInternal() override;
+        virtual void ComputeGradientInternal(const Tensor& grad) override;
+
+    private:
+        bool m_TransposeA;
+        bool m_TransposeB;
+    };
+
+    static Operation* matmul(TensorLike* a, TensorLike* b, const string& name = "")
+    {
+        return new MatMulOp(a, b, name);
+    }
+
+    static Operation* matmul(TensorLike* a, bool transposeA, TensorLike* b, bool transposeB, const string& name = "")
+    {
+        return new MatMulTransOp(a, transposeA, b, transposeB, name);
     }
 }

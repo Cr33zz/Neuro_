@@ -81,10 +81,10 @@ namespace Neuro
 	}
 
     //////////////////////////////////////////////////////////////////////////
-	void TensorOpCpu::MatMul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
+	void TensorOpCpu::MatMul(const Tensor& t1, bool transposeT1, const Tensor& t2, bool transposeT2, Tensor& output) const
 	{
-        NEURO_ASSERT(!transposeT1, "");
-        NEURO_ASSERT(!transposeT2, "");
+        NEURO_ASSERT(!transposeT1, "Not supported yet.");
+        NEURO_ASSERT(!transposeT2, "Not supported yet.");
 		
 		t1.CopyToHost();
 		t2.CopyToHost();

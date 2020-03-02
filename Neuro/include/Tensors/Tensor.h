@@ -83,9 +83,8 @@ namespace Neuro
         // YUV -> RGB conversion is only valid if pixel values are in [0,1] for Y and [-0.5,0.5] for U and V
         Tensor YUVToRGB() const;
 	
-	private:
-        void MatMul(bool transposeT, const Tensor& t, Tensor& result) const;
-        Tensor MatMul(bool transposeT, const Tensor& t) const;
+	    void MatMul(bool transpose, const Tensor& t, bool transposeT, Tensor& result) const;
+        Tensor MatMul(bool transpose, const Tensor& t, bool transposeT) const;
 
 	public:
         void MatMul(const Tensor& t, Tensor& result) const;

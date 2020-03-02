@@ -18,7 +18,7 @@ namespace Neuro
         virtual void Zero(Tensor& input) const override;
         virtual void One(Tensor& input) const override;
         virtual void Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const override;
-        virtual void MatMul(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const override;
+        virtual void MatMul(const Tensor& t1, bool transposeT1, const Tensor& t2, bool transposeT2, Tensor& output) const override;
         virtual void Mul(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const override;
         virtual void Div(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const override;
         virtual void Mul(const Tensor& input, float v, Tensor& output) const override;

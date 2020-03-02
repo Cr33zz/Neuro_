@@ -436,34 +436,34 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-	void Tensor::MatMul(bool transposeT, const Tensor& t, Tensor& output) const
+	void Tensor::MatMul(bool transpose, const Tensor& t, bool transposeT, Tensor& output) const
 	{
         NEURO_ASSERT(!transposeT, "Fused tranpose and matmul not supported.");
         NEURO_ASSERT((!transposeT && Width() == t.Height()) || (transposeT && Width() == t.Width()), "");
 		NEURO_ASSERT(t.Depth() == Depth(), "Depths must match.");
         NEURO_ASSERT(output.Batch() == max(Batch(), t.Batch()), "Output batch size doesn't match maximum of input tensors' batch sizes.");
 
-		Op()->MatMul(false, transposeT, *this, t, output);
+		Op()->MatMul(*this, transpose, t, transposeT, output);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	Tensor Tensor::MatMul(bool transposeT, const Tensor& t) const
+	Tensor Tensor::MatMul(bool transpose, const Tensor& t, bool transposeT) const
 	{
 		Tensor result(Shape(transposeT ? t.m_Shape.Height() : t.m_Shape.Width(), Height(), Depth(), max(Batch(), t.Batch())));
-		MatMul(transposeT, t, result);
+		MatMul(transpose, t, transposeT, result);
 		return result;
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	void Tensor::MatMul(const Tensor& t, Tensor& result) const
 	{
-		MatMul(false, t, result);
+		MatMul(false, t, false, result);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::MatMul(const Tensor& t) const
 	{
-		return MatMul(false, t);
+		return MatMul(false, t, false);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
