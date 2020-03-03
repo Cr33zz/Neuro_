@@ -18,10 +18,12 @@ namespace Neuro
         output.OverrideHost();
         output.Zero();
 
-        int m = t1.Height(), n = t2.Width(), k = t1.Width();
-        int lda = transposeT1 ? m : k;
-        int ldb = transposeT2 ? k : n;
-        int ldc = n;
+        int m = transposeT1 ? t1.Width() : t1.Height();
+        int n = transposeT2 ? t2.Height() : t2.Width();
+        int k = transposeT1 ? t1.Height() : t1.Width();
+        int lda = t1.Width();
+        int ldb = t2.Width();
+        int ldc = m;
 
         float alpha = 1, beta = 0;
 
