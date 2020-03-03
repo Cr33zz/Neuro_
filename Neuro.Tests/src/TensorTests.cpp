@@ -1329,7 +1329,7 @@ namespace NeuroTests
             Assert::IsTrue(result.Equals(correct));
         }
 
-        TEST_METHOD(Image_Save_Load)
+        /*TEST_METHOD(Image_Save_Load)
         {
             Tensor t(Shape(50, 50, 3));
             t.FillWithRand(-1, 0, 255);
@@ -1338,7 +1338,7 @@ namespace NeuroTests
             Tensor t2 = LoadImage("test.bmp");
 
             Assert::IsTrue(t.Equals(t2, 0.01f));
-        }
+        }*/
 
         /*TEST_METHOD(Save_Load)
         {
