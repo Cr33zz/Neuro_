@@ -7,7 +7,7 @@ TensorLike* GramMatrix(TensorLike* features, uint32_t area, uint32_t depth, bool
     assert(features->GetShape().Batch() == 1);
 
     auto reshapedFeatures = reshape(features, Shape(area, depth));
-    auto gram = matmul(reshapedFeatures, transpose(reshapedFeatures), name);
+    auto gram = matmul(reshapedFeatures, false, reshapedFeatures, true, name);
 
     if (normalize)
         gram = div(gram, (float)reshapedFeatures->GetShape().Length, name + "_norm");
