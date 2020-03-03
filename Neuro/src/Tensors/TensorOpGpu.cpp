@@ -193,12 +193,14 @@ namespace Neuro
         output.OverrideDevice();
         output.Zero();
 
-        /*if (t1.Depth() == t2.Depth() && t1.Batch() == t2.Batch())
-            MatMulStridedBatched(transposeT1, transposeT2, t1, t2, output);
+        if (transposeT1 || transposeT2)
+            MatMulGeneric(t1, transposeT1, t2, transposeT2, output);
+        else if (t1.Depth() == t2.Depth() && t1.Batch() == t2.Batch())
+            MatMulStridedBatched(t1, t2, output);
         else if (t1.Depth() * output.Batch() > 48)
-            MatMulBatched(transposeT1, transposeT2, t1, t2, output);
-        else*/
-            MatMulGeneric(transposeT1, transposeT2, t1, t2, output);
+            MatMulBatched(t1, t2, output);
+        else
+            MatMulGeneric(t1, transposeT1, t2, transposeT2, output);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -1347,14 +1349,14 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::MatMulGeneric(bool transposeA, bool transposeB, const Tensor& a, const Tensor& b, Tensor& output) const
+    void TensorOpGpu::MatMulGeneric(const Tensor& a, bool transposeA, const Tensor& b, bool transposeB, Tensor& output) const
     {
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
 
         int m = a.Height(), n = b.Width(), k = a.Width();
         void* tmpOutputPtr = nullptr;
 
-        //if (transposeT1 || transposeT2)
+        if (transposeA || transposeB)
         {
             m = transposeA ? a.Width() : a.Height(); // height of output
             n = transposeB ? b.Height() : b.Width(); // width of output
@@ -1364,7 +1366,7 @@ namespace Neuro
 
         int lda = a.Width();
         int ldb = b.Width();
-        int ldc = transposeA ? a.Width() : a.Height(); // same as m
+        int ldc = m; // same as m
 
         float alpha = 1, beta = 0;
         float alphaT = 1, betaT = 0;
@@ -1374,10 +1376,6 @@ namespace Neuro
         // https://www.adityaagrawal.net/blog/deep_learning/row_column_major
         // because cublas operates on column-major matrices it sees our row-major matrices as if they were transposed
         // so any transposition we want to apply should be flipped and the result must be transposed as well
-        // i.e. 
-        // actual dimensions of t1, t2 and output:      3x5 * 4x3 = 4x5
-        // cuBLAS column-wise view:                     5x3 * 3x4 = invalid     
-        // A1 = A ^ T and B1 = B ^ T
 
         for (uint32_t batch = 0; batch < output.Batch(); ++batch)
         {
@@ -1386,26 +1384,26 @@ namespace Neuro
 
             for (uint32_t d = 0; d < a.Depth(); ++d)
             {
-                //if (!transposeT1 && !transposeT2)
-                //{
-                //    // a little trick to avoid transposition at the end
-                //    CUDA_CHECK(cublasSgemm_v2(
-                //        s_CublasHandle,
-                //        CUBLAS_OP_N,
-                //        CUBLAS_OP_N,
-                //        n,
-                //        m,
-                //        k,  // trick to convert row major to column major
-                //        &alpha,
-                //        t2.GetDevicePtr() + d * t2.GetShape().Dim0Dim1 + t2B * t2.BatchLength(),
-                //        n,
-                //        t1.GetDevicePtr() + d * t1.GetShape().Dim0Dim1 + t1B * t1.BatchLength(),
-                //        k,
-                //        &beta,
-                //        output.GetDevicePtr() + d * output.GetShape().Dim0Dim1 + b * output.BatchLength(),
-                //        n));
-                //}
-                //else
+                if (!transposeA && !transposeB)
+                {
+                    // a little trick to avoid transposition at the end
+                    CUDA_CHECK(cublasSgemm_v2(
+                        s_CublasHandle,
+                        CUBLAS_OP_N,
+                        CUBLAS_OP_N,
+                        n,
+                        m,
+                        k,
+                        &alpha,
+                        b.GetDevicePtr() + d * b.GetShape().Dim0Dim1 + t2B * b.BatchLength(),
+                        n,
+                        a.GetDevicePtr() + d * a.GetShape().Dim0Dim1 + t1B * a.BatchLength(),
+                        k,
+                        &beta,
+                        output.GetDevicePtr() + d * output.GetShape().Dim0Dim1 + batch * output.BatchLength(),
+                        n));
+                }
+                else
                 {
                     CUDA_CHECK(cublasSgemm_v2(
                         s_CublasHandle,
@@ -1421,7 +1419,6 @@ namespace Neuro
                         ldb,
                         &beta,
                         (float*)tmpOutputPtr,
-                        //output.GetDevicePtr() + d * output.GetShape().Dim0Dim1 + batch * output.BatchLength(),
                         ldc));
 
                     CUDA_CHECK(cublasSgeam(
@@ -1448,7 +1445,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::MatMulBatched(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
+    void TensorOpGpu::MatMulBatched(const Tensor& t1, const Tensor& t2, Tensor& output) const
     {
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         int m = t1.Height(), n = t2.Width(), k = t1.Width();
@@ -1487,8 +1484,8 @@ namespace Neuro
 
         CUDA_CHECK(cublasSgemmBatched(
             s_CublasHandle,
-            transposeT2 ? CUBLAS_OP_T : CUBLAS_OP_N,
-            transposeT1 ? CUBLAS_OP_T : CUBLAS_OP_N,
+            CUBLAS_OP_N,
+            CUBLAS_OP_N,
             n,
             m,
             k,  // trick to convert row major to column major
@@ -1509,7 +1506,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::MatMulStridedBatched(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
+    void TensorOpGpu::MatMulStridedBatched(const Tensor& t1, const Tensor& t2, Tensor& output) const
     {
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
         int m = t1.Height(), n = t2.Width(), k = t1.Width();
@@ -1522,8 +1519,8 @@ namespace Neuro
 
         CUDA_CHECK(cublasSgemmStridedBatched(
             s_CublasHandle,
-            transposeT2 ? CUBLAS_OP_T : CUBLAS_OP_N,
-            transposeT1 ? CUBLAS_OP_T : CUBLAS_OP_N,
+            CUBLAS_OP_N,
+            CUBLAS_OP_N,
             n,
             m,
             k,  // trick to convert row major to column major

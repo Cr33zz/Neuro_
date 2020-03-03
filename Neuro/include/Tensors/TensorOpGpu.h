@@ -81,9 +81,9 @@ namespace Neuro
         void Activation(const cudnnActivationMode_t& activationMode, const Tensor& input, Tensor& output, float coeff) const;
         void ActivationGradient(const cudnnActivationMode_t& activationMode, const Tensor& output, const Tensor& outputGradient, Tensor& inputGradient, float coeff) const;
 
-        void MatMulGeneric(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const;
-        void MatMulBatched(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const;
-        void MatMulStridedBatched(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const;
+        void MatMulGeneric(const Tensor& t1, bool transposeT1, const Tensor& t2, bool transposeT2, Tensor& output) const;
+        void MatMulBatched(const Tensor& t1, const Tensor& t2, Tensor& output) const;
+        void MatMulStridedBatched(const Tensor& t1, const Tensor& t2, Tensor& output) const;
 
         static void DeallocateWorkspace(void* ptr);
 
