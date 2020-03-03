@@ -354,6 +354,62 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
+        TEST_METHOD(MatMul_TT_CompareWithCpuResult)
+        {
+            Tensor a = Tensor(Shape(3, 5)).FillWithRange().Transpose();
+            Tensor b = Tensor(Shape(4, 3)).FillWithRange(2).Transpose();
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r = a.MatMul(true, b, true);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = a.MatMul(true, b, true);)
+
+            Assert::IsTrue(r.Equals(r2, 0.0001f));
+        }
+
+        TEST_METHOD(MatMul_TN_CompareWithCpuResult)
+        {
+            Tensor a = Tensor(Shape(3, 5)).FillWithRange().Transpose();
+            Tensor b = Tensor(Shape(4, 3)).FillWithRange(2);
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r = a.MatMul(true, b, false);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = a.MatMul(true, b, false);)
+
+            Assert::IsTrue(r.Equals(r2, 0.0001f));
+        }
+
+        TEST_METHOD(MatMul_NT_CompareWithCpuResult)
+        {
+            Tensor a = Tensor(Shape(3, 5)).FillWithRange();
+            Tensor b = Tensor(Shape(4, 3)).FillWithRange(2).Transpose();
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r = a.MatMul(false, b, true);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = a.MatMul(false, b, true);)
+
+            Assert::IsTrue(r.Equals(r2, 0.0001f));
+        }
+
+        TEST_METHOD(MatMul_NN_CompareWithCpuResult)
+        {
+            Tensor a = Tensor(Shape(3, 5)).FillWithRange();
+            Tensor b = Tensor(Shape(4, 3)).FillWithRange(2);
+
+            Tensor::SetForcedOpMode(CPU);
+            NEURO_PROFILE("CPU", Tensor r = a.MatMul(false, b, false);)
+
+            Tensor::SetForcedOpMode(GPU);
+            NEURO_PROFILE("GPU", Tensor r2 = a.MatMul(false, b, false);)
+
+            Assert::IsTrue(r.Equals(r2, 0.0001f));
+        }
+
         TEST_METHOD(MatMul_CompareWithCpuResult)
         {
             Tensor t1(Shape(82, 40, 3, 5)); t1.FillWithRand();

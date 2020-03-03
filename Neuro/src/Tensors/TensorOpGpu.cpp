@@ -1347,19 +1347,31 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void TensorOpGpu::MatMulGeneric(bool transposeT1, bool transposeT2, const Tensor& t1, const Tensor& t2, Tensor& output) const
+    void TensorOpGpu::MatMulGeneric(bool transposeA, bool transposeB, const Tensor& a, const Tensor& b, Tensor& output) const
     {
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
-        int m = t1.Height(), n = t2.Width(), k = t1.Width();
+
+        int m = a.Height(), n = b.Width(), k = a.Width();
+        void* tmpOutputPtr = nullptr;
+
         //if (transposeT1 || transposeT2)
         {
-            m = transposeT1 ? t1.Width() : t1.Height(); // height of output
-            n = transposeT2 ? t2.Height() : t2.Width(); // width of output
-            k = transposeT1 ? t1.Height() : t1.Width(); // shared dimension of t1 and t2
+            m = transposeA ? a.Width() : a.Height(); // height of output
+            n = transposeB ? b.Height() : b.Width(); // width of output
+            k = transposeA ? a.Height() : a.Width(); // shared dimension of t1 and t2
+            DeviceMemoryManager::Default().Allocate(&tmpOutputPtr, output.GetShape().Dim0Dim1, "tmp_mult_mat");
         }
-        float alpha = 1, beta = 0;
 
+        int lda = a.Width();
+        int ldb = b.Width();
+        int ldc = transposeA ? a.Width() : a.Height(); // same as m
+
+        float alpha = 1, beta = 0;
+        float alphaT = 1, betaT = 0;
+
+        // https://petewarden.com/2015/10/25/an-engineers-guide-to-gemm/
         // https://stackoverflow.com/questions/14595750/transpose-matrix-multiplication-in-cublas-howto
+        // https://www.adityaagrawal.net/blog/deep_learning/row_column_major
         // because cublas operates on column-major matrices it sees our row-major matrices as if they were transposed
         // so any transposition we want to apply should be flipped and the result must be transposed as well
         // i.e. 
@@ -1367,12 +1379,12 @@ namespace Neuro
         // cuBLAS column-wise view:                     5x3 * 3x4 = invalid     
         // A1 = A ^ T and B1 = B ^ T
 
-        for (uint32_t b = 0; b < output.Batch(); ++b)
+        for (uint32_t batch = 0; batch < output.Batch(); ++batch)
         {
-            uint32_t t1B = min(b, t1.Batch() - 1);
-            uint32_t t2B = min(b, t2.Batch() - 1);
+            uint32_t t1B = min(batch, a.Batch() - 1);
+            uint32_t t2B = min(batch, b.Batch() - 1);
 
-            for (uint32_t d = 0; d < t1.Depth(); ++d)
+            for (uint32_t d = 0; d < a.Depth(); ++d)
             {
                 //if (!transposeT1 && !transposeT2)
                 //{
@@ -1397,40 +1409,41 @@ namespace Neuro
                 {
                     CUDA_CHECK(cublasSgemm_v2(
                         s_CublasHandle,
-                        transposeT1 ? CUBLAS_OP_N : CUBLAS_OP_T, // transpose flag flipped on purpose (matrixes are transposed by default)
-                        transposeT2 ? CUBLAS_OP_N : CUBLAS_OP_T, // transpose flag flipped on purpose
+                        transposeA ? CUBLAS_OP_N : CUBLAS_OP_T, // transpose flag flipped on purpose (matrixes are transposed by default)
+                        transposeB ? CUBLAS_OP_N : CUBLAS_OP_T, // transpose flag flipped on purpose
                         m,
                         n,
                         k,
                         &alpha,
-                        t1.GetDevicePtr() + d * t1.GetShape().Dim0Dim1 + t1B * t1.BatchLength(),
-                        t1.Width(),
-                        t2.GetDevicePtr() + d * t2.GetShape().Dim0Dim1 + t2B * t2.BatchLength(),
-                        t2.Width(),
+                        a.GetDevicePtr() + d * a.GetShape().Dim0Dim1 + t1B * a.BatchLength(),
+                        lda,
+                        b.GetDevicePtr() + d * b.GetShape().Dim0Dim1 + t2B * b.BatchLength(),
+                        ldb,
                         &beta,
-                        output.GetDevicePtr() + d * output.GetShape().Dim0Dim1 + b * output.BatchLength(),
-                        output.Height()));
-
-                    float* tPtr = output.GetDevicePtr() + d * output.GetShape().Dim0Dim1 + b * output.BatchLength();
-                    float alphaT = 1, betaT = 0;
+                        (float*)tmpOutputPtr,
+                        //output.GetDevicePtr() + d * output.GetShape().Dim0Dim1 + batch * output.BatchLength(),
+                        ldc));
 
                     CUDA_CHECK(cublasSgeam(
                         s_CublasHandle,
                         CUBLAS_OP_T,
                         CUBLAS_OP_N,
-                        output.Height(),
-                        output.Width(),
+                        n,
+                        m,
                         &alphaT,
-                        tPtr,
-                        output.Width(),
+                        (float*)tmpOutputPtr,
+                        m,
                         &betaT,
-                        tPtr,
+                        (float*)tmpOutputPtr,
                         output.Height(),
-                        tPtr,
-                        output.Width()));
+                        output.GetDevicePtr() + d * output.GetShape().Dim0Dim1 + batch * output.BatchLength(),
+                        n));
                 }
             }
         }
+        if (tmpOutputPtr)
+            CUDA_CHECK(cudaLaunchHostFunc(0, DeallocateWorkspace, tmpOutputPtr));
+
         cudaStreamSynchronize(0);
     }
 

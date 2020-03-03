@@ -451,7 +451,7 @@ namespace Neuro
 	//////////////////////////////////////////////////////////////////////////
 	Tensor Tensor::MatMul(bool transpose, const Tensor& t, bool transposeT) const
 	{
-		Tensor result(Shape(transposeT ? t.m_Shape.Height() : t.m_Shape.Width(), Height(), Depth(), max(Batch(), t.Batch())));
+		Tensor result(Shape(transposeT ? t.m_Shape.Height() : t.m_Shape.Width(), transpose ? Width() : Height(), Depth(), max(Batch(), t.Batch())));
 		MatMul(transpose, t, transposeT, result);
 		return result;
 	}

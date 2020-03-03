@@ -236,6 +236,58 @@ namespace NeuroTests
                 Assert::AreEqual((double)result.GetFlat(i), (double)t1.GetFlat(i) * t2.GetFlat(i), 1e-5);
         }
 
+        TEST_METHOD(MatMul_TT)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            Tensor a = Tensor(Shape(3, 5)).FillWithRange().Transpose();
+            Tensor b = Tensor(Shape(4, 3)).FillWithRange(2).Transpose();
+
+            Tensor c = a.MatMul(true, b, true);
+            Tensor correct = Tensor({ 26, 29, 32, 35, 80, 92, 104, 116, 134, 155, 176, 197, 188, 218, 248, 278, 242, 281, 320, 359 }, Shape(4, 5));
+
+            Assert::IsTrue(c.Equals(correct));
+        }
+
+        TEST_METHOD(MatMul_TN)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            Tensor a = Tensor(Shape(3, 5)).FillWithRange().Transpose();
+            Tensor b = Tensor(Shape(4, 3)).FillWithRange(2);
+
+            Tensor c = a.MatMul(true, b, false);
+            Tensor correct = Tensor({ 26, 29, 32, 35, 80, 92, 104, 116, 134, 155, 176, 197, 188, 218, 248, 278, 242, 281, 320, 359 }, Shape(4, 5));
+
+            Assert::IsTrue(c.Equals(correct));
+        }
+
+        TEST_METHOD(MatMul_NT)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            Tensor a = Tensor(Shape(3, 5)).FillWithRange();
+            Tensor b = Tensor(Shape(4, 3)).FillWithRange(2).Transpose();
+
+            Tensor c = a.MatMul(false, b, true);
+            Tensor correct = Tensor({ 26, 29, 32, 35, 80, 92, 104, 116, 134, 155, 176, 197, 188, 218, 248, 278, 242, 281, 320, 359 }, Shape(4, 5));
+
+            Assert::IsTrue(c.Equals(correct));
+        }
+
+        TEST_METHOD(MatMul_NN)
+        {
+            Tensor::SetDefaultOpMode(EOpMode::CPU);
+
+            Tensor a = Tensor(Shape(3, 5)).FillWithRange();
+            Tensor b = Tensor(Shape(4, 3)).FillWithRange(2);
+
+            Tensor c = a.MatMul(false, b, false);
+            Tensor correct = Tensor({ 26, 29, 32, 35, 80, 92, 104, 116, 134, 155, 176, 197, 188, 218, 248, 278, 242, 281, 320, 359 }, Shape(4, 5));
+
+            Assert::IsTrue(c.Equals(correct));
+        }
+
         TEST_METHOD(MatMul_1Batch)
         {
             Tensor::SetDefaultOpMode(EOpMode::CPU);
