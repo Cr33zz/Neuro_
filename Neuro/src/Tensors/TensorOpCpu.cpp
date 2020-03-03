@@ -88,8 +88,8 @@ namespace Neuro
         output.OverrideHost();
 		output.Zero();
 
-        Tensor& finalA = const_cast<Tensor&>(a);
-        Tensor& finalB = const_cast<Tensor&>(b);
+        const Tensor* finalA = &a;
+        const Tensor* finalB = &b;
 
         Tensor transpA;
         Tensor transpB;
@@ -98,31 +98,31 @@ namespace Neuro
         if (transposeA)
         {
             transpA = a.Transpose();
-            finalA = transpA;
+            finalA = &transpA;
         }
 
         if (transposeB)
         {
             transpB = b.Transpose();
-            finalB = transpB;
+            finalB = &transpB;
         }
 
-        uint32_t N = finalA.Height();
-        uint32_t M = finalB.Width();
-        uint32_t K = finalA.Width();
+        uint32_t N = finalA->Height();
+        uint32_t M = finalB->Width();
+        uint32_t K = finalA->Width();
 
         #pragma omp parallel for
         for (int n = 0; n < (int)output.Batch(); ++n)
 		{
-            uint32_t t1N = min((uint32_t)n, finalA.Batch() - 1);
-            uint32_t t2N = min((uint32_t)n, finalB.Batch() - 1);
+            uint32_t t1N = min((uint32_t)n, finalA->Batch() - 1);
+            uint32_t t2N = min((uint32_t)n, finalB->Batch() - 1);
 
             #pragma omp parallel for
-			for (int d = 0; d < (int)finalA.Depth(); ++d)
+			for (int d = 0; d < (int)finalA->Depth(); ++d)
 			for (uint32_t i = 0; i < N; ++i)
 			for (uint32_t j = 0; j < M; ++j)
 			for (uint32_t k = 0; k < K; ++k)
-                output(j, i, (uint32_t)d, (uint32_t)n) += finalA(k, i, (uint32_t)d, t1N) * finalB(j, k, (uint32_t)d, t2N);
+                output(j, i, (uint32_t)d, (uint32_t)n) += (*finalA)(k, i, (uint32_t)d, t1N) * (*finalB)(j, k, (uint32_t)d, t2N);
 		}
 	}
 

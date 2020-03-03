@@ -23,7 +23,7 @@ namespace Neuro
         int k = transposeT1 ? t1.Height() : t1.Width();
         int lda = t1.Width();
         int ldb = t2.Width();
-        int ldc = m;
+        int ldc = output.Width();
 
         float alpha = 1, beta = 0;
 
