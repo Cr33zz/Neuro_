@@ -438,8 +438,10 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
 	void Tensor::MatMul(bool transpose, const Tensor& t, bool transposeT, Tensor& output) const
 	{
-        NEURO_ASSERT(!transposeT, "Fused tranpose and matmul not supported.");
-        NEURO_ASSERT((!transposeT && Width() == t.Height()) || (transposeT && Width() == t.Width()), "");
+        NEURO_ASSERT((!transpose && !transposeT && Width() == t.Height()) ||
+                     (transpose && !transposeT && Height() == t.Height()) ||
+                     (!transpose && transposeT && Width() == t.Width()) ||
+                     (transpose && transposeT && Height() == t.Width()), "Matrices width/height mismatch");
 		NEURO_ASSERT(t.Depth() == Depth(), "Depths must match.");
         NEURO_ASSERT(output.Batch() == max(Batch(), t.Batch()), "Output batch size doesn't match maximum of input tensors' batch sizes.");
 

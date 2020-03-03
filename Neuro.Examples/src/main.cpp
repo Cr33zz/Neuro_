@@ -17,6 +17,17 @@
 
 int main(int argc, char *argv[])
 {
+    Tensor::SetForcedOpMode(GPU);
+
+    Tensor a = Tensor(Shape(3, 5)).FillWithRange();
+    Tensor b = Tensor(Shape(3, 4)).FillWithRange(2).Transpose();
+
+    Tensor c = a.MatMul(false, b, false);
+
+    Tensor r = Tensor({ 26, 29, 32, 35, 80, 92, 104, 116, 134, 155, 176, 197, 188, 218, 248, 278, 242, 281, 320, 359 }, Shape(4, 5));
+
+
+
     Args args = Args(argc, argv);
 
     //ComputationalGraph().Run();
