@@ -33,7 +33,12 @@ namespace Neuro
             m_InputsGradsPtrs[i] = &m_InputsGrads[i];
         }
 
-        m_Output.SetStorageType(ST_DeviceRefCounted|ST_RefCounted|ST_Offloadable);
+        int storageFlags = ST_RefCounted;
+
+        if (m_OpMode == GPU)
+            storageFlags |= ST_DeviceRefCounted|ST_Offloadable;
+
+        m_Output.SetStorageType(storageFlags);
 
         Graph::Default()->AddOperation(this);
     }

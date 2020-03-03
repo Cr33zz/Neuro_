@@ -656,6 +656,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Storage::ResetDeviceRef(size_t n) const
     {
+        if (!(m_Type & ST_DeviceRefCounted))
+            return;
+
         STORAGE_DEBUG_INFO("Device ref count reset '%s' to %zu.\n", m_Name.c_str(), n);
         m_DeviceDataRefCount = (int)n;
     }
@@ -663,6 +666,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Storage::IncDeviceRef(size_t n) const
     {
+        if (!(m_Type & ST_DeviceRefCounted))
+            return;
+
         NEURO_ASSERT(m_Type & ST_DeviceRefCounted, "Increasing ref count for non-refcounted storage.");
         m_DeviceDataRefCount += (int)n;
         STORAGE_DEBUG_INFO("Device ref count increased '%s' by %zu <<< currently %d.\n", m_Name.c_str(), n, m_DeviceDataRefCount);
@@ -671,6 +677,9 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     void Storage::DecDeviceRef(size_t n)
     {
+        if (!(m_Type & ST_DeviceRefCounted))
+            return;
+
         NEURO_ASSERT(m_Type & ST_DeviceRefCounted, "Decreasing ref count for non-refcounted storage.");
         NEURO_ASSERT(n <= m_DeviceDataRefCount, "Over-decresing ref count.");
         m_DeviceDataRefCount -= (int)n;

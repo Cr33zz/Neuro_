@@ -97,7 +97,14 @@ namespace Neuro
                      (!m_TransposeA && m_TransposeB && aShape.Width() == bShape.Width()) ||
                      (m_TransposeA && m_TransposeB && aShape.Height() == bShape.Width()), "Matrices width/height mismatch");
         NEURO_ASSERT(aShape.Depth() == bShape.Depth(), "Depths mismatch.");
-        m_Output.Resize(Shape(bShape.Width(), aShape.Height(), aShape.Depth(), max(aShape.Batch(), bShape.Batch())));
+        if (!m_TransposeA && !m_TransposeB)
+            m_Output.Resize(Shape(bShape.Width(), aShape.Height(), aShape.Depth(), max(aShape.Batch(), bShape.Batch())));
+        else if (m_TransposeA && !m_TransposeB)
+            m_Output.Resize(Shape(bShape.Width(), aShape.Width(), aShape.Depth(), max(aShape.Batch(), bShape.Batch())));
+        else if (!m_TransposeA && m_TransposeB)
+            m_Output.Resize(Shape(bShape.Height(), aShape.Height(), aShape.Depth(), max(aShape.Batch(), bShape.Batch())));
+        else if (m_TransposeA && m_TransposeB)
+            m_Output.Resize(Shape(bShape.Height(), aShape.Width(), aShape.Depth(), max(aShape.Batch(), bShape.Batch())));
     }
 
     //////////////////////////////////////////////////////////////////////////
