@@ -32,7 +32,7 @@ namespace Neuro
 
         for (auto inputNode : m_InputNodes)
         {
-            if (inputNode->ShouldPreload())
+            if (ShouldPreload())
                 inputNode->Output().Prefetch();
         }
     }
