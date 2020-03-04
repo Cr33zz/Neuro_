@@ -110,6 +110,8 @@ namespace Neuro
         size_t m_AllocatedMemSize = 0;
         size_t m_AllocatedMemPeakSize = 0;
         vector<void*> m_ScheduledDeallocations;
+        int m_MinSizeForDirectAllocation = -1;
+        vector<void*> m_DirectAlocations;
 
         mutex m_AllocFreeMtx;
         mutex m_ScheduledFreeMtx;

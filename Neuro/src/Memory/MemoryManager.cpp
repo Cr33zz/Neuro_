@@ -90,6 +90,13 @@ namespace Neuro
 
         unique_lock<mutex> allocFreeLocker(m_AllocFreeMtx);
 
+        if (m_MinSizeForDirectAllocation > 0 && size >= m_MinSizeForDirectAllocation)
+        {
+            InternalAllocate(ptr, size);
+            m_DirectAlocations.push_back(*ptr);
+            return MEM_STATUS_SUCCESS;
+        }
+
         size = ceilInt(size, m_AllocGranularity);
 
         // Find the best fit.
@@ -159,6 +166,17 @@ namespace Neuro
             return MEM_STATUS_SUCCESS;
 
         unique_lock<mutex> allocFreeLocker(m_AllocFreeMtx);
+
+        if (m_MinSizeForDirectAllocation > 0)
+        {
+            auto directAllocIt = find(m_DirectAlocations.begin(), m_DirectAlocations.end(), ptr);
+            if (directAllocIt != m_DirectAlocations.end())
+            {
+                InternalFree(ptr);
+                m_DirectAlocations.erase(directAllocIt);
+                return MEM_STATUS_SUCCESS;
+            }
+        }
 
         // Find the node in the list of used blocks.
         Block* curr = m_UsedBlocks, *prev = nullptr;
