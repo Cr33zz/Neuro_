@@ -25,6 +25,9 @@ namespace Neuro
         MEM_FLAGS_CANNOT_GROW = 1,   /// Prevent the manager from growing its memory consumption.
     };
 
+    #define KB_TO_B(x) (x * 1024)
+    #define MB_TO_B(x) (x * 1024 * 1024)
+
     // A node in the linked list of memory blocks
     class Block
     {
@@ -73,6 +76,9 @@ namespace Neuro
         EMemStatus Allocate(void** ptr, size_t size, const string& annotation = "");
         EMemStatus ScheduleFree(void* ptr);
         EMemStatus Free(void* ptr);
+
+        void MinSizeForDirectAllocation(int size) { m_MinSizeForDirectAllocation = size; }
+        int MinSizeForDirectAllocation() const { return m_MinSizeForDirectAllocation; }
 
         EMemStatus DumpMemoryState(const string& filename) const;
         EMemStatus DumpMemoryState(FILE* file) const;
