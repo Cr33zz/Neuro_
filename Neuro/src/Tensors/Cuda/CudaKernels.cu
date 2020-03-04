@@ -630,6 +630,20 @@ __global__ void map(int inputLen, const float* __restrict input, F f, float* __r
         output[i] = f(input[i]);
 }
 
+__global__ void fillSymmetric(int inputLen, float* __restrict input, int width)
+{
+    for (int i = blockIdx.x * blockDim.x + threadIdx.x; i < inputLen; i += gridDim.x * blockDim.x)
+    {
+        int w = i % width;
+        int h = i / width;
+
+        if (w < (h + 1))
+            continue;
+
+        input[i] = input[w * width + h];
+    }
+}
+
 namespace Neuro
 {
     void CudaKernels::ExtractSubTensor2D(const dim3& blocks, const dim3& threads, int outputLen, const float* inputDev, int inputStride1, int inputStride2, int inputStride3, int widthOffset, int heightOffset, float* __restrict outputDev, int outputStride1, int outputStride2, int outputStride3)
@@ -797,5 +811,10 @@ namespace Neuro
     void CudaKernels::Transpose(const dim3& blocks, const dim3& threads, int inputLen, const float* inputDev, int axis0, int axis1, int axis2, int axis3, int stride0, int stride1, int stride2, int stride3, float* outputDev, int outputStride1, int outputStride2, int outputStride3)
     {
         transpose<<<blocks, threads>>>(inputLen, inputDev, axis0, axis1, axis2, axis3, stride0, stride1, stride2, stride3, outputDev, outputStride1, outputStride2, outputStride3);
+    }
+
+    void CudaKernels::FillSymmetric(const dim3& blocks, const dim3& threads, int inputLen, float* inputDev, int width)
+    {
+        fillSymmetric<<<blocks, threads>>>(inputLen, inputDev, width);
     }
 }

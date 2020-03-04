@@ -62,9 +62,12 @@ namespace Neuro
         int n = transpose ? t.Width() : t.Height();
         int k = transpose ? t.Height() : t.Width();
         int lda = t.Width();
-        int ldc = output.Width();
+        int ldc = n;
 
         float alpha = 1, beta = 0;
+
+        uint32_t outWidth = output.Width();
+        float* outVals = output.Values();
 
         for (uint32_t b = 0; b < t.Batch(); ++b)
         {
@@ -72,7 +75,7 @@ namespace Neuro
             {
                 cblas_ssyrk(
                     CblasRowMajor,
-                    CblasUpper,
+                    CblasLower,
                     transpose ? CblasTrans : CblasNoTrans,
                     n,
                     k,
@@ -82,6 +85,13 @@ namespace Neuro
                     beta,
                     output.Values() + d * output.GetShape().Dim0Dim1 + b * output.BatchLength(),
                     ldc);
+
+                uint32_t offset = d * t.GetShape().Dim0Dim1 + b * t.BatchLength();
+
+                #pragma omp parallel for
+                for (int h = 0; h < (int)output.Height(); ++h)
+                for (uint32_t w = h + 1; w < outWidth; ++w)
+                    outVals[offset + (uint32_t)h * outWidth + w] = outVals[offset + w * outWidth + (uint32_t)h];
             }
         }
     }
