@@ -22,7 +22,7 @@ namespace Neuro
 
         virtual bool CareAboutGradient() const override { return m_CareAboutGradient; }
         virtual void RefreshCareAboutGradient() override;
-        virtual void OutputConsumed() override;
+        virtual void OutputOnDeviceConsumed() override;
         virtual void InputGradConsumed(TensorLike* inputNode) override;
         
         virtual bool ForceAllocInputGradNode(size_t index) const { return false; }
@@ -31,6 +31,7 @@ namespace Neuro
         virtual bool IsTrainingOp() const { return false; }
 
         virtual bool ShouldPreload() const override { return m_OpMode == GPU; }
+        EOpMode OpMode() const { return m_OpMode; }
 
     protected:
         Operation(const vector<TensorLike*>& inputNodes, const string& name);

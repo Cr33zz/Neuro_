@@ -48,7 +48,7 @@ namespace Neuro
 
         virtual bool CareAboutGradient() const;
         virtual void RefreshCareAboutGradient() {}
-        virtual void OutputConsumed() {}
+        virtual void OutputOnDeviceConsumed() {}
         virtual void InputGradConsumed(TensorLike* inputNode) {}
 
         // In most cases pre-loading nodes which don't care about gradient is pointless

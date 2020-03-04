@@ -55,6 +55,7 @@ namespace Neuro
     //////////////////////////////////////////////////////////////////////////
     const Tensor& Operation::Compute(bool training)
     {
+        EOpMode oldMode = Tensor::ActiveOp()->OpMode();
         Tensor::SetForcedOpMode(m_OpMode);
 
         if (m_Output.TryDeviceAllocate())
@@ -69,12 +70,19 @@ namespace Neuro
 
         ComputeInternal();
 
+        // reset the device ref count for all consumers are working in non-GPU mode we so it gets a chance to be deallocated as soon as it's offloaded
+        for (auto consumer : m_Consumers)
+        {
+            if (consumer->IsOp() && static_cast<Operation*>(consumer)->OpMode() != GPU)
+                OutputOnDeviceConsumed();
+        }
+
         m_LastComputeStep = m_Graph->CurrentStep();
         
         for (auto inputNode : m_InputNodes)
         {            
-            if (!m_InputsManuallyConsumed)
-                inputNode->OutputConsumed();
+            if (!m_InputsManuallyConsumed && OpMode() == GPU)
+                inputNode->OutputOnDeviceConsumed();
         }
 
         bool anyConsumerCareAboutGradient = false;
@@ -84,12 +92,16 @@ namespace Neuro
         // operations not participating in gradient computation offload is not necessary, it can be simply deallocated when consumed
         if (m_AlwaysOffload || m_Fetched || (m_Training && anyConsumerCareAboutGradient))
             m_Output.Offload(m_AlwaysOffload || m_Fetched); // at this point output won't change so start offloading it, it will be released when all consumers used it
+
+        Tensor::SetForcedOpMode(oldMode);
+
         return m_Output;
     }
 
     //////////////////////////////////////////////////////////////////////////
     const vector<Tensor*>& Operation::ComputeGradient(const Tensor& grad)
     {
+        EOpMode oldMode = Tensor::ActiveOp()->OpMode();
         Tensor::SetForcedOpMode(m_OpMode);
 
         for (size_t i = 0; i < m_InputsGrads.size(); ++i)
@@ -103,6 +115,8 @@ namespace Neuro
         }
 
         ComputeGradientInternal(grad);
+
+        Tensor::SetForcedOpMode(oldMode);
 
         return m_InputsGradsPtrs;
     }
@@ -124,7 +138,7 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void Operation::OutputConsumed()
+    void Operation::OutputOnDeviceConsumed()
     {
         m_Output.DecDeviceRef();
     }
