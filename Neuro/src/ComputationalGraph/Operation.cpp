@@ -70,13 +70,6 @@ namespace Neuro
 
         ComputeInternal();
 
-        // reset the device ref count for all consumers are working in non-GPU mode we so it gets a chance to be deallocated as soon as it's offloaded
-        for (auto consumer : m_Consumers)
-        {
-            if (consumer->IsOp() && static_cast<Operation*>(consumer)->OpMode() != GPU)
-                OutputOnDeviceConsumed();
-        }
-
         m_LastComputeStep = m_Graph->CurrentStep();
         
         for (auto inputNode : m_InputNodes)
@@ -92,6 +85,13 @@ namespace Neuro
         // operations not participating in gradient computation offload is not necessary, it can be simply deallocated when consumed
         if (m_AlwaysOffload || m_Fetched || (m_Training && anyConsumerCareAboutGradient))
             m_Output.Offload(m_AlwaysOffload || m_Fetched); // at this point output won't change so start offloading it, it will be released when all consumers used it
+
+        // reset the device ref count for all consumers working in non-GPU mode we so it gets a chance to be deallocated as soon as it's offloaded
+        for (auto consumer : m_Consumers)
+        {
+            if (consumer->IsOp() && static_cast<Operation*>(consumer)->OpMode() != GPU)
+                OutputOnDeviceConsumed();
+        }
 
         Tensor::SetForcedOpMode(oldMode);
 
