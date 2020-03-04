@@ -126,28 +126,48 @@ namespace Neuro
         if (m_InputNodes[0]->CareAboutGradient())
         {
             if (m_InputsGrads[0].Batch() == grad.Batch())
-                grad.MatMul(false, b, true, m_InputsGrads[0]);
+            {
+                if (m_TransposeA)
+                {
+                    auto tmp = grad.MatMul(false, b, !m_TransposeB);
+                    tmp.Transpose(m_InputsGrads[0]);
+                }
+                else
+                    grad.MatMul(false, b, !m_TransposeB, m_InputsGrads[0]);
+            }
             else
             {
-                Tensor tmp(Shape::From(m_InputsGrads[0].GetShape(), grad.Batch()));
-                tmp.TryDeviceAllocate(); // this is actually workspace
-                grad.MatMul(false, b, true, tmp);
+                //Tensor tmp(Shape::From(m_InputsGrads[0].GetShape(), grad.Batch()));
+                //tmp.TryDeviceAllocate(); // this is actually workspace
+                auto tmp = grad.MatMul(false, b, !m_TransposeB);
+                if (m_TransposeA)
+                    tmp = tmp.Transpose();
                 tmp.Sum(BatchAxis, m_InputsGrads[0]);
-                tmp.TryDeviceRelease();
+                //tmp.TryDeviceRelease();
             }
         }
 
         if (m_InputNodes[1]->CareAboutGradient())
         {
             if (m_InputsGrads[1].Batch() == grad.Batch())
-                a.MatMul(true, grad, false, m_InputsGrads[1]);
+            {
+                if (m_TransposeB)
+                {
+                    auto tmp = a.MatMul(!m_TransposeA, grad, false);
+                    tmp.Transpose(m_InputsGrads[1]);
+                }
+                else
+                    a.MatMul(!m_TransposeA, grad, false, m_InputsGrads[1]);
+            }
             else
             {
-                Tensor tmp(Shape::From(m_InputsGrads[1].GetShape(), grad.Batch()));
-                tmp.TryDeviceAllocate();
-                a.MatMul(true, grad, false, tmp);
+                /*Tensor tmp(Shape::From(m_InputsGrads[1].GetShape(), grad.Batch()));
+                tmp.TryDeviceAllocate();*/
+                auto tmp = a.MatMul(!m_TransposeA, grad, false);
+                if (m_TransposeB)
+                    tmp = tmp.Transpose();
                 tmp.Sum(BatchAxis, m_InputsGrads[1]);
-                tmp.TryDeviceRelease();
+                //tmp.TryDeviceRelease();
             }
         }
     }
