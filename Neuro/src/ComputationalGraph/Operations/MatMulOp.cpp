@@ -171,4 +171,41 @@ namespace Neuro
             }
         }
     }
+
+    //////////////////////////////////////////////////////////////////////////
+    MatMulSyrkOp::MatMulSyrkOp(TensorLike* a, bool transpose, const string& name)
+        : Operation({ a }, name.empty() ? "matmul" : name), m_Transpose(transpose)
+    {
+        UpdateOutputShape();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void MatMulSyrkOp::UpdateOutputShape()
+    {
+        const Shape& aShape = m_InputNodes[0]->GetShape();
+        if (m_Transpose)
+            m_Output.Resize(Shape(aShape.Width(), aShape.Width(), aShape.Depth(), aShape.Batch()));
+        else 
+            m_Output.Resize(Shape(aShape.Height(), aShape.Height(), aShape.Depth(), aShape.Batch()));
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void MatMulSyrkOp::ComputeInternal()
+    {
+        auto& a = *m_Inputs[0];
+        a.MatMul(m_Transpose, m_Output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    void MatMulSyrkOp::ComputeGradientInternal(const Tensor& grad)
+    {
+        auto& a = *m_Inputs[0];
+        if (m_Transpose)
+        {
+            auto tmp = grad.MatMul(false, a, true);
+            tmp.Transpose(m_InputsGrads[0]);
+        }
+        else
+            grad.MatMul(a, m_InputsGrads[0]);
+    }
 }

@@ -126,7 +126,13 @@ namespace Neuro
 		}
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpu::MatMul(const Tensor& t, bool transpose, Tensor& output) const
+    {
+        MatMul(t, transpose, t, !transpose, output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void TensorOpCpu::Mul(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const
 	{
         t1.CopyToHost();

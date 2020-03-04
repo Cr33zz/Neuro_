@@ -54,6 +54,39 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpCpuMkl::MatMul(const Tensor& t, bool transpose, Tensor& output) const
+    {
+        t.CopyToHost();
+        output.OverrideHost();
+
+        int n = transpose ? t.Width() : t.Height();
+        int k = transpose ? t.Height() : t.Width();
+        int lda = t.Width();
+        int ldc = output.Width();
+
+        float alpha = 1, beta = 0;
+
+        for (uint32_t b = 0; b < t.Batch(); ++b)
+        {
+            for (uint32_t d = 0; d < t.Depth(); ++d)
+            {
+                cblas_ssyrk(
+                    CblasRowMajor,
+                    CblasUpper,
+                    transpose ? CblasTrans : CblasNoTrans,
+                    n,
+                    k,
+                    alpha,
+                    t.Values() + d * t.GetShape().Dim0Dim1 + b * t.BatchLength(),
+                    lda,
+                    beta,
+                    output.Values() + d * output.GetShape().Dim0Dim1 + b * output.BatchLength(),
+                    ldc);
+            }
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpCpuMkl::Transpose(const Tensor& input, Tensor& output) const
     {
         input.CopyToHost();

@@ -86,6 +86,10 @@ namespace Neuro
 	    void MatMul(bool transpose, const Tensor& t, bool transposeT, Tensor& result) const;
         Tensor MatMul(bool transpose, const Tensor& t, bool transposeT) const;
 
+        // Performs A*A' (if transpose is false) or A'*A (otherwise)
+        void MatMul(bool transpose, Tensor& result) const;
+        Tensor MatMul(bool transpose) const;
+
 	public:
         void MatMul(const Tensor& t, Tensor& result) const;
         Tensor MatMul(const Tensor& t) const;

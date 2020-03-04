@@ -15,6 +15,7 @@ namespace Neuro
         virtual void Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const;
         virtual void Sub(const Tensor& t1, const Tensor& t2, Tensor& output) const;
         virtual void MatMul(const Tensor& t1, bool transposeT1, const Tensor& t2, bool transposeT2, Tensor& output) const;
+        virtual void MatMul(const Tensor& t, bool transpose, Tensor& output) const;
 		virtual void Mul(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const;
         virtual void Div(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const;
         virtual void Mul(const Tensor& input, float v, Tensor& output) const;

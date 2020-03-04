@@ -457,9 +457,9 @@ namespace Neuro
 	}
 
 	//////////////////////////////////////////////////////////////////////////
-	void Tensor::MatMul(const Tensor& t, Tensor& result) const
+	void Tensor::MatMul(const Tensor& t, Tensor& output) const
 	{
-		MatMul(false, t, false, result);
+		MatMul(false, t, false, output);
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -468,7 +468,21 @@ namespace Neuro
 		return MatMul(false, t, false);
 	}
 
-	//////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    void Tensor::MatMul(bool transpose, Tensor& output) const
+    {
+        Op()->MatMul(*this, transpose, output);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Tensor Tensor::MatMul(bool transpose) const
+    {
+        Tensor output(Shape(transpose ? Width() : Height(), transpose ? Width() : Height(), Depth(), Batch()));
+        MatMul(transpose, output);
+        return output;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
 	void Tensor::MulElem(const Tensor& t, Tensor& result) const
 	{
         NEURO_ASSERT(Shape(max(Width(), t.Width()), max(Height(), t.Height()), max(Depth(), t.Depth()), max(Batch(), t.Batch())) == result.GetShape(), "Output shape doesn't match input shape.");

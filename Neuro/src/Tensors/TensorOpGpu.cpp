@@ -204,6 +204,65 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void TensorOpGpu::MatMul(const Tensor& t, bool transpose, Tensor& output) const
+    {
+        int n = b.Width(), k = a.Width();
+        void* tmpOutputPtr = nullptr;
+
+        if (transposeA || transposeB)
+        {
+            m = transposeA ? a.Width() : a.Height(); // height of output
+            n = transposeB ? b.Height() : b.Width(); // width of output
+            k = transposeA ? a.Height() : a.Width(); // shared dimension of t1 and t2
+            DeviceMemoryManager::Default().Allocate(&tmpOutputPtr, output.GetShape().Dim0Dim1, "tmp_mult_mat");
+        }
+
+        int lda = a.Width();
+        int ldb = b.Width();
+        int ldc = m; // same as m
+
+        float alpha = 1, beta = 0;
+        float alphaT = 1, betaT = 0;
+
+        for (uint32_t batch = 0; batch < a.Batch(); ++batch)
+        {
+            for (uint32_t d = 0; d < a.Depth(); ++d)
+            {
+                    CUDA_CHECK(cublasSsyrk_v2(
+                        s_CublasHandle,
+                        CUBLAS_FILL_MODE_UPPER,
+                        transpose ? CUBLAS_OP_N : CUBLAS_OP_T, // transpose flag flipped on purpose (matrixes are transposed by default)
+                        n,
+                        k,
+                        &alpha,
+                        a.GetDevicePtr() + d * a.GetShape().Dim0Dim1 + t1B * a.BatchLength(),
+                        lda,
+                        &beta,
+                        (float*)tmpOutputPtr,
+                        ldc));
+
+                    /*CUDA_CHECK(cublasSgeam(
+                        s_CublasHandle,
+                        CUBLAS_OP_T,
+                        CUBLAS_OP_N,
+                        n,
+                        m,
+                        &alphaT,
+                        (float*)tmpOutputPtr,
+                        m,
+                        &betaT,
+                        (float*)tmpOutputPtr,
+                        output.Height(),
+                        output.GetDevicePtr() + d * output.GetShape().Dim0Dim1 + batch * output.BatchLength(),
+                        n));*/
+                }
+            }
+        }
+
+        cudaStreamSynchronize(0);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpGpu::Mul(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const
     {
         NVTXProfile nvtxProfile(__FUNCTION__, 0xFF004A7F);
