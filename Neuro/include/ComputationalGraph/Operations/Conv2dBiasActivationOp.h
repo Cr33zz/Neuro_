@@ -20,7 +20,7 @@ namespace Neuro
         EActivation m_Activation;
         float m_ActivationAlpha;
 
-        Tensor m_OutputGradTemp;
+        Tensor m_ActivationInputGrad;
     };
 
     static Operation* conv2d_bias_activation(TensorLike* x, TensorLike* kernels, uint32_t stride, uint32_t padding, TensorLike* bias, EActivation activation, float activationAlpha, const string& name = "")

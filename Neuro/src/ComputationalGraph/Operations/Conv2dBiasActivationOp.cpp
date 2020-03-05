@@ -7,6 +7,7 @@ namespace Neuro
         : Operation({ x, kernels, bias }, name.empty() ? "conv2d_bias_activation" : name), m_Stride(stride), m_Padding(padding), m_Activation(activation), m_ActivationAlpha(activationAlpha)
     {
         UpdateOutputShape();
+        m_ActivationInputGrad.Name(name + "/activation_input_grad");
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -44,11 +45,11 @@ namespace Neuro
 
         if (m_Activation != _Identity)
         {
-            m_OutputGradTemp.Resize(grad.GetShape());
-            m_OutputGradTemp.TryDeviceAllocate(); // this is actually workspace
+            m_ActivationInputGrad.Resize(grad.GetShape());
+            m_ActivationInputGrad.TryDeviceAllocate(); // this is actually workspace
 
-            grad.ActivationGradient(m_Activation, m_ActivationAlpha, m_Output, grad, m_OutputGradTemp);
-            outputGrad = &m_OutputGradTemp;
+            grad.ActivationGradient(m_Activation, m_ActivationAlpha, m_Output, grad, m_ActivationInputGrad);
+            outputGrad = &m_ActivationInputGrad;
         }
         else
             outputGrad = &grad;
@@ -61,6 +62,6 @@ namespace Neuro
             grad.Conv2DInputsGradient(*outputGrad, kernels, m_Stride, m_Padding, NCHW, m_InputsGrads[0]);
 
         if (m_Activation != _Identity)
-            m_OutputGradTemp.TryDeviceRelease();
+            m_ActivationInputGrad.ReleaseData();
     }
 }
