@@ -8,17 +8,24 @@ namespace Neuro
     {
     public:
         RollOp(TensorLike* x, int rollX, int rollY, const string& name = "");
+        RollOp(TensorLike* x, TensorLike* rollX, TensorLike* rollY, const string& name = "");
 
     protected:
+        virtual void UpdateOutputShape() override;
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
 
     private:
-        int m_RollX;
-        int m_RollY;
+        int m_RollX = 0;
+        int m_RollY = 0;
     };
 
     static Operation* roll(TensorLike* x, int rollX, int rollY, const string& name = "")
+    {
+        return new RollOp(x, rollX, rollY, name);
+    }
+
+    static Operation* roll(TensorLike* x, TensorLike* rollX, TensorLike* rollY, const string& name = "")
     {
         return new RollOp(x, rollX, rollY, name);
     }

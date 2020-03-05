@@ -6,7 +6,7 @@ namespace Neuro
     AssignOp::AssignOp(TensorLike* x, TensorLike* val, const string& name)
         : Operation({ x, val }, name.empty() ? "assign" : name)
     {
-        assert(x->GetShape() == val->GetShape());
+        NEURO_ASSERT(x->GetShape() == val->GetShape(), "");
     }
 
     //////////////////////////////////////////////////////////////////////////
