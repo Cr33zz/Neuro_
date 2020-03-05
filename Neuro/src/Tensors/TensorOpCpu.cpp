@@ -903,23 +903,34 @@ namespace Neuro
     {
         input.CopyToHost();
         output.OverrideHost();
+        output.Zero();
 
         uint32_t inputWidth = input.Width();
         uint32_t inputHeight = input.Height();
+        uint32_t outputWidth = output.Width();
 
         for (uint32_t n = 0; n < output.Batch(); ++n)
 		for (uint32_t d = 0; d < output.Depth(); ++d)
-        #pragma omp parallel for
-        for (int h = 0; h < (int)output.Height(); ++h)
-		for (uint32_t w = 0; w < output.Width(); ++w)
         {
-            if ((w + widthOffset) >= inputWidth || (h + heightOffset) >= inputHeight)
-            {
-                output(w, (uint32_t)h, d, n) = 0;
-                continue;
-            }
+            size_t baseOutputOffset = output.GetShape().GetIndex(0u, 0u, d, n);
+            size_t baseInputOffset = input.GetShape().GetIndex(widthOffset, heightOffset, d, n);
 
-			output(w, (uint32_t)h, d, n) = input(w + widthOffset, (uint32_t)h + heightOffset, d, n);
+            #pragma omp parallel for
+            for (int h = 0; h < (int)output.Height(); ++h)
+            {
+                if ((h + heightOffset) >= inputHeight)
+                    continue;
+            
+                size_t elementsNum = min((int)outputWidth, (int)inputWidth - (int)widthOffset);
+
+                if (elementsNum == 0)
+                    continue;
+
+                size_t outputOffset = baseOutputOffset + h * outputWidth;
+                size_t inputOffset = baseInputOffset + h * inputWidth;
+
+                memcpy(output.Values() + outputOffset, input.Values() + inputOffset, elementsNum * sizeof(float));
+            }
         }
     }
 
@@ -931,18 +942,44 @@ namespace Neuro
 
         uint32_t outputWidth = output.Width();
         uint32_t outputHeight = output.Height();
+        uint32_t inputWidth = input.Width();
 
         for (uint32_t n = 0; n < input.Batch(); ++n)
 		for (uint32_t d = 0; d < input.Depth(); ++d)
-        #pragma omp parallel for
-		for (int h = 0; h < (int)input.Height(); ++h)
-        for (uint32_t w = 0; w < input.Width(); ++w)
         {
-            if ((w + widthOffset) >= outputWidth || (h + heightOffset) >= outputHeight)
-                continue;
+            size_t baseInputOffset = input.GetShape().GetIndex(0u, 0u, d, n);
+            size_t baseOutputOffset = output.GetShape().GetIndex(widthOffset, heightOffset, d, n);
 
-            float& val = output(w + widthOffset, (uint32_t)h + heightOffset, d, n);
-			val = (add ? val : 0.f) + input(w, (uint32_t)h, d, n);
+            #pragma omp parallel for
+            for (int h = 0; h < (int)input.Height(); ++h)
+            {
+                if ((h + heightOffset) >= outputHeight)
+                    continue;
+
+                size_t outputOffset = baseOutputOffset + h * outputWidth;
+                size_t inputOffset = baseInputOffset + h * inputWidth;
+
+                if (!add)
+                {
+                    size_t elementsNum = min((int)inputWidth, (int)outputWidth - (int)widthOffset);
+
+                    if (elementsNum == 0)
+                        continue;
+
+                    memcpy(output.Values() + outputOffset, input.Values() + inputOffset, elementsNum * sizeof(float));
+                }
+                else
+                {
+                    for (uint32_t w = 0; w < input.Width(); ++w)
+                    {
+                        if ((w + widthOffset) >= outputWidth)
+                            continue;
+
+                        float& val = output.Values()[outputOffset + w];
+                        val = (add ? val : 0.f) + input.Values()[inputOffset + w];
+                    }
+                }
+            }
         }
     }
 
