@@ -15,12 +15,12 @@ public:
         {
             string arg = argv[i];
 
-            if (arg[0] == '-')
+            if (arg.length() > 1 && arg[0] == '-' && arg[1] == '-')
             {
                 if (lastArgName != "")
                     m_Args[lastArgName] = "__present";
 
-                lastArgName = arg.substr(1);
+                lastArgName = arg.substr(2);
             }
             else
             {
