@@ -11,6 +11,68 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    /*void TensorOpCpuMkl::Add(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const
+    {
+        if (t1.GetShape() != t2.GetShape())
+            return __super::Add(alpha, t1, beta, t2, output);
+
+        t1.CopyToHost();
+        t2.CopyToHost();
+        output.OverrideHost();
+
+        MKL_INT n = t1.Length();
+        vsadd(&n, t1.Values(), t2.Values(), output.Values());
+    }*/
+
+    //////////////////////////////////////////////////////////////////////////
+    /*void TensorOpCpuMkl::Mul(float alpha, const Tensor& t1, float beta, const Tensor& t2, Tensor& output) const
+    {
+        if (t1.GetShape() != t2.GetShape())
+            return __super::Mul(alpha, t1, beta, t2, output);
+
+        t1.CopyToHost();
+        t2.CopyToHost();
+        output.OverrideHost();
+
+        MKL_INT n = t1.Length();
+        vsmul(&n, t1.Values(), t2.Values(), output.Values());
+    }*/
+
+    //////////////////////////////////////////////////////////////////////////
+    //void TensorOpCpuMkl::Mul(const Tensor& input, float v, Tensor& output) const
+    //{
+    //    input.CopyToHost();
+    //    output.OverrideHost();
+
+    //    mkl_somatcopy(
+    //        'r',
+    //        'n',
+    //        1,
+    //        input.Length(),
+    //        v,
+    //        input.Values(),
+    //        input.Length(),
+    //        output.Values(),
+    //        output.Length());
+    //}
+
+    //////////////////////////////////////////////////////////////////////////
+    /*void TensorOpCpuMkl::Scale(Tensor& input, float v) const
+    {
+        input.CopyToHost();
+
+        mkl_simatcopy(
+            'r',
+            'n',
+            1,
+            input.Length(),
+            v,
+            input.Values(),
+            input.Length(),
+            input.Length());
+    }*/
+
+    //////////////////////////////////////////////////////////////////////////
     void TensorOpCpuMkl::MatMul(const Tensor& t1, bool transposeT1, const Tensor& t2, bool transposeT2, Tensor& output) const
     {
         t1.CopyToHost();
