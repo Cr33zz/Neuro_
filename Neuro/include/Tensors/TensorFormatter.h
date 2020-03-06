@@ -28,8 +28,8 @@ namespace Neuro
         private:
             string Float2Str(float f, int precision = 5) const;
 
-            size_t m_PadLeft;
-            size_t m_PadRight;
+            size_t m_PadLeft = 0;
+            size_t m_PadRight = 0;
         };
 
     private:
