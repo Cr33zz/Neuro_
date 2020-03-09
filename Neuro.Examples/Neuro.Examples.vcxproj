@@ -119,7 +119,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(CUDA_PATH)\include;$(ProjectDir)..\Neuro\include;$(ProjectDir)..\..\NeuroExt\Neuro.Examples\include;$(ProjectDir)include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\Neuro\deps\FreeImage\include;$(CUDA_PATH)\include;$(ProjectDir)..\Neuro\include;$(ProjectDir)..\..\NeuroExt\Neuro.Examples\include;$(ProjectDir)include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -174,7 +174,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(CUDA_PATH)\include;$(ProjectDir)..\Neuro\include;$(ProjectDir)..\..\NeuroExt\Neuro.Examples\include;$(ProjectDir)include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\Neuro\deps\FreeImage\include;$(CUDA_PATH)\include;$(ProjectDir)..\Neuro\include;$(ProjectDir)..\..\NeuroExt\Neuro.Examples\include;$(ProjectDir)include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
@@ -193,7 +193,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(CUDA_PATH)\include;$(ProjectDir)..\Neuro\include;$(ProjectDir)..\..\NeuroExt\Neuro.Examples\include;$(ProjectDir)include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\Neuro\deps\FreeImage\include;$(CUDA_PATH)\include;$(ProjectDir)..\Neuro\include;$(ProjectDir)..\..\NeuroExt\Neuro.Examples\include;$(ProjectDir)include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
