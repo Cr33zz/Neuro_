@@ -45,7 +45,8 @@ This neural network is given style image and any image we want to stylize. Model
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-calliefink_crop-style.jpg)
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-calliefink_crop-result.jpg)  
 ### 4K Neural Style Transfer
-While neural style transfer is rather straight forward for small images, memory limitations of GPUs are usually disallowing going over 1280px (in case of 12GB GPUs). Because I have full control of what is happening inside my library I came up with an approach allowing me to generate 4096px resolution images using up to 4GB available on my GPU.
+While neural style transfer is rather straight forward for small images, memory limitations of GPUs are usually disallowing going over 1280px (in case of 12GB GPUs). Because I have full control of what is happening inside my library I came up with an approach allowing me to generate 4096px resolution images using up to 4GB available on my GPU.  
+
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/toronto-starry_night-HD-showcase.jpg)  
 ### Deep Autoencoder
 Deep autoencoder is trying to reduce input to small set of numbers (encode) and then try to recover the original input (decode). In the case below we go from 784 down to 392 and back to 784.
