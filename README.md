@@ -21,7 +21,7 @@ Supported optimizers:
 * Adam
 * L-BFGS
 
-## Code examples
+## Usage examples
 ### Pix2pix
 This is one of the conditional adversarial generative networks. Example below comes from training a network on a dataset of flower paintings scoured from pintrest. The goal of this particular model is to learn how to generate flower paintings from image containing only edges. Left image is conditional input to the model (created by running canny edge detection on an image from the dataset), right image is the original image from the dataset and central image is the output from generator network.  
   
@@ -44,77 +44,9 @@ This neural network is given style image and any image we want to stylize. Model
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-frida-result.jpg)  
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-calliefink_crop-style.jpg)
 ![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/lion-calliefink_crop-result.jpg)  
-```cpp
-Tensor contentImage = LoadImage("data/content.jpg", 400, 300, NCHW);
-VGG16::PreprocessImage(contentImage, NCHW);
-Tensor styleImage = LoadImage("data/style3.jpg", 400, 300, NCHW);
-VGG16::PreprocessImage(styleImage, NCHW);
-
-auto vgg16Model = VGG16::CreateModel(NCHW);
-vgg16Model->LoadWeights("data/vgg16_weights_tf_dim_ordering_tf_kernels.h5");
-vgg16Model->SetTrainable(false);
-
-vector<TensorLike*> contentOutputs = { vgg16Model->Layer("block5_conv2")->Outputs()[0] };
-vector<TensorLike*> styleOutputs = { vgg16Model->Layer("block1_conv1")->Outputs()[0], 
-                                     vgg16Model->Layer("block2_conv1")->Outputs()[0], 
-                                     vgg16Model->Layer("block3_conv1")->Outputs()[0], 
-                                     vgg16Model->Layer("block4_conv1")->Outputs()[0],
-                                     vgg16Model->Layer("block5_conv1")->Outputs()[0] };
-
-auto outputImg = new Variable(contentImage, "output_image");
-
-auto model = Flow(vgg16Model->InputsAt(-1), MergeVectors({ contentOutputs, styleOutputs }));
-
-// pre-compute content features of content image (we only need to do it once since that image won't change)
-auto contentFeatures = model.Predict(contentImage)[0];
-Constant* content = new Constant(*contentFeatures, "content");
-
-// pre-compute style features of style image (we only need to do it once since that image won't change either)
-auto styleFeatures = model.Predict(styleImage);
-styleFeatures.erase(styleFeatures.begin()); //get rid of content feature
-vector<Constant*> styles;
-for (size_t i = 0; i < styleFeatures.size(); ++i)
-    styles.push_back(new Constant(*styleFeatures[i], "style_" + to_string(i)));
-vector<TensorLike*> styleGrams;
-for (size_t i = 0; i < styleFeatures.size(); ++i)
-    styleGrams.push_back(GramMatrix(styles[i], "style_" + to_string(i)));
-
-// generate beginning of the computational graph for processing output image
-auto outputs = model(outputImg);
-
-float contentLossWeight = 1.f;
-float styleLossWeight = 1.f;
-
-// compute content loss from first output...
-auto contentLoss = multiply(ContentLoss(content, outputs[0]), contentLossWeight);
-outputs.erase(outputs.begin());
-
-vector<TensorLike*> styleLosses;
-// ... and style losses from remaining outputs
-for (size_t i = 0; i < outputs.size(); ++i)
-    styleLosses.push_back(StyleLoss(styleGrams[i], outputs[i], (int)i));
-auto styleLoss = multiply(merge_avg(styleLosses, "style_loss"), styleLossWeight);
-
-auto totalLoss = add(contentLoss, styleLoss, "total_loss");
-
-auto optimizer = Adam(100.f, 0.99f, 0.999f, 0.1f);
-auto minimize = optimizer.Minimize({ totalLoss }, { outputImg });
-
-const int EPOCHS = 1000;
-Tqdm progress(EPOCHS, 0);
-for (int e = 1; e < EPOCHS; ++e, progress.NextStep())
-{
-    auto results = Session::Default()->Run({ outputImg, contentLoss, styleLoss, totalLoss, minimize }, {});
-
-    stringstream extString;
-    extString << setprecision(4) << fixed 
-              << " - content_l: " << (*results[1])(0) 
-              << " - style_l: " << (*results[2])(0) 
-              << " - total_l: " << (*results[3])(0);
-    progress.SetExtraString(extString.str());
-}
-
-```
+### 4K Neural Style Transfer
+While neural style transfer is rather straight forward for small images, memory limitations of GPUs are usually disallowing going over 1280px (in case of 12GB GPUs). Because I have full control of what is happening inside my library I came up with an approach allowing me to generate 4096px resolution images using up to 4GB available on my GPU.
+![alt text](https://github.com/Cr33zz/Neuro_/blob/master/Neuro.Examples/results/toronto-starry_night-HD-showcase.jpg)  
 ### Deep Autoencoder
 Deep autoencoder is trying to reduce input to small set of numbers (encode) and then try to recover the original input (decode). In the case below we go from 784 down to 392 and back to 784.
 ```cpp
