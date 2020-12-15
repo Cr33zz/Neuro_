@@ -361,9 +361,9 @@ namespace Neuro
                 outputValues[offset + w] = Get(w, (uint32_t)h, 0) * 0.2989f + Get(w, (uint32_t)h, 1) * 0.5870f + Get(w, (uint32_t)h, 2) * 0.1140f;
         }
 
-        if (depth > 0)
-            output.CopyDepthTo(0, 0, 1, 0, output);
         if (depth > 1)
+            output.CopyDepthTo(0, 0, 1, 0, output);
+        if (depth > 2)
             output.CopyDepthTo(0, 0, 2, 0, output);
 
         return output;
