@@ -155,11 +155,13 @@ Currently CUDA, CuDNN and MKL are required to compile the library. Detailed libr
 * Intel MKL 2019 Update 5 (https://software.intel.com/en-us/mkl/choose-download/windows)
   
 You need to create MKL_ROOT enviroment variable and set it to:  
-c:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\mkl  
+c:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\mkl
+  
 You also need to add the NvToolsExt and MKL binaries folder to the Path enviroment variable, usually this is the path you need to add:  
-c:\Program Files\NVIDIA Corporation\NvToolsExt\bin\x64
-c:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\redist\intel64\compiler
+c:\Program Files\NVIDIA Corporation\NvToolsExt\bin\x64  
+c:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\redist\intel64\compiler  
 c:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\redist\intel64\mkl  
+  
 In order to run unit tests you may need to regiter oleaut32.dll library (sometimes windows updates are messing things up), run the following command in *administrator* command line:
 regsvr32.exe C:\windows\syswow64\oleaut32.dll  
 Lastly, please make sure your graphics card drivers are up to date.  
