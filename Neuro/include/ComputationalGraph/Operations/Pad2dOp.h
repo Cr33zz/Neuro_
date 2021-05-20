@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class Pad2dOp : public Operation
+    class NEURO_DLL_EXPORT Pad2dOp : public Operation
     {
     public:
         Pad2dOp(TensorLike* x, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, const string& name = "");
@@ -19,7 +19,7 @@ namespace Neuro
         uint32_t m_Bottom;
     };
 
-    class ConstantPad2dOp : public Pad2dOp
+    class NEURO_DLL_EXPORT ConstantPad2dOp : public Pad2dOp
     {
     public:
         ConstantPad2dOp(TensorLike* x, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, float value, const string& name = "");
@@ -31,7 +31,7 @@ namespace Neuro
         float m_Value;
     };
 
-    class ReflectPad2dOp : public Pad2dOp
+    class NEURO_DLL_EXPORT ReflectPad2dOp : public Pad2dOp
     {
     public:
         ReflectPad2dOp(TensorLike* x, uint32_t left, uint32_t right, uint32_t top, uint32_t bottom, const string& name = "");

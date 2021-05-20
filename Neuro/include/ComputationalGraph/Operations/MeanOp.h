@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class MeanOp : public Operation
+    class NEURO_DLL_EXPORT MeanOp : public Operation
     {
     public:
         MeanOp(TensorLike* x, EAxis axis = GlobalAxis, const string& name = "");

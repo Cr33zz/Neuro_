@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class ExtractSubTensorOp : public Operation
+    class NEURO_DLL_EXPORT ExtractSubTensorOp : public Operation
     {
     public:
         ExtractSubTensorOp(TensorLike* x, uint32_t width, uint32_t height, uint32_t widthOffset, uint32_t heightOffset, bool clampAllowed = false, const string& name = "");

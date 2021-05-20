@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class LeakyReLUOp : public Operation
+    class NEURO_DLL_EXPORT LeakyReLUOp : public Operation
     {
     public:
         LeakyReLUOp(TensorLike* x, float alpha, const string& name = "");

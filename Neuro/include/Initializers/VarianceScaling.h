@@ -24,7 +24,7 @@ namespace Neuro
         UniformDistribution
     };
 
-    class VarianceScaling : public InitializerBase
+    class NEURO_DLL_EXPORT VarianceScaling : public InitializerBase
     {
     public:
         VarianceScaling(float scale = 1, EFanMode mode = FanIn, EDistribution distribution = NormalDistribution);

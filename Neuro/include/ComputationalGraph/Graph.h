@@ -3,6 +3,11 @@
 #include <vector>
 #include <unordered_set>
 
+#include "Types.h"
+
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 namespace Neuro
 {
     using namespace std;
@@ -13,7 +18,7 @@ namespace Neuro
     class Variable;
     class Constant;
 
-    class Graph
+    class NEURO_DLL_EXPORT Graph
     {
     public:
         Graph();
@@ -66,3 +71,5 @@ namespace Neuro
         static Graph* s_Default;
     };
 }
+
+#pragma warning(pop)

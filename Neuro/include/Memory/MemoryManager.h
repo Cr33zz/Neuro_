@@ -5,6 +5,11 @@
 #include <mutex>
 #include <driver_types.h>
 
+#include "Types.h"
+
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 namespace Neuro
 {
     using namespace std;
@@ -68,7 +73,7 @@ namespace Neuro
         size_t size;
     };
 
-    class MemoryManagerBase
+    class NEURO_DLL_EXPORT MemoryManagerBase
     {
     public:
         MemoryManagerBase(size_t allocGranularity, size_t nativeAllocGranularity);
@@ -124,7 +129,7 @@ namespace Neuro
     };
 
     // Memory manager for GPU memory
-    class DeviceMemoryManager : public MemoryManagerBase
+    class NEURO_DLL_EXPORT DeviceMemoryManager : public MemoryManagerBase
     {
     public:
         DeviceMemoryManager();
@@ -151,7 +156,7 @@ namespace Neuro
     };
 
     // Memory manager for generic CPU memory
-    class HostMemoryManager : public MemoryManagerBase
+    class NEURO_DLL_EXPORT HostMemoryManager : public MemoryManagerBase
     {
     public:
         HostMemoryManager();
@@ -165,7 +170,7 @@ namespace Neuro
     };
 
     // Memory manager for pinned (unpageable) CPU memory
-    class HostPinnedMemoryManager : public MemoryManagerBase
+    class NEURO_DLL_EXPORT HostPinnedMemoryManager : public MemoryManagerBase
     {
     public:
         HostPinnedMemoryManager();
@@ -231,3 +236,5 @@ namespace Neuro
         return true;
     }
 }
+
+#pragma warning(pop)

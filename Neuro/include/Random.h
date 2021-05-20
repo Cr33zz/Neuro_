@@ -2,11 +2,16 @@
 
 #include <random>
 
+#include "Types.h"
+
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 namespace Neuro
 {
 	using namespace std;
 
-	class Random
+    class NEURO_DLL_EXPORT Random
 	{
 	public:
 		Random(unsigned int seed = 0);
@@ -22,3 +27,5 @@ namespace Neuro
         int m_GeneratedNumbersCount = 0;
 	};
 }
+
+#pragma warning(pop)

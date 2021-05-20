@@ -2,6 +2,11 @@
 
 #include <unordered_set>
 
+#include "Types.h"
+
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 //#ifdef LOG_OUTPUTS
 //#define _dump(x) dump(x)
 //#define _dumpn(x, name) dump(x, name)
@@ -14,7 +19,7 @@ namespace Neuro
 {
     using namespace std;
 
-    class Debug
+    class NEURO_DLL_EXPORT Debug
     {
     public:
         static void Step();
@@ -37,3 +42,5 @@ namespace Neuro
         static bool g_LogAllGrads;
     };
 }
+
+#pragma warning(pop)

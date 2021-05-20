@@ -5,7 +5,7 @@
 namespace Neuro
 {
     // https://www.youtube.com/watch?v=8oOgPUO-TBY
-    class Pooling2D : public SingleLayer
+    class NEURO_DLL_EXPORT Pooling2D : public SingleLayer
     {
     public:
         Pooling2D(uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, EPoolingMode mode = MaxPool, EDataFormat dataFormat = NCHW, const string& name = "");
@@ -30,7 +30,7 @@ namespace Neuro
         EDataFormat m_DataFormat;
     };
 
-    class MaxPooling2D : public Pooling2D
+    class NEURO_DLL_EXPORT MaxPooling2D : public Pooling2D
     {
     public:
         MaxPooling2D(uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, EDataFormat dataFormat = NCHW, const string& name = "");
@@ -38,7 +38,7 @@ namespace Neuro
         MaxPooling2D(Shape inputShape, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, EDataFormat dataFormat = NCHW, const string& name = "");
     };
 
-    class AvgPooling2D : public Pooling2D
+    class NEURO_DLL_EXPORT AvgPooling2D : public Pooling2D
     {
     public:
         AvgPooling2D(uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, EDataFormat dataFormat = NCHW, const string& name = "");

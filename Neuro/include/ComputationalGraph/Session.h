@@ -3,6 +3,11 @@
 #include <vector>
 #include <map>
 
+#include "Types.h"
+
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 namespace Neuro
 {
     using namespace std;
@@ -14,7 +19,7 @@ namespace Neuro
     class Variable;
     class Graph;
 
-    class Session
+    class NEURO_DLL_EXPORT Session
     {
     public:
         Session(Graph* graph = nullptr);
@@ -35,8 +40,11 @@ namespace Neuro
             vector<TensorLike*> order;
             bool is_training;
         };
+
         map<size_t, OrderCacheData> m_OrderCache;
 
         static Session* s_Default;
     };
 }
+
+#pragma warning(pop)

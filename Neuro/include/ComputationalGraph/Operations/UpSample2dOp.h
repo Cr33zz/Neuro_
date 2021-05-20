@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class UpSample2dOp : public Operation
+    class NEURO_DLL_EXPORT UpSample2dOp : public Operation
     {
     public:
         UpSample2dOp(TensorLike* x, int scaleFactor, const string& name = "");

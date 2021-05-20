@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class Pool2dOp : public Operation
+    class NEURO_DLL_EXPORT Pool2dOp : public Operation
     {
     public:
         Pool2dOp(TensorLike* x, uint32_t filterSize, uint32_t stride, uint32_t padding, EPoolingMode mode, EDataFormat dataFormat, const string& name = "");

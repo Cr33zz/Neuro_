@@ -6,20 +6,25 @@
 #include <vector>
 #include <list>
 
+#include "Types.h"
+
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 namespace Neuro
 {
     using namespace std;
 
     class Tensor;
 
-    struct ILoader
+    struct NEURO_DLL_EXPORT ILoader
     {
         virtual ~ILoader() {}
         // Loads tensor(s) starting at loadIdx. Returns number of tensors loaded.
         virtual size_t operator()(vector<Tensor>& dest, size_t loadIdx) = 0;
     };
 
-    class DataPreloader
+    class NEURO_DLL_EXPORT DataPreloader
     {
     public:
         DataPreloader(const vector<Tensor*>& destination, const vector<ILoader*>& loaders, size_t capacity, bool threadedMode = true);
@@ -47,3 +52,5 @@ namespace Neuro
         vector<ILoader*> m_Loaders;
     };
 }
+
+#pragma warning(pop)

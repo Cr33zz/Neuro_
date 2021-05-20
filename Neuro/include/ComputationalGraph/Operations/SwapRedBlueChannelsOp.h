@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class SwapRedBlueChannelsOp : public Operation
+    class NEURO_DLL_EXPORT SwapRedBlueChannelsOp : public Operation
     {
     public:
         SwapRedBlueChannelsOp(TensorLike* x, const string& name = "");

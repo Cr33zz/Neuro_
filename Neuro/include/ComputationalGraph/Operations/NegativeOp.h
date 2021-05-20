@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class NegativeOp : public Operation
+    class NEURO_DLL_EXPORT NegativeOp : public Operation
     {
     public:
         NegativeOp(TensorLike* x, const string& name = "");

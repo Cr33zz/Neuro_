@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class ConcatenateOp : public Operation
+    class NEURO_DLL_EXPORT ConcatenateOp : public Operation
     {
     public:
         ConcatenateOp(const vector<TensorLike*>& xs, EAxis axis = DepthAxis, const string& name = "");

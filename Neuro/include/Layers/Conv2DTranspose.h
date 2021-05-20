@@ -7,7 +7,7 @@
 namespace Neuro
 {
     //http://deeplearning.net/software/theano_versions/dev/tutorial/conv_arithmetic.html#transposed-convolution-arithmetic
-    class Conv2DTranspose : public SingleLayer
+    class NEURO_DLL_EXPORT Conv2DTranspose : public SingleLayer
     {
     public:
         Conv2DTranspose(uint32_t outputDepth, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, EDataFormat dataFormat = NCHW, const string& name = "");

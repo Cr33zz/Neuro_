@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class SqrtOp : public Operation
+    class NEURO_DLL_EXPORT SqrtOp : public Operation
     {
     public:
         SqrtOp(TensorLike* x, const string& name = "");

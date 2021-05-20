@@ -11,6 +11,9 @@
 #include "Tensors/Shape.h"
 #include "Tensors/Storage.h"
 
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 namespace Neuro
 {
 	class TensorOpCpu;
@@ -22,7 +25,7 @@ namespace Neuro
     // This is HCHW tensor (meaning height is changing the most frequently and batch is changing the least frequently). This is just an interpretation of data.
     // Nothing prevents user from loading an image which is usually in NHWC (channels are changing the most frequently because images are usually stored as sequence
     // of RGB values for each pixel); however, before using it as an input to convolutional neural network such tensor should be converted to HCHW.
-    class Tensor
+    class NEURO_DLL_EXPORT Tensor
     {
 	public:
         explicit Tensor(const Shape& shape = Shape(0), const string& name = "", EStorageType storageType = ST_Default);
@@ -90,7 +93,6 @@ namespace Neuro
         void MatMul(bool transpose, Tensor& result) const;
         Tensor MatMul(bool transpose) const;
 
-	public:
         void MatMul(const Tensor& t, Tensor& result) const;
         Tensor MatMul(const Tensor& t) const;
         void MulElem(const Tensor& t, Tensor& result) const;
@@ -353,7 +355,7 @@ namespace Neuro
         Storage m_Storage;
         string m_Name;
 
-        TensorOpCpu* Op() const { return g_ForcedOp ? g_ForcedOp : m_Op; }
+        TensorOpCpu* Op() const;
 
 		static TensorOpCpu* GetOpFromMode(EOpMode mode);
 
@@ -414,22 +416,24 @@ namespace Neuro
         m_Storage.Data()[m_Shape.GetIndex(w, h, d, n)] = value;
     }
 
-    Tensor operator*(const Tensor& t1, const Tensor& t2);
-    Tensor operator*(const Tensor& t, float v);
-    Tensor operator/(const Tensor& t1, const Tensor& t2);
-    Tensor operator/(const Tensor& t, float v);
-    Tensor operator/(float v, const Tensor& t);
-    Tensor operator+(const Tensor& t1, const Tensor& t2);
-    Tensor operator+(const Tensor& t, float v);
-    Tensor operator-(const Tensor& t1, const Tensor& t2);
-    Tensor operator-(const Tensor& t, float v);
-    Tensor operator-(const Tensor& t);
-    Tensor pow(const Tensor& t, float p);
-    Tensor sqr(const Tensor& t);
-    Tensor sqrt(const Tensor& t);
-    Tensor sum(const Tensor& t, EAxis axis);
-    Tensor mean(const Tensor& t, EAxis axis);
+    NEURO_DLL_EXPORT Tensor operator*(const Tensor& t1, const Tensor& t2);
+    NEURO_DLL_EXPORT Tensor operator*(const Tensor& t, float v);
+    NEURO_DLL_EXPORT Tensor operator/(const Tensor& t1, const Tensor& t2);
+    NEURO_DLL_EXPORT Tensor operator/(const Tensor& t, float v);
+    NEURO_DLL_EXPORT Tensor operator/(float v, const Tensor& t);
+    NEURO_DLL_EXPORT Tensor operator+(const Tensor& t1, const Tensor& t2);
+    NEURO_DLL_EXPORT Tensor operator+(const Tensor& t, float v);
+    NEURO_DLL_EXPORT Tensor operator-(const Tensor& t1, const Tensor& t2);
+    NEURO_DLL_EXPORT Tensor operator-(const Tensor& t, float v);
+    NEURO_DLL_EXPORT Tensor operator-(const Tensor& t);
+    NEURO_DLL_EXPORT Tensor pow(const Tensor& t, float p);
+    NEURO_DLL_EXPORT Tensor sqr(const Tensor& t);
+    NEURO_DLL_EXPORT Tensor sqrt(const Tensor& t);
+    NEURO_DLL_EXPORT Tensor sum(const Tensor& t, EAxis axis);
+    NEURO_DLL_EXPORT Tensor mean(const Tensor& t, EAxis axis);
 
-    Tensor zeros(const Shape& shape);
-    Tensor ones(const Shape& shape);
+    NEURO_DLL_EXPORT Tensor zeros(const Shape& shape);
+    NEURO_DLL_EXPORT Tensor ones(const Shape& shape);
 }
+
+#pragma warning(pop)

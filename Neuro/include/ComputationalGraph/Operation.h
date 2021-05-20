@@ -2,11 +2,14 @@
 
 #include "ComputationalGraph/TensorLike.h"
 
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 namespace Neuro
 {
     class Tensor;
 
-    class Operation : public TensorLike
+    class NEURO_DLL_EXPORT Operation : public TensorLike
     {
     public:
         virtual bool IsOp() const override { return true; }
@@ -54,3 +57,5 @@ namespace Neuro
         bool m_Training = false;
     };
 }
+
+#pragma warning(pop)

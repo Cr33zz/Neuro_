@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class RollOp : public Operation
+    class NEURO_DLL_EXPORT RollOp : public Operation
     {
     public:
         RollOp(TensorLike* x, int rollX, int rollY, const string& name = "");
@@ -30,7 +30,7 @@ namespace Neuro
         return new RollOp(x, rollX, rollY, name);
     }
 
-    class RandomRollOp : public Operation
+    class NEURO_DLL_EXPORT RandomRollOp : public Operation
     {
     public:
         RandomRollOp(TensorLike* x, uint32_t jitterScale = 1, const string& name = "");

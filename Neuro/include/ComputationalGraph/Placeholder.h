@@ -5,7 +5,7 @@
 
 namespace Neuro
 {
-    class Placeholder : public TensorLike
+    class NEURO_DLL_EXPORT Placeholder : public TensorLike
     {
     public:
         explicit Placeholder(const Shape& shape, const string& name = "");

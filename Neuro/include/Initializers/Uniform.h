@@ -5,7 +5,7 @@
 
 namespace Neuro
 {
-    class Uniform : public InitializerBase
+    class NEURO_DLL_EXPORT Uniform : public InitializerBase
     {
 	public:
         Uniform(float min = -0.05f, float max = 0.05f);

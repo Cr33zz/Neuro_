@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class Dropout : public SingleLayer
+    class NEURO_DLL_EXPORT Dropout : public SingleLayer
     {
     public:
         Dropout(float p, const string& name = "");

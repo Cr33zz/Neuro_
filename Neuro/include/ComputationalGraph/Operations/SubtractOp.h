@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class SubtractOp : public Operation
+    class NEURO_DLL_EXPORT SubtractOp : public Operation
     {
     public:
         SubtractOp(TensorLike* a, TensorLike* b, const string& name = "");

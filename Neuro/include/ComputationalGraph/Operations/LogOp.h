@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class LogOp : public Operation
+    class NEURO_DLL_EXPORT LogOp : public Operation
     {
     public:
         LogOp(TensorLike* x, const string& name = "");

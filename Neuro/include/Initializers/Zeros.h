@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class Zeros : public InitializerBase
+    class NEURO_DLL_EXPORT Zeros : public InitializerBase
     {
     public:
         virtual void Init(Tensor& t) override;

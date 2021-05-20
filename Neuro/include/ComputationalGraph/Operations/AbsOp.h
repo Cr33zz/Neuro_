@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class AbsOp : public Operation
+    class NEURO_DLL_EXPORT AbsOp : public Operation
     {
     public:
         AbsOp(TensorLike* x, const string& name = "");

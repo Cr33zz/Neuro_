@@ -3,11 +3,16 @@
 #include <chrono>
 #include <string>
 
+#include "Types.h"
+
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 namespace Neuro
 {
     using namespace std;
 
-    class Stopwatch
+    class NEURO_DLL_EXPORT Stopwatch
     {
     public:
         Stopwatch();
@@ -37,7 +42,7 @@ namespace Neuro
         Seconds
     };
 
-    class AutoStopwatch
+    class NEURO_DLL_EXPORT AutoStopwatch
     {
     public:
         AutoStopwatch(EAutoStopwatchMode mode = Milliseconds);
@@ -48,3 +53,5 @@ namespace Neuro
         Stopwatch m_Timer;
     };
 }
+
+#pragma warning(pop)

@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class BatchFlattenOp : public Operation
+    class NEURO_DLL_EXPORT BatchFlattenOp : public Operation
     {
     public:
         BatchFlattenOp(TensorLike* x, const string& name = "");

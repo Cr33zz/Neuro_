@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class BatchNormalizeOp : public Operation
+    class NEURO_DLL_EXPORT BatchNormalizeOp : public Operation
     {
     public:
         BatchNormalizeOp(TensorLike* x, TensorLike* gamma, TensorLike* beta, TensorLike* runningMean, TensorLike* runningVar, float momentum, float epsilon, const string& name = "");

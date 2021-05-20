@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-	class TensorOpCpu
+    class NEURO_DLL_EXPORT TensorOpCpu
     {
 	public:
 		virtual ~TensorOpCpu() {}

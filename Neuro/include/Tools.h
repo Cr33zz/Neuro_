@@ -20,6 +20,9 @@ operation \
 Logger::WriteMessage(var.ToString().c_str());
 #define NEURO_PROFILE(name, operation) NEURO_PROFILE_INTERNAL(name, operation, NEURO_UNIQUE_NAME(p))
 
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 namespace Neuro
 {
     using namespace std;
@@ -29,63 +32,62 @@ namespace Neuro
 
     const float _EPSILON = 10e-7f;
     
-    Random& GlobalRng();
-    void GlobalRngSeed(unsigned int seed);
+    NEURO_DLL_EXPORT Random& GlobalRng();
+    NEURO_DLL_EXPORT void GlobalRngSeed(unsigned int seed);
 
-    template<typename C> void DeleteContainer(C& container);
-    void DeleteData(vector<const_tensor_ptr_vec_t>& data);
+    template<typename C> NEURO_DLL_EXPORT void DeleteContainer(C& container);
+    NEURO_DLL_EXPORT void DeleteData(vector<const_tensor_ptr_vec_t>& data);
 
-    float Clip(float value, float min, float max);
-    template <typename T> int Sign(T val);
+    NEURO_DLL_EXPORT float Clip(float value, float min, float max);
+    template <typename T> NEURO_DLL_EXPORT int Sign(T val);
 
-    vector<float> LinSpace(float start, float stop, uint32_t num = 50, bool endPoint = true);
+    NEURO_DLL_EXPORT vector<float> LinSpace(float start, float stop, uint32_t num = 50, bool endPoint = true);
 
-	string ToLower(const string& str);
-    string TrimStart(const string& str, const string& chars = "\t\n\v\f\r ");
-    string TrimEnd(const string& str, const string& chars = "\t\n\v\f\r ");
-    string PadLeft(const string& str, size_t len, char paddingChar = ' ');
-    string PadRight(const string& str, size_t len, char paddingChar = ' ');
-    vector<string> Split(const string& str, const string& delimiter);
-    string Replace(const string& str, const string& pattern, const string& replacement);
+    NEURO_DLL_EXPORT string ToLower(const string& str);
+    NEURO_DLL_EXPORT string TrimStart(const string& str, const string& chars = "\t\n\v\f\r ");
+    NEURO_DLL_EXPORT string TrimEnd(const string& str, const string& chars = "\t\n\v\f\r ");
+    NEURO_DLL_EXPORT string PadLeft(const string& str, size_t len, char paddingChar = ' ');
+    NEURO_DLL_EXPORT string PadRight(const string& str, size_t len, char paddingChar = ' ');
+    NEURO_DLL_EXPORT vector<string> Split(const string& str, const string& delimiter);
+    NEURO_DLL_EXPORT string Replace(const string& str, const string& pattern, const string& replacement);
 
-    void PackParams(const vector<Variable*>& vars, Tensor& x);
-    void UnPackParams(const Tensor& x, vector<Variable*>& vars);
-    void PackGrads(const vector<Variable*>& vars, Tensor& grad);
-    void UnPackGrads(const Tensor& grad, vector<Variable*>& vars);
+    NEURO_DLL_EXPORT void PackParams(const vector<Variable*>& vars, Tensor& x);
+    NEURO_DLL_EXPORT void UnPackParams(const Tensor& x, vector<Variable*>& vars);
+    NEURO_DLL_EXPORT void PackGrads(const vector<Variable*>& vars, Tensor& grad);
+    NEURO_DLL_EXPORT void UnPackGrads(const Tensor& grad, vector<Variable*>& vars);
 
-    string GetProgressString(int iteration, int maxIterations, const string& extraStr = "", int barLength = 30, char blankSymbol = '.', char fullSymbol = '=');
+    NEURO_DLL_EXPORT string GetProgressString(int iteration, int maxIterations, const string& extraStr = "", int barLength = 30, char blankSymbol = '.', char fullSymbol = '=');
 
-    void LoadMnistData(const string& imagesFile, const string& labelsFile, Tensor& input, Tensor& output, bool normalize, bool generateImage = false, int maxImages = -1);
+    NEURO_DLL_EXPORT void LoadMnistData(const string& imagesFile, const string& labelsFile, Tensor& input, Tensor& output, bool normalize, bool generateImage = false, int maxImages = -1);
     //void SaveMnistData(const Tensor& input, const Tensor& output, const string& imagesFile, const string& labelsFile);
-    void LoadCifar10Data(const string& imagesFile, Tensor& input, Tensor& output, bool normalize, bool generateImage = false, int maxImages = -1);
-    void SaveCifar10Data(const string& imagesFile, const Tensor& input, const Tensor& output);
-    void LoadCSVData(const string& filename, int outputsNum, Tensor& inputs, Tensor& outputs, bool outputsOneHotEncoded = false, int maxLines = -1);
+    NEURO_DLL_EXPORT void LoadCifar10Data(const string& imagesFile, Tensor& input, Tensor& output, bool normalize, bool generateImage = false, int maxImages = -1);
+    NEURO_DLL_EXPORT void SaveCifar10Data(const string& imagesFile, const Tensor& input, const Tensor& output);
+    NEURO_DLL_EXPORT void LoadCSVData(const string& filename, int outputsNum, Tensor& inputs, Tensor& outputs, bool outputsOneHotEncoded = false, int maxLines = -1);
 
     // Loaded tensor is flat and internal data layout is NHWC, it should be transposed and normalized before use
-    void LoadImage(const string& filename, float* buffer, uint32_t targetSizeX = 0, uint32_t targetSizeY = 0, uint32_t cropSizeX = 0, uint32_t cropSizeY = 0, EDataFormat targetFormat = NCHW);
-    Tensor LoadImage(const string& filename, uint32_t targetSizeX = 0, uint32_t targetSizeY = 0, uint32_t cropSizeX = 0, uint32_t cropSizeY = 0, EDataFormat targetFormat = NCHW);
-    Tensor LoadImage(uint8_t* imageBuffer, uint32_t width, uint32_t height, EPixelFormat format = RGB);
-    void SaveImage(const Tensor& t, const string& imageFile, bool denormalize, uint32_t maxCols = 0);
-    bool IsImageFileValid(const string& filename);
-    Shape GetShapeForMinSize(const Shape& shape, uint32_t minSize);
-    Shape GetShapeForMaxSize(const Shape& shape, uint32_t maxSize);
-    Shape GetImageDims(const string& filename);
+    NEURO_DLL_EXPORT void LoadImage(const string& filename, float* buffer, uint32_t targetSizeX = 0, uint32_t targetSizeY = 0, uint32_t cropSizeX = 0, uint32_t cropSizeY = 0, EDataFormat targetFormat = NCHW);
+    NEURO_DLL_EXPORT Tensor LoadImage(const string& filename, uint32_t targetSizeX = 0, uint32_t targetSizeY = 0, uint32_t cropSizeX = 0, uint32_t cropSizeY = 0, EDataFormat targetFormat = NCHW);
+    NEURO_DLL_EXPORT Tensor LoadImage(uint8_t* imageBuffer, uint32_t width, uint32_t height, EPixelFormat format = RGB);
+    NEURO_DLL_EXPORT void SaveImage(const Tensor& t, const string& imageFile, bool denormalize, uint32_t maxCols = 0);
+    NEURO_DLL_EXPORT bool IsImageFileValid(const string& filename);
+    NEURO_DLL_EXPORT Shape GetShapeForMinSize(const Shape& shape, uint32_t minSize);
+    NEURO_DLL_EXPORT Shape GetShapeForMaxSize(const Shape& shape, uint32_t maxSize);
+    NEURO_DLL_EXPORT Shape GetImageDims(const string& filename);
 
-    vector<string> LoadFilesList(const string& dir, bool shuffle, bool useCache = true, bool validate = false);
+    NEURO_DLL_EXPORT vector<string> LoadFilesList(const string& dir, bool shuffle, bool useCache = true, bool validate = false);
 
-    void SampleImagesBatch(const vector<string>& files, Tensor& output, bool loadAll = false);
+    NEURO_DLL_EXPORT void SampleImagesBatch(const vector<string>& files, Tensor& output, bool loadAll = false);
 
-    template<typename T>
-    vector<T> MergeVectors(initializer_list<vector<T>> vectors);
+    template<typename T> NEURO_DLL_EXPORT vector<T> MergeVectors(initializer_list<vector<T>> vectors);
 
-    string StringFormat(const string fmt_str, ...);
+    NEURO_DLL_EXPORT string StringFormat(const string fmt_str, ...);
 
-    Tensor GaussianFilter(uint32_t size, float sigma = 1.f);
-    void SobelFilters(const Tensor& img, Tensor& g, Tensor& theta);
-    Tensor NonMaxSuppression(const Tensor& img, const Tensor& theta);
-    Tensor Threshold(const Tensor& img, float lowThresholdRatio = 0.05f, float highThresholdRatio = 0.09f, float weak = 100.f, float strong = 255.f);
-    void Hysteresis(Tensor& img, float weak, float strong = 255.f);
-    Tensor CannyEdgeDetection(const Tensor& img);
+    NEURO_DLL_EXPORT Tensor GaussianFilter(uint32_t size, float sigma = 1.f);
+    NEURO_DLL_EXPORT void SobelFilters(const Tensor& img, Tensor& g, Tensor& theta);
+    NEURO_DLL_EXPORT Tensor NonMaxSuppression(const Tensor& img, const Tensor& theta);
+    NEURO_DLL_EXPORT Tensor Threshold(const Tensor& img, float lowThresholdRatio = 0.05f, float highThresholdRatio = 0.09f, float weak = 100.f, float strong = 255.f);
+    NEURO_DLL_EXPORT void Hysteresis(Tensor& img, float weak, float strong = 255.f);
+    NEURO_DLL_EXPORT Tensor CannyEdgeDetection(const Tensor& img);
 
     static const uint32_t NVTX_COLOR_RED = 0xFFFF0000;
     static const uint32_t NVTX_COLOR_GREEN = 0xFF00FF00;
@@ -94,14 +96,14 @@ namespace Neuro
     static const uint32_t NVTX_COLOR_MAGENTA = 0xFFFF00FF;
     static const uint32_t NVTX_COLOR_CYAN = 0xFF00FFFF;
 
-    class NVTXProfile
+    class NEURO_DLL_EXPORT NVTXProfile
     {
     public:
         NVTXProfile(const char* message, uint32_t color);
         ~NVTXProfile();
     };
 
-    struct ImageLoader : public ILoader
+    struct NEURO_DLL_EXPORT ImageLoader : public ILoader
     {
         ImageLoader(const vector<string>& files, uint32_t batchSize, uint32_t upScaleFactor = 1) : m_Files(files), m_BatchSize(batchSize), m_UpScaleFactor(upScaleFactor) {}
 
@@ -112,7 +114,7 @@ namespace Neuro
         uint32_t m_UpScaleFactor;
     };
 
-    class Tqdm
+    class NEURO_DLL_EXPORT Tqdm
     {
     public:
         Tqdm(size_t maxIterations, size_t barLen = 30, bool finalizeInit = true);
@@ -187,3 +189,5 @@ namespace Neuro
         return merged;
     }
 }
+
+#pragma warning(pop)

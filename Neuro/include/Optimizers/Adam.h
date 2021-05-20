@@ -4,10 +4,13 @@
 
 #include "Optimizers/OptimizerBase.h"
 
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 namespace Neuro
 {
     // Implementation based on https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/training/adam.py
-    class Adam : public OptimizerBase
+    class NEURO_DLL_EXPORT Adam : public OptimizerBase
     {
 	public:
         Adam(float lr = 0.001f, float beta1 = 0.9f, float beta2 = 0.999f, float epsilon = 1e-8f);
@@ -19,7 +22,7 @@ namespace Neuro
 
         virtual Operation* Minimize(const vector<TensorLike*>& losses, const vector<Variable*>& vars = {}, Variable* globalStep = nullptr) override { return new MinimizationOperation(losses, vars, globalStep, m_LearningRate, m_Beta1, m_Beta2, m_Epsilon); }
 
-        class MinimizationOperation : public Operation
+        class NEURO_DLL_EXPORT MinimizationOperation : public Operation
         {
         public:
             MinimizationOperation(const vector<TensorLike*>& losses, const vector<Variable*>& vars, Variable* globalStep, TensorLike* lr, float beta1, float beta2, float epsilon);
@@ -54,3 +57,5 @@ namespace Neuro
         friend class MinimizationOperation;
 	};
 }
+
+#pragma warning(pop)

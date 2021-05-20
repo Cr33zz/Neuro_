@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class FuseSubTensorsOp : public Operation
+    class NEURO_DLL_EXPORT FuseSubTensorsOp : public Operation
     {
     public:
         FuseSubTensorsOp(const vector<TensorLike*>& xs, size_t tX, size_t tY, const string& name = "");

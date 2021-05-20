@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class EluOp : public Operation
+    class NEURO_DLL_EXPORT EluOp : public Operation
     {
     public:
         EluOp(TensorLike* x, float alpha, const string& name = "");

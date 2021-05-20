@@ -39,7 +39,7 @@ namespace NeuroTests
 
         TEST_METHOD(Conv2d)
         {
-            Tensor::SetForcedOpMode(GPU);
+            //Tensor::SetForcedOpMode(GPU);
             auto x = Variable(Shape(9, 9, 3, 2));
             auto kernels = Variable(Shape(3, 3, 3, 5));
             Assert::IsTrue(ValidateOperation(unique_ptr<Operation>(new Conv2dOp(&x, &kernels, 1, 1, NCHW)).get()));

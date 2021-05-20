@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class Concatenate : public SingleLayer
+    class NEURO_DLL_EXPORT Concatenate : public SingleLayer
     {
     public:
         // Make sure to link this layer to input when using this constructor.

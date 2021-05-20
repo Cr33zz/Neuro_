@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class TensorOpCpuMt : public TensorOpCpu
+    class NEURO_DLL_EXPORT TensorOpCpuMt : public TensorOpCpu
     {
     public:
         virtual EOpMode OpMode() const { return CPU_MT; }

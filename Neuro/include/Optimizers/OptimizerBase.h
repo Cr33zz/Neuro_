@@ -10,7 +10,7 @@ namespace Neuro
 
     class Variable;
 
-    class OptimizerBase
+    class NEURO_DLL_EXPORT OptimizerBase
     {
 	public:
         virtual OptimizerBase* Clone() const = 0;

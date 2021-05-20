@@ -4,9 +4,12 @@
 
 #include "Optimizers/OptimizerBase.h"
 
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 namespace Neuro
 {
-    class SGD : public OptimizerBase
+    class NEURO_DLL_EXPORT SGD : public OptimizerBase
     {
 	public:
         SGD(float lr = 0.01f);
@@ -16,7 +19,7 @@ namespace Neuro
 
         virtual Operation* Minimize(const vector<TensorLike*>& losses, const vector<Variable*>& vars = {}, Variable* globalStep = nullptr) override { return new MinimizationOperation(losses, vars, m_LearningRate); }
 
-        class MinimizationOperation : public Operation
+        class NEURO_DLL_EXPORT MinimizationOperation : public Operation
         {
         public:
             MinimizationOperation(const vector<TensorLike*>& losses, const vector<Variable*>& vars, float lr);
@@ -39,3 +42,5 @@ namespace Neuro
         friend class MinimizationOperation;
 	};
 }
+
+#pragma warning(pop)

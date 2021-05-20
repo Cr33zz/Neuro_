@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class Normal : public InitializerBase
+    class NEURO_DLL_EXPORT Normal : public InitializerBase
     {
 	public:
         Normal(float mean = 0, float variance = 1, float scale = 1);

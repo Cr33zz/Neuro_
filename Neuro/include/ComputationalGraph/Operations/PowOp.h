@@ -5,13 +5,14 @@
 
 namespace Neuro
 {
-    class PowOp : public Operation
+    class NEURO_DLL_EXPORT PowOp : public Operation
     {
     public:
         PowOp(TensorLike* x, TensorLike* p, const string& name = "");
         PowOp(TensorLike* x, float p, const string& name = "");
 
     protected:
+        virtual void UpdateOutputShape() override;
         virtual void ComputeInternal() override;
         virtual void ComputeGradientInternal(const Tensor& grad) override;
 

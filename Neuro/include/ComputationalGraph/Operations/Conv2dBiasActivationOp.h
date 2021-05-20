@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class Conv2dBiasActivationOp : public Operation
+    class NEURO_DLL_EXPORT Conv2dBiasActivationOp : public Operation
     {
     public:
         Conv2dBiasActivationOp(TensorLike* x, TensorLike* kernels, uint32_t stride, uint32_t padding, TensorLike* bias, EActivation activation, float activationAlpha, const string& name = "");

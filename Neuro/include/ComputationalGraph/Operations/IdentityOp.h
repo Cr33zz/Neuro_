@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class IdentityOp : public Operation
+    class NEURO_DLL_EXPORT IdentityOp : public Operation
     {
     public:
         IdentityOp(TensorLike* x, const string& name = "");

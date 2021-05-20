@@ -27,26 +27,26 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoMkl|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Retail|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -73,24 +73,24 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(IncludePath)</IncludePath>
-    <OutDir>$(ProjectDir)lib\$(Configuration)\</OutDir>
+    <OutDir>$(ProjectDir)lib\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoMkl|x64'">
     <IncludePath>$(IncludePath)</IncludePath>
-    <OutDir>$(ProjectDir)lib\$(Configuration)\</OutDir>
+    <OutDir>$(ProjectDir)lib\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)\</IntDir>
     <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(IncludePath)</IncludePath>
-    <OutDir>$(ProjectDir)lib\$(Configuration)\</OutDir>
+    <OutDir>$(ProjectDir)lib\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Retail|x64'">
     <IncludePath>$(IncludePath)</IncludePath>
-    <OutDir>$(ProjectDir)lib\$(Configuration)\</OutDir>
+    <OutDir>$(ProjectDir)lib\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -99,18 +99,18 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>include;deps;deps\FreeImage\include;deps\h5cpp\include;c:\Program Files\NVIDIA Corporation\NvToolsExt\include;C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries_2019.5.281\windows\mkl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;deps;deps\FreeImage\include;deps\hdf5\include;deps\nvToolsExt\include;deps\mkl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FunctionLevelLinking>
       </FunctionLevelLinking>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;FREEIMAGE_LIB;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;H5_BUILT_AS_DYNAMIC_LIB;FREEIMAGE_LIB;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>-D_CRT_NONSTDC_NO_DEPRECATE -DMKL_ILP64 /Zc:twoPhase- %(AdditionalOptions)</AdditionalOptions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Lib>
-      <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\h5cpp\lib;$(CudaToolkitLibDir);c:\Program Files\NVIDIA Corporation\NvToolsExt\lib\x64;c:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\mkl\lib\intel64;C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries\windows\tbb\lib\intel64\vc_mt;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>cuda.lib;cudart_static.lib;cudnn.lib;cublas.lib;curand.lib;nvToolsExt64_1.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib;mkl_core.lib;mkl_intel_ilp64.lib;mkl_sequential.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\hdf5\lib;$(CudaToolkitLibDir);c:\Program Files\NVIDIA Corporation\NvToolsExt\lib\x64;c:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\mkl\lib\intel64;C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries\windows\tbb\lib\intel64\vc_mt;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cuda.lib;cudart.lib;cudnn.lib;cublas.lib;curand.lib;nvToolsExt64_1.lib;hdf5.lib;hdf5_cpp.lib;szip.lib;FreeImage.lib;mkl_core.lib;mkl_intel_ilp64.lib;mkl_sequential.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Lib>
     <CudaCompile>
@@ -123,6 +123,11 @@
       <LinkLibraryDependencies>
       </LinkLibraryDependencies>
     </ProjectReference>
+    <Link>
+      <AdditionalLibraryDirectories>deps\FreeImage\lib;$(CUDA_PATH)\lib\x64;deps\hdf5\lib;deps\mkl\lib;deps\nvToolsExt\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cuda.lib;cudart.lib;cublas.lib;cudnn.lib;curand.lib;nvToolsExt64_1.lib;FreeImage.lib;hdf5.lib;hdf5_cpp.lib;szip.lib;mkl_intel_ilp64_dll.lib;mkl_intel_thread_dll.lib;mkl_core_dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugNoMkl|x64'">
     <ClCompile>
@@ -130,7 +135,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>include;deps;deps\FreeImage\include;deps\h5cpp\include;c:\Program Files\NVIDIA Corporation\NvToolsExt\include;C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries_2019.5.281\windows\mkl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;deps;deps\FreeImage\include;deps\hdf5\include;deps\nvToolsExt\include;deps\mkl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <FunctionLevelLinking>
       </FunctionLevelLinking>
       <PreprocessorDefinitions>MKL_DISABLED;_CRT_SECURE_NO_WARNINGS;FREEIMAGE_LIB;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -140,8 +145,8 @@
       <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Lib>
-      <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\h5cpp\lib;$(CudaToolkitLibDir);c:\Program Files\NVIDIA Corporation\NvToolsExt\lib\x64;c:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\mkl\lib\intel64;C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries\windows\tbb\lib\intel64\vc_mt;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>cuda.lib;cudart_static.lib;cudnn.lib;cublas.lib;curand.lib;nvToolsExt64_1.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\hdf5\lib;$(CudaToolkitLibDir);c:\Program Files\NVIDIA Corporation\NvToolsExt\lib\x64;c:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\mkl\lib\intel64;C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries\windows\tbb\lib\intel64\vc_mt;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cuda.lib;cudart.lib;cudnn.lib;cublas.lib;curand.lib;nvToolsExt64_1.lib;hdf5.lib;hdf5_cpp.lib;szip.lib;FreeImage.lib;</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Lib>
     <CudaCompile>
@@ -154,6 +159,10 @@
       <LinkLibraryDependencies>
       </LinkLibraryDependencies>
     </ProjectReference>
+    <Link>
+      <AdditionalLibraryDirectories>deps\FreeImage\lib;$(CUDA_PATH)\lib\x64;deps\hdf5\lib;deps\mkl\lib;deps\nvToolsExt\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cuda.lib;cudart.lib;cublas.lib;cudnn.lib;curand.lib;nvToolsExt64_1.lib;FreeImage.lib;hdf5.lib;hdf5_cpp.lib;szip.lib;mkl_intel_ilp64_dll.lib;mkl_intel_thread_dll.lib;mkl_core_dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -163,9 +172,9 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>include;deps;deps\FreeImage\include;deps\h5cpp\include;c:\Program Files\NVIDIA Corporation\NvToolsExt\include;C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries_2019.5.281\windows\mkl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;deps;deps\FreeImage\include;deps\hdf5\include;deps\nvToolsExt\include;deps\mkl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;FREEIMAGE_LIB;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;H5_BUILT_AS_DYNAMIC_LIB;FREEIMAGE_LIB;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>-D_CRT_NONSTDC_NO_DEPRECATE -DMKL_ILP64 /Zc:twoPhase- %(AdditionalOptions)</AdditionalOptions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <OpenMPSupport>true</OpenMPSupport>
@@ -173,10 +182,12 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>deps\FreeImage\lib;$(CUDA_PATH)\lib\x64;deps\hdf5\lib;deps\mkl\lib;deps\nvToolsExt\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cuda.lib;cudart.lib;cublas.lib;cudnn.lib;curand.lib;nvToolsExt64_1.lib;FreeImage.lib;hdf5.lib;hdf5_cpp.lib;szip.lib;mkl_intel_ilp64_dll.lib;mkl_intel_thread_dll.lib;mkl_core_dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\h5cpp\lib;$(CudaToolkitLibDir);c:\Program Files\NVIDIA Corporation\NvToolsExt\lib\x64;c:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\mkl\lib\intel64;C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries\windows\tbb\lib\intel64\vc_mt;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>cuda.lib;cudart_static.lib;cudnn.lib;cublas.lib;curand.lib;nvToolsExt64_1.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib;mkl_core.lib;mkl_intel_ilp64.lib;mkl_sequential.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\hdf5\lib;$(CudaToolkitLibDir);c:\Program Files\NVIDIA Corporation\NvToolsExt\lib\x64;c:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\mkl\lib\intel64;C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries\windows\tbb\lib\intel64\vc_mt;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cuda.lib;cudart.lib;cudnn.lib;cublas.lib;curand.lib;nvToolsExt64_1.lib;hdf5.lib;hdf5_cpp.lib;szip.lib;FreeImage.lib;mkl_core.lib;mkl_intel_ilp64.lib;mkl_sequential.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Lib>
     <CudaCompile>
@@ -198,9 +209,9 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>include;deps;deps\FreeImage\include;deps\h5cpp\include;c:\Program Files\NVIDIA Corporation\NvToolsExt\include;C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries_2019.5.281\windows\mkl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;deps;deps\FreeImage\include;deps\hdf5\include;deps\nvToolsExt\include;deps\mkl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <PreprocessorDefinitions>NDEBUG;_CRT_SECURE_NO_WARNINGS;FREEIMAGE_LIB;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CRT_SECURE_NO_WARNINGS;H5_BUILT_AS_DYNAMIC_LIB;FREEIMAGE_LIB;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>-D_CRT_NONSTDC_NO_DEPRECATE -DMKL_ILP64 /Zc:twoPhase- %(AdditionalOptions)</AdditionalOptions>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <OpenMPSupport>true</OpenMPSupport>
@@ -208,10 +219,12 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>deps\FreeImage\lib;$(CUDA_PATH)\lib\x64;deps\hdf5\lib;deps\mkl\lib;deps\nvToolsExt\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cuda.lib;cudart.lib;cublas.lib;cudnn.lib;curand.lib;nvToolsExt64_1.lib;FreeImage.lib;hdf5.lib;hdf5_cpp.lib;szip.lib;mkl_intel_ilp64_dll.lib;mkl_intel_thread_dll.lib;mkl_core_dll.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\h5cpp\lib;$(CudaToolkitLibDir);c:\Program Files\NVIDIA Corporation\NvToolsExt\lib\x64;c:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\mkl\lib\intel64;C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries\windows\tbb\lib\intel64\vc_mt;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>cuda.lib;cudart_static.lib;cudnn.lib;cublas.lib;curand.lib;nvToolsExt64_1.lib;libhdf5.lib;libhdf5_cpp.lib;libszip.lib;FreeImageLib.lib;mkl_core.lib;mkl_intel_ilp64.lib;mkl_sequential.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>deps\FreeImage\lib;deps\hdf5\lib;$(CudaToolkitLibDir);c:\Program Files\NVIDIA Corporation\NvToolsExt\lib\x64;c:\Program Files (x86)\IntelSWTools\compilers_and_libraries\windows\mkl\lib\intel64;C:\Program Files %28x86%29\IntelSWTools\compilers_and_libraries\windows\tbb\lib\intel64\vc_mt;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>cuda.lib;cudart.lib;cudnn.lib;cublas.lib;curand.lib;nvToolsExt64_1.lib;hdf5.lib;hdf5_cpp.lib;szip.lib;FreeImage.lib;mkl_core.lib;mkl_intel_ilp64.lib;mkl_sequential.lib</AdditionalDependencies>
       <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Lib>
     <CudaCompile>

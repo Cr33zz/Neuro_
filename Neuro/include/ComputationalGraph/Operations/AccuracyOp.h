@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class AccuracyOp : public Operation
+    class NEURO_DLL_EXPORT AccuracyOp : public Operation
     {
     public:
         AccuracyOp(TensorLike* target, TensorLike* output, const string& name = "");
@@ -15,7 +15,7 @@ namespace Neuro
         virtual void ComputeGradientInternal(const Tensor& grad) override { assert(false); }
     };
 
-    class BinaryAccuracyOp : public Operation
+    class NEURO_DLL_EXPORT BinaryAccuracyOp : public Operation
     {
     public:
         BinaryAccuracyOp(TensorLike* target, TensorLike* output, const string& name = "");

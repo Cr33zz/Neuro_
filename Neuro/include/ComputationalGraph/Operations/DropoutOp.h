@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class DropoutOp : public Operation
+    class NEURO_DLL_EXPORT DropoutOp : public Operation
     {
     public:
         DropoutOp(TensorLike* x, float prob, const string& name = "");

@@ -2,9 +2,12 @@
 
 #include "ComputationalGraph/Operation.h"
 
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 namespace Neuro
 {
-    class TransposeOp : public Operation
+    class NEURO_DLL_EXPORT TransposeOp : public Operation
     {
     public:
         TransposeOp(TensorLike* x, const vector<EAxis>& axes, const string& name = "");
@@ -24,3 +27,5 @@ namespace Neuro
         return new TransposeOp(x, axes, name);
     }
 }
+
+#pragma warning(pop)

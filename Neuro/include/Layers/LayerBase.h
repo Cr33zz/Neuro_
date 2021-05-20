@@ -10,6 +10,9 @@
 #include "ParameterAndGradient.h"
 #include "Stopwatch.h"
 
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 namespace Neuro
 {
 	using namespace std;
@@ -19,7 +22,7 @@ namespace Neuro
 
     // In computational-graph approach layer is simply a function generating output nodes based on input nodes. Call method is the core of its functionality.
     // The benefit of using layers is that single layer can be shared between multiple inputs and the same set of weights will be used in all computations.
-    class LayerBase
+    class NEURO_DLL_EXPORT LayerBase
     {
 	public:
         virtual ~LayerBase() {}
@@ -123,3 +126,5 @@ namespace Neuro
         friend class SingleLayer;
 	};
 }
+
+#pragma warning(pop)

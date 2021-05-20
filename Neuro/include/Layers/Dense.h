@@ -9,7 +9,7 @@ namespace Neuro
     class Variable;
 	class InitializerBase;
 
-    class Dense : public SingleLayer
+    class NEURO_DLL_EXPORT Dense : public SingleLayer
     {
 	public:
         Dense(uint32_t units, ActivationBase* activation = nullptr, const string& name = "");

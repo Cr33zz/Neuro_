@@ -5,7 +5,10 @@
 #include <iomanip>
 #include <memory>
 #include <experimental/filesystem>
+#pragma warning(push)
+#pragma warning(disable:4251)
 #include <H5Cpp.h>
+#pragma warning(pop)
 
 #include "Models/ModelBase.h"
 #include "Optimizers/OptimizerBase.h"

@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class InstanceNormalization : public BatchNormalization
+    class NEURO_DLL_EXPORT InstanceNormalization : public BatchNormalization
     {
     public:
         // Make sure to link this layer to input when using this constructor.

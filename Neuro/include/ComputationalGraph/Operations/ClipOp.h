@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class ClipOp : public Operation
+    class NEURO_DLL_EXPORT ClipOp : public Operation
     {
     public:
         ClipOp(TensorLike* x, float min, float max, const string& name = "");

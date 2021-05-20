@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class DivideOp : public Operation
+    class NEURO_DLL_EXPORT DivideOp : public Operation
     {
     public:
         DivideOp(TensorLike* a, TensorLike* b, const string& name = "");

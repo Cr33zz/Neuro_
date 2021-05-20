@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class Merge : public SingleLayer
+    class NEURO_DLL_EXPORT Merge : public SingleLayer
     {
     public:
         Merge(EMergeMode mergeMode, ActivationBase* activation = nullptr, const string& name = "");

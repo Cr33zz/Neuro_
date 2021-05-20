@@ -1,5 +1,6 @@
 #include "CppUnitTest.h"
 #include "Neuro.h"
+#include "Windows.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace Neuro;
@@ -97,5 +98,10 @@ namespace NeuroTests
 
             //Assert::AreEqual(5.0, (double)(*result[0])(0));
         }
+
+        TEST_CLASS_CLEANUP(OpenMPCrashWorkaround)
+        {
+            Sleep(100); // this sleep is needed to workaround crash in OpenMP on unloading unit test dll
+        };
     };
 }

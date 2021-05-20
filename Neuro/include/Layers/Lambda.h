@@ -2,11 +2,14 @@
 
 #include "Layers/SingleLayer.h"
 
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 namespace Neuro
 {
-    typedef function<vector<TensorLike*>(const vector<TensorLike*>&)> lambdaFunc;
+    typedef NEURO_DLL_EXPORT function<vector<TensorLike*>(const vector<TensorLike*>&)> lambdaFunc;
 
-    class Lambda : public SingleLayer
+    class NEURO_DLL_EXPORT Lambda : public SingleLayer
     {
     public:
         Lambda(const lambdaFunc& lambda, const string& name = "");
@@ -18,3 +21,5 @@ namespace Neuro
         lambdaFunc m_Lambda;
     };
 }
+
+#pragma warning(pop)

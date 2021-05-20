@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class FunctionOp : public Operation
+    class NEURO_DLL_EXPORT FunctionOp : public Operation
     {
     public:
         FunctionOp(const vector<TensorLike*>& inputs, const vector<TensorLike*>& outputs, const string& name = "");

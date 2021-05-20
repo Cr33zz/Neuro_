@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class SumOp : public Operation
+    class NEURO_DLL_EXPORT SumOp : public Operation
     {
     public:
         SumOp(TensorLike* x, EAxis axis = GlobalAxis, const string& name = "");

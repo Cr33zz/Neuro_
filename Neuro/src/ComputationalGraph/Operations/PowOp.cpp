@@ -18,6 +18,15 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void PowOp::UpdateOutputShape()
+    {
+        if (m_InputNodes.size() == 2)
+            m_Output.Resize(m_InputNodes[0]->GetShape());
+        else
+            __super::UpdateOutputShape();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void PowOp::ComputeInternal()
     {
         m_Output.ResizeBatch(m_Inputs[0]->Batch());

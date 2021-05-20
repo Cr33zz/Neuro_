@@ -6,7 +6,7 @@ namespace Neuro
 {
     class Variable;
 
-    class BatchNormalization : public SingleLayer
+    class NEURO_DLL_EXPORT BatchNormalization : public SingleLayer
     {
     public:
         // Make sure to link this layer to input when using this constructor.

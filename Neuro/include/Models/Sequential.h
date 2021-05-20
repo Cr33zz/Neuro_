@@ -8,7 +8,7 @@ namespace Neuro
 {
 	using namespace std;
 
-    class Sequential : public Flow
+    class NEURO_DLL_EXPORT Sequential : public Flow
     {
 	public:
 		Sequential(const string& name = "", int seed = 0);

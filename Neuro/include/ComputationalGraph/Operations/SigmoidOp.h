@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class SigmoidOp : public Operation
+    class NEURO_DLL_EXPORT SigmoidOp : public Operation
     {
     public:
         SigmoidOp(TensorLike* x, const string& name = "");

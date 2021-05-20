@@ -1,6 +1,7 @@
 ﻿#include <fstream>
 #include "CppUnitTest.h"
 #include "Neuro.h"
+#include "Windows.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace Neuro;
@@ -1354,5 +1355,10 @@ namespace NeuroTests
             Assert::IsTrue(t.Equals(Tensor(istream)));
             istream.close();
         }*/
+
+        TEST_CLASS_CLEANUP(OpenMPCrashWorkaround)
+        {
+            Sleep(100); // this sleep is needed to workaround crash in OpenMP on unloading unit test dll
+        };
     };
 }

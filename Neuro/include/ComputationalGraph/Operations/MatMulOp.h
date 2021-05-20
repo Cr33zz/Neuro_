@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class MatMulOp : public Operation
+    class NEURO_DLL_EXPORT MatMulOp : public Operation
     {
     public:
         MatMulOp(TensorLike* a, TensorLike* b, const string& name = "");
@@ -21,7 +21,7 @@ namespace Neuro
         Tensor m_MulTempB;
     };
 
-    class MatMulTransOp : public Operation
+    class NEURO_DLL_EXPORT MatMulTransOp : public Operation
     {
     public:
         MatMulTransOp(TensorLike* a, bool transposeA, TensorLike* b, bool transposeB, const string& name = "");
@@ -37,7 +37,7 @@ namespace Neuro
     };
 
     // Performs A*A' or A'*A
-    class MatMulSyrkOp : public Operation
+    class NEURO_DLL_EXPORT MatMulSyrkOp : public Operation
     {
     public:
         MatMulSyrkOp(TensorLike* a, bool transpose, const string& name = "");

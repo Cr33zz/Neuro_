@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class Const : public InitializerBase
+    class NEURO_DLL_EXPORT Const : public InitializerBase
     {
 	public:
         Const(float value = 1.f);

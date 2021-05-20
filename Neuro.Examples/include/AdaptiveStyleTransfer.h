@@ -54,9 +54,9 @@ public:
         const string STYLE_FILES_DIR = "f:/!TrainingData/deviantart";
         const uint32_t BATCH_SIZE = 4;
 #else
-        const string CONTENT_FILES_DIR = "e:/Downloads/coco14";
+        const string CONTENT_FILES_DIR = "f:/!TrainingData/coco14";
         //const string STYLE_FILES_DIR = "f:/!TrainingData/deviantart";
-        const string STYLE_FILES_DIR = "e:/Downloads/wikiart";
+        const string STYLE_FILES_DIR = "f:/!TrainingData/wikiart";
         const uint32_t BATCH_SIZE = 6;
 #endif
 

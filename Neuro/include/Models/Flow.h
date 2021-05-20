@@ -13,7 +13,7 @@ namespace Neuro
     // When linking this model's input to other layer(s) all internal model input layers will have the same inputs shapes and input layers.
     // Number of outputs will be a sum of all internal model output layers. Inputs gradient will be averaged across internal model input layers'
     // inputs gradients.
-    class Flow : public ModelBase
+    class NEURO_DLL_EXPORT Flow : public ModelBase
     {
 	public:
         Flow(const vector<TensorLike*>& inputs, const vector<TensorLike*>& outputs, const string& name = "", int seed = 0);

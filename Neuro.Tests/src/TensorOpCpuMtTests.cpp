@@ -1,5 +1,6 @@
 ﻿#include "CppUnitTest.h"
 #include "Neuro.h"
+#include "Windows.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace Neuro;
@@ -228,7 +229,7 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
-        TEST_METHOD(Conv2D_Valid_NHWC_CompareWithCpuResult)
+        /*TEST_METHOD(Conv2D_Valid_NHWC_CompareWithCpuResult)
         {
             Tensor t(Shape(3, 26, 26, 3)); t.FillWithRand();
             Tensor kernals(Shape(3, 3, 3, 2)); kernals.FillWithRand();
@@ -240,7 +241,7 @@ namespace NeuroTests
             NEURO_PROFILE("CPU_MT", Tensor r2 = t.Conv2D(kernals, 1, 0, NHWC);)
 
             Assert::IsTrue(r.Equals(r2));
-        }
+        }*/
 
         TEST_METHOD(Conv2DInputGradient_CompareWithCpuResult)
         {
@@ -260,7 +261,7 @@ namespace NeuroTests
             Assert::IsTrue(inputGradient.Equals(inputGradient2));
         }
 
-        TEST_METHOD(Conv2DInputGradient_NHWC_CompareWithCpuResult)
+        /*TEST_METHOD(Conv2DInputGradient_NHWC_CompareWithCpuResult)
         {
             Tensor output(Shape(2, 24, 24, 3)); output.FillWithRand();
             Tensor input(Shape(3, 26, 26, 3)); input.FillWithRand();
@@ -276,7 +277,7 @@ namespace NeuroTests
             NEURO_PROFILE("CPU_MT", gradient.Conv2DInputsGradient(gradient, kernels, 1, 0, NHWC, inputGradient2);)
 
             Assert::IsTrue(inputGradient.Equals(inputGradient2));
-        }
+        }*/
 
         TEST_METHOD(Conv2DKernelsGradient_CompareWithCpuResult)
         {
@@ -296,24 +297,24 @@ namespace NeuroTests
             Assert::IsTrue(kernelsGradient.Equals(kernelsGradient2));
         }
 
-        TEST_METHOD(Conv2DKernelsGradient_NHWC_CompareWithCpuResult)
-        {
-            Tensor output(Shape(2, 24, 24, 3)); output.FillWithRand(10);
-            Tensor input(Shape(3, 26, 26, 3)); input.FillWithRand(11);
-            Tensor kernels(Shape(3, 3, 3, 2)); kernels.FillWithRand(12);
-            Tensor gradient(output); gradient.FillWithRand(13);
+        //TEST_METHOD(Conv2DKernelsGradient_NHWC_CompareWithCpuResult)
+        //{
+        //    Tensor output(Shape(2, 24, 24, 3)); output.FillWithRand(10);
+        //    Tensor input(Shape(3, 26, 26, 3)); input.FillWithRand(11);
+        //    Tensor kernels(Shape(3, 3, 3, 2)); kernels.FillWithRand(12);
+        //    Tensor gradient(output); gradient.FillWithRand(13);
 
-            Tensor::SetForcedOpMode(CPU);
-            Tensor kernelsGradient(kernels);
-            NEURO_PROFILE("CPU", input.Conv2DKernelsGradient(input, gradient, 1, 0, NHWC, kernelsGradient);)
+        //    Tensor::SetForcedOpMode(CPU);
+        //    Tensor kernelsGradient(kernels);
+        //    NEURO_PROFILE("CPU", input.Conv2DKernelsGradient(input, gradient, 1, 0, NHWC, kernelsGradient);)
 
-            Tensor::SetForcedOpMode(CPU_MT);
-            Tensor kernelsGradient2(kernels);
-            NEURO_PROFILE("CPU_MT", input.Conv2DKernelsGradient(input, gradient, 1, 0, NHWC, kernelsGradient2);)
+        //    Tensor::SetForcedOpMode(CPU_MT);
+        //    Tensor kernelsGradient2(kernels);
+        //    NEURO_PROFILE("CPU_MT", input.Conv2DKernelsGradient(input, gradient, 1, 0, NHWC, kernelsGradient2);)
 
-            //CuDNN is generating marginally different results than CPU
-            Assert::IsTrue(kernelsGradient.Equals(kernelsGradient2, 0.0001f));
-        }
+        //    //CuDNN is generating marginally different results than CPU
+        //    Assert::IsTrue(kernelsGradient.Equals(kernelsGradient2, 0.0001f));
+        //}
 
         TEST_METHOD(Pool_Max_Valid_CompareWithCpuResult)
         {
@@ -341,7 +342,7 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
-        TEST_METHOD(Pool_Max_Valid_NHWC_CompareWithCpuResult)
+        /*TEST_METHOD(Pool_Max_Valid_NHWC_CompareWithCpuResult)
         {
             Tensor t(Shape(27, 27, 2, 3)); t.FillWithRand();
             
@@ -365,7 +366,7 @@ namespace NeuroTests
             NEURO_PROFILE("CPU_MT", Tensor r2 = t.Pool2D(3, 2, AvgPool, 0, NHWC);)
 
             Assert::IsTrue(r.Equals(r2));
-        }
+        }*/
 
         TEST_METHOD(PoolGradient_Max_Valid_CompareWithCpuResult)
         {
@@ -401,7 +402,7 @@ namespace NeuroTests
             Assert::IsTrue(r.Equals(r2));
         }
 
-        TEST_METHOD(PoolGradient_Max_Valid_NHWC_CompareWithCpuResult)
+        /*TEST_METHOD(PoolGradient_Max_Valid_NHWC_CompareWithCpuResult)
         {
             Tensor input(Shape(27, 27, 2, 3)); input.FillWithRand();
             Tensor output = input.Pool2D(3, 2, MaxPool, 0, NHWC);
@@ -433,6 +434,11 @@ namespace NeuroTests
             NEURO_PROFILE("CPU_MT", output.Pool2DGradient(output, input, outputGradient, 3, 2, AvgPool, 0, NHWC, r2);)
 
             Assert::IsTrue(r.Equals(r2));
-        }
+        }*/
+
+        TEST_CLASS_CLEANUP(OpenMPCrashWorkaround)
+        {
+            Sleep(100); // this sleep is needed to workaround crash in OpenMP on unloading unit test dll
+        };
     };
 }

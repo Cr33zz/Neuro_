@@ -1,10 +1,12 @@
 ﻿#pragma once
 
+#include "Types.h"
+
 namespace Neuro
 {
 	class TensorLike;
 
-    class LossBase
+    class NEURO_DLL_EXPORT LossBase
     {
 	public:
         virtual LossBase* Clone() const = 0;
@@ -24,28 +26,28 @@ namespace Neuro
 
     // This function is also known as cross entropy and can be used for any sigmoid-ed or softmax-ed output (doesn't have to be probability distribution)
     // Used for single-class classification
-    class BinaryCrossEntropy : public LossBase
+    class NEURO_DLL_EXPORT BinaryCrossEntropy : public LossBase
     {
 	public:
         virtual LossBase* Clone() const override { return new BinaryCrossEntropy(*this); }
         virtual TensorLike* Build(TensorLike* targetOutput, TensorLike* output) override;
 	};
 
-    class MeanSquareError : public LossBase
+    class NEURO_DLL_EXPORT MeanSquareError : public LossBase
     {
 	public:
         virtual LossBase* Clone() const override { return new MeanSquareError(*this); }
         virtual TensorLike* Build(TensorLike* targetOutput, TensorLike* output) override;
 	};
 
-    class MeanAbsoluteError : public LossBase
+    class NEURO_DLL_EXPORT MeanAbsoluteError : public LossBase
     {
     public:
         virtual LossBase* Clone() const override { return new MeanAbsoluteError(*this); }
         virtual TensorLike* Build(TensorLike* targetOutput, TensorLike* output) override;
     };
 
-    class Huber : public LossBase
+    class NEURO_DLL_EXPORT Huber : public LossBase
     {
 	public:
         Huber(float delta);

@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class UpSampling2D : public SingleLayer
+    class NEURO_DLL_EXPORT UpSampling2D : public SingleLayer
     {
     public:
         UpSampling2D(uint32_t scaleFactor, const string& name = "");

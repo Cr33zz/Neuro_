@@ -6,7 +6,7 @@ namespace Neuro
 {
 	class TensorLike;
 
-    class ActivationBase
+    class NEURO_DLL_EXPORT ActivationBase
     {
 	public:
         virtual TensorLike* Build(TensorLike* input) = 0;
@@ -14,28 +14,28 @@ namespace Neuro
         virtual float Alpha() const { return 0.f; }
 	};
 
-    class Sigmoid : public ActivationBase
+    class NEURO_DLL_EXPORT Sigmoid : public ActivationBase
     {
 	public:
         virtual TensorLike* Build(TensorLike* input) override;
         virtual EActivation Type() const { return _Sigmoid; }
 	};
 
-    class Tanh : public ActivationBase
+    class NEURO_DLL_EXPORT Tanh : public ActivationBase
     {
 	public:
         virtual TensorLike* Build(TensorLike* input) override;
         virtual EActivation Type() const { return _TanH; }
 	};
 
-    class ReLU : public ActivationBase
+    class NEURO_DLL_EXPORT ReLU : public ActivationBase
     {
 	public:
         virtual TensorLike* Build(TensorLike* input) override;
         virtual EActivation Type() const { return _ReLU; }
 	};
 
-    class ELU : public ActivationBase
+    class NEURO_DLL_EXPORT ELU : public ActivationBase
     {
 	public:
 		ELU(float alpha);
@@ -48,7 +48,7 @@ namespace Neuro
         const float m_Alpha;
 	};
 
-    class LeakyReLU : public ActivationBase
+    class NEURO_DLL_EXPORT LeakyReLU : public ActivationBase
     {
     public:
         LeakyReLU(float alpha);
@@ -61,7 +61,7 @@ namespace Neuro
         const float m_Alpha;
     };
 
-    class Softmax : public ActivationBase
+    class NEURO_DLL_EXPORT Softmax : public ActivationBase
     {
 	public:
         virtual TensorLike* Build(TensorLike* input) override;

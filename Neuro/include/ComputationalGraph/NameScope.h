@@ -3,11 +3,16 @@
 #include <list>
 #include <string>
 
+#include "Types.h"
+
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 namespace Neuro
 {
     using namespace std;
 
-    class NameScope
+    class NEURO_DLL_EXPORT NameScope
     {
     public:
         NameScope(const string& scopeName);
@@ -19,3 +24,5 @@ namespace Neuro
         static list<string> s_Scopes;
     };
 }
+
+#pragma warning(pop)

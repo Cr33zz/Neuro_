@@ -4,6 +4,9 @@
 
 #include "Tensors/Tensor.h"
 
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 namespace Neuro
 {
     using namespace std;
@@ -11,7 +14,7 @@ namespace Neuro
     class Graph;
     class LayerBase;
 
-    class TensorLike
+    class NEURO_DLL_EXPORT TensorLike
     {
     public:
         virtual ~TensorLike() {}
@@ -93,3 +96,5 @@ namespace Neuro
         friend class OptimizerBase;
     };
 }
+
+#pragma warning(pop)

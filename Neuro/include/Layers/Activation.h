@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class Activation : public SingleLayer
+    class NEURO_DLL_EXPORT Activation : public SingleLayer
     {
     public:
         Activation(ActivationBase* activation, const string& name = "");

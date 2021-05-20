@@ -9,6 +9,9 @@
 #include "ParameterAndGradient.h"
 #include "ComputationalGraph/TensorLike.h"
 
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 namespace Neuro
 {
 	using namespace std;
@@ -20,7 +23,7 @@ namespace Neuro
     class Predicter;
     class Placeholder;
 
-    class ModelBase : public LayerBase
+    class NEURO_DLL_EXPORT ModelBase : public LayerBase
     {
 	public:
         ~ModelBase();
@@ -118,3 +121,5 @@ namespace Neuro
         float m_LastTrainError;
 	};
 }
+
+#pragma warning(pop)

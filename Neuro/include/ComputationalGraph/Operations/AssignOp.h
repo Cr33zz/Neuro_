@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class AssignOp : public Operation
+    class NEURO_DLL_EXPORT AssignOp : public Operation
     {
     public:
         AssignOp(TensorLike* x, TensorLike* val, const string& name = "");

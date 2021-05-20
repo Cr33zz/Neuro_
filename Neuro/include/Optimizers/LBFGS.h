@@ -4,6 +4,9 @@
 
 #include "Optimizers/OptimizerBase.h"
 
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 namespace Neuro
 {
     // Computational graph evaluation wrapper, used to compute total loss and gradients at any
@@ -25,7 +28,7 @@ namespace Neuro
 
     // Limited-memory Broyden-Fletcher-Goldfarb-Shanno optimizer
     // Implementation based on https://github.com/yixuan/LBFGSpp
-    class LBFGS : public OptimizerBase
+    class NEURO_DLL_EXPORT LBFGS : public OptimizerBase
     {
     public:
         LBFGS(/*size_t maxIterations = 100, */float epsilon = 1e-6f);
@@ -60,7 +63,7 @@ namespace Neuro
 
         virtual Operation* Minimize(const vector<TensorLike*>& losses, const vector<Variable*>& vars = {}, Variable* globalStep = nullptr) override { return new MinimizationOperation(losses, vars, m_MaxIterations, m_Epsilon); }
 
-        class MinimizationOperation : public Operation
+        class NEURO_DLL_EXPORT MinimizationOperation : public Operation
         {
         public:
             MinimizationOperation(const vector<TensorLike*>& losses, const vector<Variable*>& vars, size_t maxIterations, float epsilon);
@@ -102,3 +105,5 @@ namespace Neuro
         friend class MinimizationOperation;
     };
 }
+
+#pragma warning(pop)

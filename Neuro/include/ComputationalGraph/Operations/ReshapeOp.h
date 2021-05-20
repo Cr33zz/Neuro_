@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class ReshapeOp : public Operation
+    class NEURO_DLL_EXPORT ReshapeOp : public Operation
     {
     public:
         ReshapeOp(TensorLike* x, const Shape& shape, const string& name = "");

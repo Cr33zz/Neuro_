@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class InstanceNormalizeOp : public Operation
+    class NEURO_DLL_EXPORT InstanceNormalizeOp : public Operation
     {
     public:
         InstanceNormalizeOp(TensorLike* x, TensorLike* gamma, TensorLike* beta, float epsilon, const string& name = "");

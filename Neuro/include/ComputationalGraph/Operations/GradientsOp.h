@@ -5,11 +5,14 @@
 
 #include "ComputationalGraph/Operation.h"
 
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 namespace Neuro
 {
     class Variable;
 
-    class GradientsOp : public Operation
+    class NEURO_DLL_EXPORT GradientsOp : public Operation
     {
     public:
         GradientsOp(TensorLike* y, const vector<Variable*>& vars, const string& name = "");
@@ -40,3 +43,5 @@ namespace Neuro
         return gradients(y, vars, name);
     }
 }
+
+#pragma warning(pop)

@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class MergeOp : public Operation
+    class NEURO_DLL_EXPORT MergeOp : public Operation
     {
     public:
         MergeOp(const vector<TensorLike*>& xs, EMergeMode mode, const string& name = "");

@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class Conv2dTransposeOp : public Operation
+    class NEURO_DLL_EXPORT Conv2dTransposeOp : public Operation
     {
     public:
         Conv2dTransposeOp(TensorLike* x, TensorLike* kernels, uint32_t stride, uint32_t padding, EDataFormat dataFormat = NCHW, const string& name = "");

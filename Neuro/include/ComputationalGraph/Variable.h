@@ -8,7 +8,7 @@ namespace Neuro
     class Optimizer;
     class InitializerBase;
 
-    class Variable : public TensorLike
+    class NEURO_DLL_EXPORT Variable : public TensorLike
     {
     public:
         explicit Variable(const Tensor& initValue, const string& name = "");

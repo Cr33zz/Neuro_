@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class NormalizeGradientOp : public Operation
+    class NEURO_DLL_EXPORT NormalizeGradientOp : public Operation
     {
     public:
         NormalizeGradientOp(TensorLike* x, size_t order = 1, float scale = 1.f, const string& name = "");

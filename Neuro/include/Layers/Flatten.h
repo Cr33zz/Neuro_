@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class Flatten : public Reshape
+    class NEURO_DLL_EXPORT Flatten : public Reshape
     {
 	public:
         Flatten(const string& name = "");

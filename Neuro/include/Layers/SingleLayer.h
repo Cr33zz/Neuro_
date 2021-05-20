@@ -17,7 +17,7 @@ namespace Neuro
     class TensorLike;
     class ActivationBase;
 
-    class SingleLayer : public LayerBase
+    class NEURO_DLL_EXPORT SingleLayer : public LayerBase
     {
     public:
         virtual ~SingleLayer();

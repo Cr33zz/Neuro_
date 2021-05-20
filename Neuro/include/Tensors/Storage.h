@@ -7,6 +7,9 @@
 
 #include "Types.h"
 
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 namespace Neuro
 {
     using namespace std;
@@ -20,7 +23,7 @@ namespace Neuro
         ST_KeepDevMem = 1 << 4,
     };
 
-    class Storage
+    class NEURO_DLL_EXPORT Storage
     {
     public:
         Storage(int type = ST_Default, size_t size = 0, const string& name = "");
@@ -113,3 +116,5 @@ namespace Neuro
         string m_Name = "";
     };
 }
+
+#pragma warning(pop)

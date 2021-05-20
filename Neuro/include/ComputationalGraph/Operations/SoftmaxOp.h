@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class SoftmaxOp : public Operation
+    class NEURO_DLL_EXPORT SoftmaxOp : public Operation
     {
     public:
         SoftmaxOp(TensorLike* x, const string& name = "");

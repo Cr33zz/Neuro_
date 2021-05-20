@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class Reshape : public SingleLayer
+    class NEURO_DLL_EXPORT Reshape : public SingleLayer
     {
     public:
         Reshape(const Shape& shape, const string& name = "");

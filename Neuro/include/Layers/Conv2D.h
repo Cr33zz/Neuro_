@@ -6,7 +6,7 @@
 
 namespace Neuro
 {
-    class Conv2D : public SingleLayer
+    class NEURO_DLL_EXPORT Conv2D : public SingleLayer
     {
 	public:
         Conv2D(LayerBase* inputLayer, uint32_t filtersNum, uint32_t filterSize, uint32_t stride = 1, uint32_t padding = 0, ActivationBase* activation = nullptr, EDataFormat dataFormat = NCHW, const string& name = "");

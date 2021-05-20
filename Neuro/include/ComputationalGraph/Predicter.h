@@ -3,6 +3,9 @@
 #include <vector>
 #include "Types.h"
 
+#pragma warning(push)
+#pragma warning(disable:4251)
+
 namespace Neuro
 {
     using namespace std;
@@ -10,7 +13,7 @@ namespace Neuro
     class TensorLike;
     class Placeholder;
 
-    class Predicter
+    class NEURO_DLL_EXPORT Predicter
     {
     public:
         Predicter(const vector<Placeholder*>& inputPlaceholders, const vector<TensorLike*>& outputOps);
@@ -26,3 +29,5 @@ namespace Neuro
         vector<TensorLike*> m_Order;
     };
 }
+
+#pragma warning(pop)

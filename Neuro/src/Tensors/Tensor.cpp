@@ -3,7 +3,10 @@
 #include <numeric>
 #include <experimental/filesystem>
 #include <FreeImage.h>
+#pragma warning(push)
+#pragma warning(disable:4251)
 #include <H5Cpp.h>
+#pragma warning(pop)
 
 #include "Tensors/Tensor.h"
 #include "Tensors/TensorOpCpu.h"
@@ -2686,6 +2689,12 @@ namespace Neuro
         for (uint32_t i = 0; i < m_Shape.Length; ++i)
             stream >> m_Storage.Data()[i];
         stream.close();
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    Neuro::TensorOpCpu* Tensor::Op() const
+    {
+        return g_ForcedOp ? g_ForcedOp : m_Op;
     }
 
     //////////////////////////////////////////////////////////////////////////

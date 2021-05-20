@@ -12,7 +12,7 @@ namespace Neuro
 {
 	using namespace std;    
 
-    class Shape
+    class NEURO_DLL_EXPORT Shape
     {
 	public:
         Shape(uint32_t width = 0, uint32_t height = 1, uint32_t depth = 1, uint32_t batchSize = 1);

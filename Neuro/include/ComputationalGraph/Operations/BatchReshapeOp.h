@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class BatchReshapeOp : public Operation
+    class NEURO_DLL_EXPORT BatchReshapeOp : public Operation
     {
     public:
         BatchReshapeOp(TensorLike* x, const Shape& shape, const string& name = "");

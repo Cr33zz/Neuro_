@@ -9,7 +9,7 @@
 
 namespace Neuro
 {
-    class TensorOpGpu : public TensorOpCpuMt
+    class NEURO_DLL_EXPORT TensorOpGpu : public TensorOpCpuMt
     {
     public:
         TensorOpGpu();

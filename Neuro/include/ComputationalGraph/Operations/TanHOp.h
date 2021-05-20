@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class TanHOp : public Operation
+    class NEURO_DLL_EXPORT TanHOp : public Operation
     {
     public:
         TanHOp(TensorLike* x, const string& name = "");

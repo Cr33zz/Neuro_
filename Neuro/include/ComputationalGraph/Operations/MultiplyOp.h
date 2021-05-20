@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class MultiplyOp : public Operation
+    class NEURO_DLL_EXPORT MultiplyOp : public Operation
     {
     public:
         MultiplyOp(TensorLike* a, TensorLike* b, const string& name = "");

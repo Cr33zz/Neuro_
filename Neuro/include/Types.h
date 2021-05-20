@@ -4,6 +4,8 @@
 #include <iostream>
 #include <cassert>
 
+#define NEURO_DLL_EXPORT __declspec(dllexport)
+
 #ifndef NDEBUG
 #   define NEURO_ASSERT(condition, msg) \
     do { \

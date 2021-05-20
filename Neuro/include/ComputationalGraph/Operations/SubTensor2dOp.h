@@ -4,7 +4,7 @@
 
 namespace Neuro
 {
-    class SubTensor2dOp : public Operation
+    class NEURO_DLL_EXPORT SubTensor2dOp : public Operation
     {
     public:
         SubTensor2dOp(TensorLike* x, uint32_t width, uint32_t height, uint32_t widthOffset, uint32_t heightOffset, const string& name = "");
