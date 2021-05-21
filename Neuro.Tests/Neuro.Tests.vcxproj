@@ -113,6 +113,7 @@
       <Command>xcopy /y /d "..\Neuro\lib\Neuro.dll" "$(OutDir)"
 xcopy /y /d "..\Neuro\deps\FreeImage\lib\*.dll" "$(OutDir)"
 xcopy /y /d "..\Neuro\deps\mkl\lib\*.dll" "$(OutDir)"
+xcopy /y /d "..\Neuro\deps\hdf5\lib\*.dll" "$(OutDir)"
 xcopy /y /d "..\Neuro\deps\nvToolsExt\lib\*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -139,6 +140,7 @@ xcopy /y /d "..\Neuro\deps\nvToolsExt\lib\*.dll" "$(OutDir)"</Command>
       <Command>xcopy /y /d "..\Neuro\lib\Neuro.dll" "$(OutDir)"
 xcopy /y /d "..\Neuro\deps\FreeImage\lib\*.dll" "$(OutDir)"
 xcopy /y /d "..\Neuro\deps\mkl\lib\*.dll" "$(OutDir)"
+xcopy /y /d "..\Neuro\deps\hdf5\lib\*.dll" "$(OutDir)"
 xcopy /y /d "..\Neuro\deps\nvToolsExt\lib\*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -165,6 +167,7 @@ xcopy /y /d "..\Neuro\deps\nvToolsExt\lib\*.dll" "$(OutDir)"</Command>
       <Command>xcopy /y /d "..\Neuro\lib\Neuro.dll" "$(OutDir)"
 xcopy /y /d "..\Neuro\deps\FreeImage\lib\*.dll" "$(OutDir)"
 xcopy /y /d "..\Neuro\deps\mkl\lib\*.dll" "$(OutDir)"
+xcopy /y /d "..\Neuro\deps\hdf5\lib\*.dll" "$(OutDir)"
 xcopy /y /d "..\Neuro\deps\nvToolsExt\lib\*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
