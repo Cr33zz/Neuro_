@@ -10,6 +10,12 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
+    void InstanceNormalizeOp::UpdateOutputShape()
+    {
+        m_Output.Resize(m_InputNodes[0]->GetShape());
+    }
+
+    //////////////////////////////////////////////////////////////////////////
     void InstanceNormalizeOp::ComputeInternal()
     {
         auto& x = *m_Inputs[0];

@@ -343,6 +343,6 @@ Neuro.Examples/*.jpg
 Neuro.Examples/include/NeuralStyleTransferHD.h
 Neuro.Examples/include/NeuralStyleTransferHD2.h
 
-# Depndencies
-deps/
-lib/
+# Dependencies
+Neuro/deps/*
+Neuro/lib/*
