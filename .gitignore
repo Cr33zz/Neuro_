@@ -345,3 +345,4 @@ Neuro.Examples/include/NeuralStyleTransferHD2.h
 
 # Depndencies
 deps/
+lib/

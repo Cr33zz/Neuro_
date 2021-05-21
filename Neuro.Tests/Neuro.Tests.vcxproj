@@ -111,7 +111,9 @@
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y /d "..\Neuro\lib\Neuro.dll" "$(OutDir)"
-xcopy /y /d "..\Neuro\deps\FreeImage\lib\FreeImage.dll" "$(OutDir)"</Command>
+xcopy /y /d "..\Neuro\deps\FreeImage\lib\*.dll" "$(OutDir)"
+xcopy /y /d "..\Neuro\deps\mkl\lib\*.dll" "$(OutDir)"
+xcopy /y /d "..\Neuro\deps\nvToolsExt\lib\*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -135,7 +137,9 @@ xcopy /y /d "..\Neuro\deps\FreeImage\lib\FreeImage.dll" "$(OutDir)"</Command>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y /d "..\Neuro\lib\Neuro.dll" "$(OutDir)"
-xcopy /y /d "..\Neuro\deps\FreeImage\dll\FreeImage.dll" "$(OutDir)"</Command>
+xcopy /y /d "..\Neuro\deps\FreeImage\lib\*.dll" "$(OutDir)"
+xcopy /y /d "..\Neuro\deps\mkl\lib\*.dll" "$(OutDir)"
+xcopy /y /d "..\Neuro\deps\nvToolsExt\lib\*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Retail|x64'">
@@ -159,7 +163,9 @@ xcopy /y /d "..\Neuro\deps\FreeImage\dll\FreeImage.dll" "$(OutDir)"</Command>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y /d "..\Neuro\lib\Neuro.dll" "$(OutDir)"
-xcopy /y /d "..\Neuro\deps\FreeImage\dll\FreeImage.dll" "$(OutDir)"</Command>
+xcopy /y /d "..\Neuro\deps\FreeImage\lib\*.dll" "$(OutDir)"
+xcopy /y /d "..\Neuro\deps\mkl\lib\*.dll" "$(OutDir)"
+xcopy /y /d "..\Neuro\deps\nvToolsExt\lib\*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
