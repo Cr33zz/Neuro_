@@ -92,9 +92,9 @@ public:
         Tensor::SetForcedOpMode(GPU);
         //GlobalRngSeed(1337);
 
-        const Shape IMG_SHAPE(256, 256, 3);
+        const Shape IMG_SHAPE(512, 512, 3);
         const int EPOCHS = 150;
-        const uint32_t BATCH_SIZE = 1;
+        const uint32_t BATCH_SIZE = 3;
         const float LEARNING_RATE = 0.0002f;
         const float ADAM_BETA1 = 0.5f;
         //const uint32_t STEPS = 6;
@@ -102,9 +102,21 @@ public:
         cout << "Example: Pix2Pix" << endl;
 
         const string NAME = "flowers";
-        auto trainFiles = LoadFilesList("data/flowers", false, true);
+        auto trainFiles = LoadFilesList("g:/!TrainingData/flowers", false, true);
         /*const string NAME = "facades";
         auto trainFiles = LoadFilesList("data/facades/train", false, true);*/
+
+        auto testFiles = LoadFilesList("data/contents", false, true);
+        Tensor testImages(Shape(IMG_SHAPE.Width(), IMG_SHAPE.Height(), IMG_SHAPE.Depth(), BATCH_SIZE));
+        SampleImagesBatch(testFiles, testImages, false);
+        for (uint32_t n = 0; n < BATCH_SIZE; ++n)
+        {
+            Tensor tmp = testImages.GetBatch(n);
+            auto edges = CannyEdgeDetection(tmp).ToRGB();
+            edges.Sub(127.5f).Div(127.5f).CopyBatchTo(0, (uint32_t)n, testImages);
+        }
+
+        //testImages.Add(1.f).Mul(127.5f).SaveAsImage("pix2pix_test_samples.jpg", false);
 
         // setup models
         auto gModel = CreateGenerator(IMG_SHAPE);
@@ -173,8 +185,11 @@ public:
             {
                 dModel->SaveWeights(NAME + "_disc.h5");
                 gModel->SaveWeights(NAME + "_gen.h5");
-                Tensor tmp(Shape(IMG_SHAPE.Width() * 3, IMG_SHAPE.Height(), IMG_SHAPE.Depth(), BATCH_SIZE));
-                Tensor::Concat(WidthAxis, { inputImg->OutputPtr(), &_genImg, targetImg->OutputPtr() }, tmp);
+
+                auto genTestResults = Session::Default()->Run({ genImg }, { {inputImg, &testImages} });
+
+                Tensor tmp(Shape(IMG_SHAPE.Width() * 2, IMG_SHAPE.Height(), IMG_SHAPE.Depth(), BATCH_SIZE));
+                Tensor::Concat(WidthAxis, { inputImg->OutputPtr(), genTestResults[0] }, tmp);
                 tmp.Add(1.f).Mul(127.5f).SaveAsImage(NAME + "_s" + PadLeft(to_string(s), 4, '0') + ".jpg", false, 1);
             }
 
