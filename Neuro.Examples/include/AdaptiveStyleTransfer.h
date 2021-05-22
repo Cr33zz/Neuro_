@@ -68,11 +68,11 @@ public:
 
         //Tensor testContent = LoadImage("data/contents/chicago.jpg", IMAGE_WIDTH, IMAGE_HEIGHT);
         Tensor testContent(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3, BATCH_SIZE));
-        SampleImagesBatch(LoadFilesList(TEST_CONTENT_FILES_DIR, false), testContent, true);
+        SampleImagesBatch(LoadFilesList(TEST_CONTENT_FILES_DIR, false), testContent, false);
         testContent.SaveAsImage("_test_content.png", false);
         //Tensor testStyle = LoadImage("data/styles/asheville.jpg", IMAGE_WIDTH, IMAGE_HEIGHT);
         Tensor testStyle(Shape(IMAGE_WIDTH, IMAGE_HEIGHT, 3, BATCH_SIZE));
-        SampleImagesBatch(LoadFilesList(TEST_STYLES_FILES_DIR, false), testStyle, true);
+        SampleImagesBatch(LoadFilesList(TEST_STYLES_FILES_DIR, false), testStyle, false);
         testStyle.SaveAsImage("_test_style.png", false);
 
         //NEURO_ASSERT(testStyle.Batch() == testContent.Batch(), "Mismatched number or content and style test images.");

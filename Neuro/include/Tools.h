@@ -76,7 +76,7 @@ namespace Neuro
 
     NEURO_DLL_EXPORT vector<string> LoadFilesList(const string& dir, bool shuffle, bool useCache = true, bool validate = false);
 
-    NEURO_DLL_EXPORT void SampleImagesBatch(const vector<string>& files, Tensor& output, bool loadAll = false);
+    NEURO_DLL_EXPORT void SampleImagesBatch(const vector<string>& files, Tensor& output, bool shuffle = true);
 
     template<typename T> NEURO_DLL_EXPORT vector<T> MergeVectors(initializer_list<vector<T>> vectors);
 

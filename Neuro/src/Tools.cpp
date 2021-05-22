@@ -825,13 +825,13 @@ namespace Neuro
     }
 
     //////////////////////////////////////////////////////////////////////////
-    void SampleImagesBatch(const vector<string>& files, Tensor& output, bool loadAll)
+    void SampleImagesBatch(const vector<string>& files, Tensor& output, bool shuffle)
     {
         NEURO_ASSERT(output.Depth() == 3, "Output must have depth 3.");
         output.OverrideHost();
         
         for (size_t j = 0; j < (size_t)output.Batch(); ++j)
-            LoadImage(files[loadAll ? j : GlobalRng().Next((int)files.size())], output.Values() + j * output.BatchLength(), output.Width(), output.Height(), output.Width(), output.Height());
+            LoadImage(files[shuffle ? GlobalRng().Next((int)files.size()) : j], output.Values() + j * output.BatchLength(), output.Width(), output.Height(), output.Width(), output.Height());
     }
 
     //////////////////////////////////////////////////////////////////////////

@@ -257,7 +257,7 @@ public:
     {
         Tensor::SetForcedOpMode(GPU);
         Tensor testContent(Shape(320, 320, 3));
-        SampleImagesBatch(LoadFilesList("e:/Downloads/test_content", false), testContent, true);
+        SampleImagesBatch(LoadFilesList("e:/Downloads/test_content", false), testContent, false);
         testContent.SaveAsImage("_test_content.png", false);
 
         /*const string TEST_FILE = "data/contents/content.jpg";
